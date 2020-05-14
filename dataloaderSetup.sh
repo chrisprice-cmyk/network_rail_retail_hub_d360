@@ -23,7 +23,6 @@ if [ -f "$DL_JAR_FILE" ]; then
   # Tell user to edit bashrc with necessary variables
   echo 'Please add the following environement variables to your .bashrc file: '
   echo ''
-  echo 'export DX_ENC_PWD='$ENCRYPT_RESULT
   echo 'export DX_DEF_PWD='${DX_PASS}
   echo ''
 
