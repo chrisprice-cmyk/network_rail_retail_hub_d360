@@ -7,6 +7,8 @@ read -p 'SDO username: ' SDOUserName
 read -p 'Use Packages or MDAPI? p/m: ' deployMethod
 read -p 'Is PROD or Sandbox? p/s: ' orgType
 
+PROJECTNAME="PROJECT NAME"
+
 DEFAULTPWD=$DX_DEF_PWD
 # Encrypt the default password
 ENCRYPT_RESULT=$(java -cp bin/dataloader/dataloader.jar com.salesforce.dataloader.security.EncryptionUtil -e $DEFAULTPWD data/prod/config/login.key | sed -n '1!p')
@@ -14,10 +16,7 @@ ENCRYPT_RESULT=$(java -cp bin/dataloader/dataloader.jar com.salesforce.dataloade
 #Remove any whitespace
 ENCRYPT_RESULT="$(echo -e "${ENCRYPT_RESULT}" | sed -e 's/^[[:space:]]*//')"
 echo 'using encrypted PWD of '$ENCRYPT_RESULT''
-
 SCRATCH_PWD=$ENCRYPT_RESULT
-
-
 STARTTIME=$(date +%s)
 
 
@@ -61,8 +60,6 @@ if [ "$deployMethod" == 'p' ]; then
   echo "****  IDO TTH Guest 360 package...  ****"
   echo
   sfdx force:package:install --package "IDO TTH Guest 360 - Deployed" -u $orgAlias --wait 30 --apexcompile package --securitytype AllUsers
-
-
 fi
 
 
@@ -77,7 +74,7 @@ if [ "$deployMethod" == 'm' ]; then
 
   echo
   echo 'Converting from SFDX format to MDAPI and placing in mdapi_temp folder...'
-  sfdx force:source:convert -r force-app -d mdapi_temp
+  sfdx force:source:convert -r ido-tth -d mdapi_temp
 
   echo
   echo 'Running Metadata Deploy...'
@@ -149,7 +146,7 @@ echo '************************************************************************'
 echo
 
 
-./scripts/bash/buildLog.sh DevHub $BUILD_TIME_SEC "TH IDO SDO Install"
+./scripts/bash/buildLog.sh DevHub $BUILD_TIME_SEC "$PROJECTNAME"
 
 #Open Org
 sfdx force:org:open -p /lightning/page/home -u $orgAlias
