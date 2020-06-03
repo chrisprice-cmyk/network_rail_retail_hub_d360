@@ -2,13 +2,12 @@
 # 1) SFDX org alias
 # 2) SDO UserName
 
-read -p 'SFDX Org Alias ' orgAlias
+read -p 'SFDX Org Alias: ' orgAlias
 read -p 'SDO username: ' SDOUserName
+read -p 'Use Packages or MDAPI? p/m: ' deployMethod
+read -p 'Is PROD or Sandbox? p/s: ' orgType
 
-# The below passwords - SCRATCH_PWD is for dataloader as it is run in batch mode - https://help.salesforce.com/articleView?id=loader_batchmode.htm&type=5
-# Pulled from local ENVT variables
 DEFAULTPWD=$DX_DEF_PWD
-
 # Encrypt the default password
 ENCRYPT_RESULT=$(java -cp bin/dataloader/dataloader.jar com.salesforce.dataloader.security.EncryptionUtil -e $DEFAULTPWD data/prod/config/login.key | sed -n '1!p')
 
@@ -23,44 +22,68 @@ STARTTIME=$(date +%s)
 
 
 # EDIT - tailor the list of packages to be installed for your IDO
-echo
-echo '*************************************************'
-echo '****  Installing a pile of TTH IDO packages  ****'
-echo '*************************************************'
-echo
+if [ "$deployMethod" == 'p' ]; then
 
-echo "****  Installing IDO TTH COMMONS package...  ****"
-echo
-sfdx force:package:install --package "IDO TTH Commons - Deployed" -u $orgAlias --wait 30 --apexcompile package --securitytype AllUsers
+  echo
+  echo '*************************************************'
+  echo '****  Installing a pile of TTH IDO packages  ****'
+  echo '*************************************************'
+  echo
 
-echo "****  Installing IDO TTH Traveler Base Datamodel package...  ****"
-echo
-sfdx force:package:install --package "IDO TTH Traveler Base Datamodel - Deployed" -u $orgAlias --wait 30 --apexcompile package --securitytype AllUsers
+  echo "****  Installing IDO TTH COMMONS package...  ****"
+  echo
+  sfdx force:package:install --package "IDO TTH Commons - Deployed" -u $orgAlias --wait 30 --apexcompile package --securitytype AllUsers
 
-echo "****  Installing IDO TTH Loyalty Datamodel package...  ****"
-echo
-sfdx force:package:install --package "IDO TTH Loyalty Datamodel - Deployed" -u $orgAlias --wait 30 --apexcompile package --securitytype AllUsers
+  echo "****  Installing IDO TTH Traveler Base Datamodel package...  ****"
+  echo
+  sfdx force:package:install --package "IDO TTH Traveler Base Datamodel - Deployed" -u $orgAlias --wait 30 --apexcompile package --securitytype AllUsers
 
-echo "****  Installing IDO TTH Res/Booking datamodel package...  ****"
-echo
-sfdx force:package:install --package "IDO TTH Reservation/Booking Datamodel - Deployed" -u $orgAlias --wait 30 --apexcompile package --securitytype AllUsers
+  echo "****  Installing IDO TTH Loyalty Datamodel package...  ****"
+  echo
+  sfdx force:package:install --package "IDO TTH Loyalty Datamodel - Deployed" -u $orgAlias --wait 30 --apexcompile package --securitytype AllUsers
 
-echo "****  IDO TTH SDO Tools Extension package...  ****"
-echo
-sfdx force:package:install --package "IDO TTH SDO Tool Extensions - Deployed" -u $orgAlias --wait 30 --apexcompile package --securitytype AllUsers
+  echo "****  Installing IDO TTH Res/Booking datamodel package...  ****"
+  echo
+  sfdx force:package:install --package "IDO TTH Reservation/Booking Datamodel - Deployed" -u $orgAlias --wait 30 --apexcompile package --securitytype AllUsers
 
-echo "****  Demo Component - Marketing Cloud Engagement History...  ****"
-echo
-sfdx force:package:install --package "Demo Component - Marketing Cloud Engagement History" -u $orgAlias --wait 30 --apexcompile package --securitytype AllUsers
+  echo "****  IDO TTH SDO Tools Extension package...  ****"
+  echo
+  sfdx force:package:install --package "IDO TTH SDO Tool Extensions - Deployed" -u $orgAlias --wait 30 --apexcompile package --securitytype AllUsers
 
-echo "****  Demo Component - Lightning File Gallery...  ****"
-echo
-sfdx force:package:install --package "Demo Component - Lightning File Gallery" -u $orgAlias --wait 30 --apexcompile package --securitytype AllUsers
+  echo "****  Demo Component - Marketing Cloud Engagement History...  ****"
+  echo
+  sfdx force:package:install --package "Demo Component - Marketing Cloud Engagement History" -u $orgAlias --wait 30 --apexcompile package --securitytype AllUsers
 
-echo "****  IDO TTH Guest 360 package...  ****"
-echo
-sfdx force:package:install --package "IDO TTH Guest 360 - Deployed" -u $orgAlias --wait 30 --apexcompile package --securitytype AllUsers
+  echo "****  Demo Component - Lightning File Gallery...  ****"
+  echo
+  sfdx force:package:install --package "Demo Component - Lightning File Gallery" -u $orgAlias --wait 30 --apexcompile package --securitytype AllUsers
 
+  echo "****  IDO TTH Guest 360 package...  ****"
+  echo
+  sfdx force:package:install --package "IDO TTH Guest 360 - Deployed" -u $orgAlias --wait 30 --apexcompile package --securitytype AllUsers
+
+
+fi
+
+
+if [ "$deployMethod" == 'm' ]; then
+  echo '*************************************************'
+  echo 'Installing to SDO via MDAPI....'
+  echo '*************************************************'
+
+  echo
+  echo 'Deleting temp MDAPI folder...'
+  rm -rf mdapi_temp
+
+  echo
+  echo 'Converting from SFDX format to MDAPI and placing in mdapi_temp folder...'
+  sfdx force:source:convert -r force-app -d mdapi_temp
+
+  echo
+  echo 'Running Metadata Deploy...'
+  sfdx force:mdapi:deploy -u $orgAlias -w 60 -d mdapi_temp
+
+fi
 
 echo
 echo '*************************************************'
@@ -81,7 +104,16 @@ echo
 # make it work for MacOS - https://github.com/theswamis/dataloadercliq
 # sfdc.username = $2
 # sfdc.password = $3
-./scripts/bash/loadProdData.sh $SDOUserName $SCRATCH_PWD https://login.salesforce.com
+
+if [ "$orgType" == 'p' ]; then
+  ./scripts/bash/loadProdData.sh $SDOUserName $SCRATCH_PWD https://login.salesforce.com
+fi
+
+if [ "$orgType" == 's' ]; then
+  ./scripts/bash/loadProdData.sh $SDOUserName $SCRATCH_PWD https://test.salesforce.com
+fi
+
+
 
 echo
 echo '*************************************************'
@@ -108,15 +140,16 @@ echo
 
 
 ENDTIME=$(date +%s)
+BUILD_TIME_SEC=$(($ENDTIME - $STARTTIME))
 
 echo
 echo '************************************************************************'
-echo "Build took $(($ENDTIME - $STARTTIME)) seconds to complete..."
+echo "Build took $BUILD_TIME_SEC seconds to complete..."
 echo '************************************************************************'
 echo
 
-CURDATE=$(date +"%m/%d/%Y %H:%M")
-echo "SDO Build,$CURDATE,$(($ENDTIME - $STARTTIME))"  >> logs/buildTimes.csv
+
+./scripts/bash/buildLog.sh DevHub $BUILD_TIME_SEC "TH IDO SDO Install"
 
 #Open Org
 sfdx force:org:open -p /lightning/page/home -u $orgAlias
