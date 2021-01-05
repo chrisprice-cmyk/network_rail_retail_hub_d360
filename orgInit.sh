@@ -10,8 +10,8 @@ sfdx force:source:deploy -p force-app --wait 60 --json
 sfdx force:apex:execute -f scripts/apex/applyPermSets.apex --json
 
 # Load IDO Data using Bulk API
-#Person Account
-sfdx force:data:bulk:upsert --sobjecttype Account --csvfile data/prod/PersonAccounts.csv --externalid External_ID__c --wait 30
+#Accounts
+sfdx force:data:bulk:upsert --sobjecttype Account --csvfile data/prod/ido_Account.csv --externalid External_ID__c --wait 30
 
 #Work around for ContentVersion upload as the Bulk API in sfdx cannot do it
 #sfdx force:data:bulk:upsert --sobjecttype ContentVersion --csvfile data/prod/ContentVersion.csv --externalid External_ID__c --wait 2
