@@ -12,10 +12,10 @@ package.xml
 **/__tests__/**
 
 # Push Ignores
-tth-/main/default/profiles/
-tth-/main/default/appMenus/AppSwitcher.appMenu-meta.xml
-tth-/main/default/flexipages/LightningService_UtilityBar.flexipage-meta.xml
-#tth-/main/default/objects/Account/*
+force-app/main/default/profiles/
+force-app/main/default/appMenus/AppSwitcher.appMenu-meta.xml
+force-app/main/default/flexipages/LightningService_UtilityBar.flexipage-meta.xml
+#force-app/main/default/objects/Account/*
 
 
 # Pull ignores

@@ -10,11 +10,7 @@
     "Knowledge",
     "Communities",
     "SiteDotCom",
-    "Sites",
-    "WavePlatform",
-    "InsightsPlatform",
-    "SalesWave",
-    "ServiceWave"
+    "Sites"
   ],
   "settings": {
       "botSettings": {
@@ -52,6 +48,12 @@
           "passwordPolicies": {
               "enableSetPasswordInApi": true
           }
+      },
+      "accountSettings": {
+          "enableRelateContactToMultipleAccounts": true
+      },
+      "flowSettings": {
+          "enableFlowDeployAsActiveEnabled": true
       }
   }
 }
