@@ -1,10 +1,11 @@
-//Select all the Recommendations ID and Names
-//Take the names, replace - and & with a space
-//String.remove()
-//String.deleteWhitespace()
-
-//get ContentAsset ID of all assets with matching names
-//update recommendation.imageID with mathcing content asset ID
+//Work around to line up Recommendation images with ContentAsset metadata of related names
+//Required since recommendations are record data whilst the Recommendation image is metadata and is stored via ID
+//
+//How this Annon APEX works
+//Select all the Recommendations ID and Names that do not have an image linked
+//Take the Recommendation names, remove all special characters and whitespace and look for a ContentAsset file that has that same name
+//Update the Recommendation record to make use of that image
+//e.g. if Recommendation name was "Select Super-Sized Meal" this script would look for a content asset with the name SelectSuperSizedMeal
 
 // WHERE ImageID = null
 List<Recommendation> recommendations = [SELECT ID, Name, ImageID from Recommendation WHERE ImageID = null];
