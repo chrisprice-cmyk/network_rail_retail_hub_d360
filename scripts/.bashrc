@@ -53,3 +53,38 @@ function dscratch() {
 function defscratch() {
    sfdx force:config:set defaultusername=$@
 }
+
+function dxclass() {
+   sfdx force:apex:class:create -n $@
+}
+
+function dxaura() {
+    sfdx force:lightning:component:create --type aura -n $@
+}
+
+function dxlwc() {
+   sfdx force:lightning:component:create --type lwc -n $@
+}
+
+function dxapp() {
+   sfdx force:lightning:app:create -n $@
+}
+
+function dxtrigger() {
+   sfdx force:apex:trigger:create -n $1 -s $2 -e 'before insert,before update,before delete, after insert, after updatae, after delete'
+}
+
+function dxinstallpack() {
+   sfdx force:package:install -w 1000 --package $@
+}
+
+function dxauthorg() {
+   sfdx force:auth:web:login -a $@
+}
+
+function dxsand() {
+   read -p 'Sandbox Alias: ' orgAlias
+   read -p 'Prod Alias: ' prodAlias
+   sfdx force:org:create -t sandbox sandboxName=$orgAlias licenseType=Developer -u $prodAlias -a $orgAlias -w 1000
+
+}
