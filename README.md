@@ -2,6 +2,29 @@
 
 This is the master template that all new IDO masters should start from.  It contains a number of best practice and reusable scripts that will help in getting you up to speed with Migrating your IDO master onto an [Automated Build process](https://docs.google.com/presentation/d/1HPtzrf2yQBJeM_iCkfRWizuT-wqlTivY0WbLCl_3SzE/edit?usp=sharing).
 
+# Branching Strategy
+
+   1. Use a master / release / feature branch pipeline model
+   2. Follow a prescribed branch naming and tagging convention (described below)
+   3. Ensure the appropriate Github Actions and related scripts are contained within your repository
+
+## Branch naming and tagging convention
+  1. master/main always works - never commit directly to master/main
+  2. Releases: go into a release/<meaningful name> branch
+  3. Features: go into a feature/<meaningful name> branch
+  4. Once you're done work on your feature, create a pull request to merge into a particular release branch.  This will validate and deploy to your TEST org.
+  5. Once all work for a release is completed and merged into the appropriate release branch, create a pull request to merge into master/main .  This will validate and merge into your MASTER/PROD org.
+
+## Other repo setup steps for automated validation/deployments
+   1. GitHub secrets
+      - Test Auth
+        - sfdx force:org:display --verbose -u <Test Alias>
+        - get Sfdx Auth Url
+        - put in GitHub Secret: TEST_AUTH_SECRET
+      - Prod Auth
+        - sfdx force:org:display --verbose -u <Prod Alias>
+        - get Sfdx Auth Url
+        - put in GitHub Secret: PROD_AUTH_SECRET  
 
 
 # SUGGESTED CONTENT FOR THE README

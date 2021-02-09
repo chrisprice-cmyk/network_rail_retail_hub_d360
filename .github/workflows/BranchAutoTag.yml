@@ -1,0 +1,24 @@
+name: Autotag new Branch
+on:
+  create:
+    branches:
+      - release
+      - release/*
+      - feature/*
+
+jobs:
+  tagging-magic:
+    name: Generate new tag
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Branch that triggered this
+        run: |
+          echo 'Git ref: ' ${{ github.ref }}
+          BRANCH_NAME=${gitRef="${{ github.ref }}" && printf "%s\n" "${gitRef##*/}"}
+          echo 'Branch name: '$BRANCH_NAME
+          echo 'GIT Trigger SHA: ' ${{github.sha}}
+          echo 'Unique timestamp: ' $(date +%s)
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 0

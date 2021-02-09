@@ -1,0 +1,97 @@
+name: Release - Deploy to Test
+on:
+  push:
+    branches:
+      - release
+      - release/*
+
+jobs:
+  delta-deployment:
+    name: Deploy Delta to Test
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Source Branch Name
+        run: echo ${{ github.head_ref }}
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: Connect to TEST org
+        uses: sfdx-actions/setup-sfdx@v1
+        with:
+          sfdx-auth-url: ${{ secrets.TEST_AUTH_SECRET }}
+
+      - name: "Create Additive Delta"
+        run: ./scripts/cicd/Head-doGitAdditiveDiff.sh
+
+      - name: Check additive files exist
+        id: additive_files
+        uses: andstor/file-existence-action@v1
+        with:
+          files: "gitUpdates.zip"
+
+      - name: Archive new and modified metadata zip
+        uses: actions/upload-artifact@v2
+        if: steps.additive_files.outputs.files_exists == 'true'
+        with:
+          name: new-modified-files.zip
+          path: gitUpdates.zip
+
+      - name: Archive new and modified metadata text file
+        uses: actions/upload-artifact@v2
+        if: steps.additive_files.outputs.files_exists == 'true'
+        with:
+          name: new-modified-files.txt
+          path: new-modified-files.txt
+
+      - name: "Create Destructive Delta"
+        run: ./scripts/cicd/Head-doGitDestructiveDiff.sh ${{ github.base_ref }}
+
+      - name: Check destructive files exist
+        id: destructive_files
+        uses: andstor/file-existence-action@v1
+        with:
+          files: "gitDeletions.zip"
+
+      - name: Archive deleted metadata zip
+        uses: actions/upload-artifact@v2
+        if: steps.destructive_files.outputs.files_exists == 'true'
+        with:
+          name: deleted-files.zip
+          path: gitDeletions.zip
+
+      - name: Archive deleted metadata text file
+        uses: actions/upload-artifact@v2
+        if:  steps.destructive_files.outputs.files_exists == 'true'
+        with:
+          name: deleted-files.txt
+          path: deleted-files.txt
+
+      - name: Check pre-deployment script exist
+        id: preDeploymentScript
+        uses: andstor/file-existence-action@v1
+        with:
+          files: "scripts/cicd/preDeploymentSteps.sh"
+
+      - name: "Run Pre Deployment Script"
+        if: steps.preDeploymentScript.outputs.files_exists == 'true' && steps.additive_files.outputs.files_exists == 'true'
+        run: ./scripts/cicd/preDeploymentSteps.sh
+
+      - name: 'Deploy to Test'
+        if: steps.additive_files.outputs.files_exists == 'true'
+        run: sfdx force:source:deploy -p "deltaDeploy/force-app"
+
+      - name: Check post-deployment script exist
+        id: postDeploymentScript
+        uses: andstor/file-existence-action@v1
+        with:
+          files: "scripts/cicd/postDeploymentSteps.sh"
+
+      - name: "Run Post Deployment Script"
+        if: steps.postDeploymentScript.outputs.files_exists == 'true'  && steps.additive_files.outputs.files_exists == 'true'
+        run: ./scripts/cicd/postDeploymentSteps.sh
+
+      - name: 'Deploy Destructive Changes to Test'
+        if:  steps.destructive_files.outputs.files_exists == 'true'
+        run: sfdx force:mdapi:deploy -d deltaDestructiveDeployMeta --checkonly
