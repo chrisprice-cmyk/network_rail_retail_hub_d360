@@ -22,6 +22,12 @@ jobs:
         with:
           sfdx-auth-url: ${{ secrets.TEST_AUTH_SECRET }}
 
+      - name: Install SFDX Plugins
+        run: |
+          mkdir $HOME/.config/sfdx
+          cp .config/sfdx/unsignedPluginAllowList.json $HOME/.config/sfdx/.
+          ./scripts/cicd/installSFDXPlugins.sh       
+
       - name: "Create Additive Delta"
         run: ./scripts/cicd/Head-doGitAdditiveDiff.sh
 
