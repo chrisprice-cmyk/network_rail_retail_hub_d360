@@ -18,14 +18,15 @@ This is the master template that all new IDO masters should start from.  It cont
 
 ## Other repo setup steps for automated validation/deployments
    1. GitHub secrets
-      - Test Auth
+      - Test Org Authorisation 
         - sfdx force:org:display --verbose -u <Test Alias>
         - get Sfdx Auth Url
         - put in GitHub Secret: TEST_AUTH_SECRET
-      - Prod Auth
+      - Prod Org Authorisation 
         - sfdx force:org:display --verbose -u <Prod Alias>
         - get Sfdx Auth Url
         - put in GitHub Secret: PROD_AUTH_SECRET  
+
 
 
 # SUGGESTED CONTENT FOR THE README
@@ -64,14 +65,12 @@ The bulk of the SDO Rebase process should be taken care of within the [orgInit.s
   * Update Industry Version Tracker values
   * Add Getting to Know your IDO tab to the Q Branch app
 
-
-
 # Manual deployment - Environment setup
 The industry deployer takes care of deploying all this via a heroku server with no local setup, however if you wish to install it manually on your local machine, the following items need to be installed/configured:
 
 * SalesforceDX CLI - https://developer.salesforce.com/docs/atlas.en-us.sfdx_setup.meta/sfdx_setup/sfdx_setup_install_cli.htm
-
 * Heroku CLI - https://devcenter.heroku.com/articles/heroku-cli
-
 * SFDX Plug-ins
    * Shane McLaughlan SFDX plugins - https://github.com/mshanemc/shane-sfdx-plugins (command line install: sfdx plugins:install shane-sfdx-plugins)
+* In terminal, connect to your target org via SFDX CLI
+* In terminal run ./orgInit.sh
