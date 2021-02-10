@@ -10,9 +10,9 @@ This is the master template that all new IDO masters should start from.  It cont
 
 ## Branch naming and tagging convention
   1. master/main always works and represents your currently released and live IDO - never commit directly to master/main
-  2. Releases: go into a release/<meaningful name> branch
+  2. Releases: go into a release/"meaningful-branch-name" e.g. release/winter22r1
   3. As soon as you've created a new release branch and before you've commited anything to it, please create a tag such as <branchName-0.01>
-  4. Features: go into a feature/<meaningful name> branch
+  4. Features: go into a feature/"meaningful-branch-name" e.g. feature/hvsUpdates or feature/payeeUseCase or feature/C360SalesPlay
   5. Once you're done work on your feature, create a pull request to merge into a particular release branch.  This will validate and deploy to your TEST org.
   6. Once all work for a release is completed and merged into the appropriate release branch, create a pull request to merge into master/main .  This will validate and merge into your MASTER/PROD org.
 
