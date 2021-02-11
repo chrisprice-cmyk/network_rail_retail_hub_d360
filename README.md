@@ -9,22 +9,24 @@ This is the master template that all new IDO masters should start from.  It cont
    3. Ensure the appropriate Github Actions and related scripts are contained within your repository
 
 ## Branch naming and tagging convention
-  1. master/main always works - never commit directly to master/main
-  2. Releases: go into a release/<meaningful name> branch
-  3. Features: go into a feature/<meaningful name> branch
-  4. Once you're done work on your feature, create a pull request to merge into a particular release branch.  This will validate and deploy to your TEST org.
-  5. Once all work for a release is completed and merged into the appropriate release branch, create a pull request to merge into master/main .  This will validate and merge into your MASTER/PROD org.
+  1. master/main always works and represents your currently released and live IDO - never commit directly to master/main
+  2. Releases: go into a release/"meaningful-branch-name" e.g. release/winter22r1
+  3. As soon as you've created a new release branch and before you've commited anything to it, please create a tag such as <branchName-0.01>
+  4. Features: go into a feature/"meaningful-branch-name" e.g. feature/hvsUpdates or feature/payeeUseCase or feature/C360SalesPlay
+  5. Once you're done work on your feature, create a pull request to merge into a particular release branch.  This will validate and deploy to your TEST org.
+  6. Once all work for a release is completed and merged into the appropriate release branch, create a pull request to merge into master/main .  This will validate and merge into your MASTER/PROD org.
 
 ## Other repo setup steps for automated validation/deployments
    1. GitHub secrets
-      - Test Auth
+      - Test Org Authorisation 
         - sfdx force:org:display --verbose -u <Test Alias>
         - get Sfdx Auth Url
         - put in GitHub Secret: TEST_AUTH_SECRET
-      - Prod Auth
+      - Prod Org Authorisation 
         - sfdx force:org:display --verbose -u <Prod Alias>
         - get Sfdx Auth Url
         - put in GitHub Secret: PROD_AUTH_SECRET  
+
 
 
 # SUGGESTED CONTENT FOR THE README
@@ -63,14 +65,12 @@ The bulk of the SDO Rebase process should be taken care of within the [orgInit.s
   * Update Industry Version Tracker values
   * Add Getting to Know your IDO tab to the Q Branch app
 
-
-
 # Manual deployment - Environment setup
 The industry deployer takes care of deploying all this via a heroku server with no local setup, however if you wish to install it manually on your local machine, the following items need to be installed/configured:
 
 * SalesforceDX CLI - https://developer.salesforce.com/docs/atlas.en-us.sfdx_setup.meta/sfdx_setup/sfdx_setup_install_cli.htm
-
 * Heroku CLI - https://devcenter.heroku.com/articles/heroku-cli
-
 * SFDX Plug-ins
    * Shane McLaughlan SFDX plugins - https://github.com/mshanemc/shane-sfdx-plugins (command line install: sfdx plugins:install shane-sfdx-plugins)
+* In terminal, connect to your target org via SFDX CLI
+* In terminal run ./orgInit.sh

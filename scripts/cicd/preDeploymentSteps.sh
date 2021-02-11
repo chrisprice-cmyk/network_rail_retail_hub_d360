@@ -1,5 +1,8 @@
 #!/bin/bash
 echo 'Running pre-deployment CICD steps...'
-./scripts/bash/installPackages.sh
 
-./scripts/bash/uploadImages.sh
+#Install any app-exchange packages
+#./scripts/bash/installPackages.sh
+
+#Install ContentDocument images
+#./scripts/bash/uploadImages.sh
