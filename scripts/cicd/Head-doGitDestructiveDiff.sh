@@ -15,8 +15,6 @@ if [ -s deleted-files.txt ]; then
 
   git archive -o gitDeletions.zip HEAD^ $(git --no-pager diff HEAD^ HEAD --name-only --diff-filter=D)
 
-  echo 'Add sfdx-project.json to archive'
-  zip -r gitDeletions.zip sfdx-project.json
 
   echo 'remove and recreate existing delta folders'
   echo

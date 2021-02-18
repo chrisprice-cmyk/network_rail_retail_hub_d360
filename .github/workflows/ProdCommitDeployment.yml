@@ -11,11 +11,13 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Source Branch Name
-        run: echo ${{ github.head_ref }}
+        run: echo ${{ github.ref }}
       - uses: actions/checkout@v2
         with:
-          ref: ${{ github.head_ref }}
+          ref: ${{ github.ref }}
           fetch-depth: 0
+          submodules: true
+#          token: ${{ secrets.CICD_ACCESS }}
 
       - name: Connect to PROD org
         uses: sfdx-actions/setup-sfdx@v1
@@ -26,7 +28,7 @@ jobs:
         run: |
           mkdir $HOME/.config/sfdx
           cp .config/sfdx/unsignedPluginAllowList.json $HOME/.config/sfdx/.
-          ./scripts/cicd/installSFDXPlugins.sh      
+          ./scripts/cicd/installSFDXPlugins.sh
 
       - name: "Create Additive Delta"
         run: ./scripts/cicd/Head-doGitAdditiveDiff.sh
@@ -97,6 +99,6 @@ jobs:
         if: steps.postDeploymentScript.outputs.files_exists == 'true'  && steps.additive_files.outputs.files_exists == 'true'
         run: ./scripts/cicd/postDeploymentSteps.sh
 
-      - name: 'Deploy Destructive Changes to Test'
-        if:  steps.destructive_files.outputs.files_exists == 'true'
-        run: sfdx force:mdapi:deploy -d deltaDestructiveDeployMeta --checkonly
+#      - name: 'Deploy Destructive Changes to Prod'
+#        if:  steps.destructive_files.outputs.files_exists == 'true'
+#        run: sfdx force:mdapi:deploy -d deltaDestructiveDeployMeta -w 30

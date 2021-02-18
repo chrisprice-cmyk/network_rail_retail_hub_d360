@@ -33,23 +33,22 @@ if [ -s deleted-files.txt ]; then
   echo
   git archive -o gitDeletions.zip $BASE_BRANCH $(git --no-pager diff $TAG_HASH HEAD --name-only --diff-filter=D)
 
-  echo 'Add sfdx-project.json to archive'
-  zip -r gitDeletions.zip sfdx-project.json
+#  echo 'Add sfdx-project.json to archive'
+#  zip -r gitDeletions.zip sfdx-project.json
 
   echo 'remove and recreate existing delta folders'
   echo
   rm -rf deltaDestructiveDeploySource
-  mkdir deltaDestructiveDeploySource
+  mkdir -p deltaDestructiveDeploySource
 
   rm -rf deltaDestructiveDeployMeta
-  mkdir deltaDestructiveDeployMeta
+  mkdir -p deltaDestructiveDeployMeta
 
   echo 'Unzip the delta zip file into the deltaDestructiveDeploySource folder'
   echo
   unzip gitDeletions.zip -d deltaDestructiveDeploySource
 
-  if [ -d "deltaDestructiveDeploySource/force-app"]; then
-
+  if [ -d "deltaDestructiveDeploySource/force-app" ]; then
     echo 'Convert source format destructive changes into MDAPI format'
     echo
     sfdx force:source:convert -r deltaDestructiveDeploySource/force-app -d deltaDestructiveDeployMeta

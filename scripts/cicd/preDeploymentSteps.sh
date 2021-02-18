@@ -1,8 +1,13 @@
 #!/bin/bash
-echo 'Running pre-deployment CICD steps...'
+echo 'Running pre-deployment CICD steps'
 
-#Install any app-exchange packages
-#./scripts/bash/installPackages.sh
+mkdir -p deltaDestructiveDeploySource
 
-#Install ContentDocument images
-#./scripts/bash/uploadImages.sh
+echo 'Deploying settings...'
+./scripts/deployment/deploySettings.sh
+
+echo 'Installing SubModules...'
+./scripts/bash/installSubmodules.sh
+
+echo 'Installing AppExchange Packages...'
+./scripts/bash/installPackages.sh

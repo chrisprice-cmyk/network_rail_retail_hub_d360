@@ -34,7 +34,7 @@ unzip gitUpdates.zip -d deltaDeploy
 
 # TODO - if there are no modified files, skip over this
 #https://stackoverflow.com/questions/12137431/test-if-a-command-outputs-an-empty-string
-  if [[ $(ls -A deltaDeploy/force-app) ]]; then
+  if [ $(ls -A deltaDeploy/force-app) ]; then
       echo
       echo "there ARE new/modified metadata files"
   else

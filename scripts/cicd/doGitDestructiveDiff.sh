@@ -22,9 +22,6 @@ echo 'Create zip file gitDeletions.zip with only deleted files'
 echo
 git archive -o gitDeletions.zip $FROM_REF $(git --no-pager diff $FROM_REF $TO_REF --name-only --diff-filter=D)
 
-echo 'Add sfdx-project.json to archive'
-zip -r gitDeletions.zip sfdx-project.json
-
 echo 'remove and recreate existing delta folders'
 echo
 rm -rf deltaDestructiveDeploySource
@@ -37,8 +34,7 @@ echo 'Unzip the delta zip file into the deltaDestructiveDeploySource folder'
 echo
 unzip gitDeletions.zip -d deltaDestructiveDeploySource
 
-if [ -d "deltaDestructiveDeploySource/force-app"]; then
-
+if [ -d "deltaDestructiveDeploySource/force-app" ]; then
   echo 'Convert source format destructive changes into MDAPI format'
   echo
   sfdx force:source:convert -r deltaDestructiveDeploySource/force-app -d deltaDestructiveDeployMeta

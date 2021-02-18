@@ -38,7 +38,7 @@ echo
 unzip gitUpdates.zip -d deltaDeploy
 
 # if there are no modified metadata files, delete the zip file so the workflow process does not run
-  if [[ $(ls -A deltaDeploy/force-app) ]]; then
+  if [ $(ls -A deltaDeploy/force-app) ]; then
       echo
       echo "there ARE new/modified metadata files"
   else
