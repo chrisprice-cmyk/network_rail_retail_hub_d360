@@ -17,11 +17,14 @@ echo
 
 mkdir -p $subModRootDir
 echo 'Adding submodule.....'
-#git submodule add $subModUrl $subModPath --force
+git submodule add $subModUrl $subModPath --force
 echo 'Initialising submodule.....'
-#git submodule init
+git submodule init
 echo 'Cloning submodule.....'
-#git submodule update --init --recursive
+git submodule update --init --recursive
 
-echo 'Be sure to add '$subModPath' to your package-directories section in your sfdx-project.json file'
+echo
+echo 'Add the following to your package-directories in your sfdx-project.json file if needed'
+echo
 echo '{"path" : "'$subModPath'/force-app"}'
+echo
