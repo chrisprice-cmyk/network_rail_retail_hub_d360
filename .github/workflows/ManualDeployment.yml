@@ -23,11 +23,13 @@ jobs:
     steps:
       - name: Source Branch Name
         run: echo ${{ github.ref }}
-      - uses: actions/checkout@v2
+
+      - name: Check out source
+        uses: actions/checkout@v2
         with:
           ref: ${{ github.ref }}
           fetch-depth: 0
-          submodules: true
+          submodules: recursive
           token: ${{ secrets.CICD_ACCESS }}
 
       - name: Connect to org
@@ -51,11 +53,11 @@ jobs:
           ./scripts/cicd/installSFDXPlugins.sh
 
       - name: Deploy to SDO
-        if: ${{ github.event.inputs.deployToSDO }} == 'true'
+        if: github.event.inputs.deployToSDO == 'true'
         run: |
           ./byooInit.sh
 
       - name: Deploy to Scratch org
-        if: ${{ github.event.inputs.deployToSDO }} != 'true'
+        if: github.event.inputs.deployToSDO != 'true'
         run: |
-          ./orgInitScratch.sh
+          ./orgInit.sh
