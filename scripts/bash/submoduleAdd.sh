@@ -21,4 +21,4 @@ git submodule add $subModUrl $subModPath --force
 echo 'Initialising submodule.....'
 git submodule init
 echo 'Cloning submodule.....'
-git submodule update
+git submodule update --init --recursive
