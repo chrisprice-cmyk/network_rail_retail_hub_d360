@@ -1,15 +1,32 @@
-name: Master - Deploy to Prod
+name: CI Deployment
 on:
-  push:
-    branches:
-      - main
-      - master
+  workflow_dispatch:
+    inputs:
+      environmentName:
+        description: Github Environment name to deploy to
+        required: true
+        default: Test
+      fromRef:
+        description: Github SHA reference to start from
+        required: true
+        default: "HEAD^"
+      toRef:
+        description: Github SHA reference to go up to
+        required: true
+        default: "HEAD"
 
 jobs:
   delta-deployment:
-    name: Deploy Delta to Prod
+    name: Delta Deployment
     runs-on: ubuntu-20.04
+    environment:
+      name: ${{ github.event.inputs.environmentName }}
+      url: ${{ steps.envtUrl.outputs.url_output }}
+
     steps:
+      - name: Triggering Event
+        run: echo ${{ github.event_name }}
+
       - name: Source Branch Name
         run: echo ${{ github.ref }}
       - uses: actions/checkout@v2
@@ -17,12 +34,46 @@ jobs:
           ref: ${{ github.ref }}
           fetch-depth: 0
           submodules: true
-#          token: ${{ secrets.CICD_ACCESS }}
+          token: ${{ secrets.CICD_ACCESS }}
 
-      - name: Connect to PROD org
+      - name: Triggering event name
+        run: echo ${{ github.event_name }}
+
+      - name: Check if workflow_dispatch Triggering Event
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo "this is a manually triggered event"
+          echo "fromRef="${{ github.event.inputs.fromRef }} >> $GITHUB_ENV
+          echo "toRef="${{ github.event.inputs.toRef }} >> $GITHUB_ENV
+
+      - name: Check if not workflow_dispatch Triggering Event
+        if: github.event_name != 'workflow_dispatch'
+        run: |
+          echo "This is not a manually triggered workflow event"
+          TAG_NAME=$(git describe --tags --abbrev=0)
+          TAG_HASH=$(git show-ref -s $TAG_NAME)
+          echo 'Using Tag: ' $TAG_NAME ' with Hash: ' $TAG_HASH
+          echo "fromRef="$TAG_HASH >> $GITHUB_ENV
+          echo "toRef=HEAD" >> $GITHUB_ENV
+
+      - name: Show from and to references
+        run: |
+          echo "FROM REF: "${{ env.fromRef }}
+          echo "TO REF: "${{ env.toRef }}
+
+      - name: Connect to ${{ github.event.inputs.environmentName }} org
         uses: sfdx-actions/setup-sfdx@v1
         with:
-          sfdx-auth-url: ${{ secrets.PROD_AUTH_SECRET }}
+          sfdx-auth-url: ${{ secrets.ORG_AUTH_SECRET }}
+
+      - name: EnvtUrl
+        id: envtUrl
+        run: |
+          sfdx force:org:display --verbose --json > orgDetails.json
+          orgUrl=$(jq '.result.instanceUrl' orgDetails.json | sed 's/^.//;s/.$//')
+          accessToken=$(jq '.result.accessToken' orgDetails.json | sed 's/^.//;s/.$//')
+          frontDoor='/secur/frontdoor.jsp?sid='
+          echo "::set-output name=url_output::"$orgUrl$frontDoor$accessToken
 
       - name: Install SFDX Plugins
         run: |
@@ -31,7 +82,7 @@ jobs:
           ./scripts/cicd/installSFDXPlugins.sh
 
       - name: "Create Additive Delta"
-        run: ./scripts/cicd/Head-doGitAdditiveDiff.sh
+        run: ./scripts/cicd/doGitAdditiveDiff.sh ${{ env.fromRef }} ${{ env.toRef }}
 
       - name: Check additive files exist
         id: additive_files
@@ -54,7 +105,7 @@ jobs:
           path: new-modified-files.txt
 
       - name: "Create Destructive Delta"
-        run: ./scripts/cicd/Head-doGitDestructiveDiff.sh ${{ github.base_ref }}
+        run: ./scripts/cicd/doGitDestructiveDiff.sh ${{ env.fromRef }} ${{ env.toRef }}
 
       - name: Check destructive files exist
         id: destructive_files
@@ -80,24 +131,24 @@ jobs:
         id: preDeploymentScript
         uses: andstor/file-existence-action@v1
         with:
-          files: "scripts/cicd/preDeploymentSteps.sh"
+          files: "scripts/deployment/preDeploymentSteps.sh"
 
       - name: "Run Pre Deployment Script"
         if: steps.preDeploymentScript.outputs.files_exists == 'true'  && steps.additive_files.outputs.files_exists == 'true'
-        run: ./scripts/cicd/preDeploymentSteps.sh
+        run: ./scripts/deployment/preDeploymentSteps.sh
 
-      - name: 'Deploy to Prod'
+      - name: 'Deploy to ${{ github.event.inputs.environmentName }}'
         if: steps.additive_files.outputs.files_exists == 'true'
         run: sfdx force:source:deploy -p "deltaDeploy/force-app"
       - name: Check post-deployment script exist
         id: postDeploymentScript
         uses: andstor/file-existence-action@v1
         with:
-          files: "scripts/cicd/postDeploymentSteps.sh"
+          files: "scripts/deployment/postDeploymentSteps.sh"
 
       - name: "Run Post Deployment Script"
         if: steps.postDeploymentScript.outputs.files_exists == 'true'  && steps.additive_files.outputs.files_exists == 'true'
-        run: ./scripts/cicd/postDeploymentSteps.sh
+        run: ./scripts/deployment/postDeploymentSteps.sh
 
 #      - name: 'Deploy Destructive Changes to Prod'
 #        if:  steps.destructive_files.outputs.files_exists == 'true'

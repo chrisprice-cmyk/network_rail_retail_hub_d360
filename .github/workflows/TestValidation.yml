@@ -1,10 +1,12 @@
-name: Release - Validate on Test
+name: Validate on Test
 on:
   pull_request:
     branches:
       - release
       - release/*
       - winter*
+      - summer*
+      - spring*
 
 jobs:
   delta-deployment:
@@ -18,7 +20,7 @@ jobs:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
           submodules: true
-#          token: ${{ secrets.CICD_ACCESS }}
+          token: ${{ secrets.CICD_ACCESS }}
 
       - name: Connect to TEST org
         uses: sfdx-actions/setup-sfdx@v1
@@ -88,11 +90,11 @@ jobs:
         id: preDeploymentScript
         uses: andstor/file-existence-action@v1
         with:
-          files: "scripts/cicd/preDeploymentSteps.sh"
+          files: "scripts/deployment/preDeploymentSteps.sh"
 
       - name: "Run Pre Deployment Script"
         if: steps.preDeploymentScript.outputs.files_exists == 'true'
-        run: ./scripts/cicd/preDeploymentSteps.sh
+        run: ./scripts/deployment/preDeploymentSteps.sh
 
       - name: 'Run Additive Deploy Validation Test'
         if: steps.additive_files.outputs.files_exists == 'true'

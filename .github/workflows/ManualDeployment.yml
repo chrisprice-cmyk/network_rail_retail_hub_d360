@@ -1,0 +1,61 @@
+name: Manual Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      environmentName:
+        description: Github Environment name to deploy to
+        required: true
+        default: Test
+      deployToSDO:
+        description: Is this manual deployment to an SDO type environment?
+        required: true
+        default: true
+
+jobs:
+  Manual-Deployment:
+    name: Deploy Branch to Manual Auth Org
+    runs-on: ubuntu-20.04
+    environment:
+      name: ${{ github.event.inputs.environmentName }}
+      url: ${{ steps.envtUrl.outputs.url_output }}
+
+    steps:
+      - name: Source Branch Name
+        run: echo ${{ github.ref }}
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 0
+          submodules: true
+          token: ${{ secrets.CICD_ACCESS }}
+
+      - name: Connect to org
+        uses: sfdx-actions/setup-sfdx@v1
+        with:
+          sfdx-auth-url: ${{ secrets.ORG_AUTH_SECRET }}
+
+      - name: EnvtUrl
+        id: envtUrl
+        run: |
+          sfdx force:org:display --verbose --json > orgDetails.json
+          orgUrl=$(jq '.result.instanceUrl' orgDetails.json | sed 's/^.//;s/.$//')
+          accessToken=$(jq '.result.accessToken' orgDetails.json | sed 's/^.//;s/.$//')
+          frontDoor='/secur/frontdoor.jsp?sid='
+          echo "::set-output name=url_output::"$orgUrl$frontDoor$accessToken
+
+      - name: Install SFDX Plugins
+        run: |
+          mkdir $HOME/.config/sfdx
+          cp .config/sfdx/unsignedPluginAllowList.json $HOME/.config/sfdx/.
+          ./scripts/cicd/installSFDXPlugins.sh
+
+      - name: Deploy to SDO
+        if: ${{ github.event.inputs.deployToSDO }} == 'true'
+        run: |
+          ./byooInit.sh
+
+      - name: Deploy to Scratch org
+        if: ${{ github.event.inputs.deployToSDO }} != 'true'
+        run: |
+          ./orgInitScratch.sh

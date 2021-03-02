@@ -22,5 +22,3 @@ jobs:
         with:
           ref: ${{ github.ref }}
           fetch-depth: 0
-          submodules: false
-#          token: ${{ secrets.CICD_ACCESS }}

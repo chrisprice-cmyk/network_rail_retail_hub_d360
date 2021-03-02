@@ -1,7 +1,13 @@
 #!/bin/bash
-./scripts/cicd/preDeploymentSteps.sh
+./scripts/deployment/preDeploymentSteps.sh
 
+echo
+echo '**********************************'
+echo '* Deploying repository source...'
+echo '**********************************'
+echo
 #Deploy rest of source
-sfdx force:source:deploy -p force-app --wait 60
+#sfdx force:source:deploy -p force-app --wait 60
+sfdx force:source:push -f --wait 60
 
-./scripts/cicd/postDeploymentSteps.sh
+./scripts/deployment/postDeploymentSteps.sh

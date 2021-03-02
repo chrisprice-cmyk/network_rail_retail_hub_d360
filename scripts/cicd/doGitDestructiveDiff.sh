@@ -2,10 +2,10 @@
 #Assumes you've already checked out the branch
 # Does a diff between current head and last push
 # we're using a squash merge so this should be fine to beploy only differences between pushes
-echo 'Input paraemters: $@'
+echo 'Input parameters: '$@
 
-FROM_REF = $1
-TO_REF = $2
+FROM_REF=$1
+TO_REF=$2
 
 echo 'From reference SHA: '$FROM_REF' '
 echo 'To reference SHA: '$TO_REF' '

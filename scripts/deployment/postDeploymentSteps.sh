@@ -1,0 +1,26 @@
+#!/bin/bash
+echo
+echo '**********************************'
+echo '* Running post-deployment steps...'
+echo '**********************************'
+echo
+
+#Deploy Default Pagelayout assignments
+./scripts/deployment/deployPagelayoutAssignments.sh
+
+#Create any required Users
+./scripts/bash/createUsers.sh
+
+#Apply permission sets
+./scripts/deployment/postDeploymentPermissionSets.sh
+
+# Load IDO Data using Bulk API
+./scripts/bash/loadProdData.sh
+
+#Load Analytics Datasets
+./scripts/deployment/loadAnalyticsDatasets.sh
+
+# Data level fixes
+./scripts/deployment/runDataFixes.sh
+
+rm -rf deltaDestructiveDeploySource
