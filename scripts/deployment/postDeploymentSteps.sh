@@ -5,6 +5,8 @@ echo '* Running post-deployment steps...'
 echo '**********************************'
 echo
 
+./scripts/bash/postDeploymentMDAPI.sh
+
 #Deploy Default Pagelayout assignments
 ./scripts/deployment/deployPagelayoutAssignments.sh
 

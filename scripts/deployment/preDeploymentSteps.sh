@@ -18,3 +18,5 @@ mkdir -p deltaDestructiveDeploySource
 ./scripts/bash/uploadImages.sh
 
 ./scripts/bash/createPreDeploymentUsers.sh
+
+./scripts/bash/createCommunities.sh
