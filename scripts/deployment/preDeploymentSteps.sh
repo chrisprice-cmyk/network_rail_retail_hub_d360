@@ -7,16 +7,20 @@ echo
 
 mkdir -p deltaDestructiveDeploySource
 
-./scripts/deployment/preDeploymentPermissionSets.sh
+./scripts/deployment/preDeploymentPermissionSets.sh $@
 
-./scripts/deployment/deploySettings.sh
+./scripts/deployment/deploySettings.sh $@
 
-./scripts/bash/installSubmodules.sh
+./scripts/bash/installPackages.sh $@
 
-./scripts/bash/installPackages.sh
+if [[ " $@ " =~ " --skipSubmodules " ]]; then
+   echo "skipping installation of subModules"
+ else
+   ./scripts/bash/installSubmodules.sh $@
+fi
 
-./scripts/bash/uploadImages.sh
+./scripts/bash/uploadImages.sh $@
 
-./scripts/bash/createPreDeploymentUsers.sh
+./scripts/bash/createPreDeploymentUsers.sh $@
 
-./scripts/bash/createCommunities.sh
+./scripts/bash/createCommunities.sh $@
