@@ -10,11 +10,11 @@ echo
 #Deploy Default Pagelayout assignments
 ./scripts/deployment/deployPagelayoutAssignments.sh $@
 
-#Create any required Users
-./scripts/bash/createUsers.sh $@
-
 #Apply permission sets
 ./scripts/deployment/postDeploymentPermissionSets.sh $@
+
+#Create any required Users
+./scripts/bash/createUsers.sh $@
 
 # Load IDO Data using Bulk API
 ./scripts/bash/loadProdData.sh $@
