@@ -14,7 +14,8 @@ mkdir -p deltaDestructiveDeploySource
 ./scripts/bash/installPackages.sh $@
 
 if [[ " $@ " =~ " --skipSubmodules " ]]; then
-   echo "skipping installation of subModules"
+   echo
+   echo "!!! skipping installation of subModules !!!"
  else
    ./scripts/bash/installSubmodules.sh $@
 fi
