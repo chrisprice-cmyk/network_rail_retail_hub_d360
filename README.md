@@ -1,8 +1,11 @@
+![Q Branch Logo](images/q-branch.png)
 # Q Branch | Industries - xDO Template
 
 This is the master template that all new xDO masters should start from.  It contains a number of best practice and reusable scripts that will help in getting you up to speed with Migrating your IDO master onto an [Automated Build process](https://docs.google.com/presentation/d/1HPtzrf2yQBJeM_iCkfRWizuT-wqlTivY0WbLCl_3SzE/edit?usp=sharing).
 
 # Branching Strategy
+
+![xDO DevOps Pipeline](images/DevOpsPipeline.jpg)
 
    1. Use a master / release / feature branch pipeline model
    2. Follow a prescribed branch naming and tagging convention (described below)
