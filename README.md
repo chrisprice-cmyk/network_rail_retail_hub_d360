@@ -33,6 +33,9 @@ This is the master template that all new xDO masters should start from.  It cont
             - Add Environment Secret: ORG_AUTH_SECRET
             - Paste SFDX Auth URL
 
+# Automating Deployments and Installation
+The pprimary scripts used to deploy the project can be found either in the orgInit (used for scratch orgs) or byooInit (used for SDO/Production orgs) scripts which follow a well defined set of steps to ensure smooth deployment regardless of where it is done (e.g. locally, via GitHub actions CICD, via sfdx-deployer/Industry Deployer).  Please do not edit the org/byooInit scripts without reviewing the [Deployment of Operations quip doc](https://salesforce.quip.com/IiB7AoUkpgi8) first.
+
 
 # SUGGESTED CONTENT FOR THE README
 The following are examples of what should be contained within the README file.  
