@@ -10,6 +10,10 @@ jobs:
   delta-deployment:
     name: Deploy Delta to Test
     runs-on: ubuntu-20.04
+    environment:
+      name: Test
+      url: ${{ steps.envtUrl.outputs.url_output }}
+
     steps:
       - name: Source Branch Name
         run: echo ${{ github.head_ref }}
@@ -25,7 +29,16 @@ jobs:
       - name: Connect to TEST org
         uses: sfdx-actions/setup-sfdx@v1
         with:
-          sfdx-auth-url: ${{ secrets.TEST_AUTH_SECRET }}
+          sfdx-auth-url: ${{ secrets.ORG_AUTH_SECRET }}
+
+      - name: EnvtUrl
+        id: envtUrl
+        run: |
+          sfdx force:org:display --verbose --json > orgDetails.json
+          orgUrl=$(jq '.result.instanceUrl' orgDetails.json | sed 's/^.//;s/.$//')
+          accessToken=$(jq '.result.accessToken' orgDetails.json | sed 's/^.//;s/.$//')
+          frontDoor='/secur/frontdoor.jsp?sid='
+          echo "::set-output name=url_output::"$orgUrl$frontDoor$accessToken
 
       - name: Install SFDX Plugins
         run: |

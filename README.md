@@ -1,6 +1,6 @@
-# Q Branch | Industries - IDO Template
+# Q Branch | Industries - xDO Template
 
-This is the master template that all new IDO masters should start from.  It contains a number of best practice and reusable scripts that will help in getting you up to speed with Migrating your IDO master onto an [Automated Build process](https://docs.google.com/presentation/d/1HPtzrf2yQBJeM_iCkfRWizuT-wqlTivY0WbLCl_3SzE/edit?usp=sharing).
+This is the master template that all new xDO masters should start from.  It contains a number of best practice and reusable scripts that will help in getting you up to speed with Migrating your IDO master onto an [Automated Build process](https://docs.google.com/presentation/d/1HPtzrf2yQBJeM_iCkfRWizuT-wqlTivY0WbLCl_3SzE/edit?usp=sharing).
 
 # Branching Strategy
 
@@ -9,24 +9,29 @@ This is the master template that all new IDO masters should start from.  It cont
    3. Ensure the appropriate Github Actions and related scripts are contained within your repository
 
 ## Branch naming and tagging convention
-  1. master/main always works and represents your currently released and live IDO - never commit directly to master/main
+  1. master/main always works and represents your currently released and live xDO - never commit directly to master/main
   2. Releases: go into a release/"meaningful-branch-name" e.g. release/winter22r1
   3. As soon as you've created a new release branch and before you've commited anything to it, please create a tag such as <branchName-0.01>
   4. Features: go into a feature/"meaningful-branch-name" e.g. feature/hvsUpdates or feature/payeeUseCase or feature/C360SalesPlay
   5. Once you're done work on your feature, create a pull request to merge into a particular release branch.  This will validate and deploy to your TEST org.
-  6. Once all work for a release is completed and merged into the appropriate release branch, create a pull request to merge into master/main .  This will validate and merge into your MASTER/PROD org.
+  6. Once all work for a release is completed and merged into the appropriate release branch, create a pull request to merge into master/main.  This will validate and merge into your MASTER/PROD org.
 
 ## Other repo setup steps for automated validation/deployments
-   1. GitHub secrets
-      - Test Org Authorisation 
+   1. GitHub Environments & Secrets
+      - Test Org Authorisation
         - sfdx force:org:display --verbose -u <Test Alias>
         - get Sfdx Auth Url
-        - put in GitHub Secret: TEST_AUTH_SECRET
-      - Prod Org Authorisation 
+        - In Github > Settings > Environments
+          - New Environment > Name: Test
+            - Add Environment Secret: ORG_AUTH_SECRET
+            - Paste SFDX Auth URL
+      - Prod Org Authorisation
         - sfdx force:org:display --verbose -u <Prod Alias>
         - get Sfdx Auth Url
-        - put in GitHub Secret: PROD_AUTH_SECRET  
-
+        - In Github > Settings > Environments
+          - New Environment > Name: Master
+            - Add Environment Secret: ORG_AUTH_SECRET
+            - Paste SFDX Auth URL
 
 
 # SUGGESTED CONTENT FOR THE README
