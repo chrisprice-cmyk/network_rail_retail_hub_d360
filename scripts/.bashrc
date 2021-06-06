@@ -1,37 +1,30 @@
+
+function dxlogout() {
+   sfdx force:auth:logout -p -u $1
+}
+
 function dxpush() {
-if [$# -eq 0 ];
-   then
-      sfdx force:source:push
-   else
-      sfdx force:source:push -u $@
-fi
+   sfdx force:source:push $@
 }
 
 function dxpull() {
-if [ $# -eq 0 ];
-then
-    sfdx force:source:pull
-else
-    sfdx force:source:pull -u $@
-fi
+   sfdx force:source:pull $@
 }
 
 function dxopen() {
-if [ $# -eq 0 ];
-then
-   sfdx force:org:open
-else
-   sfdx force:org:open -u $@
-fi
+   sfdx force:org:open $@
 }
 
 function dxstatus() {
-if [ $# -eq 0 ];
-then
-   sfdx force:source:status
-else
-   sfdx force:source:status -u $@
-fi
+   sfdx force:source:status $@
+}
+
+function packlist() {
+   sfdx force:package:version:list $@
+}
+
+function orglist() {
+   sfdx force:org:list --all
 }
 
 function packlist() {
@@ -43,7 +36,9 @@ function orglist() {
 }
 
 function cscratch() {
-   sfdx force:org:create -s -f config/project-scratch-def.json -a $@
+   sfdx force:org:create --wait 120 -d 25 -s -f config/project-scratch-def.json -a $@
+   sfdx shane:user:password:set -p Demo1234 -g User -l User
+   sfdx force:org:display --verbose -u $@
 }
 
 function dscratch() {
@@ -87,4 +82,9 @@ function dxsand() {
    read -p 'Prod Alias: ' prodAlias
    sfdx force:org:create -t sandbox sandboxName=$orgAlias licenseType=Developer -u $prodAlias -a $orgAlias -w 1000
 
+}
+
+function dxdeforg() {
+   read -p 'Default Alias: ' orgAlias
+   sfdx force:config:set defaultusername=$orgAlias
 }
