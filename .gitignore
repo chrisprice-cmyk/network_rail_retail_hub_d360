@@ -40,3 +40,7 @@ force-app/main/default/flexipages/LightningService_UtilityBar.flexipage-meta.xml
 #force-app/main/default/layouts
 #force-app/main/default/tabs
 #force-app/main/default/flexipages
+
+generatedDelta/*
+destructiveChanges/*
+package/*
