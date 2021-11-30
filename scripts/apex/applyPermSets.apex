@@ -15,16 +15,7 @@ List<PermissionSetAssignment> permSetAssignments = new List<PermissionSetAssignm
  * MAKE YOUR CHANGES BELOW - PUT IN YOUR DESIRED PERM SETS AND PROFILES
 */
 //List of permission sets to apply
-permSetNames.add('tth_Loyalty_Data_Model');
-permSetNames.add('tth_BookingReservation_Data_Model');
-permSetNames.add('tth_Reservation_Hospitality_Fields');
-permSetNames.add('tth_Reservation_Airline_Fields');
-permSetNames.add('tth_Traveler_Record');
-permSetNames.add('tth_Rental_Preference_fields');
-permSetNames.add('tth_Hospitality_Preference_fields');
-permSetNames.add('tth_Airline_Preference_fields');
-permSetNames.add('TTH_SDO_Tools_Extensions');
-permSetNames.add('tth_Customer_360_Features');
+//permSetNames.add('tth_Loyalty_Data_Model');
 
 //List of Profiles to apply all above perm sets to
 profileNames.add('System Administrator');

@@ -3,12 +3,9 @@
     {
       "path": "force-app",
       "default": true
-    },
-    {
-      "path" : "deltaDestructiveDeploySource"
     }
   ],
   "namespace": "",
   "sfdcLoginUrl": "https://login.salesforce.com",
-  "sourceApiVersion": "51.0"
+  "sourceApiVersion": "53.0"
 }

@@ -15,7 +15,7 @@ List<PermissionSetAssignment> permSetAssignments = new List<PermissionSetAssignm
  * MAKE YOUR CHANGES BELOW - PUT IN YOUR DESIRED PERM SETS AND PROFILES
 */
 //List of permission sets to apply
-permSetNames.add('EinsteinAnalyticsPlusAdmin');
+//permSetNames.add('EinsteinAnalyticsPlusAdmin');
 
 //List of Profiles to apply all above perm sets to
 profileNames.add('System Administrator');
