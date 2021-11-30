@@ -335,7 +335,7 @@ flows:
 plans:
     install:
         slug: install
-        title: Install QBrix
+        title: Install Q Brix
         tier: primary
         is_listed: True
 #        checks:
