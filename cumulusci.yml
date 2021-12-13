@@ -59,6 +59,12 @@ tasks:
       options:
           command: ./scripts/bash/uploadImages.sh
 
+    qbrix_manual_fix_chatbuttons:
+      description: "Run RPA Scripts"
+      class_path: cumulusci.tasks.command.SalesforceCommand
+      options:
+          command: ./scripts/bash/runRPAScript.sh "[SDO - Service Cloud ] Fix Chat Button"
+
 # ------------------ QBRIX POST DEPLOYMENT TASKS ----------------------
 
 flows:
@@ -102,13 +108,14 @@ flows:
               ui_options:
                   name: Predeployment Permission Sets
           3:
-              task: qbrix_deploy_setings
-              ui_options:
-                  name: Predeployment feature settings
-          4:
               task: qbrix_install_packages
               ui_options:
                   name: Required Appexchange Packages
+          4:
+              task: qbrix_deploy_setings
+              ui_options:
+                  name: Predeployment feature settings
+
 
     # Executed before current repo metadata is deployed AND after any listed dependencies are installed
     qbrix_pre_deployment_post_dependencies:
@@ -236,15 +243,26 @@ flows:
 #          2:
 #              flow: qbRegister:qbrix_post_deployment
 
+    qbrix_manual_post_fixes:
+      steps:
+          1:
+              task: None
+              #task: qbrix_manual_fix_chatbuttons
+              #ui_options:
+              #    name: Running Testim to Fix Chat Buttons
+
+# ------------- MAIN POST DEPLOYMENT FLOW ---------------
     # Executes after deployment of current repository metadata
     qbrix_post_deployment:
       steps:
           1:
               flow: qbrix_sources_post_deployment
           2:
+              # global cumulus task deploy_post (https://cumulusci.readthedocs.io/en/latest/tasks.html#deploy-post)
+              # Deploys all metadata bundles under unpackaged/post/
               task: deploy_post
               ui_options:
-                  name: Postdeployment metadata
+                  name: Post deployment unpackaged metadata
           3:
               flow: qbrix_assign_all_permsets
               ui_options:
@@ -266,6 +284,8 @@ flows:
               flow: qbrix_post_deployment_datafixes
               ui_options:
                   name: Final touches...
+          8:
+              flow: qbrix_manual_post_fixes
 
 # ------------------ BUILD & DEPLOYMENT FLOWS ----------------------
     #Overrides global cumulus dev_org flow

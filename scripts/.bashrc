@@ -88,3 +88,19 @@ function dxdeforg() {
    read -p 'Default Alias: ' orgAlias
    sfdx force:config:set defaultusername=$orgAlias
 }
+
+function dxMakeCert(){
+  # Taken from https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_auth_key_and_cert.htm
+  # on how to make a Private Key and Self-signed Digital Certificate
+
+  read -p 'Enter a password for the certs: ' certPass
+  read -p 'Enter certificate Name (no spaces): ' certName
+
+  openssl genrsa -des3 -passout pass:$certPass -out server.pass.key 2048
+  openssl rsa -passin pass:$certPass -in server.pass.key -out $certName.key
+
+  rm server.pass.key
+
+  openssl req -new -key $certName.key -out $certName.csr
+  openssl x509 -req -sha256 -days 365 -in $certName.csr -signkey $certName.key -out $certName.crt
+}
