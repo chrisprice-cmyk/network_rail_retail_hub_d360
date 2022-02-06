@@ -14,7 +14,7 @@ then
   echo 'Package '$PACKAGE_ID' already installed in target org'
 else
   echo 'Installing package ' $PACKAGE_ID
-  sfdx force:package:install --package $PACKAGE_ID --targetusername $SF_ACCESS_TOKEN --wait 60
+  sfdx force:package:install --package $PACKAGE_ID --targetusername $SF_ACCESS_TOKEN --noprompt --wait 60
 fi
 
 rm installedPackages.json
