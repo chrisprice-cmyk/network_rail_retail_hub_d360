@@ -2,9 +2,15 @@
   "orgName": "xDO-Template - Dev Org",
   "edition": "enterprise",
   "features": [
+    "AddCustomApps:30",
+    "AddCustomObjects:30",
+    "AddCustomRelationships:10",
+    "AddCustomTabs:30",
     "PersonAccounts",
     "ServiceCloud",
+    "SalesUser",
     "SocialCustomerService",
+    "ContactsToMultipleAccounts",
     "EINSTEINANALYTICSPLUS",
     "LightningServiceConsole",
     "LightningSalesConsole",
@@ -27,14 +33,18 @@
     "OrderManagement",
     "B2BCommerce",
     "CaseClassification",
-    "CaseWrapUp",
     "CMSUnlimitedUse",
     "CPQ",
     "HighVelocitySales",
     "REMOTEVIDEOASSISTANCE",
     "VOICEENABLED",
     "ServiceUser",
-    "SERVICECLOUDVOICEBYOA"
+    "SERVICECLOUDVOICEBYOA",
+    "EinsteinBuilderFree",
+    "AIREPLYRECOMMENDATIONS",
+    "EinsteinArticleRecommendations",
+    "EinsteinRecommendationBuilder",
+    "B2CCOMMERCEGMV"
   ],
   "settings": {
       "botSettings": {
@@ -90,6 +100,23 @@
       },
       "serviceCloudVoiceSettings": {
         "enableServiceCloudVoice": true
+      },
+      "accountSettings": {
+        "enableRelateContactToMultipleAccounts": true,
+        "enableAccountTeams": true
+      },
+      "opportunitySettings": {
+        "enableOpportunityTeam": true
+      },
+      "quoteSettings": {
+        "enableQuote": true
+      },
+      "predictionBuilderSettings": {
+        "enablePredictionBuilder": true,
+        "isPredictionBuilderStarted": true
+      },
+      "aIReplyRecommendationsSettings": {
+        "enableAIReplyRecommendations": true
       }
   }
 }
