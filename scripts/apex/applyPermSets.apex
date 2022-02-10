@@ -55,9 +55,13 @@ for (String curPermSetGroupName : permSetGroupNames) {
 
 //create mapping of all Profile IDs
 for(String curProfileName : profileNames) {
-  Profile curProfile = [SELECT id FROM Profile WHERE name =: curProfileName];
-  profileIDs.add(curProfile.id);
-  //System.debug('*** Added Profile ' + curProfileName + ' to profile map with ID ' + curProfile.id);
+  try {
+    Profile curProfile = [SELECT id FROM Profile WHERE name =: curProfileName];
+    profileIDs.add(curProfile.id);
+    //System.debug('*** Added Profile ' + curProfileName + ' to profile map with ID ' + curProfile.id);
+  } catch (Exception ex){
+    System.debug('ORG MISSING PROFILE: ' + curProfileName);
+  }
 }
 
 // Get all users who are part of a Profile
