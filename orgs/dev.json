@@ -37,7 +37,6 @@
     "CPQ",
     "HighVelocitySales",
     "REMOTEVIDEOASSISTANCE",
-    "VOICEENABLED",
     "ServiceUser",
     "SERVICECLOUDVOICEBYOA",
     "EinsteinBuilderFree",
@@ -47,9 +46,6 @@
     "B2CCOMMERCEGMV"
   ],
   "settings": {
-      "botSettings": {
-          "enableBots": true
-      },
       "experienceBundleSettings": {
           "enableExperienceBundleMetadata": true
       },
