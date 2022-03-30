@@ -37,7 +37,7 @@ tasks:
       options:
           command: force:apex:execute -f scripts/apex/applyPreDeploymentPermSets.apex
 
-    qbrix_deploy_setings:
+    qbrix_deploy_settings:
       description: "Per deployment settings that need to be applied (e.g. Enable Bots)"
       class_path: cumulusci.tasks.salesforce.Deploy
       options:
@@ -112,7 +112,7 @@ flows:
               ui_options:
                   name: Required Appexchange Packages
           4:
-              task: qbrix_deploy_setings
+              task: qbrix_deploy_settings
               ui_options:
                   name: Predeployment feature settings
 
