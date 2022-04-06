@@ -1,0 +1,115 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    // Visual Studio Code Tasks demo
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "CCI: Create New Developer Org",
+        "type": "shell",
+        "command": "cci org remove dev && cci flow run dev_org --org dev",
+        "group": "build",
+        "problemMatcher": []
+      },
+      {
+        "label": "CCI: Create New Developer Preview Org",
+        "type": "shell",
+        "command": "cci org remove dev_preview && cci flow run dev_org --org dev_preview",
+        "group": "build",
+        "problemMatcher": []
+      },
+      {
+        "label": "CCI: Create New QA Org",
+        "type": "shell",
+        "command": "cci org remove qa && cci flow run qa_org --org qa",
+        "group": "build",
+        "problemMatcher": []
+      },
+      {
+        "label": "CCI: Clean Up Orgs",
+        "type": "shell",
+        "command": "cci org remove dev && cci org remove dev",
+        "group": "build",
+        "problemMatcher": []
+      },
+      {
+        "label": "CCI: Connect TSO and Deploy",
+        "type": "shell",
+        "command": "cci org connect ${input:OrgAlias} && cci flow run deploy_qbrix_tso --org ${input:OrgAlias}",
+        "group": "build",
+        "problemMatcher": []
+      },
+      {
+        "label": "CCI: Connect Sandbox and Deploy",
+        "type": "shell",
+        "command": "cci org connect ${input:OrgAlias} --sandbox && cci flow run deploy_qbrix_tso --org ${input:OrgAlias}",
+        "group": "build",
+        "problemMatcher": []
+      },
+      {
+        "label": "CCI: Connect to Sandbox",
+        "type": "shell",
+        "command": "cci org connect ${input:OrgAlias} --sandbox",
+        "group": "build",
+        "problemMatcher": []
+      },
+      {
+        "label": "CCI: Publish to Metadeploy",
+        "type": "shell",
+        "command": "cci task run metadeploy_publish -o dry_run True -o tag release/${input:VersionNumber} && cci task run metadeploy_publish -o publish True -o tag release/${input:VersionNumber}",
+        "group": "build",
+        "problemMatcher": []
+      },
+      {
+        "label": "CCI: Save Changes",
+        "type": "shell",
+        "command": "git add . && git commit -m '${input:CommitMessage}' && git push && git pull",
+        "group": "build",
+        "problemMatcher": []
+      },
+      {
+        "label": "CCI: Review Changes from org",
+        "type": "shell",
+        "command": "cci task run list_changes --org ${input:OrgAlias}",
+        "group": "build",
+        "problemMatcher": []
+      },
+      {
+        "label": "CCI: Retrieve Changes from org",
+        "type": "shell",
+        "command": "cci task run retrieve_changes --org ${input:OrgAlias}",
+        "group": "build",
+        "problemMatcher": []
+      },
+      {
+        "label": "CCI: Retrieve ALL Project metadata from org",
+        "type": "shell",
+        "command": "cp -r ./force-app ./backup && cci task run dx --command 'force:source:retrieve -p force-app' --org ${input:OrgAlias} && echo 'Check Custom Objects and Profiles if any as additional metadata may have been captured. Then remove backup folder.'",
+        "windows": {
+          "command": "xcopy .\\force-app .\\backup /e && cci task run dx --command 'force:source:retrieve -p force-app' --org ${input:OrgAlias} && echo 'Check Custom Objects and Profiles if any as additional metadata may have been captured. Then remove backup folder.'"
+        },
+        "group": "build",
+        "problemMatcher": []
+      }
+    ],
+    "inputs": [
+      {
+        "id": "OrgAlias",
+        "description": "Please enter the org alias for the TSO",
+        "default": "",
+        "type": "promptString"
+      },
+      {
+        "id": "VersionNumber",
+        "description": "Enter the version number you wish to publish",
+        "default": "",
+        "type": "promptString"
+      },
+      {
+        "id": "CommitMessage",
+        "description": "Provide a short summary of your changes (less than 100 characters):",
+        "default": "",
+        "type": "promptString"
+      }
+    ]
+  }
