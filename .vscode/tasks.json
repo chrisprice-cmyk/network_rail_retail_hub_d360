@@ -91,6 +91,13 @@
         "group": "build",
         "problemMatcher": []
       }
+      {
+        "label": "CCI: Open Scratch Org",
+        "type": "shell",
+        "command": "cci org browser dev",
+        "group": "build",
+        "problemMatcher": []
+      },  
     ],
     "inputs": [
       {
