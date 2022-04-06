@@ -90,7 +90,7 @@
         },
         "group": "build",
         "problemMatcher": []
-      }
+      },
       {
         "label": "CCI: Open Scratch Org",
         "type": "shell",
