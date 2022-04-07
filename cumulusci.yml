@@ -179,12 +179,17 @@ flows:
     qbrix_assign_all_permsets:
       steps:
           1:
-              task: dx
+              task: util_sleep
               options:
-                  command: force:apex:execute -f scripts/apex/applyPermSets.apex
+                  SECONDS: 30
+          2:
+              task: None
+              #task: assign_permission_set_groups
+              #options:
+                  #api_names: APINAMEHERE
               # add more tasks above if there are more permission sets to apply
-              ui_options:
-                  name: Assign Permission Sets
+              #ui_options:
+                  #name: Assign Permission Set Groups
 
     # Create users post current repository metadata deployment
     qbrix_post_deployment_users:
