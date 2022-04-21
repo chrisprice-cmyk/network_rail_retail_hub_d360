@@ -1,0 +1,131 @@
+{
+  "orgName": "QBrix-REPO-TEMPLATE - Dev Org Preview",
+  "release": "preview",
+  "edition": "Enterprise",
+  "features": [
+    "AddCustomApps:30",
+    "AddCustomObjects:30",
+    "AddCustomRelationships:10",
+    "AddCustomTabs:30",
+    "AddInsightsQueryLimit:30",
+    "AnalyticsAdminPerms",
+    "AnalyticsAppEmbedded",
+    "API",
+    "CaseClassification",
+    "Chatbot",
+    "CMSUnlimitedUse",
+    "Communities",
+    "ConnectedAppToolingAPI",
+    "CustomerCommunity",
+    "CustomerCommunityLogin",
+    "CustomerCommunityPlus",
+    "CustomerCommunityPlusLogin",
+    "DefaultWorkflowUser",
+    "DevelopmentWave",
+    "DocumentChecklist",
+    "EinsteinAnalyticsPlus",
+    "EinsteinArticleRecommendations",
+    "EinsteinBuilderFree",
+    "EinsteinRecommendationBuilder",
+    "EnablePRM",
+    "Entitlements",
+    "FeatureParameterLicensing",
+    "FieldAuditTrail",
+    "FlowSites",
+    "IndustriesActionPlan",
+    "InsightsPlatform",
+    "Interaction",
+    "Knowledge",
+    "LightningSalesConsole",
+    "LightningServiceConsole",
+    "LiveAgent",
+    "LiveMessage",
+    "Macros",
+    "MarketingUser",
+    "MultiCurrency",
+    "Pardot",
+    "PartnerCommunity",
+    "PlatformConnect:5",
+    "ProcessBuilder",
+    "SalesCloudEinstein",
+    "SalesforceContentUser",
+    "SalesforceIdentityForCommunities",
+    "SalesUser",
+    "ServiceCloud",
+    "SharedActivities",
+    "SOCIALCUSTOMERSERVICE",
+    "Workflow",
+    "WorkflowFlowActionFeature",
+    "WorkThanksPref",
+    "PRIVATEAPI"
+  ],
+  "settings": {
+    "lightningExperienceSettings": {
+      "enableS1DesktopEnabled": true
+    },
+    "chatterSettings": {
+      "enableChatter": true
+    },
+    "userManagementSettings": {
+      "enableNewProfileUI": true
+    },
+    "securitySettings": {
+      "enableAdminLoginAsAnyUser": true,
+      "sessionSettings": {
+        "forceRelogin": false
+      }
+    },
+    "languageSettings": {
+      "enableTranslationWorkbench": true
+    },
+    "enhancedNotesSettings": {
+      "enableEnhancedNotes": true
+    },
+    "pathAssistantSettings": {
+      "pathAssistantEnabled": true
+    },
+    "liveAgentSettings": {
+      "enableChatFindOrCreateEnable": true,
+      "enableLiveAgent": true,
+      "enableQuickTextEnabled": true
+    },
+    "knowledgeSettings": {
+      "enableKnowledge": true,
+      "enableLightningKnowledge": true,
+      "enableCreateEditOnArticlesTab": true,
+      "enableKbStandardSharing": true
+    },
+    "omniChannelSettings": {
+      "enableOmniChannel": true
+    },
+    "communitiesSettings": {
+      "enableNetworksEnabled": true,
+      "enableGuestRecordReassignOrgPref": true,
+      "enableOotbProfExtUserOpsEnable": true
+    },
+    "experienceBundleSettings": {
+      "enableExperienceBundleMetadata": true
+    },
+    "botSettings": {
+      "enableBots": true
+    },
+    "surveySettings": {
+      "enableSurvey": true,
+      "enableSurveyOwnerCanManageResponse": true
+    },
+    "socialProfileSettings": {
+      "enableSocialProfiles": true,
+      "isFacebookSocialProfilesDisabled": false,
+      "isLinkedInSocialProfilesDisabled": false,
+      "isTwitterSocialProfilesDisabled": false,
+      "isYouTubeSocialProfilesDisabled": false
+    },
+    "entitlementSettings": {
+      "enableEntitlements": true
+    },
+    "caseSettings": {
+      "systemUserEmail": "sdo@example.com",
+      "useSystemUserAsDefaultCaseUser": true
+    }
+  }
+}

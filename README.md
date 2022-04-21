@@ -1,87 +1,98 @@
-![Q Branch Logo](https://qnextgen.s3.us-west-1.amazonaws.com/logos/q_branch_nextgen_horizontal-27.png)
-# Q Branch | NextGen - xDO Template
+  ____    ___      _     
+ / __ \  / _ )____(_)_ __
+/ /_/ / / _  / __/ /\ \ /
+\___\_\/____/_/ /_//_\_\
 
-This is the master template that all new xDO Q Brix should start from.  It contains a number of best practice and reusable scripts that will help in getting you up to speed with Migrating your IDO master onto an [Automated Build process](https://docs.google.com/presentation/d/1HPtzrf2yQBJeM_iCkfRWizuT-wqlTivY0WbLCl_3SzE/edit?usp=sharing).
+# SETUP TASKS (DELETE THIS SECTION ONCE COMPLETE)
 
-# Branching Strategy
+TO DO: Replace this text with a description of the package along with any notes around development of the pack. Then amend the options below so that related packs are listed.
 
-![xDO DevOps Pipeline](images/DevOpsPipeline.jpg)
+TO DO: Rename all occurances of "xDO-Template" with the name of your pack.
 
-   1. Use a master / release / feature branch pipeline model
-   2. Follow a prescribed branch naming and tagging convention (described below)
-   3. Ensure the appropriate Github Actions and related scripts are contained within your repository
-
-## Branch naming and tagging convention
-  1. master/main always works and represents your currently released and live xDO - never commit directly to master/main
-  2. Releases: go into a release/"meaningful-branch-name" e.g. release/winter22r1
-  3. As soon as you've created a new release branch and before you've commited anything to it, please create a tag such as <branchName-0.01>
-  4. Features: go into a feature/"meaningful-branch-name" e.g. feature/hvsUpdates or feature/payeeUseCase or feature/C360SalesPlay
-  5. Once you're done work on your feature, create a pull request to merge into a particular release branch.  This will validate and deploy to your TEST org.
-  6. Once all work for a release is completed and merged into the appropriate release branch, create a pull request to merge into master/main.  This will validate and merge into your MASTER/PROD org.
-
-## Other repo setup steps for automated validation/deployments
-   1. GitHub Environments & Secrets
-      - Test Org Authorisation
-        - sfdx force:org:display --verbose -u <Test Alias>
-        - get Sfdx Auth Url
-        - In Github > Settings > Environments
-          - New Environment > Name: Test
-            - Add Environment Secret: ORG_AUTH_SECRET
-            - Paste SFDX Auth URL
-      - Prod Org Authorisation
-        - sfdx force:org:display --verbose -u <Prod Alias>
-        - get Sfdx Auth Url
-        - In Github > Settings > Environments
-          - New Environment > Name: Master
-            - Add Environment Secret: ORG_AUTH_SECRET
-            - Paste SFDX Auth URL
-
-# Automating Deployments and Installation
-The pprimary scripts used to deploy the project can be found either in the orgInit (used for scratch orgs) or byooInit (used for SDO/Production orgs) scripts which follow a well defined set of steps to ensure smooth deployment regardless of where it is done (e.g. locally, via GitHub actions CICD, via sfdx-deployer/Industry Deployer).  Please do not edit the org/byooInit scripts without reviewing the [Deployment of Operations quip doc](https://salesforce.quip.com/IiB7AoUkpgi8) first.
+TO DO: [Create a Documentation for this Q Brix.](https://salesforce.quip.com/6D2eA9ft6x2O)
 
 
-# SUGGESTED CONTENT FOR THE README
-The following are examples of what should be contained within the README file.  
+## Examples Below (Delete Before Publishing)
 
-TL:DR: have all the up to date steps that anyone who would need to perform an SDO Rebase process and get your IDO master up and running on a freshly cut SDO.
+### Example Testim Script reference
+    qbrix_testim_fix_chatbuttons:
+      description: "Run RPA Scripts"
+      class_path: cumulusci.tasks.command.SalesforceCommand
+      options:
+          command: ./scripts/bash/runRPAScript.sh "[SDO - Service Cloud ] Fix Chat Button"
 
-The bulk of the SDO Rebase process should be taken care of within the [orgInit.sh](orgInit.sh) file, anything above and beyond what the script takes care of should be documented here (or at the very least provide a link to the most up to date manual SDO Rebase steps)
+       1:
+         flow: qbrix_testim_fix_chatbuttons
 
 
-# EXAMPLE CONTENT
+### Example Loading CSVs (if needed)
+    qbrix_load_data:
+      steps:
+          1:
+              task: dx
+              options:
+                  command: force:data:bulk:upsert --sobjecttype Contact --csvfile data/prod/Contact.csv --externalid External_ID__c --wait 60
+              ui_options:
+                  name: Upsert Contact Records
+                  is_required: false
+                  group: "Data load"
 
-## TH IDO Master Org Setup Steps
-* Spin up a new SDO - https://org62.lightning.force.com/lightning/r/Demo_Org__c/a1T300000008OOcEAM/view
-* Install other Key Packages
-  * [IDO Record Data Marker](https://industry-deployer.herokuapp.com/byoo?template=https://github.com/sfdc-qbranch/IDO-RecordDataMarker)
-  * [Getting to know the IDO](https://industry-deployer.herokuapp.com/byoo?template=https://github.com/sfdc-qbranch/IDO-GTK)
-* Install via Industry Deployer - https://industry-deployer.herokuapp.com/byoo?template=https://github.com/sfdc-qbranch/IDO-TravelHospitality
-* Post Installation Manual Steps:
+### Example Loading TCRM Datasets
+    qbrix_load_analytics_datasets:
+      steps:
+          1:
+             task: dx
+              options:
+                  command: shane:analytics:dataset:upload -n New_guest_data -f data/analytics/New_guest_data.csv -m data/analytics/New_guest_data.json -a TTH_Hospitality_Front_Desk
+              ui_options:
+                  name: Load Guest Data Analytics Dataset
+                  is_required: false
 
-  * Default Page Layout Assignments
-    * Contact
-    * Person Account
-  * Chatbot Setup
-    * Embedded Service Deployment
-    * Apply bot to a channel
-  * Communities
-    * Branding - Logo: #76BDB9
-    * Branding - Text: #484B58
-    * Login Image:
-    * Login Logo:
-     * ![Login Logo](data/prod/images/vipcommunity/CommunityLoginLogo.png)
-    * Header Image:
-    * Header Logo
-     * ![Header Logo](data/prod/images/vipcommunity/CommunitiesLogo.png)
-  * Update Industry Version Tracker values
-  * Add Getting to Know your IDO tab to the Q Branch app
 
-# Manual deployment - Environment setup
-The industry deployer takes care of deploying all this via a heroku server with no local setup, however if you wish to install it manually on your local machine, the following items need to be installed/configured:
+## Development
 
-* SalesforceDX CLI - https://developer.salesforce.com/docs/atlas.en-us.sfdx_setup.meta/sfdx_setup/sfdx_setup_install_cli.htm
-* Heroku CLI - https://devcenter.heroku.com/articles/heroku-cli
-* SFDX Plug-ins
-   * Shane McLaughlan SFDX plugins - https://github.com/mshanemc/shane-sfdx-plugins (command line install: sfdx plugins:install shane-sfdx-plugins)
-* In terminal, connect to your target org via SFDX CLI
-* In terminal run ./orgInit.sh
+To work on this project in a scratch org:
+
+Get help on naming and building NxDO QBrix from here: https://salesforce.quip.com/TL37AfCvNVaI 
+
+1. [Set up CumulusCI](https://cumulusci.readthedocs.io/en/latest/tutorial.html)
+2. Run `cci flow run dev_org --org dev` to deploy this project.
+3. Run `cci org browser dev` to open the org in your browser.
+
+Make changes in the org
+
+4. Run `cci task run list_changes --org dev` to list changes made in the org. Use the list_changes and retrieve_changes task sections to exclude anything you don't want
+5. Run `cci task run retrieve_changes --org dev` to retrieve the changes made.
+6. Remeber to review source code which has been pulled down.
+
+QA Test
+
+7. Run `cci org remove qa` to remove any previous qa orgs. Then `cci flow run qa_org --org qa` to create a new QA org and test the deployment.
+8. Repair any issues if any are noted until the deployment works. To test small changes/fixes, just re-run `cci flow run qa_org --org qa`
+9. Run `cci org remove qa` and `cci org remove dev` once complete.
+
+Create Pull Request
+
+10. Once you are happy with the changes made, create a Pull Request for your branch. This will be reviewed by the Solution Development team and you will be notified when the changes have been merged into the main branch
+
+Create Trialforce Template
+
+11. If you dont have your TSO already connected, then connect to your TSO org using `cci org connect OrgNameHere` (replacing orgNamehere with your chosen name for the org - it can be anything!) 
+12. Run `cci flow run tso_deploy --org OrgNameHere` to deploy your latest updates into the TSO.
+13. Create a new Trialforce template in the TSO. Tip: You can quickly login to your TSO using `cci org browser OrgNameHere`
+
+
+## Metadata Type Support
+
+You will see these exclusions in the cumulusci.yml file, within the tasks > list_changes and tasks > retrieve_changes sections.
+
+Some Metadata types are not supported with these packs or have been replaced with other types. See list below for notes:
+
+- Profile - These are not supported as they don't pull all related information, fields etc. Use Permission Sets instead.
+- FeatureParameter - Currently not supported if they are managed.
+- 'AuraDefinition:' - Replaced by AuraDefinitionPack
+- SiteDotCom - Replaced by ExperienceCloudPack (remember to enable ExperienceBundle API!)
+- ManagedTopics - Not Supported
+- AppMenu - Currently a Known Issue - Track here: https://trailblazer.salesforce.com/issues_view?id=a1p30000000T5dqAAC
+
+For help with Metadata Types see the Cookbook here: https://salesforce.quip.com/MpiXAAsVbUV3 

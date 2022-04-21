@@ -1,116 +1,63 @@
 {
-  "orgName": "xDO-Template - Dev Org",
+  "orgName": "QBrix-REPO-TEMPLATE - Dev Org",
   "edition": "enterprise",
   "features": [
     "AddCustomApps:30",
     "AddCustomObjects:30",
     "AddCustomRelationships:10",
     "AddCustomTabs:30",
-    "PersonAccounts",
-    "ServiceCloud",
-    "SalesUser",
-    "SocialCustomerService",
-    "ContactsToMultipleAccounts",
-    "EINSTEINANALYTICSPLUS",
-    "LightningServiceConsole",
-    "LightningSalesConsole",
-    "LightningScheduler",
-    "Chatbot",
-    "LiveMessage",
-    "LIVEAGENT",
-    "Knowledge",
-    "Communities",
-    "Sites",
-    "WavePlatform",
-    "InsightsPlatform",
-    "INSIGHTSSALESANALYTICS",
-    "INSIGHTSSERVICEANALYTICS",
-    "CASECLASSIFICATION",
-    "CASEWRAPUP",
-    "SALESCLOUDEINSTEIN",
-    "SERVICEWORKFORCEMANAGEMENT",
-    "FIELDSERVICE:1",
-    "OrderManagement",
-    "B2BCommerce",
+    "AddInsightsQueryLimit:30",
+    "AnalyticsAdminPerms",
+    "AnalyticsAppEmbedded",
+    "API",
     "CaseClassification",
+    "Chatbot",
     "CMSUnlimitedUse",
-    "CPQ",
-    "HighVelocitySales",
-    "ServiceUser",
-    "EinsteinBuilderFree",
-    "AIREPLYRECOMMENDATIONS",
+    "Communities",
+    "ConnectedAppToolingAPI",
+    "CustomerCommunity",
+    "CustomerCommunityLogin",
+    "CustomerCommunityPlus",
+    "CustomerCommunityPlusLogin",
+    "DataMaskUser",
+    "DefaultWorkflowUser",
+    "DevelopmentWave",
+    "DocumentChecklist",
+    "EinsteinAnalyticsPlus",
     "EinsteinArticleRecommendations",
+    "EinsteinBuilderFree",
     "EinsteinRecommendationBuilder",
-    "B2CCOMMERCEGMV"
+    "EnablePRM",
+    "Entitlements",
+    "FieldAuditTrail",
+    "FlowSites",
+    "IndustriesActionPlan",
+    "InsightsPlatform",
+    "Interaction",
+    "Knowledge",
+    "LightningSalesConsole",
+    "LightningServiceConsole",
+    "LiveAgent",
+    "LiveMessage",
+    "Macros",
+    "MarketingUser",
+    "MultiCurrency",
+    "Pardot",
+    "PartnerCommunity",
+    "PlatformConnect:5",
+    "PRIVATEAPI",
+    "ProcessBuilder",
+    "SalesCloudEinstein",
+    "SalesforceContentUser",
+    "SalesforceIdentityForCommunities",
+    "SalesUser",
+    "ServiceCloud",
+    "SharedActivities",
+    "Workflow",
+    "WorkflowFlowActionFeature",
+    "WorkThanksPref"
   ],
   "settings": {
-      "experienceBundleSettings": {
-          "enableExperienceBundleMetadata": true
-      },
-      "liveMessageSettings": {
-          "enableLiveMessage": true
-      },
-      "liveAgentSettings": {
-          "enableLiveAgent": true
-      },
-      "knowledgeSettings": {
-          "enableKnowledge": true,
-          "enableLightningKnowledge": true
-      },
-      "omniChannelSettings": {
-          "enableOmniChannel": true
-      },
-      "communitiesSettings": {
-          "enableNetworksEnabled": true
-      },
-      "lightningExperienceSettings": {
-          "enableS1DesktopEnabled": true
-      },
-      "pathAssistantSettings": {
-          "pathAssistantEnabled": true
-      },
-      "mobileSettings": {
-          "enableS1EncryptedStoragePref2": false
-      },
-      "securitySettings": {
-        "enableAdminLoginAsAnyUser": true,
-        "sessionSettings": {
-          "forceRelogin": false
-        }
-      },
-      "orderManagementSettings": {
-        "enableOrderManagement": true
-      },
-      "orderSettings": {
-        "enableOrders": true,
-        "enableEnhancedCommerceOrders": true,
-        "enableOptionalPricebook": true
-      },
-      "territory2Settings": {
-        "enableTerritoryManagement2":true
-      },
-      "emailAdministrationSettings": {
-        "enableEnhancedEmailEnabled": true
-      },
-      "serviceCloudVoiceSettings": {
-        "enableServiceCloudVoice": true
-      },
-      "accountSettings": {
-        "enableRelateContactToMultipleAccounts": true,
-        "enableAccountTeams": true
-      },
-      "opportunitySettings": {
-        "enableOpportunityTeam": true
-      },
-      "quoteSettings": {
-        "enableQuote": true
-      },
-      "predictionBuilderSettings": {
-        "enablePredictionBuilder": true,
-        "isPredictionBuilderStarted": true
-      },
-      "aIReplyRecommendationsSettings": {
-        "enableAIReplyRecommendations": true
-      }
+    
   }
 }

@@ -1,372 +1,288 @@
-minimum_cumulusci_version: '3.45.0'
+#  ____    ___      _
+# / __ \  / _ )____(_)_ __
+#/ /_/ / / _  / __/ /\ \ /
+#\___\_\/____/_/ /_//_\_\
+#
 project:
-    name: xDO-Template
+
+    #------------------------------------#
+    # QBRIX CONFIG                       #
+    #------------------------------------#
+    #QBRIX NAME, API VERSION AND REPO DETAILS GO HERE
+
+    name: NxDO-Template
     package:
-        name: xDO-Template
+        name: NxDO-Template
         api_version: '54.0'
     git:
         default_branch: 'main'
-        repo_url: https://github.com/sfdc-qbranch/xDO-Template
+        repo_url: https://github.com/sfdc-qbranch/xDO-Template-v2
     source_format: sfdx
-
     dependencies:
       - github: https://github.com/sfdc-qbranch/xDO_QBrixRegister
         unmanaged: True
 
+  #------------------------------------#
+  # QBRIX PACKAGE DEPEDENDENCIES       #
+  #------------------------------------#
+  #ADD MANAGED & UNMANAGED PACKAGE DEPEDENDENCIES HERE. OTHER CCI PROJECTS CAN ALSO BE LINKED PROVIDING THEY WORK WITH JUST A DEPLOY METHOD.
+
+  #dependencies:
+  #--Examples:
+  #   - github: GitHubRepoURLHere (Note: This MUST be a CumulusCI Project and doesn't support custom installs, use sources if thats needed)
+  #   - version_id: UnmanagedPackageIDHere
+  #   - namespace: ManagedPackageNamespaceHere (Note: Lightning Components need to use the package ID and are treated as an unmanaged package)
+  #     version: ManagedPackageVersionNumberHere
+  #--Add Project Level Dependencies Below
+
+#--Add Project Sources here--
 sources:
-  qbRegister:
-    github: https://github.com/sfdc-qbranch/xDO_QBrixRegister
+    #------------------------------------#
+    # QBRIX SOURCES                      #
+    #------------------------------------#
+    #ADD SOURCES HERE WHICH MUST BE CCI PROJECTS STORED IN GITHUB.
+
+    base:
+        github: https://github.com/sfdc-qbranch/SDO-Base
+        release: latest
 
 tasks:
-    robot:
-        options:
-            suites: robot/xDO-Template/tests
-            options:
-                outputdir: robot/xDO-Template/results
+  #------------------------------------#
+  # CCI TASK DEFAULTS                  #
+  #------------------------------------#
+  #ADD DEFAULT CONFIGURATION FOR CCI TASK HERE
 
-    robot_testdoc:
-        options:
-            path: robot/xDO-Template/tests
-            output: robot/xDO-Template/doc/xDO-Template_tests.html
-
-# ------------------ QBRIX PRE DEPLOYMENT TASKS ----------------------
-
-    qbrix_pre_deployment_perm_sets:
-      description: "Apply permissions sets that need to be done pre deployment (e.g. Tableau analytics)"
-      class_path: cumulusci.tasks.sfdx.SFDXOrgTask
+  robot:
+    options:
+      suites: robot/xDO-Template/tests
       options:
-          command: force:apex:execute -f scripts/apex/applyPreDeploymentPermSets.apex
+        outputdir: robot/xDO-Template/results
 
-    qbrix_deploy_settings:
-      description: "Per deployment settings that need to be applied (e.g. Enable Bots)"
-      class_path: cumulusci.tasks.salesforce.Deploy
-      options:
-          path: force-app/main/default/settings
+  robot_testdoc:
+    options:
+      path: robot/xDO-Template/tests
+      output: robot/xDO-Template/doc/xDO-Template_tests.html
 
-#TODO convert to python module
-#in script auth work around
-    qbrix_install_packages:
-      description: "Check for and install any necessary packages"
-      class_path: cumulusci.tasks.command.SalesforceCommand
-      options:
-          command: ./scripts/bash/installPackages.sh
+  run_tests:
+    options:
+      required_org_code_coverage_percent: 75
 
-#TODO convert to python module
-#in script auth work around
-    qbrix_pre_deployment_images:
-      description: "Upload images pre deployment"
-      class_path: cumulusci.tasks.command.SalesforceCommand
-      options:
-          command: ./scripts/bash/uploadImages.sh
+  load_dataset:
+    options:
+      ignore_row_errors: True
+      drop_missing_schema: True
+      set_recently_viewed: False
 
-    qbrix_manual_fix_chatbuttons:
-      description: "Run RPA Scripts"
-      class_path: cumulusci.tasks.command.SalesforceCommand
-      options:
-          command: ./scripts/bash/runRPAScript.sh "[SDO - Service Cloud ] Fix Chat Button"
+  generate_dataset_mapping:
+    options:
+      ignore: "LiveChatTranscript"
 
-# ------------------ QBRIX POST DEPLOYMENT TASKS ----------------------
+  deploy:
+    options:
+      path: force-app
+
+  org_settings:
+    options:
+      definition_file: orgs/dev.json
+
+  update_vscode_tasks:
+    description: Update .vscode tasks.json file from Qbrix template 
+    class_path: cumulusci.tasks.command.Command
+    options:
+      command: chmod +x scripts/QBrix/*.sh && scripts/Qbrix/UpdateVSCodeTasks.sh
+
+  deploy_settings:
+    description: Checks that Settings have been defined in force-app and deploys them if present
+    class_path: cumulusci.tasks.salesforce.Deploy
+    options:
+        path: force-app/main/default/settings
+
+  #------------------------------------#
+  # CHANGE CAPTURE                     #
+  #------------------------------------#
+  #ADD OBJECT EXCLUSIONS HERE WHICH YOU DON'T WANT TO PULL TO SOURCE BY DEFAULT
+
+  list_changes:
+    options:
+      exclude:
+        - FeatureParameter
+        - "AuraDefinition:"
+        - "SiteDotCom:"
+        - "ManagedTopics:"
+        - "LiveChatTranscript:"
+        - "ExperienceResource:"
+        - "AppMenu:"
+        - "Profile:"
+        - "FlowDefinition:"
+        #Include to exclude Analytics Dashboards and Applications
+        #- 'WaveApplication:'
+        #- 'WaveDashboard:'
+        #- 'WaveDataset:'
+        #- 'WaveXmd:'
+        #- 'WaveDataflow:'
+
+  retrieve_changes:
+    options:
+      exclude:
+        - FeatureParameter
+        - "AuraDefinition:"
+        - "SiteDotCom:"
+        - "ManagedTopics:"
+        - "LiveChatTranscript:"
+        - "ExperienceResource:"
+        - "AppMenu:"
+        - "Profile:"
+        - "FlowDefinition:"
+        #Include to exclude Analytics Dashboards and Applications
+        #- 'WaveApplication:'
+        #- 'WaveDashboard:'
+        #- 'WaveDataset:'
+        #- 'WaveXmd:'
+        #- 'WaveDataflow:'
 
 flows:
-# ------------------ QBRIX PRE DEPLOYMENT FLOWS ----------------------
-# All actions in here are executed before the deployment of the current repositories metadata
+  #------------------------------------#
+  # CCI FLOW DEFAULTS                  #
+  #------------------------------------#
 
-    # Users that need to be created before metadata deployment
-    # Add more steps if you have more than one user to create
-    qbrix_pre_deployment_users:
-      steps:
-          1:
-              task: None
-              #task: dx
-              #options:
-              #  command: force:apex:execute -f scripts/apex/createPreDeploymentUser.apex
-              #ui_options:
-              #    name: Create Demo Users
+  deploy_unmanaged_ee:
+    steps:
+      6:
+        task: None
 
-    # Add more steps if you have more than one community to create
-    qbrix_create_communities:
-      steps:
-          1:
-              task: None
-              #task: create_community
-              #options:
-                #template: 'Customer Service'
-                #name: 'TestingCommunity'
-                #description: 'My Testing community'
-                #url_path_prefix: testing
-                #retries: 2
-                #timeout: 600
-                #skip_existing: true
+  deploy_unmanaged:
+    steps:
+      4:
+        task: None
 
-    # Executed before current repo metadata is deployed AND before any listed dependencies are installed
-    qbrix_pre_deployment_pre_dependencies:
-      steps:
-          1:
-              flow: script_perms
-          2:
-              task: qbrix_pre_deployment_perm_sets
-              ui_options:
-                  name: Predeployment Permission Sets
-          3:
-              task: qbrix_install_packages
-              ui_options:
-                  name: Required Appexchange Packages
-          4:
-              task: qbrix_deploy_settings
-              ui_options:
-                  name: Predeployment feature settings
+  #------------------------------------#
+  # PRE-QBRIX DEPLOY                   #
+  #------------------------------------#
+  #APPEND ADDITIONAL SOURCE DEPENDENCY DEPLOYMENTS ONTO THE DEFAULT CCI DEPENDENCY FLOW
 
+  source_dependencies:
+    steps:
+      1:
+        task: None
+        # flow: base:deploy_qbrix  
 
-    # Executed before current repo metadata is deployed AND after any listed dependencies are installed
-    qbrix_pre_deployment_post_dependencies:
-      steps:
-          1:
-              task: qbrix_pre_deployment_images
-              ui_options:
-                  name: Predeployment Images
-          2:
-              flow: qbrix_pre_deployment_users
+  dependencies:
+    steps:
+      1:  
+        flow: prepare_org                        
+      2:
+        flow: source_dependencies
 
-          3:
-              flow: qbrix_create_communities
-              ui_options:
-                  name: Create Communities
+  # Prepares the Org with any required settings/testim scripts
+  prepare_org:
+    steps:
+      1:
+        task: org_settings
+        when: not org_config.scratch
+        ui_options:
+          name: Deploying Settings
+      2:
+        task: deploy_settings
+        ui_options:
+          name: Deploying Settings
+      3:
+        task: update_dependencies
+          
 
-# --------- Calling Sources Flows ---------
-    # Executed before current repo metadata is deployed AND before any listed dependencies are installed
-    # Used to call any repos listed as sources and typically you call the qbrix_pre_deployment_pre_dependencies flow
-    qbrix_sources_pre_deployment_pre_dependencies:
-      steps:
-          1:
-              task: None
-#          2:
-#              flow: qbRegister:qbrix_pre_deployment_pre_dependencies
+  #------------------------------------#
+  # QBRIX DEPLOY                       #
+  #------------------------------------#
+  #DEFAULT INSTALL FLOWS ARE DEFINED HERE. "deploy_qbrix" and "deploy_qbrix_min" SHOULD ALWAYS BE DEFINED
 
+  #DEFAULT INSTALL FOR QBRIX WHICH DEPLOYS EVERYTHING INCLUDING BASE QBRANCH QBRIX
+  deploy_qbrix:
+    steps:
+      1:
+        flow: dependencies
+      2:
+        task: deploy
+        ui_options:
+          name: Deploying Q Brix Metadata
+      3:
+        flow: post_qbrix_deploy
 
-    # Executed before current repo metadata is deployed AND after any listed dependencies are installed
-    # Used to call any repos listed as sources and typically you call the qbrix_pre_deployment_post_dependencies flow
-    qbrix_sources_pre_deployment_post_dependencies:
-      steps:
-          1:
-              task: None
-#          2:
-#              flow: qbRegister:qbrix_pre_deployment_post_dependencies
+  #DEFAULT INSTALL FOR QBRIX WHICH DEPLOYS EVERYTHING EXCEPT BASE QBRANCH QBRIX
+  deploy_qbrix_min:
+    steps:
+      1:
+        task: update_dependencies
+      2:
+        flow: source_dependencies
+      3:
+        task: deploy
+      4:
+        flow: post_qbrix_deploy
 
-# --------- Main Pre Deployment Flow ---------
-    # Main flow to call all actions BEFORE local repo is deployed
-    qbrix_pre_deployment:
-        steps:
-            1:
-                flow: qbrix_sources_pre_deployment_pre_dependencies
-                ui_options:
-                  name: Related Q Brix pre deployment pre-dependency installation
-            2:
-                flow: qbrix_pre_deployment_pre_dependencies
-            3:
-                task: update_dependencies
-                ui_options:
-                    name: Install or Update all dependent QBrix modules
-                options:
-                  packages_only: false
-            4:
-              flow: qbrix_sources_pre_deployment_post_dependencies
-            5:
-              flow: qbrix_pre_deployment_post_dependencies
+  #RUN THIS FLOW FOR DEPLOYMENT TO A TSO PRODUCTION ORG
+  deploy_qbrix_tso:
+    steps:
+      1:
+        flow: deploy_qbrix
 
-# ------------------ QBRIX POST DEPLOYMENT FLOWS ----------------------
+  #------------------------------------#
+  # POST-QBRIX DEPLOY                  #
+  #------------------------------------#
+  #ADD POST DEPLOYMENT STEPS HERE
 
-    # Permission set assignments add more steps if additional types of assignments are needed
-    qbrix_assign_all_permsets:
-      steps:
-          1:
-              task: util_sleep
-              options:
-                  SECONDS: 30
-          2:
-              task: None
-              #task: assign_permission_set_groups
-              #options:
-                  #api_names: APINAMEHERE
-              # add more tasks above if there are more permission sets to apply
-              #ui_options:
-                  #name: Assign Permission Set Groups
+  post_qbrix_deploy:
+    steps:
+      1:
+        task: None
 
-    # Create users post current repository metadata deployment
-    qbrix_post_deployment_users:
-      steps:
-          1:
-              task: None
-#              task: dx
-#              options:
-#                  command: force:apex:execute -f scripts/apex/createHousekeeperUser.apex
-              # add more tasks above if there are more users to create
-#              ui_options:
-#                  name: Create Housekeeper user
+  #APPEND ADDITIONAL STEPS TO CCI DEV AND QA FLOWS
+  config_dev:
+    steps:
+      3:
+        flow: post_qbrix_deploy
 
-    # Load any data that is specific for this repository
-    qbrix_load_data:
-      steps:
-          1:
-              task: None
-#              task: dx
-#              options:
-#                  command: force:data:bulk:upsert --sobjecttype Contact --csvfile data/prod/tth_HospitalityContact.csv --externalid External_ID__c --wait 30
-#              ui_options:
-#                  name: Load Guest Records
-#                  is_required: false
-#                  group: "Data load"
+  config_qa:
+    steps:
+      3:
+        flow: post_qbrix_deploy
 
-    # Responsible for loading any TCRM (aka Einstein Analytics) datasets
-    # Add more steps if more than one dataset needs to be loaded
-    # Typically uses shane-sfdx-plugin for load via CSV from https://github.com/mshanemc/shane-sfdx-plugins
-    qbrix_load_analytics_datasets:
-      steps:
-          1:
-              task: None
-#              task: dx
-#              options:
-#                  command: shane:analytics:dataset:upload -n New_guest_data -f data/analytics/New_guest_data.csv -m data/analytics/New_guest_data.json -a TTH_Hospitality_Front_Desk $@
+  #------------------------------------#
+  # QBRIX DATA                         #
+  #------------------------------------#
+  #DEFINE DATA GENERATION FLOWS HERE
 
+  generate_qbrix_data:
+    steps:
+      1:
+        task: None
+        #flow: data:FLOWNAMEHERE
 
-    # Run any type of datafixes needed to complete installation
-    qbrix_post_deployment_datafixes:
-      steps:
-          1:
-              task: None
-#              task: dx
-#              options:
-#                  command: force:apex:execute -f scripts/apex/applyBookingImages.apex --json
+orgs:
+  #------------------------------------#
+  # SCRATCH ORG CONFIG                 #
+  #------------------------------------#
+  #DEFAULT SETTINGS FOR SCRATCH ORGS. PREVIEW ONLY WORKS IN CORE PREVIEW RELEASE WINDOWS
 
-    # Executed after current repo metadata is deployed
-    # AND after any listed dependencies are installed
-    # AND before current repo post deployment steps
-    # Used to call any repos listed as sources and typically you call the qbrix_post_deployment flow
-    qbrix_sources_post_deployment:
-      steps:
-          1:
-              task: None
-#          2:
-#              flow: qbRegister:qbrix_post_deployment
-
-    qbrix_manual_post_fixes:
-      steps:
-          1:
-              task: None
-              #task: qbrix_manual_fix_chatbuttons
-              #ui_options:
-              #    name: Running Testim to Fix Chat Buttons
-
-# ------------- MAIN POST DEPLOYMENT FLOW ---------------
-    # Executes after deployment of current repository metadata
-    qbrix_post_deployment:
-      steps:
-          1:
-              flow: qbrix_sources_post_deployment
-          2:
-              # global cumulus task deploy_post (https://cumulusci.readthedocs.io/en/latest/tasks.html#deploy-post)
-              # Deploys all metadata bundles under unpackaged/post/
-              task: deploy_post
-              ui_options:
-                  name: Post deployment unpackaged metadata
-          3:
-              flow: qbrix_assign_all_permsets
-              ui_options:
-                  name: Assign Permission Sets
-          4:
-              flow: qbrix_post_deployment_users
-              ui_options:
-                  name: Create Demo Users
-          5:
-              flow: qbrix_load_data
-              ui_options:
-                  name: Load Demo Data
-                  is_required: false
-          6:
-              flow: qbrix_load_analytics_datasets
-              ui_options:
-                  name: Load Analytics Datasets
-          7:
-              flow: qbrix_post_deployment_datafixes
-              ui_options:
-                  name: Final touches...
-          8:
-              flow: qbrix_manual_post_fixes
-
-# ------------------ BUILD & DEPLOYMENT FLOWS ----------------------
-    #Overrides global cumulus dev_org flow
-    #TODO - override other environment flows as well?
-    dev_org:
-      steps:
-          1:
-              flow: scratch_org_dependencies
-          2:
-              flow: qbrix_pre_deployment
-          3:
-              flow: deploy_qbrix_source
-          3.5:
-              flow: qbrix_post_deployment
-
-    # Install anything that is needed to make this deploy to a scratch org
-    scratch_org_dependencies:
-      steps:
-          1:
-                task: None
-#                task: update_dependencies
-#                ui_options:
-#                    name: Install or Update all dependent QBrix modules
-#                options:
-#                  packages_only: false
-#                  dependencies:
-#                    - github: https://github.com/sfdc-qbranch/IDO-SDO-Dependencies
-#                      unmanaged: True
-
-    #Deployment comment for metadata in current repository
-    deploy_qbrix_source:
-      steps:
-          1:
-                task: deploy
-                options:
-                    path: force-app
-                ui_options:
-                    name: Deploy QBrix metadata
-
-    # Work around to enable bash script execution on MetaDeploy
-    # Can be removed once qbrix_install_packages and qbrix_pre_deployment_images tasks have been converted to python modules
-    script_perms:
-        steps:
-            1:
-                task: command
-                options:
-                  command: chmod +x scripts/bash/*.sh
-                ui_options:
-                  name: Apply Script Permissions
-            2:
-                task: command
-                options:
-                  command: chmod +x scripts/deployment/*.sh
-                ui_options:
-                  name: Apply Script Permissions
-
-    #Main installation flow
-    install_qbrix:
-        steps:
-            1:
-                flow: qbrix_pre_deployment
-            2:
-                flow: deploy_qbrix_source
-            3:
-                flow: qbrix_post_deployment
+  scratch:
+    dev:
+      config_file: orgs/dev.json
+      days: 30
+      namespaced: false
+    dev_preview:
+      config_file: orgs/dev_preview.json
+      days: 30
+      namespaced: false
 
 plans:
-    install:
-        slug: install
-        title: Install Q Brix
-        tier: primary
-        is_listed: True
-#        checks:
-#            - when: "'SDO_Customer360_Custom_Activity__c' not in tasks.check_sobjects_available()"
-#              action: error
-#              message: "Missing object SDO_Customer360_Custom_Activity__c"
-        steps:
-            1:
-                flow: install_qbrix
+  #------------------------------------#
+  # METADEPLOY CONFIG                  #
+  #------------------------------------#
+  #DEFINE DEPLOYMENY PLANS HERE FOR USE WITH METADEPLOY
+
+  install_pack:
+    slug: deployqbrix
+    title: Install/Update Qbrix
+    tier: primary
+    is_listed: True
+    steps:
+      1:
+        flow: deploy_qbrix_tso
