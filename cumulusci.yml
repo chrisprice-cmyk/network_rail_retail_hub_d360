@@ -19,7 +19,7 @@ project:
         repo_url: https://github.com/sfdc-qbranch/xDO-Template-v2
     source_format: sfdx
     dependencies:
-      - github: https://github.com/sfdc-qbranch/xDO_QBrixRegister
+      - github: https://github.com/sfdc-qbranch/QBrix-1-xDO-Tool-QBrixRegister
         unmanaged: True
 
   #------------------------------------#
@@ -43,8 +43,8 @@ sources:
     #ADD SOURCES HERE WHICH MUST BE CCI PROJECTS STORED IN GITHUB.
 
     base:
-        github: https://github.com/sfdc-qbranch/SDO-Base
-        release: latest
+        github: https://github.com/sfdc-qbranch/QBrix-0-xDO-BaseConfig
+        # release: latest
 
 tasks:
   #------------------------------------#
