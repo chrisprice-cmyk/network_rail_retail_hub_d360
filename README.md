@@ -19,7 +19,7 @@ TO DO: [Create a Documentation for this Q Brix.](https://salesforce.quip.com/6D2
       description: "Run RPA Scripts"
       class_path: cumulusci.tasks.command.SalesforceCommand
       options:
-          command: ./scripts/bash/runRPAScript.sh "[SDO - Service Cloud ] Fix Chat Button"
+          command: ./scripts/QBrix/runRPAScript.sh "[SDO - Service Cloud ] Fix Chat Button"
 
        1:
          flow: qbrix_testim_fix_chatbuttons
