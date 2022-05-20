@@ -1,5 +1,5 @@
 {
-  "orgName": "QBrix-REPO-TEMPLATE - Dev Org",
+  "orgName": "xDO-Template - Dev Org",
   "edition": "enterprise",
   "features": [
     "AddCustomApps:30",
@@ -57,7 +57,5 @@
     "WorkflowFlowActionFeature",
     "WorkThanksPref"
   ],
-  "settings": {
-    
-  }
+  "settings": {}
 }

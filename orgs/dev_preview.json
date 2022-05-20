@@ -1,5 +1,5 @@
 {
-  "orgName": "QBrix-REPO-TEMPLATE - Dev Org Preview",
+  "orgName": "xDO-Template - Dev Org Preview",
   "release": "preview",
   "edition": "Enterprise",
   "features": [
@@ -20,6 +20,7 @@
     "CustomerCommunityLogin",
     "CustomerCommunityPlus",
     "CustomerCommunityPlusLogin",
+    "DataMaskUser",
     "DefaultWorkflowUser",
     "DevelopmentWave",
     "DocumentChecklist",
@@ -29,7 +30,6 @@
     "EinsteinRecommendationBuilder",
     "EnablePRM",
     "Entitlements",
-    "FeatureParameterLicensing",
     "FieldAuditTrail",
     "FlowSites",
     "IndustriesActionPlan",
@@ -46,6 +46,7 @@
     "Pardot",
     "PartnerCommunity",
     "PlatformConnect:5",
+    "PRIVATEAPI",
     "ProcessBuilder",
     "SalesCloudEinstein",
     "SalesforceContentUser",
@@ -53,79 +54,9 @@
     "SalesUser",
     "ServiceCloud",
     "SharedActivities",
-    "SOCIALCUSTOMERSERVICE",
     "Workflow",
     "WorkflowFlowActionFeature",
-    "WorkThanksPref",
-    "PRIVATEAPI"
+    "WorkThanksPref"
   ],
-  "settings": {
-    "lightningExperienceSettings": {
-      "enableS1DesktopEnabled": true
-    },
-    "chatterSettings": {
-      "enableChatter": true
-    },
-    "userManagementSettings": {
-      "enableNewProfileUI": true
-    },
-    "securitySettings": {
-      "enableAdminLoginAsAnyUser": true,
-      "sessionSettings": {
-        "forceRelogin": false
-      }
-    },
-    "languageSettings": {
-      "enableTranslationWorkbench": true
-    },
-    "enhancedNotesSettings": {
-      "enableEnhancedNotes": true
-    },
-    "pathAssistantSettings": {
-      "pathAssistantEnabled": true
-    },
-    "liveAgentSettings": {
-      "enableChatFindOrCreateEnable": true,
-      "enableLiveAgent": true,
-      "enableQuickTextEnabled": true
-    },
-    "knowledgeSettings": {
-      "enableKnowledge": true,
-      "enableLightningKnowledge": true,
-      "enableCreateEditOnArticlesTab": true,
-      "enableKbStandardSharing": true
-    },
-    "omniChannelSettings": {
-      "enableOmniChannel": true
-    },
-    "communitiesSettings": {
-      "enableNetworksEnabled": true,
-      "enableGuestRecordReassignOrgPref": true,
-      "enableOotbProfExtUserOpsEnable": true
-    },
-    "experienceBundleSettings": {
-      "enableExperienceBundleMetadata": true
-    },
-    "botSettings": {
-      "enableBots": true
-    },
-    "surveySettings": {
-      "enableSurvey": true,
-      "enableSurveyOwnerCanManageResponse": true
-    },
-    "socialProfileSettings": {
-      "enableSocialProfiles": true,
-      "isFacebookSocialProfilesDisabled": false,
-      "isLinkedInSocialProfilesDisabled": false,
-      "isTwitterSocialProfilesDisabled": false,
-      "isYouTubeSocialProfilesDisabled": false
-    },
-    "entitlementSettings": {
-      "enableEntitlements": true
-    },
-    "caseSettings": {
-      "systemUserEmail": "sdo@example.com",
-      "useSystemUserAsDefaultCaseUser": true
-    }
-  }
+  "settings": {}
 }
