@@ -187,6 +187,9 @@ flows:
           name: Deploying Settings
       3:
         task: update_dependencies
+        ui_options:
+            1:
+                name: QBrix Tool Register
           
 
   #------------------------------------#
