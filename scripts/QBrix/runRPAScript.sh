@@ -44,3 +44,4 @@ then
   echo '********* Using Parameter file: '$PARAMETER_FILE_NAME  
   testim --token $TESTIM_KEY --project $TESTIM_PROJECT --grid "Testim-Grid" --name "$SCRIPT_NAME" --base-url $LOGIN_URL --params-file $PARAMETER_FILE_NAME
 fi
+sfdx config:unset instanceUrl
