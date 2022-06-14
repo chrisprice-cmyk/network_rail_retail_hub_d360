@@ -16,7 +16,7 @@ project:
         api_version: '54.0'
     git:
         default_branch: 'main'
-        repo_url: https://github.com/sfdc-qbranch/xDO-Template-v2
+        repo_url: https://github.com/sfdc-qbranch/xDO-Template
     source_format: sfdx
     dependencies:
       - github: https://github.com/sfdc-qbranch/QBrix-1-xDO-Tool-QBrixRegister
