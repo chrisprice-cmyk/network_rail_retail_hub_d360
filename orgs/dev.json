@@ -58,5 +58,13 @@
     "WorkflowFlowActionFeature",
     "WorkThanksPref"
   ],
-  "settings": {}
+  "settings": {
+    "orgPreferenceSettings": {
+      "networksEnabled": true,
+      "chatterEnabled": true
+    },
+    "communitiesSettings": {
+        "enableNetworksEnabled": true
+    }
+  }
 }
