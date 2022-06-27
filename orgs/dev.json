@@ -1,6 +1,7 @@
 {
   "orgName": "xDO-Template - Dev Org",
-  "edition": "enterprise",
+  "edition": "Enterprise",
+  "country": "US",
   "features": [
     "AddCustomApps:30",
     "AddCustomObjects:30",
