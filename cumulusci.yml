@@ -74,6 +74,12 @@ tasks:
     options:
       definition_file: orgs/dev.json
 
+  update_admin_profile:
+    options:
+      package_xml: files/package.xml
+      api_names:
+        - Admin
+
   update_vscode_tasks:
     description: Update .vscode tasks.json file from Qbrix template
     class_path: cumulusci.tasks.command.Command
