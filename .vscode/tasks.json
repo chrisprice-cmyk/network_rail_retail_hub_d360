@@ -26,9 +26,9 @@
         "problemMatcher": []
       },
       {
-        "label": "CCI: Clean Up Orgs",
+        "label": "CCI: Clean Up Dev and QA Orgs",
         "type": "shell",
-        "command": "cci org remove dev && cci org remove dev",
+        "command": "cci org remove dev && cci org remove qa && cci org remove dev_preview",
         "group": "build",
         "problemMatcher": []
       },
@@ -68,7 +68,7 @@
         "problemMatcher": []
       },
       {
-        "label": "CCI: Review Changes from org",
+        "label": "CCI: Review Changes in org",
         "type": "shell",
         "command": "cci task run list_changes --org ${input:OrgAlias}",
         "group": "build",
@@ -92,9 +92,9 @@
         "problemMatcher": []
       },
       {
-        "label": "CCI: Open Scratch Org",
+        "label": "CCI: Open Org in Browser",
         "type": "shell",
-        "command": "cci org browser dev",
+        "command": "cci org browser ${input:OrgAlias}"",
         "group": "build",
         "problemMatcher": []
       },  
