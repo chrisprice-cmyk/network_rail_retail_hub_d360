@@ -9,9 +9,9 @@ project:
   #------------------------------------#
   #QBRIX NAME, API VERSION AND REPO DETAILS GO HERE
 
-  name: NxDO-Template
+  name: xDO-Template
   package:
-    name: NxDO-Template
+    name: xDO-Template
     api_version: "54.0"
   git:
     default_branch: "main"
