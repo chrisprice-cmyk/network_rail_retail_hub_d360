@@ -12,7 +12,7 @@ project:
   name: xDO-Template
   package:
     name: xDO-Template
-    api_version: "54.0"
+    api_version: "55.0"
   git:
     default_branch: "main"
     repo_url: https://github.com/sfdc-qbranch/xDO-Template
@@ -20,7 +20,6 @@ project:
   dependencies:
     - github: https://github.com/sfdc-qbranch/QBrix-1-xDO-Tool-QBrixRegister
       unmanaged: True
-
   #------------------------------------#
   # QBRIX PACKAGE DEPEDENDENCIES       #
   #------------------------------------#
@@ -33,6 +32,19 @@ project:
   #   - namespace: ManagedPackageNamespaceHere (Note: Lightning Components need to use the package ID and are treated as an unmanaged package)
   #     version: ManagedPackageVersionNumberHere
   #--Add Project Level Dependencies Below
+
+  custom:
+    #Exclude list to be used with list_changes and retrieve_changes tasks
+    exclude: &exclude-list
+      - FeatureParameter
+      - "AuraDefinition:"
+      - "SiteDotCom:"
+      - "ManagedTopics:"
+      - "LiveChatTranscript:"
+      - "ExperienceResource:"
+      - "AppMenu:"
+      - "Profile:"
+      - "FlowDefinition:"
 
 #--Add Project Sources here--
 sources:
@@ -99,41 +111,11 @@ tasks:
 
   list_changes:
     options:
-      exclude:
-        - FeatureParameter
-        - "AuraDefinition:"
-        - "SiteDotCom:"
-        - "ManagedTopics:"
-        - "LiveChatTranscript:"
-        - "ExperienceResource:"
-        - "AppMenu:"
-        - "Profile:"
-        - "FlowDefinition:"
-        #Include to exclude Analytics Dashboards and Applications
-        #- 'WaveApplication:'
-        #- 'WaveDashboard:'
-        #- 'WaveDataset:'
-        #- 'WaveXmd:'
-        #- 'WaveDataflow:'
+      exclude: *exclude-list
 
   retrieve_changes:
     options:
-      exclude:
-        - FeatureParameter
-        - "AuraDefinition:"
-        - "SiteDotCom:"
-        - "ManagedTopics:"
-        - "LiveChatTranscript:"
-        - "ExperienceResource:"
-        - "AppMenu:"
-        - "Profile:"
-        - "FlowDefinition:"
-        #Include to exclude Analytics Dashboards and Applications
-        #- 'WaveApplication:'
-        #- 'WaveDashboard:'
-        #- 'WaveDataset:'
-        #- 'WaveXmd:'
-        #- 'WaveDataflow:'
+      exclude: *exclude-list
 
 flows:
   #------------------------------------#
