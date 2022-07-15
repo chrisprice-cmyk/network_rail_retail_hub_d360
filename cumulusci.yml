@@ -155,7 +155,7 @@ flows:
     steps:
       1:
         task: org_settings
-        when: not org_config.scratch
+        when: org_config.scratch
         ui_options:
           name: Deploying Settings
       2:
