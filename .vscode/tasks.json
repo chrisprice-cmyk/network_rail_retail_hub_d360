@@ -231,7 +231,23 @@
           "showReuseMessage": false,
           "panel": "shared"
         }
-      },  
+      },
+      {
+        "label": "Q BRIX [PACKAGE]: List Installed Packages in Org",
+        "type": "shell",
+        "command": "cci task run dx --org ${input:OrgAlias} --command force:package:installed:list",
+        "group": "build",
+        "problemMatcher": [],
+        "presentation": {
+          "reveal": "always",
+          "revealProblems": "onProblem",
+          "focus": true,
+          "echo": false,
+          "showReuseMessage": false,
+          "panel": "shared"
+        }
+      },
+
     ],
     "inputs": [
       {
