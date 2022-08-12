@@ -250,6 +250,14 @@ orgs:
       config_file: orgs/dev_preview.json
       days: 30
       namespaced: false
+    qa:
+      config_file: orgs/dev.json
+      days: 30
+      namespaced: false
+    qa_preview:
+      config_file: orgs/dev_preview.json
+      days: 30
+      namespaced: false
 
 plans:
   #------------------------------------#

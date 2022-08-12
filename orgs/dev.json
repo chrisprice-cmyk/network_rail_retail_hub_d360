@@ -1,7 +1,6 @@
 {
   "orgName": "xDO-Template - Dev Org",
   "edition": "Enterprise",
-  "country": "US",
   "features": [
     "AddCustomApps:30",
     "AddCustomObjects:30",
@@ -86,6 +85,5 @@
     "WorkThanksPref",
     "WavePlatform"
   ],
-  "settings": {
-  }
+  "settings": {}
 }

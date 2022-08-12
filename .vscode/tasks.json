@@ -5,98 +5,232 @@
     "version": "2.0.0",
     "tasks": [
       {
-        "label": "CCI: Create New Developer Org",
+        "label": "Q BRIX [ORG]: Create New Developer Org (Alias 'dev')",
         "type": "shell",
         "command": "cci org remove dev && cci flow run dev_org --org dev",
         "group": "build",
-        "problemMatcher": []
+        "problemMatcher": [],
+        "presentation": {
+          "reveal": "always",
+          "revealProblems": "onProblem",
+          "focus": true,
+          "echo": false,
+          "showReuseMessage": false,
+          "panel": "shared"
+        }
       },
       {
-        "label": "CCI: Create New Developer Preview Org",
+        "label": "Q BRIX [ORG]: Create New Developer Preview Org (Alias 'dev_preview')",
         "type": "shell",
         "command": "cci org remove dev_preview && cci flow run dev_org --org dev_preview",
         "group": "build",
-        "problemMatcher": []
+        "problemMatcher": [],
+        "presentation": {
+          "reveal": "always",
+          "revealProblems": "onProblem",
+          "focus": true,
+          "echo": false,
+          "showReuseMessage": false,
+          "panel": "shared"
+        }
       },
       {
-        "label": "CCI: Create New QA Org",
+        "label": "Q BRIX [ORG]: Create New QA/Testing Org (Alias 'qa')",
         "type": "shell",
         "command": "cci org remove qa && cci flow run qa_org --org qa",
         "group": "build",
-        "problemMatcher": []
+        "problemMatcher": [],
+        "presentation": {
+          "reveal": "always",
+          "revealProblems": "onProblem",
+          "focus": true,
+          "echo": false,
+          "showReuseMessage": false,
+          "panel": "shared"
+        }
       },
       {
-        "label": "CCI: Clean Up Dev and QA Orgs",
+        "label": "Q BRIX [ORG]: Create New QA/Testing Preview Org (Alias 'qa_preview')",
         "type": "shell",
-        "command": "cci org remove dev && cci org remove qa && cci org remove dev_preview",
+        "command": "cci org remove qa_preview && cci flow run qa_org --org qa_preview",
         "group": "build",
-        "problemMatcher": []
+        "problemMatcher": [],
+        "presentation": {
+          "reveal": "always",
+          "revealProblems": "onProblem",
+          "focus": true,
+          "echo": false,
+          "showReuseMessage": false,
+          "panel": "shared"
+        }
       },
       {
-        "label": "CCI: Connect TSO and Deploy",
+        "label": "Q BRIX [ORG]: Clean Up Developer and Expired Orgs",
+        "type": "shell",
+        "command": "cci org remove dev && cci org remove qa && cci org remove dev_preview && cci org prune",
+        "group": "build",
+        "problemMatcher": [],
+        "presentation": {
+          "reveal": "always",
+          "revealProblems": "onProblem",
+          "focus": true,
+          "echo": false,
+          "showReuseMessage": false,
+          "panel": "shared"
+        }
+      },
+      {
+        "label": "Q BRIX [ORG]: List connected orgs",
+        "type": "shell",
+        "command": "cci org list",
+        "group": "build",
+        "problemMatcher": [],
+        "presentation": {
+          "reveal": "always",
+          "revealProblems": "onProblem",
+          "focus": true,
+          "echo": false,
+          "showReuseMessage": false,
+          "panel": "shared"
+        }
+      },
+      {
+        "label": "Q BRIX [CONNECT]: Connect Persistant Org/TSO and Deploy",
         "type": "shell",
         "command": "cci org connect ${input:OrgAlias} && cci flow run deploy_qbrix_tso --org ${input:OrgAlias}",
         "group": "build",
-        "problemMatcher": []
+        "problemMatcher": [],
+        "presentation": {
+          "reveal": "always",
+          "revealProblems": "onProblem",
+          "focus": true,
+          "echo": false,
+          "showReuseMessage": false,
+          "panel": "shared"
+        }
       },
       {
-        "label": "CCI: Connect Sandbox and Deploy",
+        "label": "Q BRIX [CONNECT]: Connect Sandbox and Deploy",
         "type": "shell",
-        "command": "cci org connect ${input:OrgAlias} --sandbox && cci flow run deploy_qbrix_tso --org ${input:OrgAlias}",
+        "command": "cci org connect ${input:OrgAlias} --sandbox && cci flow run deploy_qbrix --org ${input:OrgAlias}",
         "group": "build",
-        "problemMatcher": []
+        "problemMatcher": [],
+        "presentation": {
+          "reveal": "always",
+          "revealProblems": "onProblem",
+          "focus": true,
+          "echo": false,
+          "showReuseMessage": false,
+          "panel": "shared"
+        }
       },
       {
-        "label": "CCI: Connect to Sandbox",
+        "label": "Q BRIX [CONNECT]: Connect to Sandbox",
         "type": "shell",
         "command": "cci org connect ${input:OrgAlias} --sandbox",
         "group": "build",
-        "problemMatcher": []
+        "problemMatcher": [],
+        "presentation": {
+          "reveal": "always",
+          "revealProblems": "onProblem",
+          "focus": true,
+          "echo": false,
+          "showReuseMessage": false,
+          "panel": "shared"
+        }
       },
       {
-        "label": "CCI: Publish to Metadeploy",
+        "label": "Q BRIX [PUBLISH]: Publish to Metadeploy",
         "type": "shell",
-        "command": "cci task run metadeploy_publish -o dry_run True -o tag release/${input:VersionNumber} && cci task run metadeploy_publish -o publish True -o tag release/${input:VersionNumber}",
+        "command": "cci task run metadeploy_publish --publish True --commit ${input:Commit}",
         "group": "build",
-        "problemMatcher": []
+        "problemMatcher": [],
+        "presentation": {
+          "reveal": "always",
+          "revealProblems": "onProblem",
+          "focus": true,
+          "echo": false,
+          "showReuseMessage": false,
+          "panel": "shared"
+        }
       },
       {
-        "label": "CCI: Save Changes",
+        "label": "Q BRIX [SAVE]: Save Changes to GitHub",
         "type": "shell",
         "command": "git add . && git commit -m '${input:CommitMessage}' && git push && git pull",
         "group": "build",
-        "problemMatcher": []
+        "problemMatcher": [],
+        "presentation": {
+          "reveal": "always",
+          "revealProblems": "onProblem",
+          "focus": true,
+          "echo": false,
+          "showReuseMessage": false,
+          "panel": "shared"
+        }
       },
       {
-        "label": "CCI: Review Changes in org",
+        "label": "Q BRIX [SAVE]: Review Changes in org",
         "type": "shell",
         "command": "cci task run list_changes --org ${input:OrgAlias}",
         "group": "build",
-        "problemMatcher": []
+        "problemMatcher": [],
+        "presentation": {
+          "reveal": "always",
+          "revealProblems": "onProblem",
+          "focus": true,
+          "echo": false,
+          "showReuseMessage": false,
+          "panel": "shared"
+        }
       },
       {
-        "label": "CCI: Retrieve Changes from org",
+        "label": "Q BRIX [SAVE]: Retrieve Changes from org",
         "type": "shell",
         "command": "cci task run retrieve_changes --org ${input:OrgAlias}",
         "group": "build",
-        "problemMatcher": []
+        "problemMatcher": [],
+        "presentation": {
+          "reveal": "always",
+          "revealProblems": "onProblem",
+          "focus": true,
+          "echo": false,
+          "showReuseMessage": false,
+          "panel": "shared"
+        }
       },
       {
-        "label": "CCI: Retrieve ALL Project metadata from org",
+        "label": "Q BRIX [SAVE]: Retrieve ALL Project metadata from org",
         "type": "shell",
         "command": "cp -r ./force-app ./backup && cci task run dx --command 'force:source:retrieve -p force-app' --org ${input:OrgAlias} && echo 'Check Custom Objects and Profiles if any as additional metadata may have been captured. Then remove backup folder.'",
         "windows": {
           "command": "xcopy .\\force-app .\\backup /e && cci task run dx --command 'force:source:retrieve -p force-app' --org ${input:OrgAlias} && echo 'Check Custom Objects and Profiles if any as additional metadata may have been captured. Then remove backup folder.'"
         },
         "group": "build",
-        "problemMatcher": []
+        "problemMatcher": [],
+        "presentation": {
+          "reveal": "always",
+          "revealProblems": "onProblem",
+          "focus": true,
+          "echo": false,
+          "showReuseMessage": false,
+          "panel": "shared"
+        }
       },
       {
-        "label": "CCI: Open Org in Browser",
+        "label": "Q BRIX [ORG]: Open Org in Browser",
         "type": "shell",
-        "command": "cci org browser ${input:OrgAlias}"",
+        "command": "cci org browser ${input:OrgAlias}",
         "group": "build",
-        "problemMatcher": []
+        "problemMatcher": [],
+        "presentation": {
+          "reveal": "always",
+          "revealProblems": "onProblem",
+          "focus": true,
+          "echo": false,
+          "showReuseMessage": false,
+          "panel": "shared"
+        }
       },  
     ],
     "inputs": [
@@ -117,6 +251,12 @@
         "description": "Provide a short summary of your changes (less than 100 characters):",
         "default": "",
         "type": "promptString"
+      },
+      {
+        "id": "Commit",
+        "description": "Enter commit you want to publish:",
+        "default": "",
+        "type": "promptString"
       }
     ]
-  }
+    }
