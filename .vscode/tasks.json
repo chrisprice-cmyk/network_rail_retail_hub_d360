@@ -247,7 +247,21 @@
           "panel": "shared"
         }
       },
-
+      {
+        "label": "Q BRIX [GIT]: Show Latest Commit Hash",
+        "type": "shell",
+        "command": "git rev-parse HEAD",
+        "group": "build",
+        "problemMatcher": [],
+        "presentation": {
+          "reveal": "always",
+          "revealProblems": "onProblem",
+          "focus": true,
+          "echo": false,
+          "showReuseMessage": false,
+          "panel": "shared"
+        }
+      },
     ],
     "inputs": [
       {
