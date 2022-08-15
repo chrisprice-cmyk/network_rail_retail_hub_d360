@@ -200,9 +200,54 @@
         }
       },
       {
-        "label": "Q BRIX [SNAPSHOT]: Snapshot Current Changes",
+        "label": "Q BRIX [BUILD]: Snapshot Current Changes (Run before making changes to org)",
         "type": "shell",
         "command": "cci task run snapshot_changes --org ${input:OrgAlias}",
+        "group": "build",
+        "problemMatcher": [],
+        "presentation": {
+          "reveal": "always",
+          "revealProblems": "onProblem",
+          "focus": true,
+          "echo": false,
+          "showReuseMessage": false,
+          "panel": "shared"
+        }
+      },
+      {
+        "label": "Q BRIX [INFO]: Show information about a specified task.",
+        "type": "shell",
+        "command": "cci task info ${input:TaskName}",
+        "group": "build",
+        "problemMatcher": [],
+        "presentation": {
+          "reveal": "always",
+          "revealProblems": "onProblem",
+          "focus": true,
+          "echo": false,
+          "showReuseMessage": false,
+          "panel": "shared"
+        }
+      },
+      {
+        "label": "Q BRIX [INFO]: Show information about a specified flow.",
+        "type": "shell",
+        "command": "cci task info ${input:FlowName}",
+        "group": "build",
+        "problemMatcher": [],
+        "presentation": {
+          "reveal": "always",
+          "revealProblems": "onProblem",
+          "focus": true,
+          "echo": false,
+          "showReuseMessage": false,
+          "panel": "shared"
+        }
+      },
+      {
+        "label": "Q BRIX [INFO]: Show information about a connected org.",
+        "type": "shell",
+        "command": "cci org info ${input:OrgAlias}",
         "group": "build",
         "problemMatcher": [],
         "presentation": {
@@ -398,7 +443,7 @@
         }
       },
       {
-        "label": "Q BRIX [GIT]: Show Latest Commit Hash",
+        "label": "Q BRIX [PUBLISH]: Show Latest Commit Hash (For Metadeploy)",
         "type": "shell",
         "command": "git rev-parse HEAD",
         "group": "build",
@@ -465,6 +510,18 @@
       {
         "id": "PackageName",
         "description": "Enter the api name of the unmanaged package:",
+        "default": "",
+        "type": "promptString"
+      },
+      {
+        "id": "TaskName",
+        "description": "Enter the name of the task:",
+        "default": "",
+        "type": "promptString"
+      },
+      {
+        "id": "FlowName",
+        "description": "Enter the name of the flow:",
         "default": "",
         "type": "promptString"
       }
