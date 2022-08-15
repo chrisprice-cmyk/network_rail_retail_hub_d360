@@ -112,7 +112,7 @@
       {
         "label": "Q BRIX [CONNECT]: Connect to a Sandbox and Deploy Q Brix",
         "type": "shell",
-        "command": "cci org connect ${input:OrgAlias} --sandbox && cci flow run deploy_qbrix --org ${input:OrgAlias}",
+        "command": "cci org connect ${input:OrgAlias} --sandbox && cci flow run deploy_qbrix --org ${input:OrgAlias} && cci task run snapshot_changes --org ${input:OrgAlias}",
         "group": "build",
         "problemMatcher": [],
         "presentation": {
@@ -188,6 +188,21 @@
         "label": "Q BRIX [SAVE]: Save Changes to GitHub",
         "type": "shell",
         "command": "git add . && git commit -m '${input:CommitMessage}' && git push && git pull && echo 'Save complete!'",
+        "group": "build",
+        "problemMatcher": [],
+        "presentation": {
+          "reveal": "always",
+          "revealProblems": "onProblem",
+          "focus": true,
+          "echo": false,
+          "showReuseMessage": false,
+          "panel": "shared"
+        }
+      },
+      {
+        "label": "Q BRIX [SNAPSHOT]: Snapshot Current Changes",
+        "type": "shell",
+        "command": "cci task run snapshot_changes --org ${input:OrgAlias}",
         "group": "build",
         "problemMatcher": [],
         "presentation": {
