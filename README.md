@@ -1,8 +1,3 @@
-  ____    ___      _     
- / __ \  / _ )____(_)_ __
-/ /_/ / / _  / __/ /\ \ /
-\___\_\/____/_/ /_//_\_\
-
 # SETUP TASKS (DELETE THIS SECTION ONCE COMPLETE)
 
 TO DO: Replace this text with a description of the package along with any notes around development of the pack. Then amend the options below so that related packs are listed.
@@ -11,10 +6,10 @@ TO DO: Rename all occurances of "xDO-Template" with the name of your pack.
 
 TO DO: [Create a Documentation for this Q Brix.](https://salesforce.quip.com/6D2eA9ft6x2O)
 
-
 ## Examples Below (Delete Before Publishing)
 
 ### Example Testim Script reference
+
     qbrix_testim_fix_chatbuttons:
       description: "Run RPA Scripts"
       class_path: cumulusci.tasks.command.SalesforceCommand
@@ -24,8 +19,8 @@ TO DO: [Create a Documentation for this Q Brix.](https://salesforce.quip.com/6D2
        1:
          flow: qbrix_testim_fix_chatbuttons
 
-
 ### Example Loading CSVs (if needed)
+
     qbrix_load_data:
       steps:
           1:
@@ -38,6 +33,7 @@ TO DO: [Create a Documentation for this Q Brix.](https://salesforce.quip.com/6D2
                   group: "Data load"
 
 ### Example Loading TCRM Datasets
+
     qbrix_load_analytics_datasets:
       steps:
           1:
@@ -48,12 +44,11 @@ TO DO: [Create a Documentation for this Q Brix.](https://salesforce.quip.com/6D2
                   name: Load Guest Data Analytics Dataset
                   is_required: false
 
-
 ## Development
 
 To work on this project in a scratch org:
 
-Get help on naming and building NxDO QBrix from here: https://salesforce.quip.com/TL37AfCvNVaI 
+Get help on naming and building Q Brix from here: https://confluence.internal.salesforce.com/pages/viewpage.action?pageId=487362018
 
 1. [Set up CumulusCI](https://cumulusci.readthedocs.io/en/latest/tutorial.html)
 2. Run `cci flow run dev_org --org dev` to deploy this project.
@@ -77,10 +72,9 @@ Create Pull Request
 
 Create Trialforce Template
 
-11. If you dont have your TSO already connected, then connect to your TSO org using `cci org connect OrgNameHere` (replacing orgNamehere with your chosen name for the org - it can be anything!) 
+11. If you dont have your TSO already connected, then connect to your TSO org using `cci org connect OrgNameHere` (replacing orgNamehere with your chosen name for the org - it can be anything!)
 12. Run `cci flow run tso_deploy --org OrgNameHere` to deploy your latest updates into the TSO.
 13. Create a new Trialforce template in the TSO. Tip: You can quickly login to your TSO using `cci org browser OrgNameHere`
-
 
 ## Metadata Type Support
 
@@ -94,5 +88,3 @@ Some Metadata types are not supported with these packs or have been replaced wit
 - SiteDotCom - Replaced by ExperienceCloudPack (remember to enable ExperienceBundle API!)
 - ManagedTopics - Not Supported
 - AppMenu - Currently a Known Issue - Track here: https://trailblazer.salesforce.com/issues_view?id=a1p30000000T5dqAAC
-
-For help with Metadata Types see the Cookbook here: https://salesforce.quip.com/MpiXAAsVbUV3 
