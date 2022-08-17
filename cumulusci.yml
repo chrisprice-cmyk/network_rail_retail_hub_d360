@@ -17,9 +17,7 @@ project:
     default_branch: "main"
     repo_url: https://github.com/sfdc-qbranch/xDO-Template
   source_format: sfdx
-  dependencies:
-    - github: https://github.com/sfdc-qbranch/QBrix-1-xDO-Tool-QBrixRegister
-      unmanaged: True
+
   #------------------------------------#
   # QBRIX PACKAGE DEPEDENDENCIES       #
   #------------------------------------#
@@ -32,6 +30,10 @@ project:
   #   - namespace: ManagedPackageNamespaceHere (Note: Lightning Components need to use the package ID and are treated as an unmanaged package)
   #     version: ManagedPackageVersionNumberHere
   #--Add Project Level Dependencies Below
+
+  #------------------------------------#
+  # QBRIX CUSTOM OPTIONS & SETTINGS    #
+  #------------------------------------#
 
   custom:
     #Exclude list to be used with list_changes and retrieve_changes tasks
@@ -55,7 +57,6 @@ sources:
 
   base:
     github: https://github.com/sfdc-qbranch/QBrix-0-xDO-BaseConfig
-    # release: latest
 
 tasks:
   #------------------------------------#
@@ -103,6 +104,14 @@ tasks:
     class_path: cumulusci.tasks.salesforce.Deploy
     options:
       path: force-app/main/default/settings
+
+  install_qbrix_register:
+    description: Installs the Q Brix Registration Tool
+    class_path: cumulusci.tasks.salesforce.UpdateDependencies
+    options:
+      dependencies:
+        - github: https://github.com/sfdc-qbranch/QBrix-1-xDO-Tool-QBrixRegister
+          unmanaged: True
 
   #------------------------------------#
   # CHANGE CAPTURE                     #
@@ -154,19 +163,15 @@ flows:
   prepare_org:
     steps:
       1:
-        task: org_settings
-        when: org_config.scratch
+        task: install_qbrix_register
         ui_options:
-          name: Deploying Settings
+          name: Install/Update QBrix Registration Tool
       2:
         task: deploy_settings
         ui_options:
-          name: Deploying Settings
+          name: Deploying Org Settings
       3:
         task: update_dependencies
-        ui_options:
-          1:
-            name: QBrix Tool Register
 
   #------------------------------------#
   # QBRIX DEPLOY                       #
@@ -189,12 +194,14 @@ flows:
   deploy_qbrix_min:
     steps:
       1:
-        task: update_dependencies
+        task: deploy_settings
       2:
-        flow: source_dependencies
+        task: update_dependencies
       3:
-        task: deploy
+        flow: source_dependencies
       4:
+        task: deploy
+      5:
         flow: post_qbrix_deploy
 
   #RUN THIS FLOW FOR DEPLOYMENT TO A TSO PRODUCTION ORG
