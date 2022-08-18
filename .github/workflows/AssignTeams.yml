@@ -1,0 +1,22 @@
+name: Assign NextGen Team as Admin
+
+on:
+  create:
+    branches: [ "main" ]
+
+  workflow_dispatch:
+
+jobs:
+  comment:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          gh api \
+          --method PUT \
+          -H "Accept: application/vnd.github+json" \
+          /orgs/sfdc-qbranch/teams/q-demo-nextgen/repos/$OWNER/$REPO \
+          -f permission='admin'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.event.repository.name }}
+          OWNER: ${{ github.repository_owner }}
