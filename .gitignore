@@ -8,6 +8,8 @@
 .cci/
 .sf/
 
+testim-headless.zip
+
 # Logs
 #logs
 *.log
