@@ -126,6 +126,16 @@ tasks:
     options:
       exclude: *exclude-list
 
+  #------------------------------------#
+  # TESTIM INTERGRATION                #
+  #------------------------------------#
+  #Replace the testimname with the name of the script you want to run. This section can be removed if you are not using Testim.
+  qbrix_task_Testim:
+    description: "Run Testim Script"
+    class_path: tasks.custom.testim.RunTestim
+    options:
+      testimname: "REPLACE WITH NAME OF SCRIPT"
+
 flows:
   #------------------------------------#
   # CCI FLOW DEFAULTS                  #

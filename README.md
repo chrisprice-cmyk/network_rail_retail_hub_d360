@@ -10,14 +10,11 @@ TO DO: [Create a Documentation for this Q Brix.](https://salesforce.quip.com/6D2
 
 ### Example Testim Script reference
 
-    qbrix_testim_fix_chatbuttons:
-      description: "Run RPA Scripts"
-      class_path: cumulusci.tasks.command.SalesforceCommand
-      options:
-          command: ./scripts/QBrix/runRPAScript.sh "[SDO - Service Cloud ] Fix Chat Button"
-
-       1:
-         flow: qbrix_testim_fix_chatbuttons
+    qbrix_task_Testim:
+        description: "Run Testim Script"
+        class_path: tasks.custom.testim.RunTestim
+        options:
+            testimname: "REPLACE WITH NAME OF SCRIPT"
 
 ### Example Loading CSVs (if needed)
 
