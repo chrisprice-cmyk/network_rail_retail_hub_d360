@@ -135,6 +135,7 @@ tasks:
     class_path: tasks.custom.testim.RunTestim
     options:
       testimname: "REPLACE WITH NAME OF SCRIPT"
+      pass_env: true
 
 flows:
   #------------------------------------#
