@@ -113,6 +113,20 @@ tasks:
         - github: https://github.com/sfdc-qbranch/QBrix-1-xDO-Tool-QBrixRegister
           unmanaged: True
 
+  data_tool_status:
+    description: Waits for the Data Tool status to be complete within the target org before allowing flow to continue.
+    class_path: cumulusci.tasks.salesforce.custom_settings_wait.CustomSettingValueWait
+    options:
+      object: NXDO__Data_Tool_Status__c
+      field: NXDO__Completed__c
+      value: True
+
+  data_tool_deploy:
+    description: Executes the command to run the NxDO Data Tool
+    class_path: cumulusci.tasks.apex.anon.AnonymousApexTask
+    options:
+      apex: NXDO.DataTool_Utilities.requestDeploy('%%%PARAM_1%%%');
+
   #------------------------------------#
   # CHANGE CAPTURE                     #
   #------------------------------------#
