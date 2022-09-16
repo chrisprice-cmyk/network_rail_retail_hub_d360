@@ -93,6 +93,21 @@ tasks:
       api_names:
         - Admin
 
+  robot:
+    options:
+      suites: robot/Qbrix/tests
+      options:
+        outputdir: robot/Qbrix/results
+
+  robot_testdoc:
+    options:
+      path: robot/Qbrix/tests
+      output: robot/Qbrix/doc/qbrix_tests.html
+
+  #------------------------------------#
+  # QBRIX TASKS                        #
+  #------------------------------------#
+
   update_vscode_tasks:
     description: Update .vscode tasks.json file from Qbrix template
     class_path: cumulusci.tasks.command.Command
