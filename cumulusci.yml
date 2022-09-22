@@ -140,7 +140,13 @@ tasks:
     description: Executes the command to run the NxDO Data Tool
     class_path: cumulusci.tasks.apex.anon.AnonymousApexTask
     options:
-      apex: NXDO.DataTool_Utilities.requestDeploy('%%%PARAM_1%%%');
+      apex: NXDO.DataTool_Utilities.requestDeploy('%%%PARAM_1%%%', true);
+
+  data_tool_deploy_test:
+    description: Executes the command to run the NxDO Data Tool from a Scratch org Sandbox Org
+    class_path: cumulusci.tasks.apex.anon.AnonymousApexTask
+    options:
+      apex: NXDO.DataTool_Utilities.requestDeploy('%%%PARAM_1%%%', false);
 
   #------------------------------------#
   # CHANGE CAPTURE                     #
