@@ -48,3 +48,7 @@ force-app/main/default/flexipages/LightningService_UtilityBar.flexipage-meta.xml
 generatedDelta/*
 destructiveChanges/*
 package/*
+
+#ROBOT
+browser/
+playwright-log.txt
