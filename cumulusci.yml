@@ -12,16 +12,16 @@ project:
   name: xDO-Template
   package:
     name: xDO-Template
-    api_version: "55.0"
+    api_version: "56.0"
   git:
     default_branch: "main"
     repo_url: https://github.com/sfdc-qbranch/xDO-Template
   source_format: sfdx
 
   #------------------------------------#
-  # QBRIX PACKAGE DEPEDENDENCIES       #
+  # QBRIX PACKAGE DEPENDENCIES       #
   #------------------------------------#
-  #ADD MANAGED & UNMANAGED PACKAGE DEPEDENDENCIES HERE. OTHER CCI PROJECTS CAN ALSO BE LINKED PROVIDING THEY WORK WITH JUST A DEPLOY METHOD.
+  #ADD MANAGED & UNMANAGED PACKAGE DEPENDENCIES HERE. OTHER CCI PROJECTS CAN ALSO BE LINKED PROVIDING THEY WORK WITH JUST A DEPLOY METHOD.
 
   #dependencies:
   #--Examples:
@@ -162,7 +162,7 @@ tasks:
       exclude: *exclude-list
 
   #------------------------------------#
-  # TESTIM INTERGRATION                #
+  # TESTIM INTEGRATION                 #
   #------------------------------------#
   #Replace the testimname with the name of the script you want to run. This section can be removed if you are not using Testim.
   qbrix_task_Testim:
