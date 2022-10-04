@@ -52,3 +52,6 @@ package/*
 #ROBOT
 browser/
 playwright-log.txt
+log.html
+output.xml
+report.html
