@@ -371,10 +371,10 @@ class HealthChecker(BaseTask):
   def _run_task(self):
     self.logger.info("\n\n[HEALTH CHECKER] STARTING Q HEALTH CHECKER\n\n")
     self.check_project_file_naming()
-    #self.check_api_versions()
-    #self.check_for_missing_files()
-    #self.source_org_feature_checker()
-    #self.org_feature_checker()
-    #self.check_org_config_files()
+    self.check_api_versions()
+    self.check_for_missing_files()
+    self.source_org_feature_checker()
+    self.org_feature_checker()
+    self.check_org_config_files()
     self.logger.info("\n\n[HEALTH CHECKER] Complete!\n\n")
 
