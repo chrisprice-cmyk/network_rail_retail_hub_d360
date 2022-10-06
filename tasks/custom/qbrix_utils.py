@@ -306,6 +306,55 @@ class HealthChecker(BaseTask):
     else:
       self.logger.info("[CHECK COMPLETE] No Missing Features Found\n\n")  
 
+  def check_project_file_naming(self):
+
+    """ Checks that the project file names are set correctly """
+
+    project_name = self.project_config.project__name
+    package_name = self.project_config.project__package__name
+    repo_url = self.project_config.project__git__repo_url
+
+    self.logger.info("\n\n[CHECK STARTING] Checking Q Brix Names")
+    file_name_error = False 
+
+    if project_name is None or package_name is None or repo_url is None:
+      file_name_error = True
+      self.logger.info("[FAIL] One of the names is missing in your cumulusci.yml file. Update the file and run the Health Checker again.")
+    else:
+      repo_qbrix_name = repo_url.rsplit('/', 1)[-1]
+
+      if repo_qbrix_name is None:
+        file_name_error = True
+        self.logger.info("[FAIL] Check you have a valid URL for the project > Repo Url in the cumulusci.yml file")
+
+        self.logger.info(f"Names Found:\nProject Name: {project_name}\nPackage Name: {package_name}\nRepo URL: {repo_url}\nQBrix Name (From Repo URL): {repo_qbrix_name}")
+
+        if 'xDO-Template' in project_name or 'xDO-Template' in package_name or 'xDO-Template' in repo_url:
+          file_name_error = True
+          self.logger.info("[FAIL] You must update your project names in the cumulusci.yml file to be the same as your Q Brix repo url. xDO-Template was found and this should have been updated, see Readme.")
+
+        if not project_name == package_name == repo_qbrix_name:
+          file_name_error = True
+          self.logger.info("[FAIL] You must update your project names in the cumulusci.yml file to be the same as your Q Brix repo url")
+
+        if not repo_qbrix_name in self.get_json_file_value("orgs/dev.json", "orgName"):
+          file_name_error = True
+          self.logger.info("[FAIL] OrgName in orgs/dev.json has not been updated.")
+          uinput = input("Would you like to update the dev.json file? (y/n) Default y") or 'y'
+          if uinput == 'y':
+            self.update_json_file_value("orgs/dev.json", "orgName", f"{repo_qbrix_name} - Dev org")
+
+        if not repo_qbrix_name in self.get_json_file_value("orgs/dev_preview.json", "orgName"):
+          file_name_error = True
+          self.logger.info("[FAIL] OrgName in orgs/dev_preview.json has not been updated.")
+          uinput = input("Would you like to update the dev_preview.json file? (y/n) Default y") or 'y'
+          if uinput == 'y':
+            self.update_json_file_value("orgs/dev_preview.json", "orgName", f"{repo_qbrix_name} - Dev org")
+
+    if not file_name_error:
+      self.logger.info("[OK] All Checks Passed!")
+    self.logger.info("[CHECK COMPLETE] Checking Q Brix Names")
+
   # Cache Utilities
 
   def rebuild_cci_cache(self):
@@ -321,10 +370,11 @@ class HealthChecker(BaseTask):
   
   def _run_task(self):
     self.logger.info("\n\n[HEALTH CHECKER] STARTING Q HEALTH CHECKER\n\n")
-    self.check_api_versions()
-    self.check_for_missing_files()
-    self.source_org_feature_checker()
-    self.org_feature_checker()
-    self.check_org_config_files()
+    self.check_project_file_naming()
+    #self.check_api_versions()
+    #self.check_for_missing_files()
+    #self.source_org_feature_checker()
+    #self.org_feature_checker()
+    #self.check_org_config_files()
     self.logger.info("\n\n[HEALTH CHECKER] Complete!\n\n")
 
