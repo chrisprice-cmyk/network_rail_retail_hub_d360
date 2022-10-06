@@ -329,27 +329,27 @@ class HealthChecker(BaseTask):
 
         self.logger.info(f"Names Found:\nProject Name: {project_name}\nPackage Name: {package_name}\nRepo URL: {repo_url}\nQBrix Name (From Repo URL): {repo_qbrix_name}")
 
-        if 'xDO-Template' in project_name or 'xDO-Template' in package_name or 'xDO-Template' in repo_url:
-          file_name_error = True
-          self.logger.info("[FAIL] You must update your project names in the cumulusci.yml file to be the same as your Q Brix repo url. xDO-Template was found and this should have been updated, see Readme.")
+      if 'xDO-Template' in project_name or 'xDO-Template' in package_name or 'xDO-Template' in repo_url:
+        file_name_error = True
+        self.logger.info("[FAIL] You must update your project names in the cumulusci.yml file to be the same as your Q Brix repo url. xDO-Template was found and this should have been updated, see Readme.")
 
-        if not project_name == package_name == repo_qbrix_name:
-          file_name_error = True
-          self.logger.info("[FAIL] You must update your project names in the cumulusci.yml file to be the same as your Q Brix repo url")
+      if not project_name == package_name == repo_qbrix_name:
+        file_name_error = True
+        self.logger.info("[FAIL] You must update your project names in the cumulusci.yml file to be the same as your Q Brix repo url")
 
-        if not repo_qbrix_name in self.get_json_file_value("orgs/dev.json", "orgName"):
-          file_name_error = True
-          self.logger.info("[FAIL] OrgName in orgs/dev.json has not been updated.")
-          uinput = input("Would you like to update the dev.json file? (y/n) Default y") or 'y'
-          if uinput == 'y':
-            self.update_json_file_value("orgs/dev.json", "orgName", f"{repo_qbrix_name} - Dev org")
+      if not repo_qbrix_name in self.get_json_file_value("orgs/dev.json", "orgName"):
+        file_name_error = True
+        self.logger.info("[FAIL] OrgName in orgs/dev.json has not been updated.")
+        uinput = input("Would you like to update the dev.json file? (y/n) Default y") or 'y'
+        if uinput == 'y':
+          self.update_json_file_value("orgs/dev.json", "orgName", f"{repo_qbrix_name} - Dev org")
 
-        if not repo_qbrix_name in self.get_json_file_value("orgs/dev_preview.json", "orgName"):
-          file_name_error = True
-          self.logger.info("[FAIL] OrgName in orgs/dev_preview.json has not been updated.")
-          uinput = input("Would you like to update the dev_preview.json file? (y/n) Default y") or 'y'
-          if uinput == 'y':
-            self.update_json_file_value("orgs/dev_preview.json", "orgName", f"{repo_qbrix_name} - Dev org")
+      if not repo_qbrix_name in self.get_json_file_value("orgs/dev_preview.json", "orgName"):
+        file_name_error = True
+        self.logger.info("[FAIL] OrgName in orgs/dev_preview.json has not been updated.")
+        uinput = input("Would you like to update the dev_preview.json file? (y/n) Default y") or 'y'
+        if uinput == 'y':
+          self.update_json_file_value("orgs/dev_preview.json", "orgName", f"{repo_qbrix_name} - Dev org")
 
     if not file_name_error:
       self.logger.info("[OK] All Checks Passed!")
