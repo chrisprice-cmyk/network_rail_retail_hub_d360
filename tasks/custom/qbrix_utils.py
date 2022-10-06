@@ -5,6 +5,9 @@ import shutil
 import os
 from os.path import exists
 from cumulusci.core.tasks import BaseTask
+from urllib.request import urlopen
+from io import BytesIO
+from zipfile import ZipFile
 
 class HealthChecker(BaseTask):
 
@@ -377,4 +380,68 @@ class HealthChecker(BaseTask):
     self.org_feature_checker()
     self.check_org_config_files()
     self.logger.info("\n\n[HEALTH CHECKER] Complete!\n\n")
+
+class QBrixUpdater(BaseTask):
+
+  # Global Task Options
+
+  task_options={
+        "UpdateLocation": {
+            "description": "String URL for the location where the update package .zip file is located",
+            "required": False
+        }
+    }
+
+  def _init_options(self, kwargs):
+    super(QBrixUpdater, self)._init_options(kwargs)
+
+    self.UpdateLocation = "https://qnextgen.s3.us-west-1.amazonaws.com/qbrix/q_update_package.zip"
+    if "UpdateLocation" in self.options:
+      self.UpdateLocation = self.options["UpdateLocation"]
+  
+  def download_and_unzip(self, url):
+    http_response = urlopen(url)
+    self.logger.info("Download Complete!")
+    self.logger.info("Updating Q Brix...")
+    try:
+      zipfile = ZipFile(BytesIO(http_response.read()))
+
+      dir_check_list = [x for x in zipfile.namelist() if x.endswith('/')]
+
+      for d in dir_check_list:
+        if not exists(d):
+          os.mkdir(d)
+
+      zipfile.extractall()
+
+      return True
+    except:
+      self.logger.info("[ERROR] Update Failed!")
+    return False 
+
+
+  def _run_task(self):
+
+    """" Downloads the update package from AWS S3 and applies updates """
+
+    self.logger.info("\n\n[START] QBrix Update Commencing")
+    self.logger.info("Downloading Update Package...")
+
+    if self.download_and_unzip(self.UpdateLocation):
+      self.logger.info("Clearing cache and temp files...")
+      if exists("__MACOSX"):
+        shutil.rmtree("__MACOSX")
+      if exists("tasks/__pycache__"):
+        shutil.rmtree("tasks/__pycache__")
+      if exists("tasks/custom/__pycache__"):
+        shutil.rmtree("tasks/custom/__pycache__")
+      if exists("tasks/__init__.py"):
+        os.remove("tasks/__init__.py")
+      if exists("tasks/custom/__init__.py"):
+        os.remove("tasks/custom/__init__.py")
+      if exists("q_update_package"):
+        shutil.rmtree("q_update_package")
+      self.logger.info("Cleanup Complete!")
+
+      self.logger.info("[COMPLETE] Update Complete!")
 

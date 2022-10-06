@@ -107,6 +107,9 @@ tasks:
   health_check:
     class_path: tasks.custom.qbrix_utils.HealthChecker
 
+  update_qbrix:
+    class_path: tasks.custom.qbrix_utils.QBrixUpdater
+
   #------------------------------------#
   # QBRIX TASKS                        #
   #------------------------------------#
