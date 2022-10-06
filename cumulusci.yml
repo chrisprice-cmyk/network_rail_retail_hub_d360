@@ -36,6 +36,14 @@ project:
   #------------------------------------#
 
   custom:
+    # Q Brix Register Details - ADD YOUR DETAILS HERE
+    qbrix_owner_name: "YOUR NAME HERE"
+    qbrix_owner_team: "Q Branch"
+    qbrix_publisher_name: "YOUR NAME HERE"
+    qbrix_publisher_team: "Q Branch"
+    qbrix_documentation_url: https://confluence.internal.salesforce.com/pages/viewpage.action?pageId=487362018
+    qbrix_description: "Add Description of Q Brix Here"
+
     #Exclude list to be used with list_changes and retrieve_changes tasks
     exclude: &exclude-list
       - FeatureParameter
@@ -109,6 +117,9 @@ tasks:
 
   update_qbrix:
     class_path: tasks.custom.qbrix_utils.QBrixUpdater
+
+  setup_qbrix:
+    class_path: tasks.custom.qbrix_utils.Initialise_Project
 
   #------------------------------------#
   # QBRIX TASKS                        #

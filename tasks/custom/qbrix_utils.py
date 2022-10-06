@@ -8,6 +8,8 @@ from cumulusci.core.tasks import BaseTask
 from urllib.request import urlopen
 from io import BytesIO
 from zipfile import ZipFile
+from xml.etree import ElementTree as et
+from datetime import datetime
 
 class HealthChecker(BaseTask):
 
@@ -42,26 +44,26 @@ class HealthChecker(BaseTask):
     """ Removes Cached folders from project """
 
     self.logger.info("Checking for downloaded CCI project source caches in /.cci/projects...")
-    if os.path.isdir(".cci/projects"):
+    if exists(".cci/projects"):
       self.logger.info("Removing CCI project source caches...")
       shutil.rmtree(".cci/projects")
     
     self.logger.info("Checking for MDAPI src cache in /src...")
-    if os.path.isdir("src"):
+    if exists("src"):
       self.logger.info("Removing MDAPI src cache...")
       shutil.rmtree("src")
 
     self.logger.info("Checking for Q Robot cache...")
-    if os.path.isdir("browser"):
+    if exists("browser"):
       self.logger.info("Removing Robot cache in /browser...")
       shutil.rmtree("browser")
-    if os.path.isfile("log.html"):
+    if exists("log.html"):
       os.remove("log.html")
-    if os.path.isfile("playwright-log.txt"):
+    if exists("playwright-log.txt"):
       os.remove("playwright-log.txt")
-    if os.path.isfile("output.xml"):
+    if exists("output.xml"):
       os.remove("output.xml")
-    if os.path.isfile("report.html"):
+    if exists("report.html"):
       os.remove("report.html")
 
   def get_json_file_value(self, file_location, key_name):
@@ -219,13 +221,13 @@ class HealthChecker(BaseTask):
 
     self.logger.info("\n\n[CHECK STARTED] Checking for missing project files.")
 
-    if not os.path.isfile("cumulusci.yml"):
+    if not exists("cumulusci.yml"):
       self.logger.warn("Missing File: cumulusci.yml")
-    if not os.path.isfile("orgs/dev.json"):
+    if not exists("orgs/dev.json"):
       self.logger.warn("Missing File: orgs/dev.json")
-    if not os.path.isfile("sfdx-project.json"):
+    if not exists("sfdx-project.json"):
       self.logger.warn("Missing File: sfdx-project.json")
-    if not os.path.isfile("orgs/dev_preview.json"):
+    if not exists("orgs/dev_preview.json"):
       self.logger.warn("Missing File: orgs/dev_preview.json")
 
     self.logger.info("[CHECK COMPLETE] Missing files check complete.\n\n")
@@ -414,6 +416,10 @@ class QBrixUpdater(BaseTask):
 
       zipfile.extractall()
 
+      #TODO
+      self.logger.info("Files affected in this update:\n")
+      self.logger.info(zipfile.namelist())
+
       return True
     except:
       self.logger.info("[ERROR] Update Failed!")
@@ -445,3 +451,85 @@ class QBrixUpdater(BaseTask):
 
       self.logger.info("[COMPLETE] Update Complete!")
 
+class Initialise_Project(BaseTask):
+
+  # Global Task Options
+
+  task_options={
+        "TestMode": {
+            "description": "When in test mode, no files are updated.",
+            "required": False
+        }
+    }
+
+  def _init_options(self, kwargs):
+    super(Initialise_Project, self)._init_options(kwargs)
+    self.qbrix_owner = self.project_config.project__custom__qbrix_owner_name
+    self.qbrix_owner_team = self.project_config.project__custom__qbrix_owner_team
+    self.qbrix_publisher_name = self.project_config.project__custom__qbrix_publisher_name
+    self.qbrix_publisher_team = self.project_config.project__custom__qbrix_publisher_team
+    self.qbrix_documentation_url = self.project_config.project__custom__qbrix_documentation_url or 'https://confluence.internal.salesforce.com/pages/viewpage.action?pageId=487362018'
+    self.qbrix_description = self.project_config.project__custom__qbrix_description
+    self.project_name = self.project_config.project__name
+    self.repo_url = self.project_config.project__git__repo_url
+    self.template_file_location = "force-app/main/default/customMetadata/xDO_Base_QBrix_Register.xDO_Template.md-meta.xml"
+    self.TestMode = False
+
+    if "TestMode" in self.options:
+      self.TestMode = self.options["TestMode"]
+
+  def update_create_qbrix_register(self):
+
+    now = datetime.now()
+
+    xml = f'''<?xml version="1.0" encoding="UTF-8"?>
+      <CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+          <label>{self.project_name}</label>
+          <protected>true</protected>
+          <values>
+              <field>xDO_Content_Type__c</field>
+              <value xsi:type="xsd:string">Metadata_and_Record_Data</value>
+          </values>
+          <values>
+              <field>xDO_Description__c</field>
+              <value xsi:type="xsd:string">WHO: {self.qbrix_owner_team} | {self.qbrix_owner}
+      WHAT: {self.qbrix_description}
+      WHEN: {now.strftime("%B %Y")}</value>
+          </values>
+          <values>
+              <field>xDO_Documentation_Link__c</field>
+              <value xsi:type="xsd:string">{self.qbrix_documentation_url}</value>
+          </values>
+          <values>
+              <field>xDO_Publisher__c</field>
+              <value xsi:type="xsd:string">{self.qbrix_publisher_team} | {self.qbrix_publisher_name}</value>
+          </values>
+          <values>
+              <field>xDO_Repository_URL__c</field>
+              <value xsi:type="xsd:string">{self.repo_url}</value>
+          </values>
+          <values>
+              <field>xDO_Type__c</field>
+              <value xsi:type="xsd:string">Base xDO Component</value>
+          </values>
+          <values>
+              <field>xDO_Version__c</field>
+              <value xsi:type="xsd:string">1.0</value>
+          </values>
+      </CustomMetadata>'''
+
+    with open(self.template_file_location, "w") as f:
+      f.write(xml)
+
+  def _run_task(self):
+
+    file_name = self.project_name.replace("-","_")
+
+    if not exists(self.template_file_location):
+      self.template_file_location = f"force-app/main/default/customMetadata/xDO_Base_QBrix_Register.{file_name}.md-meta.xml"
+
+    if exists(self.template_file_location):
+      self.logger.info("Updating Q Brix Register File")
+      self.update_create_qbrix_register()
+      self.logger.info("Rename Q Brix Register Name")
+      os.rename("force-app/main/default/customMetadata/xDO_Base_QBrix_Register.xDO_Template.md-meta.xml", f"force-app/main/default/customMetadata/xDO_Base_QBrix_Register.{file_name}.md-meta.xml")
