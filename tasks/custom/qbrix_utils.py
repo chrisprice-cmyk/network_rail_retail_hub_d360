@@ -574,7 +574,8 @@ class Initialise_Project(BaseTask):
       self.logger.info("Updating Q Brix Register File")
       self.update_create_qbrix_register()
       self.logger.info("Rename Q Brix Register Name")
-      os.rename("force-app/main/default/customMetadata/xDO_Base_QBrix_Register.xDO_Template.md-meta.xml", f"force-app/main/default/customMetadata/xDO_Base_QBrix_Register.{file_name}.md-meta.xml")
+      if exists("force-app/main/default/customMetadata/xDO_Base_QBrix_Register.xDO_Template.md-meta.xml"):
+        os.rename("force-app/main/default/customMetadata/xDO_Base_QBrix_Register.xDO_Template.md-meta.xml", f"force-app/main/default/customMetadata/xDO_Base_QBrix_Register.{file_name}.md-meta.xml")
       self.logger.info("Q Brix Registration File Updated!")
     else:
       self.logger.info(f"Q Brix Registration File Missing - Please check your project against the current Q brix template and update it.\nExpected File Path: {self.template_file_location}")
