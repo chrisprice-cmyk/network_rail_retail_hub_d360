@@ -288,8 +288,15 @@ class HealthChecker(BaseTask):
         missing_features.extend(featureList)
       
     if len(missing_features) > 0:
-      self.logger.info(json.dumps(missing_features, indent=4))
-      self.update_org_file_features("orgs/dev.json",missing_features)
+
+      dedupe_list = []
+
+      for m in missing_features:
+        if not m.lower() in dedupe_list:
+          dedupe_list.append(m.lower())
+
+      self.logger.info(json.dumps(dedupe_list, indent=4))
+      self.update_org_file_features("orgs/dev.json",dedupe_list)
     else:
       self.logger.info("[OK] No Missing Features Found")  
 
