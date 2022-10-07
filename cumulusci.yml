@@ -122,6 +122,9 @@ tasks:
   setup_qbrix:
     class_path: tasks.custom.qbrix_utils.Initialise_Project
 
+  list_qbrix:
+    class_path: tasks.custom.qbrix_sf.ListQBrix
+
   #------------------------------------#
   # QBRIX TASKS                        #
   #------------------------------------#
