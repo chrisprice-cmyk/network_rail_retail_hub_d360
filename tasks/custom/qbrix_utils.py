@@ -8,7 +8,6 @@ from cumulusci.core.tasks import BaseTask
 from urllib.request import urlopen
 from io import BytesIO
 from zipfile import ZipFile
-from xml.etree import ElementTree as et
 from datetime import datetime
 
 class HealthChecker(BaseTask):
@@ -354,7 +353,7 @@ class HealthChecker(BaseTask):
         self.logger.info("[FAIL] OrgName in orgs/dev_preview.json has not been updated.")
         uinput = input("Would you like to update the dev_preview.json file? (y/n) Default y") or 'y'
         if uinput == 'y':
-          self.update_json_file_value("orgs/dev_preview.json", "orgName", f"{repo_qbrix_name} - Dev org")
+          self.update_json_file_value("orgs/dev_preview.json", "orgName", f"{repo_qbrix_name} - Preview Dev org")
 
     if not file_name_error:
       self.logger.info("[OK] All Checks Passed!")
@@ -391,38 +390,62 @@ class QBrixUpdater(BaseTask):
         "UpdateLocation": {
             "description": "String URL for the location where the update package .zip file is located",
             "required": False
+        },
+        "ArchivePassword": {
+            "description": "String password for the .zip file",
+            "required": False
+        },
+        "IgnoreOptionalUpdates": {
+            "description": "True or False - When True this will ignore any Optional Updates being added to the project.",
+            "required": False
         }
     }
 
   def _init_options(self, kwargs):
     super(QBrixUpdater, self)._init_options(kwargs)
+    self.ArchivePassword = None
+    if "ArchivePassword" in self.options:
+      self.ArchivePassword = self.options["ArchivePassword"]
 
     self.UpdateLocation = "https://qnextgen.s3.us-west-1.amazonaws.com/qbrix/q_update_package.zip"
     if "UpdateLocation" in self.options:
       self.UpdateLocation = self.options["UpdateLocation"]
+
+    self.IgnoreOptionalUpdates = False
+    if "IgnoreOptionalUpdates" in self.options:
+      self.IgnoreOptionalUpdates = self.options["IgnoreOptionalUpdates"]
+
   
   def download_and_unzip(self, url):
+
+    """ Downloads a .zip file and extracts all folders to the root project directory """
+
     http_response = urlopen(url)
     self.logger.info("Download Complete!")
-    self.logger.info("Updating Q Brix...")
+    self.logger.info("Extracting Update Package...")
     try:
       zipfile = ZipFile(BytesIO(http_response.read()))
 
+      # CHECK FOR MISSING DIRS AND CREATE THEM
       dir_check_list = [x for x in zipfile.namelist() if x.endswith('/')]
-
       for d in dir_check_list:
         if not exists(d):
           os.mkdir(d)
+          self.logger.info(f"Created New Directory: {d}")
 
+      # HANDLE ZIP PASSWORDS
+      if not self.ArchivePassword is None:
+        zipfile.setpassword(pwd = bytes(self.ArchivePassword, 'utf-8'))
+
+      # EXTRACT FILES
+      self.logger.info("Updating Q Brix files...")
       zipfile.extractall()
-
-      #TODO
-      self.logger.info("Files affected in this update:\n")
-      self.logger.info(zipfile.namelist())
 
       return True
     except:
       self.logger.info("[ERROR] Update Failed!")
+      if exists("q_update_package"):
+        shutil.rmtree("q_update_package")
     return False 
 
 
@@ -441,12 +464,13 @@ class QBrixUpdater(BaseTask):
         shutil.rmtree("tasks/__pycache__")
       if exists("tasks/custom/__pycache__"):
         shutil.rmtree("tasks/custom/__pycache__")
-      if exists("tasks/__init__.py"):
-        os.remove("tasks/__init__.py")
-      if exists("tasks/custom/__init__.py"):
-        os.remove("tasks/custom/__init__.py")
       if exists("q_update_package"):
         shutil.rmtree("q_update_package")
+
+      if self.IgnoreOptionalUpdates:
+        if exists("OPTIONAL_UPDATES"):
+          shutil.rmtree("OPTIONAL_UPDATES")
+
       self.logger.info("Cleanup Complete!")
 
       self.logger.info("[COMPLETE] Update Complete!")
@@ -518,12 +542,21 @@ class Initialise_Project(BaseTask):
           </values>
       </CustomMetadata>'''
 
-    with open(self.template_file_location, "w") as f:
-      f.write(xml)
+
+    if self.TestMode:
+      print(xml)
+    else:
+      with open(self.template_file_location, "w") as f:
+        f.write(xml)
 
   def _run_task(self):
 
-    file_name = self.project_name.replace("-","_")
+    self.logger.info("[Starting Q Brix Setup]")
+
+    # UPDATE Q BRIX REGISTRATION FILE
+
+    self.logger.info("Updating Q Brix Registration File...")
+    file_name = self.project_name.replace("-","_") 
 
     if not exists(self.template_file_location):
       self.template_file_location = f"force-app/main/default/customMetadata/xDO_Base_QBrix_Register.{file_name}.md-meta.xml"
@@ -533,3 +566,21 @@ class Initialise_Project(BaseTask):
       self.update_create_qbrix_register()
       self.logger.info("Rename Q Brix Register Name")
       os.rename("force-app/main/default/customMetadata/xDO_Base_QBrix_Register.xDO_Template.md-meta.xml", f"force-app/main/default/customMetadata/xDO_Base_QBrix_Register.{file_name}.md-meta.xml")
+      self.logger.info("Q Brix Registration File Updated!")
+    else:
+      self.logger.info(f"Q Brix Registration File Missing - Please check your project against the current Q brix template and update it.\nExpected File Path: {self.template_file_location}")
+
+    # UPDATE SCRATCH ORG TEMPLATE FILES
+
+    self.logger.info("Updating scratch org files...")
+
+    if exists("orgs/dev.json"):
+      HealthChecker.update_json_file_value(self, "orgs/dev.json", "orgName", f"{self.project_name} - Dev org")
+    if exists("orgs/dev_preview.json"):
+      HealthChecker.update_json_file_value(self, "orgs/dev_preview.json", "orgName", f"{self.project_name} - Dev Preview org")
+
+    self.logger.info("Scratch Org Files Updated!")
+
+    # END OF TASK
+
+    self.logger.info("[Q Brix Setup Complete!]\n\n Remember to update the Readme.md file and check in your changes.")

@@ -8,7 +8,7 @@
           </values>
           <values>
               <field>xDO_Description__c</field>
-              <value xsi:type="xsd:string">WHO: Q Branch | YOUR NAME HERE1
+              <value xsi:type="xsd:string">WHO: Q Branch | YOUR NAME HERE
       WHAT: Add Description of Q Brix Here
       WHEN: October 2022</value>
           </values>
@@ -18,7 +18,7 @@
           </values>
           <values>
               <field>xDO_Publisher__c</field>
-              <value xsi:type="xsd:string">Q Branch2 | YOUR NAME HERE2</value>
+              <value xsi:type="xsd:string">Q Branch | YOUR NAME HERE</value>
           </values>
           <values>
               <field>xDO_Repository_URL__c</field>

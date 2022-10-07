@@ -36,7 +36,8 @@ project:
   #------------------------------------#
 
   custom:
-    # Q Brix Register Details - ADD YOUR DETAILS HERE
+    # Q Brix Register Details
+    # ADD YOUR QBRIX DETAILS HERE
     qbrix_owner_name: "YOUR NAME HERE"
     qbrix_owner_team: "Q Branch"
     qbrix_publisher_name: "YOUR NAME HERE"

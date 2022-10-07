@@ -1,14 +1,29 @@
 # SETUP TASKS (DELETE THIS SECTION ONCE COMPLETE)
 
-TO DO: Replace this text with a description of the package along with any notes around development of the pack. Then amend the options below so that related packs are listed.
-
-TO DO: Rename all occurrences of "xDO-Template" with the name of your pack.
+TO DO: Replace all instances of xDO-Template with your Qbrix name (e.g. QBrix-1-MyCustomBrix) in the cumulusci.yml file. This should ONLY be within the cumulusci.yml file.
 
 TO DO: [Create a Documentation for this Q Brix.](https://salesforce.quip.com/6D2eA9ft6x2O)
 
-TO DO: Update the name of the force-app/main/default/customMetadata/xDO*Base_QBrix_Register.xDO_Template.md-meta.xml file, replace xDO_Template with the name of your qbrix, replacing all - with *
+TO DO: Update Q Brix details in the Project > Custom section of the cumulusci.yml file. Here are the values to replace:
 
-TO DO: Update force-app/main/default/customMetadata/xDO_Base_QBrix_Register.xDO_Template.md-meta.xml file. Check and update the label, description, documentation link, publisher and repo link.
+    qbrix_owner_name: Replace with name of the Q Brix owner (They will be contacted if automatic builds fail)
+    qbrix_owner_team: Replace with the name of your team
+    qbrix_publisher_name: Replace with the name of the person who is publishing the Q Brix (Can be the same as the owner)
+    qbrix_publisher_team: Replace with the name of the team for the publisher above
+    qbrix_documentation_url: Replace with the link to the documentation regarding your Q Brix
+    qbrix_description: Replace with a short description of what solution your Q Brix provides
+
+COMPLETE THE ABOVE TASK BEFORE DOING THE FOLLOWING TASKS
+
+TO DO: Run the update task
+
+    cci task run update_qbrix
+
+TO DO: Run the Q Brix Setup Task
+
+    cci task run setup_qbrix
+
+TO DO: Replace this text with a description of the package along with any notes around development of the pack. Then amend the options below so that related packs are listed.
 
 # Q Brix Title
 
