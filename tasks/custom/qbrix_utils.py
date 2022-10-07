@@ -295,6 +295,8 @@ class HealthChecker(BaseTask):
         if not m.lower() in dedupe_list:
           dedupe_list.append(m.lower())
 
+      
+      dedupe_list.sort()
       self.logger.info(json.dumps(dedupe_list, indent=4))
       self.update_org_file_features("orgs/dev.json",dedupe_list)
     else:
