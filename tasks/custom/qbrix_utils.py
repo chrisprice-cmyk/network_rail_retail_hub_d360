@@ -9,6 +9,7 @@ from urllib.request import urlopen
 from io import BytesIO
 from zipfile import ZipFile
 from datetime import datetime
+from tasks.custom import fart 
 
 class HealthChecker(BaseTask):
 
@@ -594,3 +595,56 @@ class Initialise_Project(BaseTask):
     # END OF TASK
 
     self.logger.info("[Q Brix Setup Complete!]\n\n Remember to update the Readme.md file and check in your changes.")
+
+class MassFileOps(BaseTask):
+
+  task_options = {}
+
+  def _init_options(self, kwargs):
+    super(MassFileOps, self)._init_options(kwargs)
+
+  def update_file_api_versions(self):
+  
+    """ Update file API version in project """
+
+    class_files = glob.glob("force-app/main/default/classes" + "/**/*.cls-meta.xml", recursive = True)
+    aura_files = glob.glob("force-app/main/default/aura" + "/**/*.cmp-meta.xml", recursive = True)
+    lwc_files = glob.glob("force-app/main/default/lwc" + "/**/*.js-meta.xml", recursive = True)
+
+    #To add: Visualforce and Apex Triggers
+
+    results = []
+    results.extend(class_files)
+    results.extend(aura_files)
+    results.extend(lwc_files)
+
+    for f in results:
+      self.logger.info(f"Updating File: {f}")
+      try:
+        fart.FART.fartbetween(self, f, "<apiVersion>", "</apiVersion>", self.project_config.project__package__api_version)
+        self.logger.info(f"File Updated: {f}")
+      except:
+        self.logger.info(f"[FAILED] File Update Failed: {f}")
+
+  def delete_standard_fields(self):
+    object_fields = glob.glob("force-app/main/default/objects" + "/**/*.field-meta.xml", recursive = True)
+
+    if len(object_fields) == 0:
+      self.logger.info("No Standard Fields Found in Project!")
+    else:
+      for of in object_fields:
+        if not os.path.basename(of).endswith("__c.field-meta.xml"):
+          self.logger.info(f"Deleting File: {of}")
+          os.remove(of)
+
+      
+
+  def _run_task(self):
+    confirmation = input("This will update ALL Apex Class, Aura Component and LWC Component metadata files with the project API Version. Are you sure you want to continue? (y/n) ") or 'y'
+    if confirmation.lower() == 'y':
+      self.update_file_api_versions()
+
+    confirmation = input("This will DELETE all Standard Salesforce fields from all object folders within force-app. Are you sure you want to continue? (y/n) ") or 'y'
+    if confirmation.lower() == 'y':
+      self.delete_standard_fields()
+

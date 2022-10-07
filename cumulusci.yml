@@ -125,6 +125,9 @@ tasks:
   list_qbrix:
     class_path: tasks.custom.qbrix_sf.ListQBrix
 
+  mass_qbrix_update:
+    class_path: tasks.custom.qbrix_utils.MassFileOps
+
   #------------------------------------#
   # QBRIX TASKS                        #
   #------------------------------------#
