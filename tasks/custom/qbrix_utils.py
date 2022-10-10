@@ -559,9 +559,90 @@ class Initialise_Project(BaseTask):
       with open(self.template_file_location, "w") as f:
         f.write(xml)
 
+  def get_qbrix_repo_url(self):
+    result = subprocess.run("git config --get remote.origin.url", shell=True, capture_output=True).stdout
+    repo_url = ""
+    if result is None:
+      repo_url = input("Please Enter the URL for the Q brix Repo (e.g. https://www.github.com/sfdc-qbranch/Qbrix-1-repo): ")
+    else:
+      repo_url = result.decode('utf-8').rstrip().replace(".git","")
+
+    return repo_url
+
+  def replace_file_text(self, file_location, old_text, new_text):
+    if os.path.isfile(file_location):
+
+      new_fcontents = None
+
+      with open(f"{file_location}", "r") as tmpFile:
+        fcontents = tmpFile.read()
+        tmpFile.close()
+        new_fcontents = fcontents.replace(f"{old_text}", f"{new_text}")
+      
+      with open(f"{file_location}", "w") as tmpFile:
+        tmpFile.write(new_fcontents)
+        tmpFile.close()
+
   def _run_task(self):
 
     self.logger.info("[Starting Q Brix Setup]")
+
+    # GET CORRECT QBRIX INFO
+
+    self.logger.info("Getting remote GitHub Repo...")
+    repo_url = self.get_qbrix_repo_url()
+    if repo_url != None:
+      qbrix_name = repo_url.rsplit('/', 1)[-1]
+      if qbrix_name != None: 
+        self.repo_url = repo_url
+        self.project_name = qbrix_name
+    self.logger.info(f"Found: {repo_url}")
+
+    # UPDATE CCI YML
+
+    self.logger.info("Updating CumulusCI Configuration File...")
+    self.replace_file_text("cumulusci.yml", "xDO-Template", f"{qbrix_name}")
+    self.logger.info("CumulusCI File Updated")
+
+    #Get Initial Details
+
+    self.logger.info("Q Brix Details Check")
+
+    if "OWNER NAME HERE" in self.qbrix_owner:
+      
+      qbrix_owner = input("Enter the owner name for this Q Brix (i.e. Who is the contact for issues?): ")
+      if qbrix_owner != None:
+        self.replace_file_text("cumulusci.yml", "OWNER NAME HERE", qbrix_owner)
+
+      qbrix_owner_team = input("Enter the owners team for this Q Brix (e.g. Q Branch): ")
+      if qbrix_owner_team != None:
+        self.replace_file_text("cumulusci.yml", "OWNER TEAM HERE", qbrix_owner_team)
+
+      same_person_check = input("Is the Owner the same person as the publisher? (Default y/n) ") or 'y'
+      if same_person_check.lower() == 'y':
+        self.replace_file_text("cumulusci.yml", "OWNER OR PUBLISHER NAME HERE", qbrix_owner)
+        self.replace_file_text("cumulusci.yml", "OWNER OR PUBLISHER TEAM HERE", qbrix_owner_team)
+      else:
+        qbrix_publisher_name = input("Enter the publishers name for this Q Brix (i.e. Who is the contact for publishing updates?): ")
+        if qbrix_publisher_name != None:
+          self.replace_file_text("cumulusci.yml", "OWNER OR PUBLISHER NAME HERE", qbrix_publisher_name)
+
+        qbrix_publisher_team = input("Enter the publisher's team name for this Q Brix (e.g. Q Branch): ")
+        if qbrix_publisher_team != None:
+          self.replace_file_text("cumulusci.yml", "OWNER OR PUBLISHER TEAM HERE", qbrix_publisher_team)
+
+      qbrix_documentation_url = input("Enter the url for documentation (You can skip this for now and update in the cumulusci.yml file later): ")
+      if qbrix_documentation_url != None:
+        self.replace_file_text("cumulusci.yml", "https://confluence.internal.salesforce.com/pages/viewpage.action?pageId=487362018", qbrix_documentation_url)
+
+      qbrix_description = input("Enter a short description for this Q Brix (e.g. Deploys base configuration for Commerce Cloud): ")
+      if qbrix_description != None:
+        self.replace_file_text("cumulusci.yml", "SHORT DESCRIPTION OF QBRIX HERE", qbrix_description)    
+
+      self.logger.info("Q Brix Details Updated")
+    else:
+      self.logger.info("Q Brix Details Check (Skipped) - Appears details are already set.")
+
 
     # UPDATE Q BRIX REGISTRATION FILE
 
@@ -637,14 +718,30 @@ class MassFileOps(BaseTask):
           self.logger.info(f"Deleting File: {of}")
           os.remove(of)
 
-      
-
   def _run_task(self):
-    confirmation = input("This will update ALL Apex Class, Aura Component and LWC Component metadata files with the project API Version. Are you sure you want to continue? (y/n) ") or 'y'
-    if confirmation.lower() == 'y':
-      self.update_file_api_versions()
 
-    confirmation = input("This will DELETE all Standard Salesforce fields from all object folders within force-app. Are you sure you want to continue? (y/n) ") or 'y'
-    if confirmation.lower() == 'y':
-      self.delete_standard_fields()
+    self.logger.info(f''' 
+      Q BRIX - MASS OPERATION UTILITIES\n\n
+      [1] API Updater - Updates Apex Classes and LWC/Aura Components with Q Brix API Version\n
+      [2] Standard Field Cleaner - Removes standard fields within object folders\n
+      [e] Exit / Cancel   
+    ''')
+
+
+    option = input("Which task you like to run? (Enter the option number) : ")
+
+
+    match option:
+        case "1":
+          confirmation = input("This will update ALL Apex Class, Aura Component and LWC Component metadata files with the project API Version. Are you sure you want to continue? (y/n) ") or 'y'
+          if confirmation.lower() == 'y':
+            self.update_file_api_versions()
+        case "2":
+            confirmation = input("This will DELETE all Standard Salesforce fields from all object folders within force-app. Are you sure you want to continue? (y/n) ") or 'y'
+            if confirmation.lower() == 'y':
+              self.delete_standard_fields()
+        case _:
+            self.logger.info("Exiting Mass Operations Utilities")
+
+    
 

@@ -1,6 +1,6 @@
 {
-  "orgName": "xDO-Template - Dev Org",
-  "edition": "Partner Enterprise",
+  "orgName": "xDO-Template - Dev Preview org",
+  "edition": "Enterprise",
   "release": "preview",
   "features": [
     "AddCustomApps:30",

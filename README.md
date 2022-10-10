@@ -1,19 +1,8 @@
 # SETUP TASKS (DELETE THIS SECTION ONCE COMPLETE)
 
-TO DO: Replace all instances of xDO-Template with your Qbrix name (e.g. QBrix-1-MyCustomBrix) in the cumulusci.yml file. This should ONLY be within the cumulusci.yml file.
+TO DO (CAN BE COMPLETED LATER IF NEEDED): [Create a Documentation for this Q Brix.](https://salesforce.quip.com/6D2eA9ft6x2O)
 
-TO DO: [Create a Documentation for this Q Brix.](https://salesforce.quip.com/6D2eA9ft6x2O)
-
-TO DO: Update Q Brix details in the Project > Custom section of the cumulusci.yml file. Here are the values to replace:
-
-    qbrix_owner_name: Replace with name of the Q Brix owner (They will be contacted if automatic builds fail)
-    qbrix_owner_team: Replace with the name of your team
-    qbrix_publisher_name: Replace with the name of the person who is publishing the Q Brix (Can be the same as the owner)
-    qbrix_publisher_team: Replace with the name of the team for the publisher above
-    qbrix_documentation_url: Replace with the link to the documentation regarding your Q Brix
-    qbrix_description: Replace with a short description of what solution your Q Brix provides
-
-COMPLETE THE ABOVE TASK BEFORE DOING THE FOLLOWING TASKS
+COMPLETE TASKS IN ORDER
 
 TO DO: Run the update task
 
@@ -22,8 +11,6 @@ TO DO: Run the update task
 TO DO: Run the Q Brix Setup Task
 
     cci task run setup_qbrix
-
-TO DO: Replace this text with a description of the package along with any notes around development of the pack. Then amend the options below so that related packs are listed.
 
 # Q Brix Title
 

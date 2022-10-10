@@ -10,12 +10,14 @@ project:
   #QBRIX NAME, API VERSION AND REPO DETAILS GO HERE
 
   name: xDO-Template
+
   package:
     name: xDO-Template
     api_version: "56.0"
   git:
     default_branch: "main"
     repo_url: https://github.com/sfdc-qbranch/xDO-Template
+
   source_format: sfdx
 
   #------------------------------------#
@@ -38,12 +40,12 @@ project:
   custom:
     # Q Brix Register Details
     # ADD YOUR QBRIX DETAILS HERE
-    qbrix_owner_name: "YOUR NAME HERE"
-    qbrix_owner_team: "Q Branch"
-    qbrix_publisher_name: "YOUR NAME HERE"
-    qbrix_publisher_team: "Q Branch"
+    qbrix_owner_name: "OWNER NAME HERE"
+    qbrix_owner_team: "OWNER TEAM HERE"
+    qbrix_publisher_name: "OWNER OR PUBLISHER NAME HERE"
+    qbrix_publisher_team: "OWNER OR PUBLISHER TEAM HERE"
     qbrix_documentation_url: https://confluence.internal.salesforce.com/pages/viewpage.action?pageId=487362018
-    qbrix_description: "Add Description of Q Brix Here"
+    qbrix_description: "SHORT DESCRIPTION OF QBRIX HERE"
 
     #Exclude list to be used with list_changes and retrieve_changes tasks
     exclude: &exclude-list
