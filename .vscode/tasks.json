@@ -20,6 +20,66 @@
         }
       },
       {
+        "label": "Q BRIX [SETUP]: Setup new QBrix Project (incudes Updater)",
+        "type": "shell",
+        "command": "cci task run update_qbrix && cci task run setup_qbrix",
+        "group": "build",
+        "problemMatcher": [],
+        "presentation": {
+          "reveal": "always",
+          "revealProblems": "onProblem",
+          "focus": true,
+          "echo": false,
+          "showReuseMessage": false,
+          "panel": "shared"
+        }
+      },
+      {
+        "label": "Q BRIX [UTILITY]: Run Mass Operations Utility",
+        "type": "shell",
+        "command": "cci task run mass_qbrix_update",
+        "group": "build",
+        "problemMatcher": [],
+        "presentation": {
+          "reveal": "always",
+          "revealProblems": "onProblem",
+          "focus": true,
+          "echo": false,
+          "showReuseMessage": false,
+          "panel": "shared"
+        }
+      },
+      {
+        "label": "Q BRIX [HEALTH]: Run Health Checker",
+        "type": "shell",
+        "command": "cci task run health_check",
+        "group": "build",
+        "problemMatcher": [],
+        "presentation": {
+          "reveal": "always",
+          "revealProblems": "onProblem",
+          "focus": true,
+          "echo": false,
+          "showReuseMessage": false,
+          "panel": "shared"
+        }
+      },
+      {
+        "label": "Q BRIX [UPDATE]: Update QBrix Default Scripts",
+        "type": "shell",
+        "command": "cci task run update_qbrix",
+        "group": "build",
+        "problemMatcher": [],
+        "presentation": {
+          "reveal": "always",
+          "revealProblems": "onProblem",
+          "focus": true,
+          "echo": false,
+          "showReuseMessage": false,
+          "panel": "shared"
+        }
+      },
+      {
         "label": "Q BRIX [ORG]: Create New Developer Preview Org (Alias 'dev_preview')",
         "type": "shell",
         "command": "cci org remove dev_preview && cci flow run dev_org --org dev_preview && echo 'New Developer Scratch Org has been created with alias dev_preview.'",
