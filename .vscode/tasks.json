@@ -35,6 +35,21 @@
         }
       },
       {
+        "label": "Q BRIX [INFO]: List installed Q Brix",
+        "type": "shell",
+        "command": "cci task run list_qbrix",
+        "group": "build",
+        "problemMatcher": [],
+        "presentation": {
+          "reveal": "always",
+          "revealProblems": "onProblem",
+          "focus": true,
+          "echo": false,
+          "showReuseMessage": false,
+          "panel": "shared"
+        }
+      },
+      {
         "label": "Q BRIX [UTILITY]: Run Mass Operations Utility",
         "type": "shell",
         "command": "cci task run mass_qbrix_update",
@@ -488,7 +503,7 @@
         }
       },
       {
-        "label": "Q BRIX [PACKAGE]: List Installed Packages in Org",
+        "label": "Q BRIX [INFO]: List Installed Packages in Org",
         "type": "shell",
         "command": "cci task run dx --org ${input:OrgAlias} --command force:package:installed:list",
         "group": "build",
