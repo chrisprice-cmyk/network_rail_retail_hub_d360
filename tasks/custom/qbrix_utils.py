@@ -721,7 +721,7 @@ class MassFileOps(BaseTask):
   def _run_task(self):
 
     self.logger.info(f''' 
-      Q BRIX - MASS OPERATION UTILITIES\n\n
+    Q BRIX - MASS OPERATION UTILITIES\n\n
       [1] API Updater - Updates Apex Classes and LWC/Aura Components with Q Brix API Version\n
       [2] Standard Field Cleaner - Removes standard fields within object folders\n
       [e] Exit / Cancel   
