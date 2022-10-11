@@ -733,7 +733,9 @@ class MassFileOps(BaseTask):
     aura_files = glob.glob("force-app/main/default/aura" + "/**/*.cmp-meta.xml", recursive = True)
     lwc_files = glob.glob("force-app/main/default/lwc" + "/**/*.js-meta.xml", recursive = True)
     results = []
-    results.extend(class_files).extend(aura_files).extend(lwc_files)
+    results.extend(class_files)
+    results.extend(aura_files)
+    results.extend(lwc_files)
 
     for f in results:
       try:
