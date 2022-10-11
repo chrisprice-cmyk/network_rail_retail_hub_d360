@@ -9,7 +9,7 @@ from urllib.request import urlopen
 from io import BytesIO
 from zipfile import ZipFile
 from datetime import datetime
-from tasks.custom import fart 
+from tasks.custom import fart
 
 class HealthChecker(BaseTask):
 
@@ -43,19 +43,18 @@ class HealthChecker(BaseTask):
 
     """ Removes Cached folders from project """
 
-    self.logger.info("Checking for downloaded CCI project source caches in /.cci/projects...")
+    self.logger.info("Removing CCI Source Cache...")
     if exists(".cci/projects"):
-      self.logger.info("Removing CCI project source caches...")
       shutil.rmtree(".cci/projects")
+    self.logger.info("CCI Source Cache Removed")
     
-    self.logger.info("Checking for MDAPI src cache in /src...")
+    self.logger.info("Removing MDAPI Cache...")
     if exists("src"):
-      self.logger.info("Removing MDAPI src cache...")
       shutil.rmtree("src")
+    self.logger.info("MDAPI Cache Removed")
 
-    self.logger.info("Checking for Q Robot cache...")
+    self.logger.info("Removing Q Robot cache...")
     if exists("browser"):
-      self.logger.info("Removing Robot cache in /browser...")
       shutil.rmtree("browser")
     if exists("log.html"):
       os.remove("log.html")
@@ -65,6 +64,7 @@ class HealthChecker(BaseTask):
       os.remove("output.xml")
     if exists("report.html"):
       os.remove("report.html")
+    self.logger.info("Q Robot cache cleared")
 
   def get_json_file_value(self, file_location, key_name):
 
@@ -209,7 +209,7 @@ class HealthChecker(BaseTask):
     if project_api_version != sfdx_version:
       self.logger.info("[ERROR] Sfdx Project Version does not match Project API Version.")
 
-      sfdx_input = input("Would you like to update the sfdx-project.json file? (y/n) Default y") or 'y'
+      sfdx_input = input("                        Would you like to update the sfdx-project.json file? (y/n) Default y") or 'y'
       if sfdx_input == 'y':
         self.update_json_file_value("sfdx-project.json","sourceApiVersion",project_api_version)
 
@@ -219,43 +219,51 @@ class HealthChecker(BaseTask):
 
     """ Checks for essential files within the current project folder """
 
-    self.logger.info("\n\n[CHECK STARTED] Checking for missing project files.")
+    self.logger.info("[CHECK STARTED] Checking for missing project files.")
 
     if not exists("cumulusci.yml"):
-      self.logger.warn("Missing File: cumulusci.yml")
+      self.logger.info("Missing File: cumulusci.yml")
     if not exists("orgs/dev.json"):
-      self.logger.warn("Missing File: orgs/dev.json")
+      self.logger.info("Missing File: orgs/dev.json")
     if not exists("sfdx-project.json"):
-      self.logger.warn("Missing File: sfdx-project.json")
+      self.logger.info("Missing File: sfdx-project.json")
     if not exists("orgs/dev_preview.json"):
-      self.logger.warn("Missing File: orgs/dev_preview.json")
+      self.logger.info("Missing File: orgs/dev_preview.json")
+    if not exists(".vscode/tasks.json"):
+      self.logger.info("Missing File: .vscode/tasks.json")
+    if not exists("force-app/main/default"):
+      self.logger.info("Missing Folder/Directory: force-app/main/default")
+    if not exists("tasks/custom"):
+      self.logger.info("Missing Folder/Directory: tasks/custom")
+    if not exists("scripts"):
+      self.logger.info("Missing Folder/Directory: scripts")
 
-    self.logger.info("[CHECK COMPLETE] Missing files check complete.\n\n")
+    self.logger.info("[CHECK COMPLETE] Missing files check complete.")
 
   def check_org_config_files(self):
 
     """ Checks the orgs/dev.json and orgs/dev_preview.json file for key values """
 
-    self.logger.info("\n\n[CHECK STARTED] Checking your org config files for issues")
+    self.logger.info("[CHECK STARTED] Checking your org config files for issues")
     error_found = False 
     if not "enterprise" in self.get_json_file_value("orgs/dev.json", "edition").lower():
       self.logger.info("[FAIL] Your org/dev.json file is not set to Enterprise edition.")
       error_found = True
-      devInput = input("Would you like to update the dev.json file? (y/n) Default y") or 'y'
+      devInput = input("                        Would you like to update the dev.json file? (y/n) Default y") or 'y'
       if devInput == 'y':
         self.update_json_file_value('orgs/dev.json', 'edition', 'Enterprise')
 
     if not "enterprise" in self.get_json_file_value("orgs/dev_preview.json", "edition").lower():
       self.logger.info("[FAIL] Your org/dev_preview.json file is not set to Enterprise edition.")
       error_found = True
-      devInput = input("Would you like to update the dev_preview.json file? (y/n) Default y") or 'y'
+      devInput = input("                        Would you like to update the dev_preview.json file? (y/n) Default y") or 'y'
       if devInput == 'y':
         self.update_json_file_value('orgs/dev_preview.json', 'edition', 'Enterprise')
 
     if not "preview" in self.get_json_file_value("orgs/dev_preview.json", "release").lower():
       self.logger.info("[FAIL] Your org/dev_preview.json file is not set to the preview release.")
       error_found = True
-      devInput = input("Would you like to update the dev_preview.json file? (y/n) Default y") or 'y'
+      devInput = input("                        Would you like to update the dev_preview.json file? (y/n) Default y") or 'y'
       if devInput == 'y':
         self.update_json_file_value('orgs/dev_preview.json', 'release', 'preview')
 
@@ -263,13 +271,13 @@ class HealthChecker(BaseTask):
     if not error_found:
       self.logger.info("[OK] Both files have passed checks")
 
-    self.logger.info("[CHECK COMPLETE] config files check complete.\n\n")
+    self.logger.info("[CHECK COMPLETE] config files check complete.")
 
   def source_org_feature_checker(self):
 
     """ Check all source project dev.json files for missing features from current project dev.json file """
 
-    self.logger.info("\n\n[CHECK STARTED] Checking that all source dev.json file features are listed in the current dev.json file")
+    self.logger.info("[CHECK STARTED] Checking that all source dev.json file features are listed in the current dev.json file")
 
     #Prepare Project File
     if not self.SkipCacheRebuild:
@@ -303,14 +311,14 @@ class HealthChecker(BaseTask):
     else:
       self.logger.info("[OK] No Missing Features Found")  
 
-    self.logger.info("[CHECK COMPLETE] config files check complete.\n\n")
+    self.logger.info("[CHECK COMPLETE] config files check complete.")
 
 
   def org_feature_checker(self):
 
     """ Check and optionally update the dev_preview.json file with features from the dev.json file """
 
-    self.logger.info("\n\n[CHECK STARTED] Checking dev_preview.json file has all the features which are in the dev.json file\n\n")  
+    self.logger.info("\n\n[CHECK STARTED] Checking dev_preview.json file has all the features which are in the dev.json file")  
     missing_features = []
     missing_features = self.find_missing_features("orgs/dev_preview.json", "orgs/dev.json")
     if len(missing_features) > 0:
@@ -318,7 +326,7 @@ class HealthChecker(BaseTask):
       self.logger.info(json.dumps(missing_features, indent=4))
       self.update_org_file_features("orgs/dev_preview.json",missing_features)
     else:
-      self.logger.info("[CHECK COMPLETE] No Missing Features Found\n\n")  
+      self.logger.info("[CHECK COMPLETE] No Missing Features Found")  
 
   def check_project_file_naming(self):
 
@@ -354,19 +362,20 @@ class HealthChecker(BaseTask):
       if not repo_qbrix_name in self.get_json_file_value("orgs/dev.json", "orgName"):
         file_name_error = True
         self.logger.info("[FAIL] OrgName in orgs/dev.json has not been updated.")
-        uinput = input("Would you like to update the dev.json file? (y/n) Default y") or 'y'
+        uinput = input("                        Would you like to update the dev.json file? (y/n) Default y") or 'y'
         if uinput == 'y':
           self.update_json_file_value("orgs/dev.json", "orgName", f"{repo_qbrix_name} - Dev org")
 
       if not repo_qbrix_name in self.get_json_file_value("orgs/dev_preview.json", "orgName"):
         file_name_error = True
         self.logger.info("[FAIL] OrgName in orgs/dev_preview.json has not been updated.")
-        uinput = input("Would you like to update the dev_preview.json file? (y/n) Default y") or 'y'
+        uinput = input("                        Would you like to update the dev_preview.json file? (y/n) Default y") or 'y'
         if uinput == 'y':
           self.update_json_file_value("orgs/dev_preview.json", "orgName", f"{repo_qbrix_name} - Preview Dev org")
 
     if not file_name_error:
       self.logger.info("[OK] All Checks Passed!")
+
     self.logger.info("[CHECK COMPLETE] Checking Q Brix Names")
 
   # Cache Utilities
@@ -375,7 +384,7 @@ class HealthChecker(BaseTask):
 
     """" Rebuilds the CCI projects Cache folder using the dev_org flow from CCI """
 
-    self.logger.info("\n\n[START] CCI Project Cache Rebuild Starting")
+    self.logger.info("\n\n[START] CCI Project Cache Rebuild Starting...")
     subprocess.run(["cci", "flow" , "info", "dev_org"])
     self.logger.info("[COMPLETE] CCI Project Cache Rebuild Complete!\n\n")
 
@@ -383,13 +392,42 @@ class HealthChecker(BaseTask):
   # MAIN EXECUTE
   
   def _run_task(self):
-    self.logger.info("\n\n[HEALTH CHECKER] STARTING Q HEALTH CHECKER\n\n")
-    self.check_project_file_naming()
-    self.check_api_versions()
-    self.check_for_missing_files()
-    self.source_org_feature_checker()
-    self.org_feature_checker()
-    self.check_org_config_files()
+
+    self.logger.info(f''' 
+    Q BRIX - HEALTH CHECKER\n\n
+      OPTION  DESCRIPTION\n
+      [1]     Run All Health Checks\n
+      [2]     Run API Version File Checks\n
+      [3]     Check for Missing Files in project\n
+      [4]     Check All Sources for missing Features in current project\n
+      [5]     Check dev.json features match dev_preview.json features\n
+      [e]     Exit   
+    ''')
+
+    menu_option = input("                        Enter an option from above (Default = 1) :") or '1'
+
+    match menu_option.lower():
+      case "1":
+        self.check_project_file_naming()
+        self.check_api_versions()
+        self.check_for_missing_files()
+        self.source_org_feature_checker()
+        self.org_feature_checker()
+        self.check_org_config_files()
+      case "2":
+        self.check_api_versions()
+      case "3":
+        self.check_for_missing_files()
+      case "4":
+        self.source_org_feature_checker()
+        self.check_org_config_files()
+      case "5":
+        self.check_org_config_files()
+      case "e":
+        exit()
+      case _:
+        self.logger.info("Invalid Option, please select a valid option from the menu.")
+
     self.logger.info("\n\n[HEALTH CHECKER] Complete!\n\n")
 
 class QBrixUpdater(BaseTask):
@@ -470,8 +508,6 @@ class QBrixUpdater(BaseTask):
       self.logger.info("Clearing cache and temp files...")
       if exists("__MACOSX"):
         shutil.rmtree("__MACOSX")
-      if exists("tasks/__pycache__"):
-        shutil.rmtree("tasks/__pycache__")
       if exists("tasks/custom/__pycache__"):
         shutil.rmtree("tasks/custom/__pycache__")
       if exists("q_update_package"):
@@ -490,10 +526,6 @@ class Initialise_Project(BaseTask):
   # Global Task Options
 
   task_options={
-        "TestMode": {
-            "description": "When in test mode, no files are updated.",
-            "required": False
-        }
     }
 
   def _init_options(self, kwargs):
@@ -507,10 +539,6 @@ class Initialise_Project(BaseTask):
     self.project_name = self.project_config.project__name
     self.repo_url = self.project_config.project__git__repo_url
     self.template_file_location = "force-app/main/default/customMetadata/xDO_Base_QBrix_Register.xDO_Template.md-meta.xml"
-    self.TestMode = False
-
-    if "TestMode" in self.options:
-      self.TestMode = self.options["TestMode"]
 
   def update_create_qbrix_register(self):
 
@@ -552,24 +580,26 @@ class Initialise_Project(BaseTask):
           </values>
       </CustomMetadata>'''
 
-
-    if self.TestMode:
-      print(xml)
-    else:
-      with open(self.template_file_location, "w") as f:
-        f.write(xml)
+    with open(self.template_file_location, "w") as f:
+      f.write(xml)
 
   def get_qbrix_repo_url(self):
+
+    """ Get Repo URL for current Q Brix"""
+
     result = subprocess.run("git config --get remote.origin.url", shell=True, capture_output=True).stdout
     repo_url = ""
     if result is None:
-      repo_url = input("Please Enter the URL for the Q brix Repo (e.g. https://www.github.com/sfdc-qbranch/Qbrix-1-repo): ")
+      repo_url = input("                        Please Enter the URL for the Q brix Repo (e.g. https://www.github.com/sfdc-qbranch/Qbrix-1-repo): ")
     else:
       repo_url = result.decode('utf-8').rstrip().replace(".git","")
 
     return repo_url
 
   def replace_file_text(self, file_location, old_text, new_text):
+
+    """ Replace specific text within a file """
+
     if os.path.isfile(file_location):
 
       new_fcontents = None
@@ -610,39 +640,39 @@ class Initialise_Project(BaseTask):
 
     if "OWNER NAME HERE" in self.qbrix_owner:
       
-      qbrix_owner = input("Enter the owner name for this Q Brix (i.e. Who is the contact for issues?): ")
+      qbrix_owner = input("                        Enter the owner name for this Q Brix (i.e. Who is the contact for issues?): ")
       if qbrix_owner != None:
         self.replace_file_text("cumulusci.yml", "OWNER NAME HERE", qbrix_owner)
         self.qbrix_owner = qbrix_owner
 
-      qbrix_owner_team = input("Enter the owners team for this Q Brix (e.g. Q Branch): ")
+      qbrix_owner_team = input("                        Enter the owners team for this Q Brix (e.g. Q Branch): ")
       if qbrix_owner_team != None:
         self.replace_file_text("cumulusci.yml", "OWNER TEAM HERE", qbrix_owner_team)
         self.qbrix_owner_team = qbrix_owner_team
 
-      same_person_check = input("Is the Owner the same person as the publisher? (Default y/n) ") or 'y'
+      same_person_check = input("                        Is the Owner the same person as the publisher? (Default y/n) ") or 'y'
       if same_person_check.lower() == 'y':
         self.replace_file_text("cumulusci.yml", "OWNER OR PUBLISHER NAME HERE", qbrix_owner)
         self.replace_file_text("cumulusci.yml", "OWNER OR PUBLISHER TEAM HERE", qbrix_owner_team)
         self.qbrix_publisher_name = qbrix_owner
         self.qbrix_publisher_team = qbrix_owner_team
       else:
-        qbrix_publisher_name = input("Enter the publishers name for this Q Brix (i.e. Who is the contact for publishing updates?): ")
+        qbrix_publisher_name = input("                        Enter the publishers name for this Q Brix (i.e. Who is the contact for publishing updates?): ")
         if qbrix_publisher_name != None:
           self.replace_file_text("cumulusci.yml", "OWNER OR PUBLISHER NAME HERE", qbrix_publisher_name)
           self.qbrix_publisher_name = qbrix_publisher_name
 
-        qbrix_publisher_team = input("Enter the publisher's team name for this Q Brix (e.g. Q Branch): ")
+        qbrix_publisher_team = input("                        Enter the publisher's team name for this Q Brix (e.g. Q Branch): ")
         if qbrix_publisher_team != None:
           self.replace_file_text("cumulusci.yml", "OWNER OR PUBLISHER TEAM HERE", qbrix_publisher_team)
           self.qbrix_publisher_team = qbrix_publisher_team
 
-      qbrix_documentation_url = input("Enter the url for documentation (You can skip this for now and update in the cumulusci.yml file later): ")
+      qbrix_documentation_url = input("                        Enter the url for documentation (You can skip this for now and update in the cumulusci.yml file later): ")
       if qbrix_documentation_url != None:
         self.replace_file_text("cumulusci.yml", "https://confluence.internal.salesforce.com/pages/viewpage.action?pageId=487362018", qbrix_documentation_url)
         self.qbrix_documentation_url = qbrix_documentation_url
 
-      qbrix_description = input("Enter a short description for this Q Brix (e.g. Deploys base configuration for Commerce Cloud): ")
+      qbrix_description = input("                        Enter a short description for this Q Brix (e.g. Deploys base configuration for Commerce Cloud): ")
       if qbrix_description != None:
         self.replace_file_text("cumulusci.yml", "SHORT DESCRIPTION OF QBRIX HERE", qbrix_description) 
         self.qbrix_description = qbrix_description
@@ -696,26 +726,42 @@ class MassFileOps(BaseTask):
   
     """ Update file API version in project """
 
+    #Handle Bulk Files
+    #To add: Visualforce and Apex Triggers
+
     class_files = glob.glob("force-app/main/default/classes" + "/**/*.cls-meta.xml", recursive = True)
     aura_files = glob.glob("force-app/main/default/aura" + "/**/*.cmp-meta.xml", recursive = True)
     lwc_files = glob.glob("force-app/main/default/lwc" + "/**/*.js-meta.xml", recursive = True)
-
-    #To add: Visualforce and Apex Triggers
-
     results = []
-    results.extend(class_files)
-    results.extend(aura_files)
-    results.extend(lwc_files)
+    results.extend(class_files).extend(aura_files).extend(lwc_files)
 
     for f in results:
-      self.logger.info(f"Updating File: {f}")
       try:
         fart.FART.fartbetween(self, f, "<apiVersion>", "</apiVersion>", self.project_config.project__package__api_version)
-        self.logger.info(f"File Updated: {f}")
+        self.logger.info(f"[OK] File Updated: {f}")
       except:
         self.logger.info(f"[FAILED] File Update Failed: {f}")
 
+    #Handle Single Files
+
+    if exists("files/package.xml"):
+      try:
+        fart.FART.fartbetween(self, f, "<version>", "</version>", self.project_config.project__package__api_version)
+        self.logger.info(f"[OK] File Updated: files/package.xml")
+      except:
+        self.logger.info(f"[FAILED] File Update files/package.xml")
+
+    if exists("sfdx-project.json"):
+      try:
+        self.update_json_file_value("sfdx-project.json","sourceApiVersion",self.project_config.project__package__api_version)
+        self.logger.info(f"[OK] File Updated: sfdx-project.json")
+      except:
+        self.logger.info(f"[FAILED] File Update sfdx-project.json")
+
   def delete_standard_fields(self):
+
+    """ Removes Standard Salesforce Fields from Project """
+
     object_fields = glob.glob("force-app/main/default/objects" + "/**/*.field-meta.xml", recursive = True)
 
     if len(object_fields) == 0:
@@ -723,33 +769,39 @@ class MassFileOps(BaseTask):
     else:
       for of in object_fields:
         if not os.path.basename(of).endswith("__c.field-meta.xml"):
-          self.logger.info(f"Deleting File: {of}")
           os.remove(of)
+          self.logger.info(f"Deleted File: {of}")
 
   def _run_task(self):
 
     self.logger.info(f''' 
     Q BRIX - MASS OPERATION UTILITIES\n\n
-      [1] API Updater - Updates Apex Classes and LWC/Aura Components with Q Brix API Version\n
-      [2] Standard Field Cleaner - Removes standard fields within object folders\n
-      [e] Exit / Cancel   
+      OPTION  DESCRIPTION\n
+      [1]     Update File APIs - Updates Apex Classes and LWC/Aura Components with Q Brix API Version\n
+      [2]     Delete Standard Fields - Removes standard fields within object folders\n
+      [e]     Exit   
     ''')
 
+    option = input("                        Which task you like to run? (Enter the option number) : ")
 
-    option = input("Which task you like to run? (Enter the option number) : ")
-
-
-    match option:
+    match option.lower():
         case "1":
-          confirmation = input("This will update ALL Apex Class, Aura Component and LWC Component metadata files with the project API Version. Are you sure you want to continue? (y/n) ") or 'y'
+          confirmation = input("                        This will update ALL Apex Classes, Aura Component's and LWC Component's metadata files with the project API Version. Are you sure you want to continue? (y/n) Default y:") or 'y'
           if confirmation.lower() == 'y':
             self.update_file_api_versions()
+            self.logger.info("Update Complete!")
         case "2":
-            confirmation = input("This will DELETE all Standard Salesforce fields from all object folders within force-app. Are you sure you want to continue? (y/n) ") or 'y'
-            if confirmation.lower() == 'y':
-              self.delete_standard_fields()
+          confirmation = input("                        This will DELETE all Standard Salesforce fields from all object folders within force-app/main/default/objects. Are you sure you want to continue? (y/n) Default y:") or 'y'
+          if confirmation.lower() == 'y':
+            self.delete_standard_fields()
+            self.logger.info("Update Complete!")
+        case "e":
+          self.logger.info("Exiting Mass Operations Utilities")
+          exit()
         case _:
-            self.logger.info("Exiting Mass Operations Utilities")
+          self.logger.info("Invalid Menu Option Selected. Please choose a valid option from the list above.")
+
+    self._run_task()
 
     
 
