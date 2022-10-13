@@ -236,6 +236,7 @@ flows:
     steps:
       1:
         task: install_qbrix_register
+        when: org_config.scratch
         ui_options:
           name: Install/Update QBrix Registration Tool
       2:
