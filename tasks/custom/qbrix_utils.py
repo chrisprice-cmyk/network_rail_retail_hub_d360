@@ -643,12 +643,12 @@ class Initialise_Project(BaseTask):
     if "OWNER NAME HERE" in self.qbrix_owner:
       
       qbrix_owner = input("                        Enter the owner name for this Q Brix (i.e. Who is the contact for issues?): ")
-      if qbrix_owner != None:
+      if qbrix_owner != "":
         self.replace_file_text("cumulusci.yml", "OWNER NAME HERE", qbrix_owner)
         self.qbrix_owner = qbrix_owner
 
       qbrix_owner_team = input("                        Enter the owners team for this Q Brix (e.g. Q Branch): ")
-      if qbrix_owner_team != None:
+      if qbrix_owner_team != "":
         self.replace_file_text("cumulusci.yml", "OWNER TEAM HERE", qbrix_owner_team)
         self.qbrix_owner_team = qbrix_owner_team
 
@@ -660,24 +660,24 @@ class Initialise_Project(BaseTask):
         self.qbrix_publisher_team = qbrix_owner_team
       else:
         qbrix_publisher_name = input("                        Enter the publishers name for this Q Brix (i.e. Who is the contact for publishing updates?): ")
-        if qbrix_publisher_name != None:
+        if qbrix_publisher_name != "":
           self.replace_file_text("cumulusci.yml", "OWNER OR PUBLISHER NAME HERE", qbrix_publisher_name)
           self.qbrix_publisher_name = qbrix_publisher_name
 
         qbrix_publisher_team = input("                        Enter the publisher's team name for this Q Brix (e.g. Q Branch): ")
-        if qbrix_publisher_team != None:
+        if qbrix_publisher_team != "":
           self.replace_file_text("cumulusci.yml", "OWNER OR PUBLISHER TEAM HERE", qbrix_publisher_team)
           self.qbrix_publisher_team = qbrix_publisher_team
 
       qbrix_documentation_url = input("                        Enter the url for documentation (You can skip this for now and update in the cumulusci.yml file later): ")
-      if qbrix_documentation_url != None:
+      if qbrix_documentation_url != "":
         self.replace_file_text("cumulusci.yml", f"https://confluence.internal.salesforce.com/pages/viewpage.action?pageId=487362018", qbrix_documentation_url)
         self.qbrix_documentation_url = qbrix_documentation_url
       else:
         self.qbrix_documentation_url = f"https://confluence.internal.salesforce.com/pages/viewpage.action?pageId=487362018"
 
       qbrix_description = input("                        Enter a short description for this Q Brix (e.g. Deploys base configuration for Commerce Cloud): ")
-      if qbrix_description != None:
+      if qbrix_description != "":
         self.replace_file_text("cumulusci.yml", "SHORT DESCRIPTION OF QBRIX HERE", qbrix_description) 
         self.qbrix_description = qbrix_description
 
