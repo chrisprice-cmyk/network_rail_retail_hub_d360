@@ -668,7 +668,7 @@ class Initialise_Project(BaseTask):
           self.qbrix_publisher_team = qbrix_publisher_team
 
       qbrix_documentation_url = input("                        Enter the url for documentation (You can skip this for now and update in the cumulusci.yml file later): ")
-      if qbrix_documentation_url != None:
+      if not qbrix_documentation_url is None:
         self.replace_file_text("cumulusci.yml", "https://confluence.internal.salesforce.com/pages/viewpage.action?pageId=487362018", qbrix_documentation_url)
         self.qbrix_documentation_url = qbrix_documentation_url
 
