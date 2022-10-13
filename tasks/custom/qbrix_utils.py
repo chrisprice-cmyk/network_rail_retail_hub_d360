@@ -534,7 +534,7 @@ class Initialise_Project(BaseTask):
     self.qbrix_owner_team = self.project_config.project__custom__qbrix_owner_team
     self.qbrix_publisher_name = self.project_config.project__custom__qbrix_publisher_name
     self.qbrix_publisher_team = self.project_config.project__custom__qbrix_publisher_team
-    self.qbrix_documentation_url = self.project_config.project__custom__qbrix_documentation_url or 'https://confluence.internal.salesforce.com/pages/viewpage.action?pageId=487362018'
+    self.qbrix_documentation_url = self.project_config.project__custom__qbrix_documentation_url
     self.qbrix_description = self.project_config.project__custom__qbrix_description
     self.project_name = self.project_config.project__name
     self.repo_url = self.project_config.project__git__repo_url
@@ -630,9 +630,11 @@ class Initialise_Project(BaseTask):
 
     # UPDATE CCI YML
 
-    self.logger.info("Updating CumulusCI Configuration File...")
-    self.replace_file_text("cumulusci.yml", "xDO-Template", f"{qbrix_name}")
-    self.logger.info("CumulusCI File Updated")
+    if self.project_name == "xDO-Template" or self.project_name != qbrix_name:
+      self.logger.info("Updating CumulusCI Configuration File...")
+      self.replace_file_text("cumulusci.yml", "xDO-Template", f"{qbrix_name}")
+      self.replace_file_text("cumulusci.yml", f"name: {self.project_name}", f"name: {qbrix_name}")
+      self.logger.info("CumulusCI File Updated")
 
     #Get Initial Details
 
@@ -668,9 +670,11 @@ class Initialise_Project(BaseTask):
           self.qbrix_publisher_team = qbrix_publisher_team
 
       qbrix_documentation_url = input("                        Enter the url for documentation (You can skip this for now and update in the cumulusci.yml file later): ")
-      if not qbrix_documentation_url is None:
-        self.replace_file_text("cumulusci.yml", "https://confluence.internal.salesforce.com/pages/viewpage.action?pageId=487362018", qbrix_documentation_url)
+      if qbrix_documentation_url != None:
+        self.replace_file_text("cumulusci.yml", f"https://confluence.internal.salesforce.com/pages/viewpage.action?pageId=487362018", qbrix_documentation_url)
         self.qbrix_documentation_url = qbrix_documentation_url
+      else:
+        self.qbrix_documentation_url = f"https://confluence.internal.salesforce.com/pages/viewpage.action?pageId=487362018"
 
       qbrix_description = input("                        Enter a short description for this Q Brix (e.g. Deploys base configuration for Commerce Cloud): ")
       if qbrix_description != None:
@@ -755,7 +759,7 @@ class MassFileOps(BaseTask):
 
     if exists("sfdx-project.json"):
       try:
-        self.update_json_file_value("sfdx-project.json","sourceApiVersion",self.project_config.project__package__api_version)
+        HealthChecker.update_json_file_value(self, "sfdx-project.json", "sourceApiVersion", self.project_config.project__package__api_version)
         self.logger.info(f"[OK] File Updated: sfdx-project.json")
       except:
         self.logger.info(f"[FAILED] File Update sfdx-project.json")
