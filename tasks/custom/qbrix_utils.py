@@ -37,6 +37,8 @@ class HealthChecker(BaseTask):
     if "SkipCacheRebuild" in self.options:
       self.SkipCacheRebuild = self.options["SkipCacheRebuild"]
 
+    self.errors_found = False
+
   # File and Project Utilities
 
   def clean_project(self):
@@ -160,12 +162,15 @@ class HealthChecker(BaseTask):
 
     #Check two arrays have been passed
     if main_features_file is None or check_features_file is None:
-      raise Exception("You must pass two arrays, one or more is missing")
+      raise Exception("[ERROR] You must pass two file locations, one or more is missing")
 
-    if not exists(main_features_file) or not exists(check_features_file):
-      raise Exception("One of the files cannot be accessed. Check it has not been deleted.")
+    if not exists(main_features_file):
+      raise Exception(f"[ERROR] One of the files cannot be accessed ({main_features_file}). Check it has not been deleted.")
 
-    self.logger.info(f"Comparing {main_features_file} to {check_features_file}")
+    if not exists(check_features_file):
+      raise Exception(f"[ERROR] One of the files cannot be accessed ({check_features_file}). Check it has not been deleted.")
+
+    self.logger.info(f"[INFO] Comparing {main_features_file} to {check_features_file}")
 
     #Init Missing Features List
     missing_features = []
@@ -181,35 +186,36 @@ class HealthChecker(BaseTask):
         mFile.close()
 
       CompareToList = mObject['features']
-      CompareToList = [x.lower() for x in CompareToList]
+      if CompareToList is None or len(CompareToList) < 1:
+        self.logger.info(f"[ERROR] Failed to find any features in file: {main_features_file}")
+      else:
+        CompareToList = [x.lower() for x in CompareToList]
 
-      #Load Comparison File
-      with open(check_features_file) as mFile:
-        mObject = json.load(mFile)
-        mFile.close()
+        #Load Comparison File
+        with open(check_features_file) as mFile:
+          mObject = json.load(mFile)
+          mFile.close()
 
-      CompareFromList = mObject['features']
-      CompareFromList = [x.lower() for x in CompareFromList]
+        CompareFromList = mObject['features']
+        if CompareFromList is None or len(CompareFromList) < 1:
+          self.logger.info(f"[ERROR] Failed to find any features in file: {check_features_file}")
+        else:
+          CompareFromList = [x.lower() for x in CompareFromList]
+
+          #Compare both lists and populate missing list
+          for cf in CompareFromList:
+            if cf.lower() not in CompareToList and cf.lower() not in missing_features:
+              missing_features.append(cf.lower())
+
+          if len(missing_features) == 0:
+            self.logger.info(f"[OK] There are no missing features found when comparing to file: {check_features_file}")
+          else:
+            self.logger.info(f"[WARNING] There are missing features, when comparing to file: {check_features_file}")
+            missing_features.sort()
     except:
-      self.logger.info(f"ERROR: Failed to compare file: {check_features_file}")
+      self.logger.info(f"[ERROR] Failed to compare file: {check_features_file}")
       return None
-
-    if CompareFromList is None:
-      self.logger.info(f"ERROR: Failed to find any features in file: {check_features_file}")
-      return None
-
-    #Compare both lists and populate missing list
-    for cf in CompareFromList:
-      if cf.lower() not in CompareToList and cf.lower() not in missing_features:
-        missing_features.append(cf.lower())
-
-    if len(missing_features) == 0:
-      self.logger.info(f"[OK] There are no missing features found when comparing to file: {check_features_file}")
-    else:
-      self.logger.info(f"[WARNING] There are missing features, when comparing to file: {check_features_file}")
-
-    missing_features.sort()
-
+  
     return missing_features     
 
   # File Checks
@@ -220,20 +226,24 @@ class HealthChecker(BaseTask):
 
     project_api_version = self.project_config.project__package__api_version
 
+    if project_api_version is None or project_api_version == '':
+      raise Exception("[ERROR] No Project api version was found in the cumulusci.yml file. Ensure that this has been entered into the file.")
+
     self.logger.info(f"\n\n[CHECK STARTED] Checking File API Versions are set to v{project_api_version}")
 
+    #Check SFDX Project File
     self.logger.info("Checking sfdx-project.json file...")
-
     sfdx_version = self.get_json_file_value("sfdx-project.json", "sourceApiVersion")
-
     self.logger.info(f"sfdx-project.json API Version: {sfdx_version}")
 
     if project_api_version != sfdx_version:
-      self.logger.info("[ERROR] Sfdx Project Version does not match Project API Version.")
+      self.logger.info("[ERROR] Sfdx Project Version does not match Project API Version. Health check will now correct the files.")
+      self.update_json_file_value("sfdx-project.json","sourceApiVersion",project_api_version)
 
-      sfdx_input = input("                        Would you like to update the sfdx-project.json file? (y/n) Default y") or 'y'
-      if sfdx_input == 'y':
-        self.update_json_file_value("sfdx-project.json","sourceApiVersion",project_api_version)
+    #Check package.xml File used for profile updates
+    if exists('files/package.xml'):
+      self.logger.info("Checking files/package.xml...")
+      fart.FART.fartbetween(self, 'files/package.xml', '<version>', '</version>', project_api_version)
 
     self.logger.info(f"[CHECK COMPLETE] Checking File API Versions are set to v{project_api_version} has completed.")
 
@@ -241,24 +251,25 @@ class HealthChecker(BaseTask):
 
     """ Checks for essential files within the current project folder """
 
-    self.logger.info("[CHECK STARTED] Checking for missing project files.")
+    self.logger.info("[CHECK STARTED] Checking for missing Q Brix project files.")
 
     if not exists("cumulusci.yml"):
-      self.logger.info("[ERROR] Missing File: cumulusci.yml")
+      self.logger.info("[ERROR] Missing File: cumulusci.yml - You must have a cumulusci configuration file. Copy the one from the xDO-Template repo if needed.")
     if not exists("orgs/dev.json"):
-      self.logger.info("[ERROR] Missing File: orgs/dev.json")
+      self.logger.info("[ERROR] Missing File: orgs/dev.json - You must have an org definition file for development.")
     if not exists("sfdx-project.json"):
-      self.logger.info("[ERROR] Missing File: sfdx-project.json")
+      self.logger.info("[ERROR] Missing File: sfdx-project.json - You must have the sfdx-project.json file. Check the xDO-Template and copy the template example.")
     if not exists("orgs/dev_preview.json"):
-      self.logger.info("[ERROR] Missing File: orgs/dev_preview.json")
+      self.logger.info("[ERROR] Missing File: orgs/dev_preview.json - You should have a preview dev org definition file. Please create one.")
     if not exists(".vscode/tasks.json"):
-      self.logger.info("[ERROR] Missing File: .vscode/tasks.json")
+      self.logger.info("[WARNING] Missing File: .vscode/tasks.json - VSCode Tasks will not function without this file. Copy it from the xDO-Template repo.")
     if not exists("force-app/main/default"):
-      self.logger.info("[ERROR] Missing Folder/Directory: force-app/main/default")
+      self.logger.info("[ERROR] Missing Folder/Directory: force-app/main/default. Creating this now...")
+      os.mkdir('force-app/main/default')
     if not exists("tasks/custom"):
       self.logger.info("[ERROR] Missing Folder/Directory: tasks/custom")
     if not exists("scripts"):
-      self.logger.info("[ERROR] Missing Folder/Directory: scripts")
+      self.logger.info("[WARNING] Missing Folder/Directory: scripts - Multiple bundled scripts are located in this folder so check the xDO-Template and copy them over to your repo if needed.")
 
     self.logger.info("[CHECK COMPLETE] Missing files check complete.")
 
