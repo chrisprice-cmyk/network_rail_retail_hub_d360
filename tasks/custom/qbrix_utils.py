@@ -21,7 +21,7 @@ class HealthChecker(BaseTask):
             "required": False
         },
         "SkipCacheRebuild": {
-            "description": "Boolean, Skips the cci cache rebuild if true",
+            "description": "Boolean, Skips the cci cache rebuild if true. Not recommended unless you have recently run dev_org or qa_org flow",
             "required": False
         }
     }
@@ -41,19 +41,22 @@ class HealthChecker(BaseTask):
 
   def clean_project(self):
 
-    """ Removes Cached folders from project """
+    """ Removes Cached folders from Q Brix project """
 
-    self.logger.info("Removing CCI Source Cache...")
+    #Removes Cache of Source Projects listed within the Cumulusci.yml file
+    self.logger.info("[START] Check and Remove CCI Source Cache...")
     if exists(".cci/projects"):
       shutil.rmtree(".cci/projects")
-    self.logger.info("CCI Source Cache Removed")
+      self.logger.info("[OK] CCI Source Q Brix Cache Removed")
     
-    self.logger.info("Removing MDAPI Cache...")
+    #Removes MDAPI cache folder
+    self.logger.info("[START] Check and Remove MDAPI Cache...")
     if exists("src"):
       shutil.rmtree("src")
-    self.logger.info("MDAPI Cache Removed")
+      self.logger.info("[OK] MDAPI Cache Removed")
 
-    self.logger.info("Removing Q Robot cache...")
+    #Removes Files and Folders created by Q Robot
+    self.logger.info("[START] Check and Remove Q Robot cache...")
     if exists("browser"):
       shutil.rmtree("browser")
     if exists("log.html"):
@@ -64,21 +67,22 @@ class HealthChecker(BaseTask):
       os.remove("output.xml")
     if exists("report.html"):
       os.remove("report.html")
-    self.logger.info("Q Robot cache cleared")
+    self.logger.info("[OK] Q Robot cache cleared")
 
   def get_json_file_value(self, file_location, key_name):
 
     """ Reads a value from a json file based on key name """
 
     if not file_location is None and os.path.isfile(file_location):
+      print(f"Reading {file_location}")
       with open(file_location) as mFile:
         mObject = json.load(mFile)
         mFile.close()
-      
       try:
         return_value = mObject[key_name]
       except:
         return_value = ""
+      print(return_value)
       return return_value
     else:
       self.logger.info(f"WARNING: Key {key_name} not found in {file_location}")
@@ -87,6 +91,9 @@ class HealthChecker(BaseTask):
   def update_json_file_value(self, file_location, key_name, new_value):
 
     """ Updates a scratch org json file key value with a new value. Not designed to be used with a list """
+
+    if key_name is None or new_value is None:
+      raise Exception("Error: Missing Key Name and/or New Value for JSON File Update. Please check you are passing a key name and new value.")
 
     if not file_location is None and os.path.isfile(file_location):
 
@@ -103,6 +110,21 @@ class HealthChecker(BaseTask):
         nFile.close()
 
       self.logger.info(f"{file_location} has been updated!")
+
+  def remove_json_entry(self, file_location, key_name):
+
+    if key_name is None:
+      raise Exception("Error: Missing Key Name for JSON File Update. Please check you are passing a key name.")
+
+    with open(file_location) as mFile:
+              mObject = json.load(mFile)
+              mFile.close()
+
+    del mObject[key_name]
+
+    with open(file_location, "w") as nFile:
+      json.dump(mObject, nFile, indent=2)
+      nFile.close()
 
   def update_org_file_features(self, file_location, missing_features):
 
@@ -222,21 +244,21 @@ class HealthChecker(BaseTask):
     self.logger.info("[CHECK STARTED] Checking for missing project files.")
 
     if not exists("cumulusci.yml"):
-      self.logger.info("Missing File: cumulusci.yml")
+      self.logger.info("[ERROR] Missing File: cumulusci.yml")
     if not exists("orgs/dev.json"):
-      self.logger.info("Missing File: orgs/dev.json")
+      self.logger.info("[ERROR] Missing File: orgs/dev.json")
     if not exists("sfdx-project.json"):
-      self.logger.info("Missing File: sfdx-project.json")
+      self.logger.info("[ERROR] Missing File: sfdx-project.json")
     if not exists("orgs/dev_preview.json"):
-      self.logger.info("Missing File: orgs/dev_preview.json")
+      self.logger.info("[ERROR] Missing File: orgs/dev_preview.json")
     if not exists(".vscode/tasks.json"):
-      self.logger.info("Missing File: .vscode/tasks.json")
+      self.logger.info("[ERROR] Missing File: .vscode/tasks.json")
     if not exists("force-app/main/default"):
-      self.logger.info("Missing Folder/Directory: force-app/main/default")
+      self.logger.info("[ERROR] Missing Folder/Directory: force-app/main/default")
     if not exists("tasks/custom"):
-      self.logger.info("Missing Folder/Directory: tasks/custom")
+      self.logger.info("[ERROR] Missing Folder/Directory: tasks/custom")
     if not exists("scripts"):
-      self.logger.info("Missing Folder/Directory: scripts")
+      self.logger.info("[ERROR] Missing Folder/Directory: scripts")
 
     self.logger.info("[CHECK COMPLETE] Missing files check complete.")
 
@@ -260,18 +282,24 @@ class HealthChecker(BaseTask):
       if devInput == 'y':
         self.update_json_file_value('orgs/dev_preview.json', 'edition', 'Enterprise')
 
-    if not "preview" in self.get_json_file_value("orgs/dev_preview.json", "release").lower():
-      self.logger.info("[FAIL] Your org/dev_preview.json file is not set to the preview release.")
+    if not "na135" in self.get_json_file_value("orgs/dev_preview.json", "instance").lower():
+      self.logger.info("[FAIL] Your org/dev_preview.json file is not set to the preview release on instance NA135.")
       error_found = True
       devInput = input("                        Would you like to update the dev_preview.json file? (y/n) Default y") or 'y'
       if devInput == 'y':
-        self.update_json_file_value('orgs/dev_preview.json', 'release', 'preview')
+        self.update_json_file_value('orgs/dev_preview.json', 'instance', 'NA135')
 
-    
+    if "preview" in self.get_json_file_value("orgs/dev_preview.json", "release").lower():
+      self.logger.info("[FAIL] Your org/dev_preview.json file is to preview release which is not needed. Instead the instance should be set to NA135 or an R0 instance.")
+      error_found = True
+      devInput = input("                        Would you like to update the dev_preview.json file? (y/n) Default y") or 'y'
+      if devInput == 'y':
+        self.remove_json_entry('orgs/dev_preview.json', 'release')
+
     if not error_found:
-      self.logger.info("[OK] Both files have passed checks")
-
-    self.logger.info("[CHECK COMPLETE] config files check complete.")
+      self.logger.info("[OK] Files have passed checks")
+    else:
+      self.logger.info("[FAIL] Some file checks have failed. Please check the messages above.")
 
   def source_org_feature_checker(self):
 
@@ -331,7 +359,9 @@ class HealthChecker(BaseTask):
   def check_project_file_naming(self):
 
     """ Checks that the project file names are set correctly """
-
+    repo_url = Initialise_Project.get_qbrix_repo_url(self)
+    if repo_url != None:
+      repo_qbrix_name = repo_url.rsplit('/', 1)[-1]
     project_name = self.project_config.project__name
     package_name = self.project_config.project__package__name
     repo_url = self.project_config.project__git__repo_url
@@ -341,24 +371,30 @@ class HealthChecker(BaseTask):
 
     if project_name is None or package_name is None or repo_url is None:
       file_name_error = True
-      self.logger.info("[FAIL] One of the names is missing in your cumulusci.yml file. Update the file and run the Health Checker again.")
-    else:
-      repo_qbrix_name = repo_url.rsplit('/', 1)[-1]
+      self.logger.info("[FAIL] One or more of the required parameters are missing from the cumulusci.yml file. Check that the Project name, Project Package Name and Repo URL have all been added and populated.")
+      self.logger.info(f"Names Found:\nProject Name: {project_name}\nPackage Name: {package_name}\nRepo URL: {repo_url}\nQBrix Name (From Repo URL): {repo_qbrix_name}")
 
+    else:
+
+      #Check Repo Name has been found
       if repo_qbrix_name is None:
         file_name_error = True
         self.logger.info("[FAIL] Check you have a valid URL for the project > Repo Url in the cumulusci.yml file")
-
         self.logger.info(f"Names Found:\nProject Name: {project_name}\nPackage Name: {package_name}\nRepo URL: {repo_url}\nQBrix Name (From Repo URL): {repo_qbrix_name}")
 
+      #Check for the Template name in the config file.
       if 'xDO-Template' in project_name or 'xDO-Template' in package_name or 'xDO-Template' in repo_url:
         file_name_error = True
         self.logger.info("[FAIL] You must update your project names in the cumulusci.yml file to be the same as your Q Brix repo url. xDO-Template was found and this should have been updated, see Readme.")
-
+        self.logger.info(f"Names Found:\nProject Name: {project_name}\nPackage Name: {package_name}\nRepo URL: {repo_url}\nQBrix Name (From Repo URL): {repo_qbrix_name}")
+        
+      #Check that the repo name and project names all match
       if not project_name == package_name == repo_qbrix_name:
         file_name_error = True
         self.logger.info("[FAIL] You must update your project names in the cumulusci.yml file to be the same as your Q Brix repo url")
+        self.logger.info(f"Names Found:\nProject Name: {project_name}\nPackage Name: {package_name}\nRepo URL: {repo_url}\nQBrix Name (From Repo URL): {repo_qbrix_name}")
 
+      #Check that the dev.json file has the correct qbrix name
       if not repo_qbrix_name in self.get_json_file_value("orgs/dev.json", "orgName"):
         file_name_error = True
         self.logger.info("[FAIL] OrgName in orgs/dev.json has not been updated.")
@@ -366,6 +402,7 @@ class HealthChecker(BaseTask):
         if uinput == 'y':
           self.update_json_file_value("orgs/dev.json", "orgName", f"{repo_qbrix_name} - Dev org")
 
+      #Check that the dev_preview.json file has the correct qbrix name
       if not repo_qbrix_name in self.get_json_file_value("orgs/dev_preview.json", "orgName"):
         file_name_error = True
         self.logger.info("[FAIL] OrgName in orgs/dev_preview.json has not been updated.")
@@ -404,7 +441,7 @@ class HealthChecker(BaseTask):
       [e]     Exit   
     ''')
 
-    menu_option = input("                        Enter an option from above (Default = 1) :") or '1'
+    menu_option = input("                        Enter an option from above (Default = 1) : ") or '1'
 
     match menu_option.lower():
       case "1":
@@ -426,7 +463,7 @@ class HealthChecker(BaseTask):
       case "e":
         exit()
       case _:
-        self.logger.info("Invalid Option, please select a valid option from the menu.")
+        self.logger.info("Invalid Option, please select a valid option from the menu. e.g 1")
 
     self.logger.info("\n\n[HEALTH CHECKER] Complete!\n\n")
 

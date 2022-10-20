@@ -1,7 +1,6 @@
 {
-  "orgName": "xDO-Template - Dev Preview org",
+  "orgName": "xDO-Template - Dev org",
   "edition": "Enterprise",
-  "instance": "NA135",
   "features": [
     "AddCustomApps:30",
     "AddCustomObjects:30",
@@ -13,7 +12,6 @@
     "API",
     "B2BCommerce",
     "B2CCOMMERCEGMV",
-    "CADENCESTARTATSTEPENABLED",
     "CaseClassification",
     "CASEWRAPUP",
     "Chatbot",
@@ -87,5 +85,6 @@
     "WorkThanksPref",
     "WavePlatform"
   ],
-  "settings": {}
+  "settings": {},
+  "instance": "NA135"
 }

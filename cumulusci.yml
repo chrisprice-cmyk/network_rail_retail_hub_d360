@@ -10,14 +10,12 @@ project:
   #QBRIX NAME, API VERSION AND REPO DETAILS GO HERE
 
   name: xDO-Template
-
   package:
     name: xDO-Template
     api_version: "56.0"
   git:
     default_branch: "main"
     repo_url: https://github.com/sfdc-qbranch/xDO-Template
-
   source_format: sfdx
 
   #------------------------------------#
