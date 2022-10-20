@@ -1,3 +1,4 @@
+from pickle import FALSE
 import subprocess
 import textwrap
 from cumulusci.tasks.command import Command
@@ -7,7 +8,7 @@ class CreateBanner(Command):
   task_options={
         "text": {
             "description": "Text you want to show as a banner",
-            "required": False
+            "required": FALSE
         }
     }
 
@@ -17,7 +18,7 @@ class CreateBanner(Command):
         if "text" in self.options:
           self.text = self.options["text"]
         else:
-          self.text = f"{self.project_config.project__name}\n\nAPI VERSION: {self.project_config.project__package__api_version}\nREPO URL:    {self.project_config.project__git__repo_url}"
+          self.text = f"{self.project_config.project__name} | DEPLOYMENT STARTED\n\nAPI VERSION: {self.project_config.project__package__api_version}\nREPO URL:    {self.project_config.project__git__repo_url}"
         
         self.width = None
         self.text_box = None
@@ -34,6 +35,9 @@ class CreateBanner(Command):
         return output_string
 
   def _generate_list(self):
+    
+        #if we are running in a headless runner- tty will not be there.
+        if self.width ==0: return []
         # Split the input text into separate paragraphs before formatting the
         # length.
         box_width = self.width - 4
@@ -50,4 +54,10 @@ class CreateBanner(Command):
     print(self._banner_string())
 
 def get_terminal_width():
+   #if we are running in a headless runner- tty will not be there.
+  try:
     return int(subprocess.check_output(['stty', 'size']).split()[1])
+  except Exception as e:
+      print(e)
+  return 0
+  
