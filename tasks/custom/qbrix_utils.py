@@ -218,6 +218,36 @@ class HealthChecker(BaseTask):
   
     return missing_features     
 
+  def clean_features(self, scratch_org_definition):
+    if not exists(scratch_org_definition):
+      self.logger.info("Scratch org file not found. Skipping.")
+    else:
+      with open(scratch_org_definition) as mFile:
+          mObject = json.load(mFile)
+          mFile.close()
+      CompareToList = mObject['features']
+      CompareToList = [x.lower() for x in CompareToList]
+      clean_features = []
+      for cf in CompareToList:       
+        if ":" in cf:
+          if not self.startswithmatch( cf.lower(),clean_features):
+            clean_features.append(cf.lower())
+        else:
+          if cf.lower() not in clean_features:
+            clean_features.append(cf.lower())
+          
+      if len(clean_features) > 0:
+        mObject['features'] = clean_features
+        with open(scratch_org_definition, "w") as nFile:
+          json.dump(mObject, nFile, indent=2)
+          nFile.close()
+
+  def startswithmatch(self, check_value, list_value):
+    if any(check_value.startswith(item.split(":")[0]) for item in list_value):
+      return True
+    else:
+      return False
+
   # File Checks
 
   def check_api_versions(self):
@@ -436,6 +466,13 @@ class HealthChecker(BaseTask):
     subprocess.run(["cci", "flow" , "info", "dev_org"])
     self.logger.info("[COMPLETE] CCI Project Cache Rebuild Complete!\n\n")
 
+  def clean_scratch_files(self):
+    self.logger.info("Cleaning dev_preview.json")
+    self.clean_features("orgs/dev_preview.json")
+    self.logger.info("Cleaning dev.json")
+    self.clean_features("orgs/dev.json")
+    self.logger.info("Cleaning Complete")
+
   
   # MAIN EXECUTE
   
@@ -449,6 +486,7 @@ class HealthChecker(BaseTask):
       [3]     Check for Missing Files in project\n
       [4]     Check All Sources for missing Features in current project\n
       [5]     Check dev.json features match dev_preview.json features\n
+      [6]     Clean default scratch org file feature lists\n
       [e]     Exit   
     ''')
 
@@ -462,6 +500,7 @@ class HealthChecker(BaseTask):
         self.source_org_feature_checker()
         self.org_feature_checker()
         self.check_org_config_files()
+        self.clean_scratch_files()
       case "2":
         self.check_api_versions()
       case "3":
@@ -471,6 +510,8 @@ class HealthChecker(BaseTask):
         self.check_org_config_files()
       case "5":
         self.check_org_config_files()
+      case "6":
+        self.clean_scratch_files()
       case "e":
         exit()
       case _:
