@@ -230,7 +230,7 @@ class HealthChecker(BaseTask):
       clean_features = []
       for cf in CompareToList:       
         if ":" in cf:
-          if not self.startswithmatch( cf.lower(),clean_features):
+          if not self.advancedfeaturematch( cf.lower(),clean_features):
             clean_features.append(cf.lower())
         else:
           if cf.lower() not in clean_features:
@@ -242,11 +242,12 @@ class HealthChecker(BaseTask):
           json.dump(mObject, nFile, indent=2)
           nFile.close()
 
-  def startswithmatch(self, check_value, list_value):
-    if any(check_value.startswith(item.split(":")[0]) for item in list_value):
-      return True
-    else:
-      return False
+  def advancedfeaturematch(self, check_value, list_value):
+    chk = False
+    for substring in list_value: 
+      if substring.split(":")[0] == check_value.split(":")[0]: 
+        chk = True 
+    return chk
 
   # File Checks
 
