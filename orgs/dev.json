@@ -85,5 +85,13 @@
     "WorkThanksPref",
     "WavePlatform"
   ],
-  "settings": {}
+  "settings": {
+    "lightningExperienceSettings": {
+      "enableS1DesktopEnabled": true
+    },
+    "accountSettings": {
+      "enableRelateContactToMultipleAccounts": true,
+      "enableAccountTeams": true
+    }
+  }
 }

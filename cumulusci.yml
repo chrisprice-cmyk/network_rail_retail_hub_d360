@@ -19,6 +19,33 @@ project:
   source_format: sfdx
 
   #------------------------------------#
+  # QBRIX CUSTOM OPTIONS & SETTINGS    #
+  #------------------------------------#
+
+  custom:
+    # ADD YOUR DETAILS HERE FOR Q BRIX REGISTRATION
+    # It is recommended you run cci task run setup_qbrix to set these as it will also update other files
+    qbrix_owner_name: "OWNER NAME HERE"
+    qbrix_owner_team: "OWNER TEAM HERE"
+    qbrix_publisher_name: "OWNER OR PUBLISHER NAME HERE"
+    qbrix_publisher_team: "OWNER OR PUBLISHER TEAM HERE"
+    qbrix_documentation_url: https://confluence.internal.salesforce.com/pages/viewpage.action?pageId=487362018
+    qbrix_description: "SHORT DESCRIPTION OF QBRIX HERE"
+
+    #GLOBAL EXCLUSION LIST
+    #Used by retrieve_changes and list_changes builtin CCI tasks
+    exclude: &exclude-list
+      - FeatureParameter
+      - "AuraDefinition:"
+      - "SiteDotCom:"
+      - "ManagedTopics:"
+      - "LiveChatTranscript:"
+      - "ExperienceResource:"
+      - "AppMenu:"
+      - "Profile:"
+      - "FlowDefinition:"
+
+  #------------------------------------#
   # QBRIX PACKAGE DEPENDENCIES       #
   #------------------------------------#
   #ADD MANAGED & UNMANAGED PACKAGE DEPENDENCIES HERE. OTHER CCI PROJECTS CAN ALSO BE LINKED PROVIDING THEY WORK WITH JUST A DEPLOY METHOD.
@@ -30,32 +57,6 @@ project:
   #   - namespace: ManagedPackageNamespaceHere (Note: Lightning Components need to use the package ID and are treated as an unmanaged package)
   #     version: ManagedPackageVersionNumberHere
   #--Add Project Level Dependencies Below
-
-  #------------------------------------#
-  # QBRIX CUSTOM OPTIONS & SETTINGS    #
-  #------------------------------------#
-
-  custom:
-    # Q Brix Register Details
-    # ADD YOUR QBRIX DETAILS HERE
-    qbrix_owner_name: "OWNER NAME HERE"
-    qbrix_owner_team: "OWNER TEAM HERE"
-    qbrix_publisher_name: "OWNER OR PUBLISHER NAME HERE"
-    qbrix_publisher_team: "OWNER OR PUBLISHER TEAM HERE"
-    qbrix_documentation_url: https://confluence.internal.salesforce.com/pages/viewpage.action?pageId=487362018
-    qbrix_description: "SHORT DESCRIPTION OF QBRIX HERE"
-
-    #Exclude list to be used with list_changes and retrieve_changes tasks
-    exclude: &exclude-list
-      - FeatureParameter
-      - "AuraDefinition:"
-      - "SiteDotCom:"
-      - "ManagedTopics:"
-      - "LiveChatTranscript:"
-      - "ExperienceResource:"
-      - "AppMenu:"
-      - "Profile:"
-      - "FlowDefinition:"
 
 #--Add Project Sources here--
 sources:
@@ -71,7 +72,7 @@ tasks:
   #------------------------------------#
   # CCI TASK DEFAULTS                  #
   #------------------------------------#
-  #ADD DEFAULT CONFIGURATION FOR CCI TASK HERE
+  #ADD DEFAULT CONFIGURATION FOR BUILTIN CCI TASKS HERE
 
   run_tests:
     options:
@@ -102,16 +103,18 @@ tasks:
       api_names:
         - Admin
 
-  robot:
+  list_changes:
     options:
-      suites: robot/Qbrix/tests
-      options:
-        outputdir: robot/Qbrix/results
+      exclude: *exclude-list
 
-  robot_testdoc:
+  retrieve_changes:
     options:
-      path: robot/Qbrix/tests
-      output: robot/Qbrix/doc/qbrix_tests.html
+      exclude: *exclude-list
+
+  #------------------------------------#
+  # QBRIX TASKS                        #
+  #------------------------------------#
+  # CUSTOM TASKS ADDED FOR Q BRIX DEVELOPMENT
 
   health_check:
     class_path: tasks.custom.qbrix_utils.HealthChecker
@@ -128,16 +131,6 @@ tasks:
   mass_qbrix_update:
     class_path: tasks.custom.qbrix_utils.MassFileOps
 
-  #------------------------------------#
-  # QBRIX TASKS                        #
-  #------------------------------------#
-
-  update_vscode_tasks:
-    description: Update .vscode tasks.json file from Qbrix template
-    class_path: cumulusci.tasks.command.Command
-    options:
-      command: chmod +x scripts/QBrix/*.sh && scripts/Qbrix/UpdateVSCodeTasks.sh
-
   deploy_settings:
     description: Checks that Settings have been defined in force-app and deploys them if present
     class_path: cumulusci.tasks.salesforce.Deploy
@@ -152,6 +145,8 @@ tasks:
         - github: https://github.com/sfdc-qbranch/QBrix-1-xDO-Tool-QBrixRegister
           unmanaged: True
 
+  # NextGen Data Tool Integration - Remove this if you are not using the NextGen Data Tool
+  # Do not modify this task
   data_tool_status:
     description: Waits for the Data Tool status to be complete within the target org before allowing flow to continue.
     class_path: cumulusci.tasks.salesforce.custom_settings_wait.CustomSettingValueWait
@@ -160,35 +155,29 @@ tasks:
       field: NXDO__Completed__c
       value: True
 
+  # NextGen Data Tool Integration - Remove this if you are not using the NextGen Data Tool
+  # Update the value for param1 to your data key
   data_tool_deploy:
     description: Executes the command to run the NxDO Data Tool
     class_path: cumulusci.tasks.apex.anon.AnonymousApexTask
     options:
       apex: NXDO.DataTool_Utilities.requestDeploy('%%%PARAM_1%%%', true);
+      param1: 1234
 
+  # NextGen Data Tool Integration - Remove this if you are not using the NextGen Data Tool
+  # Update the value for param1 to your data key
   data_tool_deploy_test:
     description: Executes the command to run the NxDO Data Tool from a Scratch org Sandbox Org
     class_path: cumulusci.tasks.apex.anon.AnonymousApexTask
     options:
       apex: NXDO.DataTool_Utilities.requestDeploy('%%%PARAM_1%%%', false);
-
-  #------------------------------------#
-  # CHANGE CAPTURE                     #
-  #------------------------------------#
-  #ADD OBJECT EXCLUSIONS HERE WHICH YOU DON'T WANT TO PULL TO SOURCE BY DEFAULT
-
-  list_changes:
-    options:
-      exclude: *exclude-list
-
-  retrieve_changes:
-    options:
-      exclude: *exclude-list
+      param1: 1234
 
   #------------------------------------#
   # TESTIM INTEGRATION                 #
   #------------------------------------#
-  #Replace the testimname with the name of the script you want to run. This section can be removed if you are not using Testim.
+  # Replace the testimname parameter value with the name of the script you want to run.
+  # This section can be removed if you are not using Testim.
   qbrix_task_Testim:
     description: "Run Testim Script"
     class_path: tasks.custom.testim.RunTestim
@@ -200,6 +189,7 @@ flows:
   #------------------------------------#
   # CCI FLOW DEFAULTS                  #
   #------------------------------------#
+  # Do not change these defaults which using the project for Q Brix development
 
   deploy_unmanaged_ee:
     steps:
@@ -219,8 +209,8 @@ flows:
   source_dependencies:
     steps:
       1:
+        # Placeholder task, replace this with your custom steps
         task: None
-        # flow: base:deploy_qbrix
 
   dependencies:
     steps:
@@ -288,6 +278,7 @@ flows:
   post_qbrix_deploy:
     steps:
       1:
+        # Placeholder task, replace this with your custom steps
         task: None
 
   #APPEND ADDITIONAL STEPS TO CCI DEV AND QA FLOWS
@@ -309,14 +300,13 @@ flows:
   generate_qbrix_data:
     steps:
       1:
+        # Placeholder task, replace this with your custom steps
         task: None
-        #flow: data:FLOWNAMEHERE
-
 orgs:
   #------------------------------------#
   # SCRATCH ORG CONFIG                 #
   #------------------------------------#
-  #DEFAULT SETTINGS FOR SCRATCH ORGS. PREVIEW ONLY WORKS IN CORE PREVIEW RELEASE WINDOWS
+  #DEFAULT SETTINGS FOR SCRATCH ORGS. PREVIEW ORGS ARE DESIGNED TO LOAD ON NA135 WHICH IS AN R0 INSTANCE
 
   scratch:
     dev:
