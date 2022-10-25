@@ -7,7 +7,7 @@ project:
   #------------------------------------#
   # QBRIX CONFIG                       #
   #------------------------------------#
-  #QBRIX NAME, API VERSION AND REPO DETAILS GO HERE
+  # Q Brix Name, API Version and Repo URL are all set here. Name and Package > Name should be the same.
 
   name: xDO-Template
   package:
@@ -24,7 +24,7 @@ project:
 
   custom:
     # ADD YOUR DETAILS HERE FOR Q BRIX REGISTRATION
-    # It is recommended you run cci task run setup_qbrix to set these as it will also update other files
+    # It is recommended you run "Setup New Q Brix Project" from the VSCode Build Tasks to set these as it will also update other files
     qbrix_owner_name: "OWNER NAME HERE"
     qbrix_owner_team: "OWNER TEAM HERE"
     qbrix_publisher_name: "OWNER OR PUBLISHER NAME HERE"
@@ -84,18 +84,9 @@ tasks:
       drop_missing_schema: True
       set_recently_viewed: True
 
-  generate_dataset_mapping:
-    options:
-      ignore:
-        - "LiveChatTranscript"
-
   deploy:
     options:
       path: force-app
-
-  org_settings:
-    options:
-      definition_file: orgs/dev.json
 
   update_admin_profile:
     options:
