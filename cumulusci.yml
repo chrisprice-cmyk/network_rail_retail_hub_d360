@@ -46,11 +46,11 @@ project:
       - "FlowDefinition:"
 
   #------------------------------------#
-  # QBRIX PACKAGE DEPENDENCIES       #
+  # QBRIX PACKAGE DEPENDENCIES         #
   #------------------------------------#
   #ADD MANAGED & UNMANAGED PACKAGE DEPENDENCIES HERE. OTHER CCI PROJECTS CAN ALSO BE LINKED PROVIDING THEY WORK WITH JUST A DEPLOY METHOD.
 
-  #dependencies:
+  dependencies:
   #--Examples:
   #   - github: GitHubRepoURLHere (Note: This MUST be a CumulusCI Project and doesn't support custom installs, use sources if thats needed)
   #   - version_id: UnmanagedPackageIDHere
@@ -63,7 +63,7 @@ sources:
   #------------------------------------#
   # QBRIX SOURCES                      #
   #------------------------------------#
-  #ADD SOURCES HERE WHICH MUST BE CCI PROJECTS STORED IN GITHUB.
+  # Add Q Brix Sources here. These must be located on GitHub and be a CCI Project or Q Brix Project.
 
   base:
     github: https://github.com/sfdc-qbranch/QBrix-0-xDO-BaseConfig
@@ -72,7 +72,7 @@ tasks:
   #------------------------------------#
   # CCI TASK DEFAULTS                  #
   #------------------------------------#
-  #ADD DEFAULT CONFIGURATION FOR BUILTIN CCI TASKS HERE
+  # Default configuration and overrides for builtin CCI Tasks
 
   run_tests:
     options:
@@ -112,7 +112,7 @@ tasks:
       exclude: *exclude-list
 
   #------------------------------------#
-  # QBRIX TASKS                        #
+  # Q BRIX TASKS                       #
   #------------------------------------#
   # CUSTOM TASKS ADDED FOR Q BRIX DEVELOPMENT
 
@@ -145,7 +145,11 @@ tasks:
         - github: https://github.com/sfdc-qbranch/QBrix-1-xDO-Tool-QBrixRegister
           unmanaged: True
 
-  # NextGen Data Tool Integration - Remove this if you are not using the NextGen Data Tool
+  #------------------------------------#
+  # DATA TOOL INTEGRATION              #
+  #------------------------------------#
+  # Note: This section can be removed if you are not using the NextGen Data Tool
+
   # Do not modify this task
   data_tool_status:
     description: Waits for the Data Tool status to be complete within the target org before allowing flow to continue.
@@ -155,7 +159,6 @@ tasks:
       field: NXDO__Completed__c
       value: True
 
-  # NextGen Data Tool Integration - Remove this if you are not using the NextGen Data Tool
   # Update the value for param1 to your data key
   data_tool_deploy:
     description: Executes the command to run the NxDO Data Tool
@@ -164,7 +167,6 @@ tasks:
       apex: NXDO.DataTool_Utilities.requestDeploy('%%%PARAM_1%%%', true);
       param1: 1234
 
-  # NextGen Data Tool Integration - Remove this if you are not using the NextGen Data Tool
   # Update the value for param1 to your data key
   data_tool_deploy_test:
     description: Executes the command to run the NxDO Data Tool from a Scratch org Sandbox Org
@@ -177,7 +179,7 @@ tasks:
   # TESTIM INTEGRATION                 #
   #------------------------------------#
   # Replace the testimname parameter value with the name of the script you want to run.
-  # This section can be removed if you are not using Testim.
+  # Note: This section can be removed if you are not using Testim.
   qbrix_task_Testim:
     description: "Run Testim Script"
     class_path: tasks.custom.testim.RunTestim
@@ -185,39 +187,15 @@ tasks:
       testimname: "REPLACE WITH NAME OF SCRIPT"
       pass_env: true
 
+  #------------------------------------#
+  # CUSTOM TASKS                       #
+  #------------------------------------#
+  # Add Your Custom Tasks here
+
 flows:
   #------------------------------------#
-  # CCI FLOW DEFAULTS                  #
+  # STAGE 1 of 3: PRE-QBRIX DEPLOYMENT #
   #------------------------------------#
-  # Do not change these defaults which using the project for Q Brix development
-
-  deploy_unmanaged_ee:
-    steps:
-      6:
-        task: None
-
-  deploy_unmanaged:
-    steps:
-      4:
-        task: None
-
-  #------------------------------------#
-  # PRE-QBRIX DEPLOY                   #
-  #------------------------------------#
-  #APPEND ADDITIONAL SOURCE DEPENDENCY DEPLOYMENTS ONTO THE DEFAULT CCI DEPENDENCY FLOW
-
-  source_dependencies:
-    steps:
-      1:
-        # Placeholder task, replace this with your custom steps
-        task: None
-
-  dependencies:
-    steps:
-      1:
-        flow: prepare_org
-      2:
-        flow: source_dependencies
 
   # Prepares the Org with any required settings/testim scripts
   prepare_org:
@@ -229,16 +207,26 @@ flows:
       2:
         task: deploy_settings
         ui_options:
-          name: Deploying Org Settings
+          name: Deploy Required Settings to Salesforce Org
       3:
+        # Dependencies are set in the QBRIX PACKAGE DEPENDENCIES area above.
         task: update_dependencies
+        ui_options:
+          name: Installs/Updates Q Brix Dependencies
+
+  # Add steps here to deploy q brix added to the sources area above
+  source_dependencies:
+    steps:
+      1:
+        # Placeholder task, replace this with your custom steps
+        task: None
 
   #------------------------------------#
-  # QBRIX DEPLOY                       #
+  # STAGE 2 of 3: Q BRIX DEPLOYMENT    #
   #------------------------------------#
   #DEFAULT INSTALL FLOWS ARE DEFINED HERE. "deploy_qbrix" and "deploy_qbrix_min" SHOULD ALWAYS BE DEFINED
 
-  #DEFAULT INSTALL FOR QBRIX WHICH DEPLOYS EVERYTHING INCLUDING BASE Q BRANCH QBRIX
+  # Deploys the q brix
   deploy_qbrix:
     steps:
       1:
@@ -250,38 +238,82 @@ flows:
       3:
         flow: post_qbrix_deploy
 
-  #DEFAULT INSTALL FOR QBRIX WHICH DEPLOYS EVERYTHING EXCEPT BASE Q BRANCH QBRIX
+  # Deploys just the contents of this q brix with any essential dependencies
   deploy_qbrix_min:
     steps:
       1:
-        task: deploy_settings
-      2:
-        task: update_dependencies
-      3:
-        flow: source_dependencies
-      4:
-        task: deploy
-      5:
-        flow: post_qbrix_deploy
+        flow: deploy_qbrix
 
-  #RUN THIS FLOW FOR DEPLOYMENT TO A TSO PRODUCTION ORG
+  # Deploys the q brix into a TSO or Production Org
   deploy_qbrix_tso:
     steps:
       1:
         flow: deploy_qbrix
 
-  #------------------------------------#
-  # POST-QBRIX DEPLOY                  #
-  #------------------------------------#
-  #ADD POST DEPLOYMENT STEPS HERE
+  #-------------------------------------------------#
+  # STAGE 3 of 3 (OPTIONAL) POST-QBRIX DEPLOYMENT   #
+  #-------------------------------------------------#
+  # ADD POST DEPLOYMENT STEPS HERE
 
   post_qbrix_deploy:
     steps:
       1:
         # Placeholder task, replace this with your custom steps
+        flow: deploy_qbrix_data
+
+  #------------------------------------#
+  # QBRIX TEST VALIDATION              #
+  #------------------------------------#
+  # Add steps here to validate your org deployment through testing (for example with Testim or Q Robot)
+
+  validate_qbrix:
+    steps:
+      1:
         task: None
 
-  #APPEND ADDITIONAL STEPS TO CCI DEV AND QA FLOWS
+  #------------------------------------#
+  # QBRIX DATA                         #
+  #------------------------------------#
+  #DEFINE DATA GENERATION FLOWS AND TASKS HERE
+
+  deploy_qbrix_data:
+    steps:
+      1:
+        # Placeholder task, replace this with your custom steps
+        task: None
+
+  #------------------------------------#
+  # QBRIX LEGACY FLOWS AND DEFAULTS    #
+  #------------------------------------#
+  #
+  # NOTE: These flows should not need to be modified and allow for legacy integration and default overrides.
+  #
+
+  # Legacy flow to redirect to the new flow for deploying data.
+  generate_qbrix_data:
+    steps:
+      1:
+        flow: deploy_qbrix_data
+
+  # Default Override of cci task
+  deploy_unmanaged_ee:
+    steps:
+      6:
+        task: None
+
+  # Default Override of cci task
+  deploy_unmanaged:
+    steps:
+      4:
+        task: None
+
+  dependencies:
+    steps:
+      1:
+        flow: prepare_org
+      2:
+        flow: source_dependencies
+
   config_dev:
     steps:
       3:
@@ -292,16 +324,6 @@ flows:
       3:
         flow: post_qbrix_deploy
 
-  #------------------------------------#
-  # QBRIX DATA                         #
-  #------------------------------------#
-  #DEFINE DATA GENERATION FLOWS HERE
-
-  generate_qbrix_data:
-    steps:
-      1:
-        # Placeholder task, replace this with your custom steps
-        task: None
 orgs:
   #------------------------------------#
   # SCRATCH ORG CONFIG                 #
@@ -330,11 +352,11 @@ plans:
   #------------------------------------#
   # METADEPLOY CONFIG                  #
   #------------------------------------#
-  #DEFINE DEPLOYMENY PLANS HERE FOR USE WITH METADEPLOY
+  # DEFINE DEPLOY PLANS HERE FOR USE WITH METADEPLOY
 
-  install_pack:
+  deploy_q_brix_plan:
     slug: deployqbrix
-    title: Install/Update Qbrix
+    title: Deploy Q Brix
     tier: primary
     is_listed: True
     steps:
