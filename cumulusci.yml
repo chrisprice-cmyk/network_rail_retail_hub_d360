@@ -210,7 +210,7 @@ flows:
     steps:
       1:
         # Placeholder task, replace this with your custom steps
-        task: None
+        flow: base:deploy_qbrix
 
   #------------------------------------#
   # STAGE 2 of 3: Q BRIX DEPLOYMENT    #
@@ -250,7 +250,7 @@ flows:
     steps:
       1:
         # Placeholder task, replace this with your custom steps
-        flow: deploy_qbrix_data
+        task: None
 
   #------------------------------------#
   # QBRIX TEST VALIDATION              #
