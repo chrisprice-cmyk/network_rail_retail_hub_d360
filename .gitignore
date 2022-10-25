@@ -7,6 +7,7 @@
 .cci/
 .sf/
 
+#TESTIM
 testim-headless.zip
 
 # Logs
@@ -37,12 +38,6 @@ bin/dataloader/dataloader.jar
 force-app/main/default/profiles/
 force-app/main/default/appMenus/AppSwitcher.appMenu-meta.xml
 force-app/main/default/flexipages/LightningService_UtilityBar.flexipage-meta.xml
-#force-app/main/default/objects/Account/*
-#force-app/main/default/workflows/
-#force-app/main/default/lwc/
-#force-app/main/default/layouts
-#force-app/main/default/tabs
-#force-app/main/default/flexipages
 
 generatedDelta/*
 destructiveChanges/*
