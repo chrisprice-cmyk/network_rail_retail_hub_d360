@@ -640,6 +640,8 @@ class InitProject(BaseTask, ABC):
 
         self.logger.info("[Starting Q Brix Setup]")
 
+        QBrixUpdater.silent_run(self)
+
         repo_url = self.get_qbrix_repo_url()
         qbrix_name = ""
         if repo_url != "":
