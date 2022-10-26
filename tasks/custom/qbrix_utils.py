@@ -444,6 +444,7 @@ class HealthChecker(BaseTask, ABC):
 
     def _run_task(self):
         self.logger.info("[HEALTH CHECKER] STARTING Q HEALTH CHECKER")
+        QBrixUpdater.silent_run(self)
         self.check_project_file_naming()
         self.check_api_versions()
         self.check_for_missing_files()
@@ -507,6 +508,23 @@ class QBrixUpdater(BaseTask, ABC):
             if exists("q_update_package"):
                 shutil.rmtree("q_update_package")
         return False
+    
+    def cleanup(self):
+        if exists("__MACOSX"):
+            shutil.rmtree("__MACOSX")
+        if exists("tasks/__pycache__"):
+            shutil.rmtree("tasks/__pycache__")
+        if exists("tasks/custom/__pycache__"):
+            shutil.rmtree("tasks/custom/__pycache__")
+        if exists("q_update_package"):
+            shutil.rmtree("q_update_package")
+        if self.IgnoreOptionalUpdates:
+            if exists("OPTIONAL_UPDATES"):
+                shutil.rmtree("OPTIONAL_UPDATES")
+    
+    def silent_run(self):
+        self.IgnoreOptionalUpdates = True
+        self.download_and_unzip(self.UpdateLocation)
 
     def _run_task(self):
 
@@ -516,20 +534,9 @@ class QBrixUpdater(BaseTask, ABC):
 
         if self.download_and_unzip(self.UpdateLocation):
             self.logger.info("Clearing cache and temp files...")
-            if exists("__MACOSX"):
-                shutil.rmtree("__MACOSX")
-            if exists("tasks/__pycache__"):
-                shutil.rmtree("tasks/__pycache__")
-            if exists("tasks/custom/__pycache__"):
-                shutil.rmtree("tasks/custom/__pycache__")
-            if exists("q_update_package"):
-                shutil.rmtree("q_update_package")
-
-            if self.IgnoreOptionalUpdates:
-                if exists("OPTIONAL_UPDATES"):
-                    shutil.rmtree("OPTIONAL_UPDATES")
-
-            self.logger.info("Update Complete!")
+            self.cleanup()
+        
+        self.logger.info("Update Complete!")
 
 
 class InitProject(BaseTask, ABC):
