@@ -521,6 +521,7 @@ class QBrixUpdater(BaseTask, ABC):
         if self.IgnoreOptionalUpdates:
             if exists("OPTIONAL_UPDATES"):
                 shutil.rmtree("OPTIONAL_UPDATES")
+        InitProject.replace_file_text(self, "cumulusci.yml", "tasks.custom.qbrix_utils.Initialise_Project", "tasks.custom.qbrix_utils.InitProject")
     
     def silent_run(self):
         self.IgnoreOptionalUpdates = True
