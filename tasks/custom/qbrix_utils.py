@@ -444,7 +444,7 @@ class HealthChecker(BaseTask, ABC):
 
     def _run_task(self):
         self.logger.info("[HEALTH CHECKER] STARTING Q HEALTH CHECKER")
-        QBrixUpdater.silent_run(self)
+        #QBrixUpdater.silent_run(self)
         self.check_project_file_naming()
         self.check_api_versions()
         self.check_for_missing_files()
@@ -641,7 +641,7 @@ class InitProject(BaseTask, ABC):
 
         self.logger.info("[Starting Q Brix Setup]")
 
-        QBrixUpdater.silent_run(self)
+        #QBrixUpdater.silent_run(self)
 
         repo_url = self.get_qbrix_repo_url()
         qbrix_name = ""
