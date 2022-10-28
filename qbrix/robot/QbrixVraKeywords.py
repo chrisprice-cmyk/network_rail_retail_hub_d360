@@ -2,7 +2,7 @@ from time import sleep
 
 from Browser import ElementState, SelectAttribute
 from cumulusci.robotframework.base_library import BaseLibrary
-from qbrix.robot.qbrix_shared_keywords import QbrixSharedKeywords
+from qbrix.robot.QbrixSharedKeywords import QbrixSharedKeywords
 
 
 class QbrixVraKeywords(BaseLibrary):
@@ -19,7 +19,7 @@ class QbrixVraKeywords(BaseLibrary):
 
     def create_vra_service_channel(self):
         """ Creates the VRA Service Channel """
-        QbrixSharedKeywords.go_to_setup_admin_page("ServiceChannelSettings/home")
+        QbrixSharedKeywords().go_to_setup_admin_page("ServiceChannelSettings/home")
         self.browser.wait_for_elements_state("iframe >>> .btn:has-text('New')", ElementState.visible,
                                              '15s')
         visible = "visible" in self.browser.get_element_states("iframe >>> .listRelatedObject:has-text('SDO_VRA_End_User_Session_Request')")

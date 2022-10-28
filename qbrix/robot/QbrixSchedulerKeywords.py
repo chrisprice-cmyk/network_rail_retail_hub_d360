@@ -2,7 +2,7 @@ from time import sleep
 
 from Browser import ElementState, SelectAttribute
 from cumulusci.robotframework.base_library import BaseLibrary
-from qbrix.robot.qbrix_shared_keywords import QbrixSharedKeywords
+from qbrix.robot.QbrixSharedKeywords import QbrixSharedKeywords
 
 
 class QbrixSchedulerKeywords(BaseLibrary):
@@ -19,7 +19,7 @@ class QbrixSchedulerKeywords(BaseLibrary):
 
     def enable_scheduler(self):
         """ Enables Salesforce Scheduler """
-        QbrixSharedKeywords.go_to_setup_admin_page("LightningSchedulerSettings/home")
+        QbrixSharedKeywords().go_to_setup_admin_page("LightningSchedulerSettings/home")
         self.browser.wait_for_elements_state("h2:has-text('Event Management')", ElementState.visible, '30s')
         sleep(5)
         checked = "checked" in self.browser.get_element_states("label:has-text('Appointment Distribution')")
@@ -40,7 +40,7 @@ class QbrixSchedulerKeywords(BaseLibrary):
 
     def create_appointment_assignment_policies(self):
         """ Creates the Appointment Assignment Policies """
-        QbrixSharedKeywords.go_to_setup_admin_page("AppointmentAssignmentPolicy/home")
+        QbrixSharedKeywords().go_to_setup_admin_page("AppointmentAssignmentPolicy/home")
         sleep(2)
         self.browser.wait_for_elements_state("iframe >>> .btn:has-text('New')", ElementState.visible, '30s')
         visible = "visible" in self.browser.get_element_states(

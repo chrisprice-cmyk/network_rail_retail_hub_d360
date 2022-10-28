@@ -1,15 +1,15 @@
 *** Settings ***
 Resource          cumulusci/robotframework/SalesforcePlaywright.robot
-Library           qbrix/robot/qbrix_shared_keywords.py
-Library           qbrix/robot/qbrix_einstein_keywords.py
-Library           qbrix/robot/qbrix_field_service_keywords.py
-Library           qbrix/robot/qbrix_marketing_keywords.py
-Library           qbrix/robot/qbrix_net_zero_keywords.py
-Library           qbrix/robot/qbrix_sales_keywords.py
-Library           qbrix/robot/qbrix_scheduler_keywords.py
-Library           qbrix/robot/qbrix_service_keywords.py
-Library           qbrix/robot/qbrix_surveys_keywords.py
-Library           qbrix/robot/qbrix_vra_keywords.py
+Library           qbrix/robot/QbrixSharedKeywords.py
+Library           qbrix/robot/QbrixEinsteinKeywords.py
+Library           qbrix/robot/QbrixFieldServiceKeywords.py
+Library           qbrix/robot/QbrixMarketingKeywords.py
+Library           qbrix/robot/QbrixNetZeroKeywords.py
+Library           qbrix/robot/QbrixSalesCloudKeywords.py
+Library           qbrix/robot/QbrixSchedulerKeywords.py
+Library           qbrix/robot/QbrixSurveysKeywords.py
+Library           qbrix/robot/QbrixVraKeywords.py
+Library           qbrix/robot/QbrixServiceKeywords.py
 Suite Setup       Run keywords
 ...               Set browser timeout    900 seconds
 ...               AND    Open test browser    wait=false
@@ -89,7 +89,7 @@ Check and Disable Field Service Status Transitions
     Disable Field Service Status Transitions
 
 Create Rider Chat Button
-    Create A Chat Button And Automated Invitations  SFS - Rider Bot  SDO_SFS_Rider_Bot
+    Create A Chat Button And Automated Invitations    SFS - Rider Bot    SDO_SFS_Rider_Bot
 #
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # MARKETING TESTS
@@ -103,7 +103,6 @@ Check and Enable Pardot
 
 Check and Create Pardot Email Template
     Create Pardot Template
-
 #
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # SALES CLOUD TESTS
@@ -123,7 +122,6 @@ Check and Update Forecast Hiararchy Settings
 
 Check and Enable Opportunity Splits
     Enable Opportunity Splits
-
 #
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # SERVICE CLOUD TESTS
@@ -136,8 +134,8 @@ Check and Enable Case Swarming
     Enable Case Swarming
 
 Create Service Chat Buttons
-    Create A Chat Button And Automated Invitations  *Standard Chat Button  SDO_Service_Chat
-    Create A Chat Button And Automated Invitations  Service - Sunny Bot  SDO_Service_Sunny_Bot
+    Create A Chat Button And Automated Invitations    *Standard Chat Button    SDO_Service_Chat
+    Create A Chat Button And Automated Invitations    Service - Sunny Bot    SDO_Service_Sunny_Bot
 #
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # Q BRANCH TOOLING TESTS
@@ -165,7 +163,6 @@ Check and Enable Territory Management
 
 Check and Enable Net Zero Cloud
     Enable Net Zero
-
 #
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # VRA TESTS
@@ -173,7 +170,6 @@ Check and Enable Net Zero Cloud
 
 Check and Create VRA Service Channel
     Create VRA Service Channel
-
 #
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # Chat Button
@@ -181,7 +177,6 @@ Check and Create VRA Service Channel
 
 Chat Buttons and Automated Invitations
     Create Chat Button and Automated Invitations
-
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # SCHEDULER TESTS
 # -----------------------------------------------------------------------------------------------------------------------------------------
@@ -191,11 +186,35 @@ Check and Enable Scheduler Setting
 
 Check and Create Appointment Assignment Polcies
     Create Appointment Assignment Policies
-
-
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # Survey Setup
 # -----------------------------------------------------------------------------------------------------------------------------------------
 
 Set Survey Default Community
-    Set Survey Default Community
+    Set Survey Default Community    SDO - Consumer
+# -----------------------------------------------------------------------------------------------------------------------------------------
+# Service Presence Statuses to Profile
+# -----------------------------------------------------------------------------------------------------------------------------------------
+
+Add Service Presence Statuses to Profile
+    Add Service Presence Statuses to Profile    System Administrator    All - Available
+    Add Service Presence Statuses to Profile    System Administrator    Busy
+    Add Service Presence Statuses to Profile    System Administrator    Busy - Break
+    Add Service Presence Statuses to Profile    System Administrator    Busy - Lunch
+    Add Service Presence Statuses to Profile    System Administrator    Busy - Training
+    Add Service Presence Statuses to Profile    System Administrator    Cases - Available
+    Add Service Presence Statuses to Profile    System Administrator    Chat - Available
+    Add Service Presence Statuses to Profile    System Administrator    Messaging - Available
+    Add Service Presence Statuses to Profile    System Administrator    Phone - Available
+# -----------------------------------------------------------------------------------------------------------------------------------------
+# Validation Counts
+# -----------------------------------------------------------------------------------------------------------------------------------------
+
+Validate Data Rows Exist
+    Validate Minimal Rowcount    Account 1
+    Validate Minimal Rowcount    Account 1    Name!=''
+    Validate Maximum Rowcount    Account 300 Name!=''
+    Validate Range Rowcount    Account 1    300    Name!=''
+    Validate Minimal Rowcount    Contact 1
+    Validate Minimal Rowcount    Contact 1    Name!=''
+    Validate Exact Rowcount    Product2    52

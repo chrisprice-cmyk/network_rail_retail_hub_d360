@@ -2,7 +2,7 @@ from time import sleep
 
 from Browser import ElementState, SelectAttribute
 from cumulusci.robotframework.base_library import BaseLibrary
-from qbrix.robot.qbrix_shared_keywords import QbrixSharedKeywords
+from qbrix.robot.QbrixSharedKeywords import QbrixSharedKeywords
 
 
 class QbrixMarketingKeywords(BaseLibrary):
