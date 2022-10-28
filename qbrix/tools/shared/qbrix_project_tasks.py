@@ -433,6 +433,9 @@ def check_and_update_old_class_refs():
     replace_file_text("cumulusci.yml", "tasks.custom.qbrix_utils.MassFileOps",
                       "qbrix.tools.utils.qbrix_mass_ops.MassFileOps")
 
+    # SFDMU
+    replace_file_text("cumulusci.yml", "tasks.custom.sfdmuload.SFDMULoad", "qbrix.tools.data.qbrix_sfdmu.SFDMULoad")
+
 
 def clean_project_files():
     """ Removes Cached files and folders from q brix project """
