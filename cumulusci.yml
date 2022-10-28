@@ -108,7 +108,6 @@ tasks:
   # CUSTOM TASKS ADDED FOR Q BRIX DEVELOPMENT
 
   health_check:
-    #.qbrix/tools/utils/qbrix_health_check.py
     class_path: qbrix.tools.utils.qbrix_health_check.HealthChecker
 
   update_qbrix:
