@@ -370,7 +370,7 @@ def download_and_unzip(url: Optional[str] = DEFAULT_UPDATE_LOCATION, archive_pas
                 log.info(f"Created New Directory: {d}")
 
         # HANDLE ZIP PASSWORDS
-        if archive_password != "":
+        if archive_password is not None and archive_password != "":
             zipfile.setpassword(pwd=bytes(archive_password, 'utf-8'))
 
         # EXTRACT FILES

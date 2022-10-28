@@ -104,10 +104,11 @@ class InitProject(BaseTask, ABC):
 
         # YAML File Update
 
-        if self.project_name == "xDO-Template" or self.project_name != qbrix_name:
+        if self.project_config.project__name == "xDO-Template" or self.project_config.project__name != qbrix_name:
             replace_file_text("cumulusci.yml", "xDO-Template", f"{qbrix_name}")
             replace_file_text("cumulusci.yml", f"name: {self.project_name}", f"name: {qbrix_name}")
-            replace_file_text("README.md", "Q Brix Title", {self.project_name})
+
+        replace_file_text("README.md", "Q Brix Title", {self.project_name})
 
         # Registration File Update
 
