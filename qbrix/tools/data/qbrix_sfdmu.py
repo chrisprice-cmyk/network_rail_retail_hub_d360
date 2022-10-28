@@ -14,10 +14,10 @@ from cumulusci.core.keychain import BaseProjectKeychain
 LOAD_COMMAND = "sfdx sfdmu:run --sourceusername CSVFILE --targetusername {targetusername} -p {pathtoexportjson} --canmodify {instanceurl} --noprompt --verbose"
 SCRATCHORG_LOAD_COMMAND = "sfdx sfdmu:run --sourceusername CSVFILE --targetusername {targetusername} -p {pathtoexportjson} --noprompt --verbose"
 
-class SFDMULoad(SFDXBaseTask):
 
+class SFDMULoad(SFDXBaseTask):
     keychain_class = BaseProjectKeychain
-    task_options={
+    task_options = {
         "pathtoexportjson": {
             "description": "Directory path to the export.json to upload",
             "required": True
@@ -26,48 +26,48 @@ class SFDMULoad(SFDXBaseTask):
             "description": "Username or AccessToken of the account that will be used to upload the data",
             "required": False
         },
-          "instanceurl": {
+        "instanceurl": {
             "description": "Instance url for the targetusername.",
             "required": False
         }
         ,
-          "accesstoken": {
+        "accesstoken": {
             "description": "Passed in accesstoken associated to the targetusername and instance url.",
             "required": False
         }
-          ,
-          "org": {
+        ,
+        "org": {
             "description": "Value to replace every instance of the find value in the source file.",
             "required": False
         }
     }
 
     def _prepareexportjsonfile(self, pathtoexportjson):
-        
-        if os.path.isdir(self.pathtoexportjson)==False:
-            raise  Exception("Path to export.json is not valid")
+
+        if os.path.isdir(self.pathtoexportjson) == False:
+            raise Exception("Path to export.json is not valid")
 
         if os.path.isfile(f"{self.pathtoexportjson}/export.json") == False:
-            raise  Exception("export.json is missing")
-        
+            raise Exception("export.json is missing")
+
         with open(f"{self.pathtoexportjson}/export.json", "r") as tmpFile:
             defcontents = tmpFile.read()
             tmpFile.close()
 
             exportjson = json.loads(defcontents)
 
-            #build the org data
+            # build the org data
             orgdata = {}
             orgdata['name'] = self.targetusername
             orgdata['accessToken'] = self.accesstoken
             orgdata['instanceUrl'] = self.instanceurl
 
-            exportjson["orgs"] =[]
+            exportjson["orgs"] = []
             exportjson["orgs"].append(orgdata)
 
             tmpdata = json.dumps(exportjson)
-            
-            self.logger.info('Formatted EXPORT.JSON:'+tmpdata)
+
+            self.logger.info('Formatted EXPORT.JSON:' + tmpdata)
 
         with open(f"{self.pathtoexportjson}/export.json", "w") as tmpFile:
             tmpFile.write(tmpdata)
@@ -76,27 +76,24 @@ class SFDMULoad(SFDXBaseTask):
     def _cleanupexportjsonfile(self, pathtoexportjson):
         if os.path.isdir(self.pathtoexportjson):
             if os.path.isfile(f"{self.pathtoexportjson}/export.json"):
-
-                 with open(f"{self.pathtoexportjson}/export.json", "r") as tmpFile:
+                with open(f"{self.pathtoexportjson}/export.json", "r") as tmpFile:
                     defcontents = tmpFile.read()
                     tmpFile.close()
                     exportjson = json.loads(defcontents)
-                    exportjson["orgs"] =[]
+                    exportjson["orgs"] = []
                     tmpdata = json.dumps(exportjson)
 
                     with open(f"{self.pathtoexportjson}/export.json", "w") as tmpFile:
                         tmpFile.write(tmpdata)
                         tmpFile.close()
-    
 
     def _setprojectdefaults(self, instanceurl):
-        subprocess.run([f"sfdx config:set instanceUrl={instanceurl}"], shell=True,capture_output=True)
+        subprocess.run([f"sfdx config:set instanceUrl={instanceurl}"], shell=True, capture_output=True)
 
     def _init_options(self, kwargs):
         super(SFDMULoad, self)._init_options(kwargs)
         self.env = self._get_env()
         self.keychain = None
-
 
     @property
     def keychain_cls(self):
@@ -114,7 +111,7 @@ class SFDMULoad(SFDXBaseTask):
     @abstractmethod
     def get_keychain_key(self):
         return None
-    
+
     def _load_keychain(self):
         if self.keychain is not None:
             return
@@ -127,21 +124,20 @@ class SFDMULoad(SFDXBaseTask):
             self.keychain = self.keychain_cls(self.project_config, keychain_key)
             self.project_config.keychain = self.keychain
 
-    def _prepruntime(self,a):
-        
+    def _prepruntime(self, a):
+
         if "org" not in self.options or not self.options["org"]:
             self._load_keychain()
-        
-        #location of the export.json
+
+        # location of the export.json
         if "pathtoexportjson" not in self.options or not self.options["pathtoexportjson"]:
             self.pathtoexportjson = "datasets/sfdmu/"
         else:
             self.pathtoexportjson = self.options["pathtoexportjson"]
 
-
-        #if not passed in - fall back to the key ring data
+        # if not passed in - fall back to the key ring data
         if "targetusername" not in self.options or not self.options["targetusername"]:
-            
+
             if not isinstance(self.org_config, ScratchOrgConfig):
                 self.targetusername = self.org_config.access_token
             else:
@@ -149,21 +145,20 @@ class SFDMULoad(SFDXBaseTask):
         else:
             self.targetusername = self.options["targetusername"]
 
-        #if not passed in - fall back to the key ring data
+        # if not passed in - fall back to the key ring data
         if "accesstoken" not in self.options or not self.options["accesstoken"]:
             self.accesstoken = self.org_config.access_token
         else:
             self.accesstoken = self.options["accesstoken"]
 
-        #if not passed in - fall back to the key ring data
+        # if not passed in - fall back to the key ring data
         if "instanceurl" not in self.options or not self.options["instanceurl"]:
             self.instanceurl = self.org_config.instance_url
         else:
             self.instanceurl = self.options["instanceurl"]
 
-    
     def _run_task(self):
-    
+
         try:
             self._prepruntime(self)
             self._setprojectdefaults(self.instanceurl)
@@ -171,37 +166,35 @@ class SFDMULoad(SFDXBaseTask):
         except:
             self.logger.info('An Error has occurred.')
 
-        self.logger.info('Target Path:'+self.pathtoexportjson)
-        self.logger.info('Current Working Directory:'+self.options.get("dir"))
+        self.logger.info('Target Path:' + self.pathtoexportjson)
+        self.logger.info('Current Working Directory:' + self.options.get("dir"))
         self.options["command"] = self._get_command()
         output = []
-        
+
         cmdtorun = self._get_command();
-        resp=subprocess.run([f"{cmdtorun}"],shell=True, capture_output=True, cwd=self.options.get("dir"))
-        
-        #self._run_command(
+        resp = subprocess.run([f"{cmdtorun}"], shell=True, capture_output=True, cwd=self.options.get("dir"))
+
+        # self._run_command(
         #    command=self._get_command(),
         #    env=self.env,
         #    output_handler=output.append,
         #    return_code_handler=self._handle_returncode,
-        #)
-        
-        
-        #resp = output[0].decode("utf-8")
-        stdoutres=resp.stdout.splitlines()
+        # )
+
+        # resp = output[0].decode("utf-8")
+        stdoutres = resp.stdout.splitlines()
         [self.logger.info(i) for i in stdoutres]
-        #self.logger.info(resp.stdout)
-        
-        
+        # self.logger.info(resp.stdout)
+
         self.logger.info('cleaning up export.json..')
         self._cleanupexportjsonfile(self)
-         
+
     def _get_command(self):
         command = ""
         if not isinstance(self.org_config, ScratchOrgConfig):
             command = LOAD_COMMAND.format(
                 pathtoexportjson=self.pathtoexportjson,
-                instanceurl=self.instanceurl.replace("https://",""),
+                instanceurl=self.instanceurl.replace("https://", ""),
                 targetusername=self.targetusername
             )
         else:

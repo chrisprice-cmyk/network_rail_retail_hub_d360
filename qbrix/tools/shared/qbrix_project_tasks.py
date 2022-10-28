@@ -1,0 +1,491 @@
+import glob
+import json
+import os
+import shutil
+import subprocess
+from io import BytesIO
+from os.path import exists
+from typing import Optional
+from urllib.request import urlopen
+from zipfile import ZipFile
+
+from qbrix.tools.shared.qbrix_json_tasks import *
+from qbrix.tools.shared.qbrix_console_utils import init_logger
+from qbrix.tools.utils.qbrix_fart import FART
+from qbrix.tools.shared.qbrix_cci_tasks import rebuild_cci_cache
+
+log = init_logger()
+
+DEFAULT_UPDATE_LOCATION = "https://qnextgen.s3.us-west-1.amazonaws.com/qbrix/q_update_package.zip"
+
+
+def replace_file_text(file_location, old_text, new_text):
+    """ Replace specific text within a file
+    :param file_location: Relative path and file name of the file you want to replace text within
+    :param old_text: Text string to search for
+    :param new_text: New text to replace old text
+    """
+    if not exists(file_location):
+        raise Exception(f"Error: File Path does not exist. Check the file {file_location}")
+
+    with open(f"{file_location}", "r") as tmpFile:
+        fcontents = tmpFile.read()
+
+    new_fcontents = fcontents.replace(f"{old_text}", f"{new_text}")
+
+    with open(f"{file_location}", "w") as tmpFile:
+        tmpFile.write(new_fcontents)
+
+
+def get_qbrix_repo_url():
+    """ Get Repo URL for current Q Brix
+    :return: Returns the github repo url for the Q Brix.
+    """
+    result = None
+    try:
+        result = subprocess.run("git config --get remote.origin.url", shell=True, capture_output=True).stdout
+    except Exception as e:
+        log.error("Failed to get Q Brix Repo URL. Check that you have git installed and you are running this within a "
+                  "Q Brix project.")
+
+    if result is None:
+        repo_url = input("Please Enter the URL for the Q brix Repo (e.g. "
+                         "https://www.github.com/sfdc-qbranch/Qbrix-1-repo): ")
+        if repo_url == "":
+            log.error("No Q Brix URL was entered.")
+    else:
+        repo_url = result.decode('utf-8').rstrip().replace(".git", "")
+
+    return repo_url
+
+
+def advanced_feature_match(check_value, list_value):
+    """ Checks for a feature containing a : within a list. If the feature already exists, this return True
+    otherwise False is returned.
+    :param check_value: Value to check
+    :param list_value: List to check
+    :return: Returns True if feature already exists in list or False if not """
+
+    if ":" in check_value:
+        log.debug("Feature was passed to advanced feature match which does not match format expected.")
+
+    chk = False
+    for substring in list_value:
+        if substring.split(":")[0] == check_value.split(":")[0]:
+            chk = True
+    return chk
+
+
+def check_and_delete_dir(dir_path):
+    """ Deletes a folder (and all contents) if it exists. Returns True if folder has been deleted.
+    :param dir_path: Relative path to directory
+    :return: True when directory has been deleted. False if there was an issue.
+    """
+
+    if dir_path is None or dir_path == "":
+        return
+    if exists(dir_path):
+        try:
+            shutil.rmtree(f"{dir_path}")
+            log.info(f"Deleted {dir_path} and its contents (if any)")
+            return True
+        except:
+            log.error(f"Unable to delete folder: {dir_path}")
+            return False
+    else:
+        log.debug(f"Directory {dir_path} not found. Skipping.")
+        return True
+
+
+def check_and_delete_file(file_path):
+    """ Deletes a File if it exists. Returns True if File has been removed.
+     :param file_path: Relative File path and name of the file to delete.
+     :return: True if deleted and False if there was an issue.
+     """
+
+    if file_path == "":
+        return False
+    if exists(file_path):
+        try:
+            os.remove(f"{file_path}")
+            log.info(f"File Deleted: {file_path}")
+            return True
+        except:
+            log.error(f"Unable to remove file: {file_path}")
+            return False
+    else:
+        log.debug(f"File {file_path} not found. Skipping.")
+        return True
+
+
+def update_org_file_features(file_location, missing_features, auto: Optional[bool] = False):
+    """ Update scratch org json file features with additional features.
+    :param file_location: Relative path to file and file name
+    :param missing_features: list of missing features
+    :param auto: When True auto updates the file without prompting
+    :return: True when complete, False if there was an issue. """
+
+    if not exists(file_location) or missing_features is None:
+        raise Exception("[ERROR] File Location was not found or feature list was empty.")
+
+    if not auto:
+        get_response = input(
+            f"Would you like to append these missing features to your {file_location} file? (y/n) Default y: ") \
+                       or 'y'
+    else:
+        get_response = 'y'
+
+    if get_response == 'y':
+        log.info(f"Updating: {file_location}")
+
+        try:
+            with open(file_location) as json_file:
+                json_file_data = json.load(json_file)
+
+            # Get Existing Feature List
+            current_features = json_file_data['features']
+            current_features = [x.lower() for x in current_features]
+
+            # De-Duplicate Feature Lists and Append to Clean List
+            clean_feature_list = []
+            for current_feature in current_features:
+                if (":" not in current_feature and not current_feature.lower() in clean_feature_list) or (
+                        ":" in current_feature and not advanced_feature_match(current_feature.lower(),
+                                                                              clean_feature_list)):
+                    clean_feature_list.append(current_feature.lower())
+
+            for missing_feature in missing_features:
+                if (":" not in missing_feature and not missing_feature.lower() in clean_feature_list) or (
+                        ":" in missing_feature and not advanced_feature_match(missing_feature.lower(),
+                                                                              clean_feature_list)):
+                    clean_feature_list.append(missing_feature.lower())
+
+            clean_feature_list.sort()
+
+            # Update File
+            json_file_data['features'] = clean_feature_list
+            with open(file_location, "w") as nFile:
+                json.dump(json_file_data, nFile, indent=2)
+
+            log.info(f"Updated features in file: {file_location}")
+
+            return True
+        except Exception as e:
+            log.error(f"[ERROR] Unable to update features in file: {file_location}. Error Message: {e}")
+            return False
+
+
+def find_missing_features(main_features_file, check_features_file):
+    """ Compares two json scratch org definition files and checks the main file has all the features which the
+    check file has. You can then optionally update the current project file with missing features.
+    :param main_features_file: Relative path and file name for the file you want to update
+    :param check_features_file: Relative path and file name for the file you want check against
+    :return: List of features """
+
+    if not exists(main_features_file) or not exists(check_features_file):
+        raise Exception("[ERROR] One of the files cannot be found. Check it has not been deleted.")
+
+    log.info(f"Feature Check: Comparing {main_features_file} to {check_features_file}")
+
+    # Init Missing Features List
+    missing_features = []
+
+    try:
+        # Load Main File
+        with open(main_features_file) as main_json_file:
+            main_json_file_data = json.load(main_json_file)
+
+        if main_json_file_data['features'] is None:
+            raise Exception(f"[ERROR] No features found in file: {main_json_file}. Check the file and try again.")
+        main_comparison_list = main_json_file_data['features']
+        main_comparison_list = [x.lower() for x in main_comparison_list]
+
+        # Load Comparison File
+        with open(check_features_file) as check_json_file:
+            check_json_file_data = json.load(check_json_file)
+
+        if check_json_file_data['features'] is None:
+            raise Exception(f"[ERROR] No features found in file: {check_json_file}. Check the file and try again.")
+        check_comparison_list = check_json_file_data['features']
+        check_comparison_list = [x.lower() for x in check_comparison_list]
+
+        # Compare both lists and populate missing list
+        missing_feature_count = 0
+        for missing_feature in check_comparison_list:
+            if (":" not in missing_feature and not missing_feature.lower() in main_comparison_list) or (
+                    ":" in missing_feature and not advanced_feature_match(missing_feature.lower(),
+                                                                          main_comparison_list)):
+                missing_features.append(missing_feature.lower())
+                missing_feature_count += 1
+
+        if len(missing_features) == 0:
+            log.info(
+                f"[OK] There are no missing features found when comparing to file: {check_features_file}")
+        else:
+            log.info(
+                f"{missing_feature_count} missing feature(s) found, when comparing to file: {check_features_file}")
+
+        missing_features.sort()
+
+        return missing_features
+    except:
+        raise Exception("[ERROR] Failed to compare files.")
+
+
+def check_org_config_files(auto: Optional[bool] = False):
+    """ Checks the orgs/dev.json and orgs/dev_preview.json file for key values """
+
+    log.info("Scratch Org File Check: Checking your org config files for issues")
+    error_found = False
+
+    # Check that dev.json is set to an Enterprise Edition. Partner Enterprise would also pass check.
+    if "enterprise" not in get_json_file_value("orgs/dev.json", "edition").lower():
+        log.info("Scratch Org File Check: [FAIL] Your org/dev.json file is not set to Enterprise edition.")
+        error_found = True
+        if not auto:
+            update_dev_input = input("\n\nWould you like to update the dev.json file edition? (y/n) Default y: ") or 'y'
+        else:
+            update_dev_input = 'y'
+        if update_dev_input == 'y':
+            update_json_file_value('orgs/dev.json', 'edition', 'Enterprise')
+            log.info("Scratch Org File Check: Updated orgs/dev.json to use Enterprise Edition")
+
+    if "enterprise" not in get_json_file_value("orgs/dev_preview.json", "edition").lower():
+        log.error(
+            "Scratch Org File Check: [FAIL] Your org/dev_preview.json file is not set to Enterprise edition.")
+        error_found = True
+        if not auto:
+            update_dev_input = input(
+                "Would you like to update the dev_preview.json file edition? (y/n) Default y: ") or 'y'
+        else:
+            update_dev_input = 'y'
+        if update_dev_input == 'y':
+            update_json_file_value('orgs/dev.json', 'edition', 'Enterprise')
+            log.info("Scratch Org File Check: Updated orgs/dev_preview.json to use Enterprise Edition")
+
+    instance = get_json_file_value("orgs/dev_preview.json", "instance") or ""
+    if "na135" not in instance.lower():
+        log.error(
+            "Scratch Org File Check: [FAIL] Your org/dev_preview.json file is not set to the NA135 Instance.")
+        error_found = True
+        if not auto:
+            update_dev_input = input(
+                "\n\nWould you like to update the dev_preview.json file instance? (y/n) Default y: ") or 'y'
+        else:
+            update_dev_input = 'y'
+        if update_dev_input == 'y':
+            update_json_file_value('orgs/dev_preview.json', 'instance', 'NA135')
+            remove_json_entry('orgs/dev_preview.json', 'release')
+
+    if not error_found:
+        log.info("Scratch Org File Check: [OK] All files have passed checks")
+
+
+def check_api_versions(project_api_version):
+    """ Checks API Versions within the project are all in sync with cumulusci.yml file api version """
+
+    log.info(f"API Version Check: Checking File API Versions are set to v{project_api_version}")
+
+    # Check and Update sfdx-project.json File
+    sfdx_version = get_json_file_value("sfdx-project.json", "sourceApiVersion")
+    if project_api_version != sfdx_version:
+        update_json_file_value("sfdx-project.json", "sourceApiVersion", project_api_version)
+        log.info("API Version Check: Updated sfdx-project.json File")
+
+
+def source_org_feature_checker(skip_rebuild: Optional[bool] = False):
+    """ Check all source project dev.json files for missing features from current project dev.json file
+    :param skip_rebuild: Set to True when you do no want CumulusCI Cache Rebuilt. Defaults to False
+    """
+
+    log.info("Source Feature Check: Checking that all source dev.json file features are listed in the "
+             "current dev.json file")
+
+    # Prepare Project File
+    if not skip_rebuild:
+        clean_project_files()
+        rebuild_cci_cache()
+    else:
+        log.info("Cache Rebuild Skipped")
+
+    # Locate all dev.json files in CCI Cache
+    dev_files = glob.glob(".cci/projects" + "/**/dev.json", recursive=True)
+
+    # Check for missing features and add them to dev.json
+    main_missing_feature_list = []
+    for feature_check_file in dev_files:
+        missing_feature_list = find_missing_features("orgs/dev.json", feature_check_file)
+        if missing_feature_list is not None and len(missing_feature_list) > 0:
+            main_missing_feature_list.extend(missing_feature_list)
+    if len(main_missing_feature_list) > 0:
+        main_missing_feature_list.sort()
+        update_org_file_features("orgs/dev.json", main_missing_feature_list)
+    else:
+        log.info("Source Feature Check: No missing features found when comparing all sources to "
+                 "orgs/dev.json")
+
+
+def org_feature_checker():
+    """ Checks and updates the dev_preview.json file with missing features from the dev.json file """
+
+    log.info(
+        "Scratch Org Config Check: Comparing dev.json and dev_preview.json files for missing features.")
+    missing_features = find_missing_features("orgs/dev_preview.json", "orgs/dev.json")
+    if len(missing_features) > 0:
+        log.info("Scratch Org Config Check: Missing Features Found. Updating orgs/dev_preview.json file")
+        update_org_file_features("orgs/dev_preview.json", missing_features)
+    else:
+        log.info("Scratch Org Config Check: No Missing Features Found")
+
+
+def check_for_missing_files():
+    """ Checks for essential files within the current project folder """
+
+    if not exists("cumulusci.yml"):
+        log.error("[ERROR] Missing File: cumulusci.yml")
+    if not exists("orgs/dev.json"):
+        log.error("[ERROR] Missing File: orgs/dev.json")
+    if not exists("sfdx-project.json"):
+        log.error("[ERROR] Missing File: sfdx-project.json")
+    if not exists("orgs/dev_preview.json"):
+        log.error("[ERROR] Missing File: orgs/dev_preview.json")
+
+
+def download_and_unzip(url: Optional[str] = DEFAULT_UPDATE_LOCATION, archive_password: Optional[str] = "",
+                       ignore_optional_updates: Optional[bool] = False):
+    """ Downloads a .zip file and extracts all folders to the root project directory """
+
+    log.info("Downloading Update Package")
+    http_response = urlopen(url)
+    log.info("Download Complete!")
+    log.info("Extracting Update Package to project folder...")
+    try:
+        zipfile = ZipFile(BytesIO(http_response.read()))
+
+        # CHECK FOR MISSING DIRS AND CREATE THEM
+        dir_check_list = [x for x in zipfile.namelist() if x.endswith('/')]
+        for d in dir_check_list:
+            if not exists(d):
+                os.mkdir(d)
+                log.info(f"Created New Directory: {d}")
+
+        # HANDLE ZIP PASSWORDS
+        if archive_password != "":
+            zipfile.setpassword(pwd=bytes(archive_password, 'utf-8'))
+
+        # EXTRACT FILES
+        log.info("Updating Q Brix files...")
+        zipfile.extractall()
+
+        # Clean Up
+        if exists("__MACOSX"):
+            shutil.rmtree("__MACOSX")
+        if exists("q_update_package"):
+            shutil.rmtree("q_update_package")
+        if ignore_optional_updates:
+            if exists("OPTIONAL_UPDATES"):
+                shutil.rmtree("OPTIONAL_UPDATES")
+
+        return True
+    except Exception as e:
+        log.error(f"[ERROR] Update Failed! Error Message: {e}")
+        if exists("q_update_package"):
+            shutil.rmtree("q_update_package")
+    return False
+
+
+def check_and_update_old_class_refs():
+        # Health Check
+    replace_file_text("cumulusci.yml", "tasks.custom.qbrix_utils.HealthChecker",
+                      "qbrix.tools.utils.qbrix_health_check.HealthChecker")
+
+    # Q Brix Update
+    replace_file_text("cumulusci.yml", "tasks.custom.qbrix_utils.QBrixUpdater",
+                      "qbrix.tools.utils.qbrix_update.QBrixUpdater")
+
+    # FART
+    replace_file_text("cumulusci.yml", "tasks.custom.fart.FART",
+                      "qbrix.tools.utils.qbrix_fart.FART")
+
+    # Batch Apex
+    replace_file_text("cumulusci.yml", "tasks.custom.batchanonymousapex.BatchAnonymousApex",
+                      "qbrix.tools.utils.qbrix_batch_apex.QBrixUpdater")
+
+    # Org Generator
+    replace_file_text("cumulusci.yml", "tasks.custom.orggenerator.Spin",
+                      "qbrix.tools.utils.qbrix_org_generator.Spin")
+
+    # Init Project
+    replace_file_text("cumulusci.yml", "tasks.custom.qbrix_utils.Initialise_Project",
+                      "qbrix.tools.utils.qbrix_project_setup.InitProject")
+    replace_file_text("cumulusci.yml", "tasks.custom.qbrix_utils.InitProject",
+                      "qbrix.tools.utils.qbrix_project_setup.InitProject")
+
+    # List Q Brix
+    replace_file_text("cumulusci.yml", "tasks.custom.qbrix_sf.ListQBrix",
+                      "qbrix.salesforce.qbrix_salesforce_tasks.ListQBrix")
+
+    # Banner
+    replace_file_text("cumulusci.yml", "tasks.custom.announce.CreateBanner",
+                      "qbrix.tools.shared.qbrix_console_utils.CreateBanner")
+
+
+def clean_project_files():
+    """ Removes Cached files and folders from q brix project """
+
+    try:
+        check_and_delete_dir(".cci/projects")
+        check_and_delete_dir("src")
+        check_and_delete_dir("browser")
+        check_and_delete_file("log.html")
+        check_and_delete_file("playwright-log.txt")
+        check_and_delete_file("output.xml")
+        check_and_delete_file("report.html")
+    except Exception() as e:
+        log.info(f"Failed to Clean Up Project Files. Error Message: {e}")
+
+
+def delete_standard_fields():
+    """ Removes Standard Salesforce Fields from Project """
+    object_fields = glob.glob("force-app/main/default/objects" + "/**/*.field-meta.xml", recursive=True)
+    if len(object_fields) == 0:
+        log.info("No Standard/Core Fields Found in Project!")
+    else:
+        for of in object_fields:
+            if not os.path.basename(of).endswith("__c.field-meta.xml"):
+                os.remove(of)
+                log.info(f"Deleted File: {of}")
+
+
+def update_file_api_versions(project_api_version):
+    """ Update file API version in project
+    :param project_api_version: Target API Version you want to update the files to. e.g. 56
+    """
+    # Handle Bulk Files
+    # To add: Visualforce and Apex Triggers
+    class_files = glob.glob("force-app/main/default/classes" + "/**/*.cls-meta.xml", recursive=True)
+    aura_files = glob.glob("force-app/main/default/aura" + "/**/*.cmp-meta.xml", recursive=True)
+    lwc_files = glob.glob("force-app/main/default/lwc" + "/**/*.js-meta.xml", recursive=True)
+    results = []
+    results.extend(class_files)
+    results.extend(aura_files)
+    results.extend(lwc_files)
+    for f in results:
+        try:
+            FART.fartbetween(f, "<apiVersion>", "</apiVersion>", project_api_version)
+            log.info(f"[OK] File Updated: {f}")
+        except:
+            log.error(f"[FAILED] File Update Failed: {f}")
+    # Handle Single Files
+    if exists("files/package.xml"):
+        try:
+            FART.fartbetween("files/package.xml", "<apiVersion>", "</apiVersion>", project_api_version)
+            log.info(f"[OK] File Updated: files/package.xml")
+        except:
+            log.error(f"[FAILED] File Update files/package.xml")
+    if exists("sfdx-project.json"):
+        try:
+            update_json_file_value("sfdx-project.json", "sourceApiVersion", project_api_version)
+            log.info(f"[OK] File Updated: sfdx-project.json")
+        except:
+            log.error(f"[FAILED] File Update sfdx-project.json")

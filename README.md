@@ -4,10 +4,6 @@ TO DO (CAN BE COMPLETED LATER IF NEEDED): [Create a Documentation for this Q Bri
 
 COMPLETE TASKS IN ORDER
 
-TO DO: Run the update task
-
-    cci task run update_qbrix
-
 TO DO: Run the Q Brix Setup Task
 
     cci task run setup_qbrix

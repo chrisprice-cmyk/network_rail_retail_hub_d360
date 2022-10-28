@@ -1,0 +1,131 @@
+from time import sleep
+
+from Browser import ElementState, SelectAttribute
+from cumulusci.robotframework.base_library import BaseLibrary
+from qbrix.robot.qbrix_shared_keywords import QbrixSharedKeywords
+
+
+class QbrixSalesCloudKeywords(BaseLibrary):
+
+    def __init__(self):
+        super().__init__()
+        self._browser = None
+
+    @property
+    def browser(self):
+        if self._browser is None:
+            self._browser = self.builtin.get_library_instance("Browser")
+        return self._browser
+
+    def enable_forecasts(self):
+        """Go directly to the Field Service admin page"""
+        QbrixSharedKeywords.go_to_setup_admin_page("Forecasting3Settings/home")
+        visible = "visible" in self.browser.get_element_states("label:has-text('Inactive')")
+        if visible:
+            toggle_switch = self.browser.get_element("label:has-text('Inactive')")
+            self.browser.click(toggle_switch)
+            sleep(1)
+
+    def enable_contacts_to_multiple_accounts(self):
+        QbrixSharedKeywords.go_to_setup_admin_page("AccountSettings/home")
+        QbrixSharedKeywords.wait_for_page_title("Account Settings")
+        self.browser.click("iframe >>> :nth-match(input:has-text('Edit'),1)")
+        self.browser.wait_for_elements_state(
+            "iframe >>> label:has-text('Allow users to relate a contact to multiple accounts')", ElementState.visible,
+            '10s')
+        checked = "checked" in self.browser.get_element_states(
+            "iframe >>> label:has-text('Allow users to relate a contact to multiple accounts')")
+        if not checked:
+            toggle_switch = self.browser.get_element(
+                "iframe >>> label:has-text('Allow users to relate a contact to multiple accounts')")
+            self.browser.click(toggle_switch)
+            self.browser.click("iframe >>> :nth-match(input:has-text('Save'), 2)")
+            sleep(2)
+
+    def enable_sales_engagement(self):
+        """ Enables Sales Engagement """
+        QbrixSharedKeywords.go_to_setup_admin_page("SalesEngagement/home")
+        sleep(5)
+        QbrixSharedKeywords.click_button_with_text("Set Up and Enable Sales Engagement")
+
+    def set_guest_on_channel_menu(self, channel_menu_api_name):
+
+        """ Sets the Channel Menu Guest API Setting. Expects the Channel Menu API Name (not the label)"""
+
+        QbrixSharedKeywords.go_to_setup_admin_page("ChannelMenuDeployments/home")
+
+        self.browser.click(f"tr:has-text('{channel_menu_api_name}') >> a.slds-button")
+        sleep(1)
+        self.browser.click(".branding-actions > .scrollable > .uiMenuItem:nth-child(2) > a")
+        sleep(3)
+        visible = "visible" in self.browser.get_element_states("a.supportAPIButton:has-text('Enable on')")
+        if visible:
+            self.browser.click("a.supportAPIButton:has-text('Enable on')")
+            sleep(5)
+
+    def update_forecast_hierarchy_settings(self):
+
+        """ Sets the default SDO configuration for Forecasting """
+        QbrixSharedKeywords.go_to_setup_admin_page("Forecasting3Role/home")
+        sleep(5)
+
+        # Enable Admin User for the CEO Role
+        visible = "visible" in self.browser.get_element_states(
+            "iframe >>> :nth-match(a:text-is('Enable Users'):right-of(span.label:text-is('CEO')),1)")
+        if visible:
+            self.browser.click("iframe >>> :nth-match(a:text-is('Enable Users'):right-of(span.label:text-is('CEO')),1)")
+            sleep(5)
+            existing_list = self.browser.get_select_options("iframe >>> #duel_select_1")
+            if len(existing_list) > 0 and not any(d['label'] == 'Admin User' for d in existing_list):
+                self.browser.select_options_by("iframe >>> td.selectCell:has-text('Available Users') >> select",
+                                               SelectAttribute.text, "Admin User")
+                self.browser.click("iframe >>> img.rightArrowIcon")
+                sleep(1)
+                self.browser.click("iframe >>> .btn:text-is('Save')")
+            else:
+                self.browser.click("iframe >>> .btn:text-is('Cancel')")
+            sleep(8)
+
+        # Setup Elliot Executive for VP of Sales
+        visible = "visible" in self.browser.get_element_states(
+            "iframe >>> :nth-match(img.plus:left-of(span.label:text-is('CEO')),1)")
+        if visible:
+            self.browser.click("iframe >>> :nth-match(img.plus:left-of(span.label:text-is('CEO')),1)")
+            sleep(3)
+            self.browser.click("iframe >>> span:has-text('VP of Sales') >> a:text-is('Enable Users')")
+            sleep(5)
+            existing_list = self.browser.get_select_options("iframe >>> #duel_select_1")
+            if len(existing_list) > 0 and not any(d['label'] == 'Elliot Executive' for d in existing_list):
+                self.browser.select_options_by("iframe >>> td.selectCell:has-text('Available Users') >> select",
+                                               SelectAttribute.text, "Elliot Executive")
+                self.browser.click("iframe >>> img.rightArrowIcon")
+                sleep(1)
+                self.browser.click("iframe >>> .btn:text-is('Save')")
+            else:
+                self.browser.click("iframe >>> .btn:text-is('Cancel')")
+            sleep(2)
+
+        sleep(10)
+
+    def enable_opportunity_splits(self):
+        QbrixSharedKeywords.go_to_setup_admin_page("OpportunitySplitSetup/home")
+        self.browser.wait_for_elements_state("h1:has-text('Opportunity Splits')", ElementState.visible, '30s')
+        sleep(5)
+        visible = "visible" in self.browser.get_element_states("iframe >>> .button[value='Set up Opportunity Splits']")
+        if visible:
+            button_to_click = self.browser.get_element("iframe >>> .button[value='Set up Opportunity Splits']")
+            self.browser.click(button_to_click)
+            self.browser.wait_for_elements_state("iframe >>> .button[value='Save']", ElementState.visible, '30s')
+            sleep(2)
+            save_button_to_click = self.browser.get_element("iframe >>> .button[value='Save']")
+            self.browser.click(save_button_to_click)
+            sleep(4)
+            self.browser.wait_for_elements_state("iframe >>> .btn[title='Enable']", ElementState.visible, '30s')
+            sleep(2)
+            enable_button_to_click = self.browser.get_element("iframe >>> .btn[title='Enable']")
+            self.browser.click(enable_button_to_click)
+            self.browser.wait_for_elements_state("iframe >>> .btn[value='Save']", ElementState.visible, '30s')
+            sleep(3)
+            enable_button_to_click = self.browser.get_element("iframe >>> .btn[value='Save']")
+            self.browser.click(enable_button_to_click)
+            sleep(4)

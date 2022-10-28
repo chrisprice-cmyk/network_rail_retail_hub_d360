@@ -108,19 +108,26 @@ tasks:
   # CUSTOM TASKS ADDED FOR Q BRIX DEVELOPMENT
 
   health_check:
-    class_path: tasks.custom.qbrix_utils.HealthChecker
+    #.qbrix/tools/utils/qbrix_health_check.py
+    class_path: qbrix.tools.utils.qbrix_health_check.HealthChecker
 
   update_qbrix:
-    class_path: tasks.custom.qbrix_utils.QBrixUpdater
+    class_path: qbrix.tools.utils.qbrix_update.QBrixUpdater
 
   setup_qbrix:
-    class_path: tasks.custom.qbrix_utils.InitProject
+    class_path: qbrix.tools.utils.qbrix_project_setup.InitProject
 
   list_qbrix:
-    class_path: tasks.custom.qbrix_sf.ListQBrix
+    class_path: qbrix.salesforce.qbrix_salesforce_tasks.ListQBrix
+
+  q_update_dependencies:
+    class_path: qbrix.salesforce.qbrix_salesforce_tasks.QUpdateDependencies
 
   mass_qbrix_update:
-    class_path: tasks.custom.qbrix_utils.MassFileOps
+    class_path: qbrix.tools.utils.qbrix_mass_ops.MassFileOps
+
+  qbrix_installed:
+    class_path: qbrix.salesforce.qbrix_salesforce_tasks.QBrixInstalled
 
   deploy_settings:
     description: Checks that Settings have been defined in force-app and deploys them if present
@@ -128,13 +135,11 @@ tasks:
     options:
       path: force-app/main/default/settings
 
-  install_qbrix_register:
-    description: Installs the Q Brix Registration Tool
-    class_path: cumulusci.tasks.salesforce.UpdateDependencies
+  check_register:
+    class_path: qbrix.salesforce.qbrix_salesforce_tasks.QUpdateDependencies
     options:
       dependencies:
         - github: https://github.com/sfdc-qbranch/QBrix-1-xDO-Tool-QBrixRegister
-          unmanaged: True
 
   #------------------------------------#
   # DATA TOOL INTEGRATION              #
@@ -173,7 +178,7 @@ tasks:
   # Note: This section can be removed if you are not using Testim.
   qbrix_task_Testim:
     description: "Run Testim Script"
-    class_path: tasks.custom.testim.RunTestim
+    class_path: qbrix.tools.testing.qbrix_testim.RunTestim
     options:
       testimname: "REPLACE WITH NAME OF SCRIPT"
       pass_env: true
@@ -192,7 +197,7 @@ flows:
   prepare_org:
     steps:
       1:
-        task: install_qbrix_register
+        task: check_register
         ui_options:
           name: Install/Update QBrix Registration Tool
       2:
