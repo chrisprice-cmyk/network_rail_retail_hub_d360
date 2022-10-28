@@ -409,7 +409,7 @@ def check_and_update_old_class_refs():
 
     # Batch Apex
     replace_file_text("cumulusci.yml", "tasks.custom.batchanonymousapex.BatchAnonymousApex",
-                      "qbrix.tools.utils.qbrix_batch_apex.QBrixUpdater")
+                      "qbrix.tools.utils.qbrix_batch_apex.BatchAnonymousApex")
 
     # Org Generator
     replace_file_text("cumulusci.yml", "tasks.custom.orggenerator.Spin",
@@ -428,6 +428,10 @@ def check_and_update_old_class_refs():
     # Banner
     replace_file_text("cumulusci.yml", "tasks.custom.announce.CreateBanner",
                       "qbrix.tools.shared.qbrix_console_utils.CreateBanner")
+
+    # Mass File Ops
+    replace_file_text("cumulusci.yml", "tasks.custom.qbrix_utils.MassFileOps",
+                      "qbrix.tools.utils.qbrix_mass_ops.MassFileOps")
 
 
 def clean_project_files():
