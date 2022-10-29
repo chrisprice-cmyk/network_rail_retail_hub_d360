@@ -10,6 +10,7 @@ class QbrixMarketingKeywords(BaseLibrary):
     def __init__(self):
         super().__init__()
         self._browser = None
+        self.shared = QbrixSharedKeywords()
 
     @property
     def browser(self):
@@ -19,7 +20,7 @@ class QbrixMarketingKeywords(BaseLibrary):
 
     def enable_pardot_setting(self):
         """ Enables Pardot Setting"""
-        QbrixSharedKeywords.go_to_setup_admin_page("PardotSetupAssistant/home")
+        self.shared.go_to_setup_admin_page("PardotSetupAssistant/home")
         self.browser.wait_for_elements_state("div:text-is('B2B Marketing Setup Assistant')", ElementState.visible,
                                              '15s')
         self.browser.click(".slds-button:has-text('Send Your First Email')")
@@ -33,7 +34,7 @@ class QbrixMarketingKeywords(BaseLibrary):
 
     def enable_pardot_app(self):
         """ Enables Pardot Connected App Settings"""
-        QbrixSharedKeywords.go_to_setup_admin_page("ConnectedApplication/home")
+        self.shared.go_to_setup_admin_page("ConnectedApplication/home")
         self.browser.click("iframe >>> a:text-is('b2bma_canvas')")
         sleep(2)
         self.browser.click("iframe >>> .btn:has-text('Edit Policies')")
@@ -66,7 +67,7 @@ class QbrixMarketingKeywords(BaseLibrary):
 
     def enable_territory_management(self):
         """ Enables Maps Territory Planning Settings"""
-        QbrixSharedKeywords.go_to_setup_admin_page("Territory2Settings/home")
+        self.shared.go_to_setup_admin_page("Territory2Settings/home")
         sleep(5)
         visible = "visible" in self.browser.get_element_states(
             f":nth-match(iframe,1) >>> button:has-text('Enable Enterprise Territory Management')")

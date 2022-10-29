@@ -337,14 +337,64 @@ class QbrixSharedKeywords(BaseLibrary):
             raise Exception("Unable to locate the Profile ID by name")
         
         profileediturl =f"EnhancedProfiles/page?address=%2F{profileid}%3Fs%3DServicePresenceStatusAccess"
-        self.log_to_file(profileediturl)
+        
         self.go_to_setup_admin_page(profileediturl)
         sleep(5)
         self.browser.click("iframe >>> a:has-text('Edit')")
-        sleep(10)
-        #selection_element = self.browser.get_element(f"iframe >>> [option=\"{servicestatus}\"] ")
-        
+        sleep(10)        
         self.browser.select_options_by(f"iframe >>> td.selectCell:has-text('{servicestatus}') >> select", SelectAttribute.text, servicestatus)
         self.browser.click("iframe >>> img.rightArrowIcon")
         sleep(1)
         self.browser.click("iframe >>> .btn:text-is('Save')")
+
+    # -----------------------------------------------------------------------------------------------------------------------------------------
+    # Chat Agent Configurations
+    # -----------------------------------------------------------------------------------------------------------------------------------------
+    def add_profile_to_chat_configuration(self,liveagentconfigname:str,profilename:str):
+        """ Adds a specified profile to the specified Chat User Config  """
+        
+        if profilename is None:
+            raise Exception("Profile Name must be specified")
+        
+        if liveagentconfigname is None:
+            raise Exception("Live Chat User Config Name must be specified")
+        
+    
+        self.go_to_setup_admin_page("EnhancedProfiles/home")
+        sleep(10)
+        
+        liveagentconfig = self.find_livechatuserconfig_by_name(liveagentconfigname)
+        editurl =f"LiveChatUserConfigSettings/page?address=%2F{liveagentconfig}"
+        self.go_to_setup_admin_page(editurl)
+        sleep(5)
+        self.browser.click("iframe >>> .btn:text-is('Edit')")
+        sleep(10)
+    
+        self.browser.select_options_by(f"iframe >>> td.selectCell:has-text('{profilename}') >> select", SelectAttribute.text, profilename)
+        #there are 5 dueling lists. second one is profiles
+        self.browser.click("iframe >>> :nth-match(img.rightArrowIcon, 2)")
+        sleep(1)
+        #button at top and one on the bottom. dealer's choice
+        self.browser.click("iframe >>> :nth-match(.btn:text-is('Save'), 1)")
+        
+        
+        
+        
+    def find_livechatuserconfig_by_name(self,configname:str):
+        """ Locates the ID of a Live Chat User Config by Master Label. See: select id, MasterLabel from LiveChatUserConfig"""
+        if configname is None:
+            raise Exception("Live Chat User Config Name must be specified")
+        
+        soql=f"SELECT ID FROM LiveChatUserConfig where MasterLabel ='{configname}'"
+        self.log_to_file(soql)
+        results = self.salesforceapi.soql_query(soql)
+        
+        #so this gets translated to a dict with 3 keys: 
+        #records
+        #totalSize
+        #done
+        self.log_to_file(results)
+        if results["totalSize"] == 1:
+            return results["records"][0]["Id"]
+        
+        return None

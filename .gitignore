@@ -50,3 +50,7 @@ playwright-log.txt
 log.html
 output.xml
 report.html
+.qbrix/*
+qbrix/robot/__pycache__
+qbrix/tools/utils/__pycache__
+qbrix/tools/shared/__pycache__

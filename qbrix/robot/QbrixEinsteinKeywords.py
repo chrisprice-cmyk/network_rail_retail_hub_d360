@@ -10,6 +10,7 @@ class QbrixEinsteinKeywords(BaseLibrary):
     def __init__(self):
         super().__init__()
         self._browser = None
+        self.shared = QbrixSharedKeywords()
 
     @property
     def browser(self):
@@ -18,34 +19,34 @@ class QbrixEinsteinKeywords(BaseLibrary):
         return self._browser
 
     def enable_einstein_analytics_crm(self):
-        QbrixSharedKeywords().go_to_setup_admin_page("InsightsSetupGettingStarted/home")
+        self.shared.go_to_setup_admin_page("InsightsSetupGettingStarted/home")
         sleep(5)
         QbrixSharedKeywords().click_button_with_text("Enable CRM Analytics")
         sleep(30)
 
     def go_to_campaign_insights_setup_page(self):
         """Go directly to the Campaign Insights setup page"""
-        QbrixSharedKeywords().go_to_setup_admin_page("CampaignInsights/home")
+        self.shared.go_to_setup_admin_page("CampaignInsights/home")
 
     def go_to_opportunity_insights_setup_page(self):
         """Go directly to the Opportunity Insights setup page"""
-        QbrixSharedKeywords().go_to_setup_admin_page("OpportunityInsights/home")
+        self.shared.go_to_setup_admin_page("OpportunityInsights/home")
 
     def go_to_account_insights_setup_page(self):
         """Go directly to the Account Insights setup page"""
-        QbrixSharedKeywords().go_to_setup_admin_page("AccountInsights/home")
+        self.shared.go_to_setup_admin_page("AccountInsights/home")
 
     def go_to_relationship_insights_setup_page(self):
         """Go directly to the Relationships Insights setup page"""
-        QbrixSharedKeywords().go_to_setup_admin_page("EinsteinSmartTags/home")
+        self.shared.go_to_setup_admin_page("EinsteinSmartTags/home")
 
     def go_to_key_account_insights_setup_page(self):
         """Go directly to the Key Accounts Insights setup page"""
-        QbrixSharedKeywords().go_to_setup_admin_page("EKAI/home")
+        self.shared.go_to_setup_admin_page("EKAI/home")
 
     def go_to_lead_scoring_setup_page(self):
         """Go directly to the Lead Scoring setup page"""
-        QbrixSharedKeywords().go_to_setup_admin_page("LeadIQ/home")
+        self.shared.go_to_setup_admin_page("LeadIQ/home")
         self.browser.wait_for_elements_state("h1:has-text('Einstein Lead Scoring')", ElementState.visible, '30s')
         sleep(5)
         checked = "checked" in self.browser.get_element_states("label:has-text('Off')")
@@ -59,7 +60,7 @@ class QbrixEinsteinKeywords(BaseLibrary):
 
     def go_to_oppty_scoring_setup_page(self):
         """Go directly to the Opportunity Scoring setup page"""
-        QbrixSharedKeywords().go_to_setup_admin_page("OpportunityIQSetupHome/home")
+        self.shared.go_to_setup_admin_page("OpportunityIQSetupHome/home")
         self.browser.wait_for_elements_state("h1:has-text('Einstein Opportunity Scoring')", ElementState.visible, '30s')
         sleep(5)
         enabled = "enabled" in self.browser.get_element_states(".slds-button:has-text('Set Up')")
@@ -79,7 +80,7 @@ class QbrixEinsteinKeywords(BaseLibrary):
 
     def enable_automated_data_capture(self):
         """Go directly to the Opportunity Scoring setup page"""
-        QbrixSharedKeywords().go_to_setup_admin_page("AutomatedDataCapture/home")
+        self.shared.go_to_setup_admin_page("AutomatedDataCapture/home")
         self.browser.wait_for_elements_state("h1:has-text('Einstein Automated Contacts')", ElementState.visible, '30s')
         sleep(5)
         checked = "checked" in self.browser.get_element_states(":nth-match(span.slds-checkbox--faux,1)")
@@ -93,13 +94,13 @@ class QbrixEinsteinKeywords(BaseLibrary):
 
     def enable_einstein_prediction_builder(self):
         """ Enable Einstein Prediction Builder """
-        QbrixSharedKeywords().go_to_setup_admin_page("EinsteinBuilder/home")
-        QbrixSharedKeywords().click_button_with_text("Get Started")
+        self.shared.go_to_setup_admin_page("EinsteinBuilder/home")
+        self.shared.click_button_with_text("Get Started")
         sleep(2)
-        QbrixSharedKeywords().set_lightning_toggle("on")
+        self.shared.set_lightning_toggle("on")
 
     def enable_einstein_activity_capture(self):
-        QbrixSharedKeywords().go_to_setup_admin_page("ActivitySyncEngineSettingsMain/home")
+        self.shared.go_to_setup_admin_page("ActivitySyncEngineSettingsMain/home")
         self.browser.wait_for_elements_state(".einsteinTitle:has-text('Einstein Activity Capture')",
                                              ElementState.visible, '30s')
         sleep(2)
@@ -109,7 +110,7 @@ class QbrixEinsteinKeywords(BaseLibrary):
             sleep(2)
 
     def enable_einstein_forecasting(self):
-        QbrixSharedKeywords().go_to_setup_admin_page("ForecastingPrediction/home")
+        self.shared.go_to_setup_admin_page("ForecastingPrediction/home")
         self.browser.wait_for_elements_state("h1:has-text('Einstein Forecasting')", ElementState.visible, '30s')
         sleep(2)
         enabled = "enabled" in self.browser.get_element_states(".slds-button:has-text('Enable')")
@@ -118,7 +119,7 @@ class QbrixEinsteinKeywords(BaseLibrary):
             sleep(2)
 
     def enable_call_coaching_eci(self):
-        QbrixSharedKeywords().go_to_setup_admin_page("CallCoachingSettings/home")
+        self.shared.go_to_setup_admin_page("CallCoachingSettings/home")
         self.browser.wait_for_elements_state("h1:has-text('Einstein Conversation Insights')", ElementState.visible,
                                              '30s')
         sleep(2)
@@ -128,7 +129,7 @@ class QbrixEinsteinKeywords(BaseLibrary):
             sleep(1)
 
     def enable_einstein_classification(self):
-        QbrixSharedKeywords().go_to_setup_admin_page("EinsteinCaseClassification/home")
+        self.shared.go_to_setup_admin_page("EinsteinCaseClassification/home")
         self.browser.wait_for_elements_state("h1:has-text('Einstein Classification')", ElementState.visible, '10s')
         sleep(2)
         checked = "checked" in self.browser.get_element_states(

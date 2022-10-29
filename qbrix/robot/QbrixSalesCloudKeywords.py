@@ -10,6 +10,7 @@ class QbrixSalesCloudKeywords(BaseLibrary):
     def __init__(self):
         super().__init__()
         self._browser = None
+        self.shared = QbrixSharedKeywords()
 
     @property
     def browser(self):
@@ -19,7 +20,7 @@ class QbrixSalesCloudKeywords(BaseLibrary):
 
     def enable_forecasts(self):
         """Go directly to the Field Service admin page"""
-        QbrixSharedKeywords().go_to_setup_admin_page("Forecasting3Settings/home")
+        self.shared.go_to_setup_admin_page("Forecasting3Settings/home")
         visible = "visible" in self.browser.get_element_states("label:has-text('Inactive')")
         if visible:
             toggle_switch = self.browser.get_element("label:has-text('Inactive')")
@@ -27,8 +28,8 @@ class QbrixSalesCloudKeywords(BaseLibrary):
             sleep(1)
 
     def enable_contacts_to_multiple_accounts(self):
-        QbrixSharedKeywords().go_to_setup_admin_page("AccountSettings/home")
-        QbrixSharedKeywords().wait_for_page_title("Account Settings")
+        self.shared.go_to_setup_admin_page("AccountSettings/home")
+        self.shared.wait_for_page_title("Account Settings")
         self.browser.click("iframe >>> :nth-match(input:has-text('Edit'),1)")
         self.browser.wait_for_elements_state(
             "iframe >>> label:has-text('Allow users to relate a contact to multiple accounts')", ElementState.visible,
@@ -44,15 +45,15 @@ class QbrixSalesCloudKeywords(BaseLibrary):
 
     def enable_sales_engagement(self):
         """ Enables Sales Engagement """
-        QbrixSharedKeywords().go_to_setup_admin_page("SalesEngagement/home")
+        self.shared.go_to_setup_admin_page("SalesEngagement/home")
         sleep(5)
-        QbrixSharedKeywords().click_button_with_text("Set Up and Enable Sales Engagement")
+        self.shared.click_button_with_text("Set Up and Enable Sales Engagement")
 
     def set_guest_on_channel_menu(self, channel_menu_api_name):
 
         """ Sets the Channel Menu Guest API Setting. Expects the Channel Menu API Name (not the label)"""
 
-        QbrixSharedKeywords().go_to_setup_admin_page("ChannelMenuDeployments/home")
+        self.shared.go_to_setup_admin_page("ChannelMenuDeployments/home")
 
         self.browser.click(f"tr:has-text('{channel_menu_api_name}') >> a.slds-button")
         sleep(1)
@@ -66,7 +67,7 @@ class QbrixSalesCloudKeywords(BaseLibrary):
     def update_forecast_hierarchy_settings(self):
 
         """ Sets the default SDO configuration for Forecasting """
-        QbrixSharedKeywords().go_to_setup_admin_page("Forecasting3Role/home")
+        self.shared.go_to_setup_admin_page("Forecasting3Role/home")
         sleep(5)
 
         # Enable Admin User for the CEO Role
@@ -108,7 +109,7 @@ class QbrixSalesCloudKeywords(BaseLibrary):
         sleep(10)
 
     def enable_opportunity_splits(self):
-        QbrixSharedKeywords().go_to_setup_admin_page("OpportunitySplitSetup/home")
+        self.shared.go_to_setup_admin_page("OpportunitySplitSetup/home")
         self.browser.wait_for_elements_state("h1:has-text('Opportunity Splits')", ElementState.visible, '30s')
         sleep(5)
         visible = "visible" in self.browser.get_element_states("iframe >>> .button[value='Set up Opportunity Splits']")

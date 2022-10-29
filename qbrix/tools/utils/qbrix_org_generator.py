@@ -339,20 +339,20 @@ class Spin(SFDXBaseTask):
 
     def _createworkingarea(self):
 
-        if os.path.isdir('qbrix') == False:
-            os.mkdir('qbrix')
+        if os.path.isdir('.qbrix') == False:
+            os.mkdir('.qbrix')
 
         subprocess.run([f"sfdx force:project:create --projectname {self.devhubuser} --json"], shell=True,
-                       capture_output=True, cwd="qbrix")
+                       capture_output=True, cwd=".qbrix")
         subprocess.run([f"sfdx force:config:set defaultusername={self.devhubuser} --json"], shell=True,
                        capture_output=True,
-                       cwd=os.path.join('qbrix', self.devhubuser))
+                       cwd=os.path.join('.qbrix', self.devhubuser))
 
     def _getlatesttemplate(self):
         self._createworkingarea()
         result = subprocess.run([
             f"sfdx force:data:soql:query -u {self.devhubuser} -q \"SELECT ID FROM TrialTemplate Order By CreatedDate DESC LIMIT 1\" --json"],
-            shell=True, capture_output=True, cwd=os.path.join('qbrix', self.devhubuser))
+            shell=True, capture_output=True, cwd=os.path.join('.qbrix', self.devhubuser))
 
         if result is None: return None
 
@@ -368,18 +368,18 @@ class Spin(SFDXBaseTask):
     def _getrequestedqbrixfordeploy(self):
         if (not self.deployqbrix is None):
             for (x) in self.deployqbrix:
-                if os.path.isdir(os.path.join("qbrix", x)):
+                if os.path.isdir(os.path.join(".qbrix", x)):
                     self.logger.info(f"qrbix {x} exists. Clearing cache to pull latest")
-                    shutil.rmtree(os.path.join("qbrix", x), ignore_errors=True)
+                    shutil.rmtree(os.path.join(".qbrix", x), ignore_errors=True)
 
                 cmd = f"git clone https://{self.githubpat}:x-oauth-basic@github.com/{self.qbrixowner}/{x}"
-                result = subprocess.run([f"{cmd}"], shell=True, capture_output=True, cwd="qbrix")
+                result = subprocess.run([f"{cmd}"], shell=True, capture_output=True, cwd=".qbrix")
 
                 print(result.stdout)
 
     def _deployqbrix(self):
         for (x) in self.deployqbrix:
-            targetdir = os.path.join("qbrix", x)
+            targetdir = os.path.join(".qbrix", x)
 
             if os.path.isdir(targetdir):
 
@@ -501,7 +501,7 @@ class Spin(SFDXBaseTask):
         if (not self.signuprequestid is None):
             result = subprocess.run([
                 f"sfdx force:data:record:get -u {self.devhubuser} -s SignupRequest -i \"{self.signuprequestid}\" --json"],
-                shell=True, capture_output=True, cwd=os.path.join('qbrix', self.devhubuser))
+                shell=True, capture_output=True, cwd=os.path.join('.qbrix', self.devhubuser))
 
         if result is None: CommandException("Signup Request Id not found.")
         jsonresult = json.loads(result.stdout)

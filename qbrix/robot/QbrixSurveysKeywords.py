@@ -10,6 +10,7 @@ class QbrixSurveysKeywords(BaseLibrary):
     def __init__(self):
         super().__init__()
         self._browser = None
+        self.shared = QbrixSharedKeywords()
 
     @property
     def browser(self):
@@ -19,7 +20,7 @@ class QbrixSurveysKeywords(BaseLibrary):
 
     def enable_surveys(self):
         sleep(5)
-        self.go_to_setup_admin_page("SurveySettings/home")
+        self.shared.go_to_setup_admin_page("SurveySettings/home")
         sleep(10)
         survey_toggle="[class=\"toggle slds-p-left_medium\"]"
 

@@ -10,6 +10,7 @@ Library           qbrix/robot/QbrixSchedulerKeywords.py
 Library           qbrix/robot/QbrixSurveysKeywords.py
 Library           qbrix/robot/QbrixVraKeywords.py
 Library           qbrix/robot/QbrixServiceKeywords.py
+Library           qbrix/robot/QbrixToolingKeywords.py
 Suite Setup       Run keywords
 ...               Set browser timeout    900 seconds
 ...               AND    Open test browser    wait=false
@@ -206,6 +207,7 @@ Add Service Presence Statuses to Profile
     Add Service Presence Statuses to Profile    System Administrator    Chat - Available
     Add Service Presence Statuses to Profile    System Administrator    Messaging - Available
     Add Service Presence Statuses to Profile    System Administrator    Phone - Available
+
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # Validation Counts
 # -----------------------------------------------------------------------------------------------------------------------------------------
@@ -218,3 +220,11 @@ Validate Data Rows Exist
     Validate Minimal Rowcount    Contact 1
     Validate Minimal Rowcount    Contact 1    Name!=''
     Validate Exact Rowcount    Product2    52
+
+
+# -----------------------------------------------------------------------------------------------------------------------------------------
+# Chat Agent Configurations
+# -----------------------------------------------------------------------------------------------------------------------------------------
+Add Profile to Chat Agent Configuration
+    Add Profile To Chat Configuration  Chat Representatives  System Administrator
+    Add Profile To Chat Configuration  Chat Representatives  SDO-Service

@@ -1,0 +1,187 @@
+name: QBrix-CI-Build-R0-ProdOrg
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  schedule:
+    # * is a special character in YAML so you have to quote this string
+    - cron: "0 1 * * *"
+
+  workflow_dispatch:
+env:
+  CUMULUSCI_KEYCHAIN_CLASS: cumulusci.core.keychain.EnvironmentProjectKeychain
+  CUMULUSCI_SERVICE_github: ${{ secrets.QBRIX_CUMULUSCI_SERVICE_github }}
+  SFDX_CLIENT_ID: ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
+  SFDX_HUB_KEY: ${{ secrets.QBRIX_DEVHUB_PRIVATE_KEY }}
+  TESTIM_KEY: ${{ secrets.QBRIX_TESTIM_KEY }}
+  TESTIM_GRID: ${{ secrets.QBRIX_TESTIM_GRID }}
+  TESTIM_PROJECT: ${{ secrets.QBRIX_TESTIM_PROJECT }}
+  DEVHUBCONSUMERKEY: ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
+  DEVHUBJWTKEYFILE: devhub.key
+  GITHUB_PAT: ${{ secrets.QBRIX_GITHUB_PAT}}
+  USE_TEMPLATE: true
+  TEMPLATEID: LATEST
+  TEMPLATE_INSTANCE: NA135
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Core Setup - key for jwt auth
+        run: echo "${{ secrets.QBRIX_DEVHUB_PRIVATE_KEY }}" > devhub.key
+
+        # Install Node
+      - name: Install Node
+        run: sudo apt install nodejs
+
+      # Install NPM
+      - name: Install NPM
+        run: sudo apt install npm
+
+      # Install SFDX
+      - name: Install SFDX
+        run: npm install --location=global sfdx-cli
+
+      # We will use a common app with a common key -
+      - name: Create SFDX Session for DEV HUB ACCESS
+        run: sfdx auth:jwt:grant -u ${{ secrets.QBRIX_DEVHUB_USERACCOUNT }} -a DEVHUB_ACCT -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }} --setdefaultdevhubusername
+
+      # We will use a common app with a common key -
+      - name: Create SFDX Session for QLABS Service Account
+        run: sfdx auth:jwt:grant -u ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -a DEVHUB_ACCT -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
+
+      - name: Extract the accesstoken
+        run: sfdx force:org:display -u ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} --json > qlab_tmp.json
+
+      - name: extract the accesstoken for qlabs
+        uses: sergeysova/jq-action@v2
+        id: qlabs_accesstoken
+        with:
+          cmd: jq '.result.accessToken' qlab_tmp.json -r
+
+      #Update the build Status to Running only on the main or master branch
+      - name: update build status to starting
+        if: (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
+        uses: fjogeleit/http-request-action@v1
+        with:
+          url: "https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixBuildService"
+          method: "POST"
+          customHeaders: '{"Content-Type": "application/json","Authorization": "Bearer ${{ steps.qlabs_accesstoken.outputs.value }}"}'
+          data: '{"qbrixname": "${{ github.repository }}-R0-ProdOrg", "buildstatus": "Running"}'
+
+      #- name: Setup
+      #  run: sudo apt install software-properties-common -y & sudo add-apt-repository ppa:deadsnakes/ppa
+
+      #install Python 3.9
+      - name: Install Python
+        run: sudo apt install python3.9
+
+      #install PIP
+      - name: Install PIP
+        run: sudo apt-get -y install python3-pip
+
+      #install Python Test Resources
+      - name: Install Python Test Resources
+        run: sudo apt install python3-testresources
+
+      #Setup PyOpenSSL and keyrings.alt
+      - name: Setup PyOpenSSL
+        run: |
+          pip install pyopenssl --upgrade
+          pip install keyrings.alt
+
+      #install CumumulsCI
+      - name: Install CumulusCI
+        run: pip install cumulusci
+
+      #install playright via CCI
+      - name: Install Playwright via CCI
+        run: cci robot install_playwright
+
+      #display cci version
+      - name: cci version
+        run: cci version
+
+      #CCI Service List
+      - name: cci service list
+        run: cci service list
+
+      #install Behave
+      - name: Install Behave Feature Testing
+        run: pip install behave
+
+      # Install Vlocity
+      - name: Install Vlocity
+        run: npm install --location=global vlocity
+
+      # Install Testim
+      - name: Install Testim
+        run: npm install --location=global @testim/testim-cli
+
+      # Install sfdmu
+      - name: Install sfdmu
+        run: sfdx plugins:install sfdmu
+
+      - name: Set CCI DevHub Username
+        run: cci service connect devhub --username DEVHUB_ACCT
+
+      # CCI Service List - we should have all 3 connected now: persistant, github (via env var) and devhub
+      - name: All connected services
+        run: cci service list
+
+      # Create a scratch org to attach - future use the org pool service
+      - name: generate scratch org - if the evn variable to use a template is set to false - we fallback to org/dev.json
+        if: env.USE_TEMPLATE == 'false'
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 60
+          max_attempts: 5
+          retry_on: error
+          command: cci task run spin_request --mode SCRATCH --scratch_config ${GITHUB_WORKSPACE}/orgs/dev.json --devhubuser ${{ secrets.QBRIX_DEVHUB_USERACCOUNT }} --cciorg build__dev --devhubconsumerkey ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }} --devhubjwtkeyfile devhub.key --githubpat ${{ secrets.QBRIX_GITHUB_PAT}}
+
+      - name: generate production org - if the evn variable to use a template is set to true - we connect to the devhub that is enabled to provision an org.
+        if: env.USE_TEMPLATE == 'true'
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 60
+          max_attempts: 2
+          retry_on: error
+          command: cci task run spin_request --mode TEMPLATE --cciorg build__dev --devhubuser ${{ secrets.QBRIX_DEVHUB_USERACCOUNT }} --instance ${TEMPLATE_INSTANCE} --devhubconsumerkey ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }} --devhubjwtkeyfile devhub.key --templateid ${TEMPLATEID} --githubpat ${{ secrets.QBRIX_GITHUB_PAT}}
+
+      # Import the org
+      - name: import the org
+        if: env.USE_TEMPLATE == 'false'
+        run: cci org import build__dev build__dev
+
+      #CCI Run Deploy - timeout at 12 hours
+      - name: run deploy_qbrix
+        run: cci flow run deploy_qbrix --org build__dev
+
+      #TODO: Add Run Tests
+
+      # Clean up scratch orgs
+      - name: Delete the scratch Org
+        if: env.USE_TEMPLATE == 'false'
+        run: cci org scratch_delete dev
+
+      - name: fail status
+        if: ${{ failure() && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
+        uses: fjogeleit/http-request-action@v1
+        with:
+          url: "https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixBuildService"
+          method: "POST"
+          customHeaders: '{"Content-Type": "application/json","Authorization": "Bearer ${{ steps.qlabs_accesstoken.outputs.value }}"}'
+          data: '{"qbrixname": "${{ github.repository }}-R0-ProdOrg", "buildstatus": "Failed"}'
+
+      - name: success status
+        if: ${{ success() && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
+        uses: fjogeleit/http-request-action@v1
+        with:
+          url: "https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixBuildService"
+          method: "POST"
+          customHeaders: '{"Content-Type": "application/json","Authorization": "Bearer ${{ steps.qlabs_accesstoken.outputs.value }}"}'
+          data: '{"qbrixname": "${{ github.repository }}-R0-ProdOrg", "buildstatus": "Passed"}'

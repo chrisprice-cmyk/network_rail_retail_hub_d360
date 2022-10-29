@@ -10,6 +10,7 @@ class QbrixVraKeywords(BaseLibrary):
     def __init__(self):
         super().__init__()
         self._browser = None
+        self.shared = QbrixSharedKeywords()
 
     @property
     def browser(self):
@@ -19,7 +20,7 @@ class QbrixVraKeywords(BaseLibrary):
 
     def create_vra_service_channel(self):
         """ Creates the VRA Service Channel """
-        QbrixSharedKeywords().go_to_setup_admin_page("ServiceChannelSettings/home")
+        self.shared.go_to_setup_admin_page("ServiceChannelSettings/home")
         self.browser.wait_for_elements_state("iframe >>> .btn:has-text('New')", ElementState.visible,
                                              '15s')
         visible = "visible" in self.browser.get_element_states("iframe >>> .listRelatedObject:has-text('SDO_VRA_End_User_Session_Request')")

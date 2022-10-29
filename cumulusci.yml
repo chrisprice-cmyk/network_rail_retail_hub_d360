@@ -140,6 +140,10 @@ tasks:
       dependencies:
         - github: https://github.com/sfdc-qbranch/QBrix-1-xDO-Tool-QBrixRegister
 
+  spin_request:
+    description: generate a spin
+    class_path: qbrix.tools.utils.qbrix_org_generator.Spin
+
   #------------------------------------#
   # DATA TOOL INTEGRATION              #
   #------------------------------------#

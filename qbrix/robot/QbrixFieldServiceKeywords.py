@@ -10,6 +10,7 @@ class QbrixFieldServiceKeywords(BaseLibrary):
     def __init__(self):
         super().__init__()
         self._browser = None
+        self.shared = QbrixSharedKeywords()
 
     @property
     def browser(self):
@@ -18,7 +19,7 @@ class QbrixFieldServiceKeywords(BaseLibrary):
         return self._browser
 
     def enable_field_service(self):
-        QbrixSharedKeywords.go_to_setup_admin_page("FieldServiceSettings/home")
+        self.shared.go_to_setup_admin_page("FieldServiceSettings/home")
         sleep(15)
         checked = "checked" in self.browser.get_element_states("label:has-text('Field Service')")
         if not checked:
@@ -70,7 +71,7 @@ class QbrixFieldServiceKeywords(BaseLibrary):
                 ElementState.visible, '10s')
 
     def disable_field_service_integration(self):
-        QbrixSharedKeywords.go_to_setup_admin_page("FieldServiceSettings/home")
+        self.shared.go_to_setup_admin_page("FieldServiceSettings/home")
         sleep(2)
         checked = "checked" in self.browser.get_element_states(
             "label:has-text('Permissions to access data needed for optimization, automatic scheduling, and service appointment bundling.')")
