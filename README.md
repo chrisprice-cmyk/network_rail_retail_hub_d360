@@ -2,8 +2,6 @@
 
 TO DO (CAN BE COMPLETED LATER IF NEEDED): [Create a Documentation for this Q Brix.](https://salesforce.quip.com/6D2eA9ft6x2O)
 
-COMPLETE TASKS IN ORDER
-
 TO DO: Run the Q Brix Setup Task
 
     cci task run setup_qbrix
@@ -71,7 +69,7 @@ Here are some common code examples which are not always included in the project 
 
     qbrix_task_Testim:
         description: "Run Testim Script"
-        class_path: tasks.custom.testim.RunTestim
+        class_path: qbrix.tools.testing.qbrix_testim.RunTestim
         options:
             testimname: "REPLACE WITH NAME OF SCRIPT"
 
