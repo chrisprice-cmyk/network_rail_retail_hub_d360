@@ -68,6 +68,7 @@ def advanced_feature_match(check_value, list_value):
 
     if ":" in check_value:
         log.debug("Feature was passed to advanced feature match which does not match format expected.")
+        return
 
     chk = False
     for substring in list_value:
@@ -212,11 +213,20 @@ def find_missing_features(main_features_file, check_features_file):
         # Compare both lists and populate missing list
         missing_feature_count = 0
         for missing_feature in check_comparison_list:
-            if (":" not in missing_feature and not missing_feature.lower() in main_comparison_list) or (
-                    ":" in missing_feature and not advanced_feature_match(missing_feature.lower(),
-                                                                          main_comparison_list)):
+
+            add_feature = False
+
+            # Separate out features which contain a :
+            if ":" in missing_feature:
+                if not advanced_feature_match(missing_feature.lower(), main_comparison_list):
+                    add_feature = True
+            else:
+                if not missing_feature.lower() in main_comparison_list:
+                    add_feature = True
+
+            if add_feature:
                 missing_features.append(missing_feature.lower())
-                missing_feature_count += 1
+                missing_feature_count += 1               
 
         if len(missing_features) == 0:
             log.info(
