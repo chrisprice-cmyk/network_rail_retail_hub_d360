@@ -72,8 +72,7 @@ class QBrixInstalled(BaseTask, ABC):
         self.qbrix_name = self.options["qbrix_name"]
 
     def _run_task(self):
-        QbrixInstallCheck(self.qbrix_name, self.org_config)
-
+        self.return_value = QbrixInstallCheck(self.qbrix_name, self.org_config)
 
 
 class QUpdateDependencies(UpdateDependencies, ABC):

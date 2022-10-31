@@ -128,6 +128,11 @@ tasks:
   qbrix_installed:
     class_path: qbrix.salesforce.qbrix_salesforce_tasks.QBrixInstalled
 
+  dataset_clean:
+    class_path: qbrix.tools.data.qbrix_analytics.DataSetCleaner
+    options:
+      dataset_folder: test/datasets
+
   deploy_settings:
     description: Checks that Settings have been defined in force-app and deploys them if present
     class_path: cumulusci.tasks.salesforce.Deploy
