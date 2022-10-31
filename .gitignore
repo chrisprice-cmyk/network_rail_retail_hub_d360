@@ -4,9 +4,11 @@
 
 # Salesforce cache
 .sfdx/
-.cci/
 .sf/
-.qbrix/
+
+# CumulusCI
+.cci/
+src/
 
 #TESTIM
 testim-headless.zip
@@ -50,7 +52,12 @@ playwright-log.txt
 log.html
 output.xml
 report.html
+
+# Q BRIX
 .qbrix/*
 qbrix/robot/__pycache__
+qbrix/salesforce/__pycache__
 qbrix/tools/utils/__pycache__
 qbrix/tools/shared/__pycache__
+qbrix/tools/data/__pycache__
+qbrix/tools/testing/__pycache__

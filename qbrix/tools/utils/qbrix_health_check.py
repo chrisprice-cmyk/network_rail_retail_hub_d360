@@ -51,7 +51,7 @@ class HealthChecker(BaseTask, ABC):
         log.info("Health Check: Checking that scratch org files are configured with required settings")
         check_org_config_files(True)
 
-        log.info("Health Check: All Checking complete.")
+        log.info("Health Check: All Checks completed.")
 
     def check_project_file_naming(self):
 

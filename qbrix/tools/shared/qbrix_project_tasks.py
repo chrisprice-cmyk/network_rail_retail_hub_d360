@@ -506,3 +506,30 @@ def update_file_api_versions(project_api_version):
             log.info(f"[OK] File Updated: sfdx-project.json")
         except:
             log.error(f"[FAILED] File Update sfdx-project.json")
+
+def upsert_gitignore_entries(list_entries):
+
+    # TO BE UPDATED
+
+    if len(list_entries) == 0:
+        log.error("Updated .gitignore file failed. No entries passed to check.")
+        return
+
+    entries_to_append = []
+
+    with open (".gitignore", 'a+') as git_file:
+        git_file.seek(0)
+        lines = git_file.readlines()
+
+        for line in lines:
+            if line == "" or line.startswith("#"):
+                continue
+
+            for entry in list_entries:
+                if not line.startswith(entry) and entry not in entries_to_append:
+                    entries_to_append.append(entry)
+        
+        if len(entries_to_append) > 0:
+            for e in entries_to_append:
+                git_file.write(f"{e}\n")
+

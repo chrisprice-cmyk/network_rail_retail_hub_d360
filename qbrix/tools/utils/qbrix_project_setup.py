@@ -108,7 +108,7 @@ class InitProject(BaseTask, ABC):
             replace_file_text("cumulusci.yml", "xDO-Template", f"{qbrix_name}")
             replace_file_text("cumulusci.yml", f"name: {self.project_name}", f"name: {qbrix_name}")
 
-        replace_file_text("README.md", "Q Brix Title", {self.project_name})
+        replace_file_text("README.md", "Q Brix Title", self.project_name)
 
         # Registration File Update
 
@@ -148,7 +148,7 @@ class InitProject(BaseTask, ABC):
             self.qbrix_description = input("\n\nEnter a short description for this Q Brix (e.g. Deploys base configuration for Commerce Cloud): ") or "SHORT DESCRIPTION OF QBRIX HERE"
             replace_file_text("cumulusci.yml", "SHORT DESCRIPTION OF QBRIX HERE", self.qbrix_description)
             if self.qbrix_description != "" and self.qbrix_description != "SHORT DESCRIPTION OF QBRIX HERE":
-                replace_file_text("README.md", "Write a few words describing your Q Brix.", {self.qbrix_description})
+                replace_file_text("README.md", "Write a few words describing your Q Brix.", self.qbrix_description)
 
         log.info("Q Brix Details Updated")
 
