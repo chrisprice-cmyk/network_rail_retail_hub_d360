@@ -66,7 +66,7 @@ def advanced_feature_match(check_value, list_value):
     :param list_value: List to check
     :return: Returns True if feature already exists in list or False if not """
 
-    if ":" in check_value:
+    if ":" not in check_value:
         log.debug("Feature was passed to advanced feature match which does not match format expected.")
         return
 
