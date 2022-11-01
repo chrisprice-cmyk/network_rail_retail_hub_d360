@@ -51,6 +51,31 @@ class HealthChecker(BaseTask, ABC):
         log.info("Health Check: Checking that scratch org files are configured with required settings")
         check_org_config_files(True)
 
+        log.info("Checking .gitignore file")
+        test_list = []
+        test_list.append(".sf/")
+        test_list.append(".qbrix/")
+        test_list.append("testim-headless.zip")
+        test_list.append("src/")
+        test_list.append(".cci/")
+        test_list.append(".sfdx/")
+        test_list.append("browser/")
+        test_list.append("playwright-log.txt")
+        test_list.append("log.html")
+        test_list.append("output.xml")
+        test_list.append("report.html")
+        test_list.append(".qbrix/*")
+        test_list.append("qbrix/robot/__pycache__")
+        test_list.append("qbrix/salesforce/__pycache__")
+        test_list.append("qbrix/tools/utils/__pycache__")
+        test_list.append("qbrix/tools/shared/__pycache__")
+        test_list.append("qbrix/tools/data/__pycache__")
+        test_list.append("qbrix/tools/testing/__pycache__")
+        test_list.append("tasks/custom/__pycache__")
+        upsert_gitignore_entries(test_list)
+
+        replace_file_text(".gitignore", "#.vscode", ".vscode")
+
         log.info("Health Check: All Checks completed.")
 
     def check_project_file_naming(self):

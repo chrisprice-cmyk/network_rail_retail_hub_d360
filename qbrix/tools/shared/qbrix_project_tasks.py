@@ -509,27 +509,24 @@ def update_file_api_versions(project_api_version):
 
 def upsert_gitignore_entries(list_entries):
 
-    # TO BE UPDATED
-
     if len(list_entries) == 0:
-        log.error("Updated .gitignore file failed. No entries passed to check.")
+        log.debug("Updated .gitignore file skipped. No entries passed to check.")
         return
 
     entries_to_append = []
 
-    with open (".gitignore", 'a+') as git_file:
+    with open(".gitignore", 'a+') as git_file:
         git_file.seek(0)
-        lines = git_file.readlines()
+        content = git_file.read()
 
-        for line in lines:
-            if line == "" or line.startswith("#"):
+        for entry in list_entries:
+            if entry not in content or f"#{entry}" in content:
+                if entry.lower() not in entries_to_append:
+                    entries_to_append.append(entry.lower())
+            else:
                 continue
-
-            for entry in list_entries:
-                if not line.startswith(entry) and entry not in entries_to_append:
-                    entries_to_append.append(entry)
         
         if len(entries_to_append) > 0:
             for e in entries_to_append:
                 git_file.write(f"{e}\n")
-
+    

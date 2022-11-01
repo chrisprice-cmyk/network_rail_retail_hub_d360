@@ -48,9 +48,16 @@ def get_json_file_value(file_location, key_name):
     try:
         with open(file_location) as json_file:
             json_file_data = json.load(json_file)
-        return json_file_data[key_name]
+
+        if key_name in json_file_data:
+            log.info(f"{key_name} value found in {file_location}.")
+            return json_file_data[key_name]
+        else:
+            log.info(f"No value found for {key_name} in {file_location}.")
+            return None
     except Exception as e:
-        log.error(f"Failed to update json file. Error: {e}")
+        log.error(f"Failed to read json file value. Error: {e}")
+        return None
 
 
 def update_json_file_value(file_location, key_name, new_value):
@@ -80,3 +87,4 @@ def update_json_file_value(file_location, key_name, new_value):
         log.info(f"{file_location} has been updated!")
     except Exception as e:
         log.error(f".json File Update Failed to update file: {file_location}. Error Message: {e}")
+
