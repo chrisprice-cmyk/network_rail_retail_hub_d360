@@ -36,6 +36,11 @@ def QbrixInstallCheck(qbrix_name, org_config):
         return False
 
     json_result = json.loads(result.stdout)
+
+    if not 'result' in json_result or len(json_result['result']) == 0:
+        log.info("No Q Brix installed")
+        return False
+
     if json_result["result"]["totalSize"] >= 1:
         log.info(f"{qbrix_name} is installed.")
         return True
