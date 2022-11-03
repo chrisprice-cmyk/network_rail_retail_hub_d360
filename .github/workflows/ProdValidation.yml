@@ -31,7 +31,7 @@ jobs:
       - name: Connect to PROD org
         uses: sfdx-actions/setup-sfdx@v1
         with:
-          sfdx-auth-url: ${{ secrets.ORG_AUTH_SECRET }}
+          sfdx-auth-url: ${{ secrets.DEV_HUB_AUTH_URL }}
 
       - name: EnvtUrl
         id: envtUrl
