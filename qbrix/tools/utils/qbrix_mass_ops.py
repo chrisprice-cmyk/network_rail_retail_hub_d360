@@ -14,13 +14,13 @@ class MassFileOps(BaseTask, ABC):
         super(MassFileOps, self)._init_options(kwargs)
 
     def _run_task(self):
-        log.info(f''' 
-    Q BRIX - MASS OPERATION UTILITIES\n\n
-      OPTION  DESCRIPTION\n
-      [1]     Update File APIs - Updates Apex Classes and LWC/Aura Components with Q Brix API Version\n
-      [2]     Delete Standard Fields - Removes standard fields within object folders\n
-      [e]     Exit   
-    ''')
+        log.info(f""" 
+        \nQ BRIX - MASS OPERATION UTILITIES\n\n
+        OPTION  DESCRIPTION\n
+        [1]     Update File APIs - Updates Apex Classes and LWC/Aura Components with Q Brix API Version\n
+        [2]     Delete Standard Fields - Removes standard fields within object folders\n
+        [e]     Exit   
+    """)
         option = input("\n\nWhich task you like to run? (Enter the option number) : ")
         match option.lower():
             case "1":

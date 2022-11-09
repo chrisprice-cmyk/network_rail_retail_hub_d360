@@ -1,5 +1,4 @@
 from time import sleep
-
 from Browser import ElementState
 from cumulusci.robotframework.base_library import BaseLibrary
 from qbrix.robot.QbrixSharedKeywords import QbrixSharedKeywords
@@ -19,33 +18,48 @@ class QbrixEinsteinKeywords(BaseLibrary):
         return self._browser
 
     def enable_einstein_analytics_crm(self):
+        """
+        Enable Einstein Analytics CRM within Salesforce Org
+        """
         self.shared.go_to_setup_admin_page("InsightsSetupGettingStarted/home")
         sleep(5)
         QbrixSharedKeywords().click_button_with_text("Enable CRM Analytics")
         sleep(30)
 
     def go_to_campaign_insights_setup_page(self):
-        """Go directly to the Campaign Insights setup page"""
+        """
+        Go directly to the Campaign Insights setup page
+        """
         self.shared.go_to_setup_admin_page("CampaignInsights/home")
 
     def go_to_opportunity_insights_setup_page(self):
-        """Go directly to the Opportunity Insights setup page"""
+        """
+        Go directly to the Opportunity Insights setup page
+        """
         self.shared.go_to_setup_admin_page("OpportunityInsights/home")
 
     def go_to_account_insights_setup_page(self):
-        """Go directly to the Account Insights setup page"""
+        """
+        Go directly to the Account Insights setup page
+        """
         self.shared.go_to_setup_admin_page("AccountInsights/home")
 
     def go_to_relationship_insights_setup_page(self):
-        """Go directly to the Relationships Insights setup page"""
+        """
+        Go directly to the Relationships Insights setup page
+        """
         self.shared.go_to_setup_admin_page("EinsteinSmartTags/home")
 
     def go_to_key_account_insights_setup_page(self):
-        """Go directly to the Key Accounts Insights setup page"""
+        """
+        Go directly to the Key Accounts Insights setup page
+        """
         self.shared.go_to_setup_admin_page("EKAI/home")
 
     def go_to_lead_scoring_setup_page(self):
-        """Go directly to the Lead Scoring setup page"""
+        """
+        Go directly to the Lead Scoring setup page
+        """
         self.shared.go_to_setup_admin_page("LeadIQ/home")
         self.browser.wait_for_elements_state("h1:has-text('Einstein Lead Scoring')", ElementState.visible, '30s')
         sleep(5)
@@ -59,7 +73,9 @@ class QbrixEinsteinKeywords(BaseLibrary):
             sleep(2)
 
     def go_to_oppty_scoring_setup_page(self):
-        """Go directly to the Opportunity Scoring setup page"""
+        """
+        Go directly to the Opportunity Scoring setup page
+        """
         self.shared.go_to_setup_admin_page("OpportunityIQSetupHome/home")
         self.browser.wait_for_elements_state("h1:has-text('Einstein Opportunity Scoring')", ElementState.visible, '30s')
         sleep(5)
@@ -137,4 +153,4 @@ class QbrixEinsteinKeywords(BaseLibrary):
         if not checked:
             self.browser.click("label.slds-checkbox_toggle:has-text('Einstein Classification Apps')")
             sleep(1)
-        sleep(10)
+

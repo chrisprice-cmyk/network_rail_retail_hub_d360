@@ -17,8 +17,10 @@ class QbrixNetZeroKeywords(BaseLibrary):
         return self._browser
 
     def enable_net_zero(self):
-        self.shared.go_to_setup_admin_page("NetZeroPrefs/home")
-        sleep(2)
+        """
+        Enables NetZero Cloud Setting
+        """
+        self.shared.go_to_setup_admin_page("NetZeroPrefs/home", 5)
         # Check and Click Main Net Zero Button/Toggle
         selector_main_toggle = "div.slds-grid:has-text('Allow users to turn on Net Zero Cloud in this org.') >> span.slds-checkbox_faux"
         main_toggle_checked = "checked" in self.browser.get_element_states(selector_main_toggle)

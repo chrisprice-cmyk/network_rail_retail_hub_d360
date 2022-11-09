@@ -1,6 +1,8 @@
 import json
 from time import sleep
 from datetime import datetime
+from typing import Optional
+
 from Browser import ElementState, SelectAttribute
 from cumulusci.robotframework.base_library import BaseLibrary
 from cumulusci.robotframework.SalesforceAPI import SalesforceAPI
@@ -26,30 +28,40 @@ class QbrixSharedKeywords(BaseLibrary):
         return self._salesforceapi
 
     def go_to_lightning_setup_home(self):
-        """ Goes directly to setup home page in Lightning UI """
+        """
+        Goes directly to set up home page in Lightning UI
+        """
         self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/setup/SetupOneHome/home")
         self.browser.wait_for_elements_state("h1:has-text('Home')", ElementState.visible, '30s')
 
-    def set_org_wide_email(self):
-        """ Sets and org wide email address for the target org, defaulting to the sdo address """
+    def set_org_wide_email(self, org_wide_email_address: Optional[str] = "sdo@salesforce.com"):
+        """
+        Sets and org wide email address for the target org, defaulting to the sdo address
+        :param org_wide_email_address: (Optional) Email Address to use as new org wide email, although this parameter will default to sdo@salesforce.com
+        """
         self.go_to_setup_admin_page("OrgWideEmailAddresses/home")
         self.browser.wait_for_elements_state(
-            f"iframe >>> h2:text-is('Organization-Wide Email Addresses for User Selection and Default No-Reply Use')",
-            ElementState.visible, '10s')
+            "iframe >>> h2:text-is('Organization-Wide Email Addresses for User Selection and Default No-Reply Use')",
+            ElementState.visible, '15s')
         email_address_check = "visible" in self.browser.get_element_states(
-            "iframe >>> td:has-text('sdo@salesforce.com')")
+            f"iframe >>> td:has-text('{org_wide_email_address}')")
         if not email_address_check:
             self.browser.click("iframe >>> .btn:has-text('Add')")
             sleep(2)
             self.browser.fill_text("iframe >>> tr:has-text('Display Name') >> input", "Default Email")
-            self.browser.fill_text("iframe >>> tr:has-text('Email Address') >> input", "sdo@salesforce.com")
+            self.browser.fill_text("iframe >>> tr:has-text('Email Address') >> input", org_wide_email_address)
             self.browser.select_options_by("iframe >>> tr:has-text('Purpose') >> select", SelectAttribute.text,
                                            "User Selection and Default No-Reply Address")
             self.browser.click("iframe >>> :nth-match(.btn:text-is('Save'), 1)")
             sleep(2)
 
-    def go_to_setup_admin_page(self, setup_page_url):
-        """ Browses to a lightning setup URL, provide everything after lightning/setup/ in the URL """
+    def go_to_setup_admin_page(self, setup_page_url: str, sleep_length: Optional[int] = 2):
+        """
+        Browses to a lightning setup URL, provide everything after lightning/setup/ in the URL
+
+        :param setup_page_url: Requires the section of the URL Path which comes after lightning/setup
+        :param sleep_length: (Optional) Set the length of time (in seconds) which the robot will wait for the page to load. Defaults to 2 seconds.
+        """
         if setup_page_url is None:
             raise Exception("URL Text must be specified")
         if "lightning/setup" in setup_page_url:
@@ -57,10 +69,13 @@ class QbrixSharedKeywords(BaseLibrary):
             endpos = len(setup_page_url)
             setup_page_url = setup_page_url[startpos:endpos]
         self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/setup/{setup_page_url}")
-        sleep(2)
+        sleep(sleep_length)
 
-    def set_lightning_toggle(self, new_state):
-        """ Toggles a Salesforce Lightning Toggle either on or off """
+    def set_lightning_toggle(self, new_state: str):
+        """
+        Toggles a Salesforce Lightning Toggle either on or off
+        :param new_state: Define a new state for the lightning toggle (i.e. on or off)
+        """
         if new_state is None:
             raise Exception("State for the lightning toggle must be specified. State should be 'on' or 'off'.")
         if new_state.lower() not in ("on", "off"):
@@ -75,23 +90,40 @@ class QbrixSharedKeywords(BaseLibrary):
             if visible:
                 toggle_switch = self.browser.get_element("label:has-text('On')")
                 self.browser.click(toggle_switch)
-                sleep(1)
+                sleep(2)
 
-    def click_button_with_text(self, button_text):
-        """ Finds a button using the button text and clicks it providing it is visible on the page. You must define
-        the text for the label on the button. """
+    def click_button_with_text(self, button_text, uses_iframe: Optional[bool] = False, sleep_length: Optional[int] = 2):
+        """
+        Finds a button using the button text and clicks it providing it is visible on the page. You must define
+        the text for the label on the button.
+
+        :param button_text: Exact text for the button you want to click
+        :param uses_iframe: Set to True to add iframe support to the button selector
+        :param sleep_length: (Optional) Set the length of time (in seconds) which the robot will wait for the page to load after button is clicked. Defaults to 2 seconds.
+        """
 
         if button_text is None:
             raise Exception("Button Text must be specified")
-        visible = "visible" in self.browser.get_element_states(f"button:has-text('{button_text}')")
-        if visible:
-            button_to_click = self.browser.get_element(f"button:has-text('{button_text}')")
-            self.browser.click(button_to_click)
-            sleep(1)
 
-    def click_button_in_frame_with_text(self, button_text):
-        """ Finds a button using the button text and clicks it providing it is visible on the page within an iframe.
-        You must define the text for the label on the button. """
+        button_selector = f"button:has-text('{button_text}')"
+        if uses_iframe:
+            button_selector = f":nth-match(iframe,1) >>> button:has-text('{button_text}')"
+
+        self.browser.wait_for_elements_state(button_selector, ElementState.visible, '15s')
+
+        button_visible = "visible" in self.browser.get_element_states(button_selector)
+        if button_visible:
+            self.browser.click(button_selector)
+            sleep(sleep_length)
+
+    def click_button_in_frame_with_text(self, button_text: str):
+        """
+        NO LONGER USED, use click_button_with_text and set the uses_iframe parameter to True.
+
+        Finds a button using the button text and clicks it providing it is visible on the page within an iframe.
+        You must define the text for the label on the button.
+
+        """
 
         if button_text is None:
             raise Exception("Button Text must be specified")
@@ -102,9 +134,13 @@ class QbrixSharedKeywords(BaseLibrary):
             self.browser.click(button_to_click)
             sleep(1)
 
-    def click_input_button_in_iframe_with_text(self, button_text):
-        """ Finds a button using the button text and clicks it providing it is visible on the page within an iframe.
-        You must define the text for the label on the button. """
+    def click_input_button_in_iframe_with_text(self, button_text: str):
+        """
+        Finds a button using the button text and clicks it providing it is visible on the page within an iframe.
+        You must define the text for the label on the button.
+
+        :param button_text: The text of the button you want to click
+        """
         if button_text is None:
             raise Exception("Button Text must be specified")
         visible = "visible" in self.browser.get_element_states(
@@ -114,16 +150,30 @@ class QbrixSharedKeywords(BaseLibrary):
             self.browser.click(button_to_click)
             sleep(1)
 
-    def wait_for_page_title(self, page_title):
-        """ Waits for a title on a lightning page to be loaded. Page Title needs to be passed in and is expected to
-        be in an H1 element. """
+    def wait_for_page_title(self, page_title: str, title_element_type: Optional[str] = "h1", wait_time: Optional[str] = "10s", uses_iframe: Optional[bool] = True):
+        """
+        Waits for a title on a lightning page to be loaded based on title text and optional element type.
+
+        :param page_title: Text of the title or text you want to wait on to know if the page has loaded.
+        :param title_element_type: (Optional) Type of element where the text is contained. Expects an HTML element and defaults to 'h1'
+        :param wait_time: (Optional) Length of time which you want to wait on the title to load, defaults to '10s'. Note: This is a string with the number and then the time i.e. s
+        :param uses_iframe: (Optional) Set to True if the element is within an iframe. Defaults to True
+        """
 
         if page_title is None:
             raise Exception("No page title specified")
-        self.browser.wait_for_elements_state(f"iframe >>> h1:text-is('{page_title}')", ElementState.visible, '10s')
 
-    def enable_omnichannel_for_bot(self, button_name, queue_name):
-        """ Sets a given Live Chat Button to Omni-Channel Routing with an associated Queue"""
+        iframe_selector = ":nth-match(iframe,1) >>> " if uses_iframe else ""
+
+        self.browser.wait_for_elements_state(f"{iframe_selector}{title_element_type}:text-is('{page_title}')", ElementState.visible, wait_time)
+
+    def enable_omnichannel_for_bot(self, button_name: str, queue_name: str):
+        """
+        Sets a given Live Chat Button to Omni-Channel Routing with an associated Queue
+
+        :param button_name: Name of the Live Chat Button
+        :param queue_name: Name of the Queue you want to assign to the Live Chat Button. Note this must be an exact match as it is case sensitive.
+        """
 
         if button_name == '' or queue_name == '':
             raise Exception("Button Name and Queue Name must be specified")
@@ -142,207 +192,264 @@ class QbrixSharedKeywords(BaseLibrary):
         sleep(2)
 
     def create_chat_button_and_automated_invitations(self):
-        """ Creates the Chat Button and Invitations with Defaulls of *Standard Chat Button and SDO_Service_Chat """
-        self.create_a_chat_button_and_automated_invitations("*Standard Chat Button","SDO_Service_Chat")
+        """
+        Creates the Chat Button and Invitations with Defaults of *Standard Chat Button and SDO_Service_Chat
+        """
+        self.create_a_chat_button_and_automated_invitations("*Standard Chat Button", "SDO_Service_Chat")
 
-
-    def create_a_chat_button_and_automated_invitations(self, buttonName:str, buttonAPIName:str):
+    def create_a_chat_button_and_automated_invitations(self, buttonName: str, buttonAPIName: str):
+        """
+        Creates the Chat Button and Invitations
+        :param buttonName: Name of the Chat Button
+        :param buttonAPIName: API Name for the Chat Button
+        """
         sleep(3)
-        """ Creates the Chat Button and Invitations """
         if buttonName is None:
             raise Exception("buttonName must be specified")
         if buttonAPIName is None:
             raise Exception("buttonAPIName must be specified")
         self.go_to_setup_admin_page("LiveChatButtonSettings/home")
         self.browser.wait_for_elements_state("iframe >>> h1:has-text('Chat Buttons')", ElementState.visible, '60s')
-        sleep(5)
+        sleep(10)
         visible = "visible" in self.browser.get_element_states(f"iframe >>> .listRelatedObject:has-text('{buttonName}')")
         if not visible:
             self.click_input_button_in_iframe_with_text('New')
-            self.browser.wait_for_elements_state("iframe >>> h3:has-text('Basic Information')", ElementState.visible, '45')
+            self.browser.wait_for_elements_state("iframe >>> h3:has-text('Basic Information')", ElementState.visible,
+                                                 '45')
             sleep(5)
-            self.browser.select_options_by("iframe >>> select[name='j_id0:theForm:thePageBlock:editDataSection:editTypeItem:editType']", SelectAttribute.text,"Chat Button")       
+            self.browser.select_options_by(
+                "iframe >>> select[name='j_id0:theForm:thePageBlock:editDataSection:editTypeItem:editType']",
+                SelectAttribute.text, "Chat Button")
             sleep(1)
-            self.browser.fill_text("iframe >>> input[name='j_id0:theForm:thePageBlock:editDataSection:nameSection:editMasterLabel']", buttonName)
-            self.browser.fill_text("iframe >>> input[name='j_id0:theForm:thePageBlock:editDataSection:developerNameSection:editDeveloperName']", '')
+            self.browser.fill_text(
+                "iframe >>> input[name='j_id0:theForm:thePageBlock:editDataSection:nameSection:editMasterLabel']",
+                buttonName)
+            self.browser.fill_text(
+                "iframe >>> input[name='j_id0:theForm:thePageBlock:editDataSection:developerNameSection:editDeveloperName']",
+                '')
             sleep(1)
-            self.browser.fill_text("iframe >>> input[name='j_id0:theForm:thePageBlock:editDataSection:developerNameSection:editDeveloperName']", buttonAPIName)
+            self.browser.fill_text(
+                "iframe >>> input[name='j_id0:theForm:thePageBlock:editDataSection:developerNameSection:editDeveloperName']",
+                buttonAPIName)
             sleep(2)
-            if not "checked" in self.browser.get_element_states("iframe >>> id=j_id0:theForm:thePageBlock:editDataSection:hasChasitorIdleTimeout:hasChasitorIdleTimeout"):
-                self.browser.click("iframe >>> id=j_id0:theForm:thePageBlock:editDataSection:hasChasitorIdleTimeout:hasChasitorIdleTimeout")
+            if not "checked" in self.browser.get_element_states(
+                    "iframe >>> id=j_id0:theForm:thePageBlock:editDataSection:hasChasitorIdleTimeout:hasChasitorIdleTimeout"):
+                self.browser.click(
+                    "iframe >>> id=j_id0:theForm:thePageBlock:editDataSection:hasChasitorIdleTimeout:hasChasitorIdleTimeout")
                 sleep(1)
-                #Customer Timeout
-                self.browser.fill_text("iframe >>> id=j_id0:theForm:thePageBlock:editDataSection:j_id76:editChasitorIdleTimeout", "300")
+                # Customer Timeout
+                self.browser.fill_text(
+                    "iframe >>> id=j_id0:theForm:thePageBlock:editDataSection:j_id76:editChasitorIdleTimeout", "300")
                 sleep(1)
-                #Customer Timeout Warning
-                self.browser.fill_text("iframe >>> id=j_id0:theForm:thePageBlock:editDataSection:j_id79:editChasitorIdleTimeoutWarning", "250")
-                sleep(1)    
-            self.browser.select_options_by("iframe >>> id=j_id0:theForm:thePageBlock:editRoutingSection:rountingTypeSection:editRoutingType", SelectAttribute.text, "Omni-Channel")
+                # Customer Timeout Warning
+                self.browser.fill_text(
+                    "iframe >>> id=j_id0:theForm:thePageBlock:editDataSection:j_id79:editChasitorIdleTimeoutWarning",
+                    "250")
+                sleep(1)
+            self.browser.select_options_by(
+                "iframe >>> id=j_id0:theForm:thePageBlock:editRoutingSection:rountingTypeSection:editRoutingType",
+                SelectAttribute.text, "Omni-Channel")
             sleep(2)
-            self.browser.click("iframe >>> id=j_id0:theForm:thePageBlock:editRoutingSection:queueSection:editQueue_lkwgt")
+            self.browser.click(
+                "iframe >>> id=j_id0:theForm:thePageBlock:editRoutingSection:queueSection:editQueue_lkwgt")
             sleep(5)
             mainpage = self.browser.switch_page('NEW')
             sleep(2)
-            self.browser.fill_text(":nth-match(frame,1) >>> xpath=//*[@id=\"lksrch\"]","Chat")
+            self.browser.fill_text(":nth-match(frame,1) >>> xpath=//*[@id=\"lksrch\"]", "Chat")
             sleep(1)
             button_to_click = self.browser.get_element(f":nth-match(frame,1) >>> input:has-text('Go!')")
             self.browser.click(button_to_click)
-            sleep(3) 
-            search_header = self.browser.get_element(":nth-match(frame,2) >>> xpath=//*[@id=\"new\"]/div/div[3]/div/div[2]/table/tbody/tr[2]/th")
+            sleep(3)
+            search_header = self.browser.get_element(
+                ":nth-match(frame,2) >>> xpath=//*[@id=\"new\"]/div/div[3]/div/div[2]/table/tbody/tr[2]/th")
             self.browser.click(search_header)
             sleep(5)
             self.browser.switch_page(mainpage)
-            if not "checked" in self.browser.get_element_states("iframe >>> id=j_id0:theForm:thePageBlock:editRoutingSection:j_id192:editHasQueue"):
+            if "checked" not in self.browser.get_element_states(
+                    "iframe >>> id=j_id0:theForm:thePageBlock:editRoutingSection:j_id192:editHasQueue"):
                 self.browser.click("iframe >>> id=j_id0:theForm:thePageBlock:editRoutingSection:j_id192:editHasQueue")
                 sleep(1)
-                self.browser.fill_text("iframe >>> id=j_id0:theForm:thePageBlock:editRoutingSection:j_id195:editPerAgentQueueLength", "5")
+                self.browser.fill_text(
+                    "iframe >>> id=j_id0:theForm:thePageBlock:editRoutingSection:j_id195:editPerAgentQueueLength", "5")
                 sleep(1)
             self.browser.click("iframe >>> :nth-match(.btn[value='Save'], 1)")
             sleep(8)
 
-    def find_profileid_by_name(self,profilename:str):
-        """ Locates the ID of a profile by friendly name """
+    def find_profileid_by_name(self, profilename: str):
+        """
+        Locates the ID of a profile by friendly name
+        :param profilename: Name of the Salesforce Profile
+        :return: Returns Salesforce ID for the Profile Name (If Found) otherwise returns None.
+        """
         if profilename is None:
             raise Exception("Profile Name must be specified")
-        
+
         results = self.salesforceapi.soql_query(f"SELECT ID FROM Profile where Name ='{profilename}'")
-        
-        #so this gets translated to a dict with 3 keys: 
-        #records
-        #totalSize
-        #done
-        
+
+        # so this gets translated to a dict with 3 keys: 
+        # records
+        # totalSize
+        # done
+
         if results["totalSize"] == 1:
             return results["records"][0]["Id"]
-        
+
         return None
-    
-    def validate_minimal_rowcount(self,object,count,filter=None):
-        '''Validate that the rows for the target object and filter do not go below the minimal count'''
-        
+
+    def validate_minimal_rowcount(self, object, count, filter=None):
+        """
+        Validate that the rows for the target object and filter do not go below the minimal count
+        :param object: The target object you want to lookup
+        :param count: The expected minimal count for the object
+        :param filter: (Optional) SOQL Filter for the target object (e.g. MyCustomField__c = 'Example')
+        """
+
         if object is None:
             raise Exception("A target object must be specified")
-        
+
         if count is None:
-            raise Exception("A minimal count must be specified")
-        
-        foundcnt = self.find_record_count(object,filter=None)
-        
-        if( not foundcnt>=int(count)):
-            raise Exception(f"A minimal count not met. Expected was: {count} and found count was {foundcnt}")
-        
+            raise Exception("'count' must be specified. This should be the minimum number of object records you expect in the org.")
+
+        foundcnt = self.find_record_count(object, filter=None)
+
+        if not foundcnt >= int(count):
+            raise Exception(f"A minimal count not met. The expected minimal number of records was: {count} and the total found was: {foundcnt}")
+
         pass
-    
-     
-    def validate_exact_rowcount(self,object,count,filter=None):
-        
-        '''Validate that the rows for the target object and filter match the expected count'''
-        
+
+    def validate_exact_rowcount(self, object, count, filter=None):
+        """
+        Validate that the rows for the target object and filter match the expected count
+        :param object: Target Object you want to lookup
+        :param count: Expected count for the object.
+        :param filter: (Optional) SOQL Filter for the target object (e.g. MyCustomField__c = 'Example')
+        """
+
         if object is None:
             raise Exception("A target object must be specified")
-        
+
         if count is None:
-            raise Exception("A minimal count must be specified")
-        
-        foundcnt = self.find_record_count(object,filter)
-        
-        if( not foundcnt==int(count)):
+            raise Exception("'count' must be specified. This should be the exact number of object records you expect in the org.")
+
+        foundcnt = self.find_record_count(object, filter)
+
+        if not foundcnt == int(count):
             raise Exception(f"An exact count not met. Expected was: {count} and found count was {foundcnt}")
-        
+
         pass
-    
-    def validate_maximum_rowcount(self,object,count,filter=None):
-        '''Validate that the rows for the target object and filter do not exceed the expected count'''
-        
+
+    def validate_maximum_rowcount(self, object, count, filter=None):
+        """
+        Validate that the rows for the target object and filter do not exceed the expected count
+        :param object: Object to lookup
+        :param count: Expected maximum count
+        :param filter: (Optional) SOQL Filter for the target object (e.g. MyCustomField__c = 'Example')
+        """
+
         if object is None:
             raise Exception("A target object must be specified")
-        
+
         if count is None:
-            raise Exception("A minimal count must be specified")
-        
-        foundcnt = self.find_record_count(object,filter)
-        
-        if( foundcnt>int(count)):
+            raise Exception("'count' must be specified. This should be the maximum number of object records you expect in the org.")
+
+        foundcnt = self.find_record_count(object, filter)
+
+        if foundcnt > int(count):
             raise Exception(f"A max count not met. Expected was: {count} and found count was {foundcnt}")
-        
+
         pass
-    
-    
-    def validate_range_rowcount(self,object,lowercount,uppercount,filter=None):
-        '''Validate the count of the rows for the specified object and filter is >= lower value and <= upper value'''
-        
+
+    def validate_range_rowcount(self, object, lowercount, uppercount, filter=None):
+        """Validate the count of the rows for the specified object and filter is >= lower value and <= upper value
+        :param object: Target object you are going to lookup
+        :param lowercount: Minimum number for the range you want to specify. e.g. 0 if the range is 0-10
+        :param uppercount: Maximum number for the range you want to specify. e.g. 10 if the range is 0-10
+        :param filter: (Optional) SOQL Filter for the target object (e.g. MyCustomField__c = 'Example')
+        """
+
         if object is None:
             raise Exception("A target object must be specified")
-        
+
         if lowercount is None:
             raise Exception("A lower count must be specified")
-        
+
         if uppercount is None:
             raise Exception("As upper count must be specified")
-        
-        foundcnt = self.find_record_count(object,filter)
-        
-        if( not foundcnt>=int(lowercount) or not foundcnt<=int(uppercount)):
-            raise Exception(f"A range count not met. Expected Range was between {lowercount} and {uppercount} and the found count was {foundcnt}")
-        
+
+        foundcnt = self.find_record_count(object, filter)
+
+        if not foundcnt >= int(lowercount) or not foundcnt <= int(uppercount):
+            raise Exception(
+                f"A range count not met. Expected Range was between {lowercount} and {uppercount} and the found count was {foundcnt}")
+
         pass
 
-    def find_record_count(self,object,filter=None):
-        '''Locate the record count for the target object and given filter'''
-        
+    def find_record_count(self, object, filter=None):
+        """Locate the record count for the target object and given filter
+        :param object: Target Object
+        :param filter: (Optional) SOQL Filter for the target object (e.g. MyCustomField__c = 'Example')
+        :return: Returns record count, if records are found, otherwise returns None.
+        """
+
         if object is None:
             raise Exception("A target object must be specified")
-        
+
         soql = f"select count(Id) from {object}"
-        
-        if not filter is None and filter != "":
+
+        if filter is not None and filter != "":
             soql = f"{soql} where ({filter})"
-            
+
         results = self.salesforceapi.soql_query(soql)
-        
-        #so this gets translated to a dict with 3 keys: 
-        #records
-        #totalSize
-        #done
-        
+
+        # so this gets translated to a dict with 3 keys: 
+        # records
+        # totalSize
+        # done
+
         if results["totalSize"] == 1:
             return int(results["records"][0]["expr0"])
-        
+
         return None
 
-    def log_to_file(self,data):
-        '''Use this for local debugging to write data to a temp file'''
+    def log_to_file(self, data):
+        """
+        Use this for local debugging to write data to a temp file
+        :param data: Data which you want to log to file. File defaults to ./temp.log
+        """
         now = datetime.now()
         dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
         with open(f"temp.log", "a") as tmpFile:
             tmpFile.write(f"{dt_string}::{data}\n")
             tmpFile.close()
 
-    def add_service_presence_statuses_to_profile(self,profilename:str,servicestatus:str):
-        
-        """ Adds a specified service presence to the specified profile """
+    def add_service_presence_statuses_to_profile(self, profilename: str, servicestatus: str):
+
+        """ Adds a specified service presence to the specified profile
+        :param profilename: Name of Salesforce Profile
+        :param servicestatus: Service Status to be defined for the Profile
+        """
         if profilename is None:
             raise Exception("Profile Name must be specified")
         if servicestatus is None:
             raise Exception("Service Status must be specified")
-        
-        self.go_to_setup_admin_page("EnhancedProfiles/home")
-        sleep(10)
+
+        self.go_to_setup_admin_page("EnhancedProfiles/home", 12)
+
         profileid = self.find_profileid_by_name(profilename)
-        
-        if profileid is None:  
+        if profileid is None:
             raise Exception(f"The Profile Name: {profilename} cannot be located.")
-        
-        if(profileid is None):
+
+        if (profileid is None):
             raise Exception("Unable to locate the Profile ID by name")
-        
-        profileediturl =f"EnhancedProfiles/page?address=%2F{profileid}%3Fs%3DServicePresenceStatusAccess"
-        
+
+        profileediturl = f"EnhancedProfiles/page?address=%2F{profileid}%3Fs%3DServicePresenceStatusAccess"
+
         self.go_to_setup_admin_page(profileediturl)
         sleep(5)
         self.browser.click("iframe >>> a:has-text('Edit')")
-        sleep(10)        
-        self.browser.select_options_by(f"iframe >>> td.selectCell:has-text('{servicestatus}') >> select", SelectAttribute.text, servicestatus)
+        sleep(10)
+        self.browser.select_options_by(f"iframe >>> td.selectCell:has-text('{servicestatus}') >> select",
+                                       SelectAttribute.text, servicestatus)
         self.browser.click("iframe >>> img.rightArrowIcon")
         sleep(1)
         self.browser.click("iframe >>> .btn:text-is('Save')")
@@ -350,51 +457,55 @@ class QbrixSharedKeywords(BaseLibrary):
     # -----------------------------------------------------------------------------------------------------------------------------------------
     # Chat Agent Configurations
     # -----------------------------------------------------------------------------------------------------------------------------------------
-    def add_profile_to_chat_configuration(self,liveagentconfigname:str,profilename:str):
-        """ Adds a specified profile to the specified Chat User Config  """
-        
+    def add_profile_to_chat_configuration(self, liveagentconfigname: str, profilename: str):
+        """
+        Adds a specified profile to the specified Chat User Config
+        :param liveagentconfigname: Live Chat User Config Name
+        :param profilename: Salesforce Profile Name
+        """
+
         if profilename is None:
             raise Exception("Profile Name must be specified")
-        
+
         if liveagentconfigname is None:
             raise Exception("Live Chat User Config Name must be specified")
-        
-    
-        self.go_to_setup_admin_page("EnhancedProfiles/home")
-        sleep(10)
-        
+
+        self.go_to_setup_admin_page("EnhancedProfiles/home", 12)
         liveagentconfig = self.find_livechatuserconfig_by_name(liveagentconfigname)
-        editurl =f"LiveChatUserConfigSettings/page?address=%2F{liveagentconfig}"
+        editurl = f"LiveChatUserConfigSettings/page?address=%2F{liveagentconfig}"
         self.go_to_setup_admin_page(editurl)
         sleep(5)
         self.browser.click("iframe >>> .btn:text-is('Edit')")
         sleep(10)
-    
-        self.browser.select_options_by(f"iframe >>> td.selectCell:has-text('{profilename}') >> select", SelectAttribute.text, profilename)
-        #there are 5 dueling lists. second one is profiles
+
+        self.browser.select_options_by(f"iframe >>> td.selectCell:has-text('{profilename}') >> select",
+                                       SelectAttribute.text, profilename)
+        # there are 5 dueling lists. second one is profiles
         self.browser.click("iframe >>> :nth-match(img.rightArrowIcon, 2)")
         sleep(1)
-        #button at top and one on the bottom. dealer's choice
+        # button at top and one on the bottom. dealer's choice
         self.browser.click("iframe >>> :nth-match(.btn:text-is('Save'), 1)")
-        
-        
-        
-        
-    def find_livechatuserconfig_by_name(self,configname:str):
-        """ Locates the ID of a Live Chat User Config by Master Label. See: select id, MasterLabel from LiveChatUserConfig"""
+
+    def find_livechatuserconfig_by_name(self, configname: str):
+        """
+        Locates the ID of a Live Chat User Config by Master Label. See: select id, MasterLabel from
+        LiveChatUserConfig
+        :param configname: Live Chat User Configuration Name (Use the Master Label not the api name)
+        :return: Returns Salesforce ID for the Live Chat User Configuration, if found. Otherwise returns None.
+        """
         if configname is None:
             raise Exception("Live Chat User Config Name must be specified")
-        
-        soql=f"SELECT ID FROM LiveChatUserConfig where MasterLabel ='{configname}'"
+
+        soql = f"SELECT ID FROM LiveChatUserConfig where MasterLabel ='{configname}'"
         self.log_to_file(soql)
         results = self.salesforceapi.soql_query(soql)
-        
-        #so this gets translated to a dict with 3 keys: 
-        #records
-        #totalSize
-        #done
+
+        # so this gets translated to a dict with 3 keys: 
+        # records
+        # totalSize
+        # done
         self.log_to_file(results)
         if results["totalSize"] == 1:
             return results["records"][0]["Id"]
-        
+
         return None

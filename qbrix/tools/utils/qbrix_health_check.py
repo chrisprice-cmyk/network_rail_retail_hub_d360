@@ -74,7 +74,8 @@ class HealthChecker(BaseTask, ABC):
         test_list.append("tasks/custom/__pycache__")
         upsert_gitignore_entries(test_list)
 
-        replace_file_text(".gitignore", "#.vscode", ".vscode")
+        replace_file_text(".gitignore", ".vscode", "")
+        replace_file_text(".gitignore", "#.vscode", "")
 
         log.info("Health Check: All Checks completed.")
 

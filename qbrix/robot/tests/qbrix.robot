@@ -91,6 +91,17 @@ Check and Disable Field Service Status Transitions
 
 Create Rider Chat Button
     Create A Chat Button And Automated Invitations    SFS - Rider Bot    SDO_SFS_Rider_Bot
+
+Create Tracker Chat Button
+    Create A Chat Button And Automated Invitations    SFS - Tracker Bot    SDO_SFS_Tracker_Bot
+
+Add Case Wrap Up Model
+    Enable Einstein Classification
+    Add Case Wrap Up Model
+
+Add Case Classification Model
+    Enable Einstein Classification
+    Create Case Classification Model
 #
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # MARKETING TESTS
@@ -207,7 +218,6 @@ Add Service Presence Statuses to Profile
     Add Service Presence Statuses to Profile    System Administrator    Chat - Available
     Add Service Presence Statuses to Profile    System Administrator    Messaging - Available
     Add Service Presence Statuses to Profile    System Administrator    Phone - Available
-
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # Validation Counts
 # -----------------------------------------------------------------------------------------------------------------------------------------
@@ -220,11 +230,10 @@ Validate Data Rows Exist
     Validate Minimal Rowcount    Contact 1
     Validate Minimal Rowcount    Contact 1    Name!=''
     Validate Exact Rowcount    Product2    52
-
-
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # Chat Agent Configurations
 # -----------------------------------------------------------------------------------------------------------------------------------------
+
 Add Profile to Chat Agent Configuration
-    Add Profile To Chat Configuration  Chat Representatives  System Administrator
-    Add Profile To Chat Configuration  Chat Representatives  SDO-Service
+    Add Profile To Chat Configuration    Chat Representatives    System Administrator
+    Add Profile To Chat Configuration    Chat Representatives    SDO-Service

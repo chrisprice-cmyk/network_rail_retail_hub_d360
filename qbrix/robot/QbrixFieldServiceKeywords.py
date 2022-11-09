@@ -19,8 +19,10 @@ class QbrixFieldServiceKeywords(BaseLibrary):
         return self._browser
 
     def enable_field_service(self):
-        self.shared.go_to_setup_admin_page("FieldServiceSettings/home")
-        sleep(15)
+        """
+        Enables Field Service Setting in Salesforce Setup
+        """
+        self.shared.go_to_setup_admin_page("FieldServiceSettings/home", 20)
         checked = "checked" in self.browser.get_element_states("label:has-text('Field Service')")
         if not checked:
             toggle_switch = self.browser.get_element("label:has-text('Field Service')")
@@ -34,10 +36,14 @@ class QbrixFieldServiceKeywords(BaseLibrary):
                                              ElementState.visible, '120s')
 
     def enable_all_field_service_permission_sets(self):
+        """
+        Enables all Field Service Permission Sets and also updates Permissions Sets if there are updates waiting
+        """
         self.go_to_field_service_admin_page()
         self.browser.click(":nth-match(iframe,1) >>> div.settings-tab:has-text('Permission Sets')")
         sleep(30)
         elements = self.browser.get_elements(":nth-match(iframe,1) >>> div:text-is('Create Permissions')")
+        sleep(10)
         for elem in elements:
             visible = "visible" in self.browser.get_element_states(elem)
             if visible:
@@ -51,6 +57,9 @@ class QbrixFieldServiceKeywords(BaseLibrary):
                 sleep(30)
 
     def disable_field_service_status_transitions(self):
+        """
+        Disables Field Service Status Transitions
+        """
         self.go_to_field_service_admin_page()
         self.browser.click(":nth-match(iframe,1) >>> span:text-is('Service Appointment Life Cycle')")
         self.browser.wait_for_elements_state(":nth-match(iframe,1) >>> h1:text-is('Service Appointment Life Cycle')",
@@ -71,8 +80,10 @@ class QbrixFieldServiceKeywords(BaseLibrary):
                 ElementState.visible, '10s')
 
     def disable_field_service_integration(self):
-        self.shared.go_to_setup_admin_page("FieldServiceSettings/home")
-        sleep(2)
+        """
+        Disables Field Service Integration
+        """
+        self.shared.go_to_setup_admin_page("FieldServiceSettings/home", 5)
         checked = "checked" in self.browser.get_element_states(
             "label:has-text('Permissions to access data needed for optimization, automatic scheduling, and service appointment bundling.')")
         if checked:

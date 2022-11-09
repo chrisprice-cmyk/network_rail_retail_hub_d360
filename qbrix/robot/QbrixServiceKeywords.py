@@ -50,11 +50,65 @@ class QbrixServiceKeywords(BaseLibrary):
         if not checked:
             self.browser.click("span.slds-checkbox_faux")
             sleep(1)
+        sleep(3)
         self.shared.go_to_setup_admin_page("CaseSwarming/home")
-        self.shared.set_lightning_toggle("on")
+        self.browser.wait_for_elements_state("h1:has-text('Swarming')", ElementState.visible, '30s')
+        checked = "checked" in self.browser.get_element_states("span.slds-checkbox_faux")
+        if not checked:
+            self.browser.click("span.slds-checkbox_faux")
+            sleep(1)
 
     def create_chat_button(self):
         self.shared.go_to_setup_admin_page("LiveChatButtonSettings/home")
         sleep(4)
         self.browser.get_element_states(".button:has-text('New')")
         sleep(5)
+
+    def add_case_wrap_up_model(self):
+        self.shared.go_to_setup_admin_page("EinsteinCaseClassification/home")
+        sleep(2)
+        if "visible" in self.browser.get_element_states("button.slds-button:text-is('Get Started')"):
+            self.browser.click("button.slds-button:text-is('Get Started')")
+        else:
+            if "visible" in self.browser.get_element_states("button.slds-button:text-is('New Model')"):
+                self.browser.click("button.slds-button:text-is('New Model')")
+        self.browser.click("div.slds-visual-picker >> label:has-text('Case Wrap-Up')")
+        self.browser.fill_text("label:has-text('Model Name')", "Case Wrap-Up")
+        self.browser.click("label:has-text('Model Name')")
+        sleep(1)
+        self.browser.click("div.modal-footer >> button.slds-button:text-is('Next')")
+        sleep(2)
+        self.browser.click("div.modal-footer >> button.slds-button:text-is('Next')")
+        sleep(2)
+        self.browser.click("div.modal-footer >> button.slds-button:text-is('Next')")
+        sleep(3)
+        self.browser.click("tr:has-text('Case Reason') >> div.slds-checkbox_add-button")
+        self.browser.click("tr:has-text('Case Type') >> div.slds-checkbox_add-button")
+        self.browser.click("tr:has-text('Escalated') >> div.slds-checkbox_add-button")
+        self.browser.click("tr:has-text('Priority') >> div.slds-checkbox_add-button")
+        sleep(3)
+        self.browser.click("div.modal-footer >> button.slds-button:text-is('Next')")
+        self.browser.click("div.modal-footer >> button.slds-button:text-is('Finish')")
+        sleep(10)
+
+    def create_case_classification_model(self):
+        self.shared.go_to_setup_admin_page("EinsteinCaseClassification/home")
+        sleep(2)
+        if "visible" in self.browser.get_element_states("button.slds-button:text-is('Get Started')"):
+            self.browser.click("button.slds-button:text-is('Get Started')")
+        else:
+            if "visible" in self.browser.get_element_states("button.slds-button:text-is('New Model')"):
+                self.browser.click("button.slds-button:text-is('New Model')")
+        self.browser.fill_text("label:has-text('Model Name')", "SDO - Classification")
+        sleep(1)
+        self.browser.click("div.modal-footer >> button.slds-button:text-is('Next')")
+        sleep(2)
+        self.browser.click("div.modal-footer >> button.slds-button:text-is('Next')")
+        sleep(2)
+        self.browser.click("div.modal-footer >> button.slds-button:text-is('Next')")
+        sleep(3)
+        self.browser.click("tr:has-text('Case Reason') >> div.slds-checkbox_add-button")
+        sleep(3)
+        self.browser.click("div.modal-footer >> button.slds-button:text-is('Next')")
+        self.browser.click("div.modal-footer >> button.slds-button:text-is('Finish')")
+        sleep(10)

@@ -20,33 +20,37 @@ class QbrixSalesCloudKeywords(BaseLibrary):
 
     def enable_forecasts(self):
         """Go directly to the Field Service admin page"""
+
+        forecase_toggle_selector = "label:has-text('Inactive')"
+
         self.shared.go_to_setup_admin_page("Forecasting3Settings/home")
-        visible = "visible" in self.browser.get_element_states("label:has-text('Inactive')")
+        visible = "visible" in self.browser.get_element_states(forecase_toggle_selector)
         if visible:
-            toggle_switch = self.browser.get_element("label:has-text('Inactive')")
+            toggle_switch = self.browser.get_element(forecase_toggle_selector)
             self.browser.click(toggle_switch)
-            sleep(1)
+            sleep(2)
 
     def enable_contacts_to_multiple_accounts(self):
+        """
+        Enables Contacts to Multiple Accounts Feature in the Salesforce Org
+        """
+
+        ctma_selector = "iframe >>> label:has-text('Allow users to relate a contact to multiple accounts')"
+
         self.shared.go_to_setup_admin_page("AccountSettings/home")
         self.shared.wait_for_page_title("Account Settings")
         self.browser.click("iframe >>> :nth-match(input:has-text('Edit'),1)")
-        self.browser.wait_for_elements_state(
-            "iframe >>> label:has-text('Allow users to relate a contact to multiple accounts')", ElementState.visible,
-            '10s')
-        checked = "checked" in self.browser.get_element_states(
-            "iframe >>> label:has-text('Allow users to relate a contact to multiple accounts')")
+        self.browser.wait_for_elements_state(ctma_selector, ElementState.visible, '10s')
+        checked = "checked" in self.browser.get_element_states(ctma_selector)
         if not checked:
-            toggle_switch = self.browser.get_element(
-                "iframe >>> label:has-text('Allow users to relate a contact to multiple accounts')")
+            toggle_switch = self.browser.get_element(ctma_selector)
             self.browser.click(toggle_switch)
             self.browser.click("iframe >>> :nth-match(input:has-text('Save'), 2)")
-            sleep(2)
+            sleep(10)
 
     def enable_sales_engagement(self):
         """ Enables Sales Engagement """
-        self.shared.go_to_setup_admin_page("SalesEngagement/home")
-        sleep(5)
+        self.shared.go_to_setup_admin_page("SalesEngagement/home", 10)
         self.shared.click_button_with_text("Set Up and Enable Sales Engagement")
 
     def set_guest_on_channel_menu(self, channel_menu_api_name):
@@ -65,10 +69,8 @@ class QbrixSalesCloudKeywords(BaseLibrary):
             sleep(5)
 
     def update_forecast_hierarchy_settings(self):
-
         """ Sets the default SDO configuration for Forecasting """
-        self.shared.go_to_setup_admin_page("Forecasting3Role/home")
-        sleep(5)
+        self.shared.go_to_setup_admin_page("Forecasting3Role/home", 8)
 
         # Enable Admin User for the CEO Role
         visible = "visible" in self.browser.get_element_states(
@@ -109,6 +111,9 @@ class QbrixSalesCloudKeywords(BaseLibrary):
         sleep(10)
 
     def enable_opportunity_splits(self):
+        """
+        Enables Opportunity Splits
+        """
         self.shared.go_to_setup_admin_page("OpportunitySplitSetup/home")
         self.browser.wait_for_elements_state("h1:has-text('Opportunity Splits')", ElementState.visible, '30s')
         sleep(5)

@@ -395,6 +395,8 @@ def download_and_unzip(url: Optional[str] = DEFAULT_UPDATE_LOCATION, archive_pas
         if ignore_optional_updates:
             if exists("OPTIONAL_UPDATES"):
                 shutil.rmtree("OPTIONAL_UPDATES")
+            if exists(".qbrix/OPTIONAL_UPDATES"):
+                shutil.rmtree(".qbrix/OPTIONAL_UPDATES")
 
         return True
     except Exception as e:
