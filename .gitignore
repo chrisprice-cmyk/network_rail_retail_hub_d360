@@ -66,3 +66,5 @@ qbrix/tools/testing/__pycache__
 .idea/
 tasks/custom/__pycache__
 qbrix/.idea/workspace.xml
+qbrix/tools/shared/__pycache__/qbrix_project_tasks.cpython-310.pyc
+qbrix/tools/data/__pycache__/qbrix_analytics.cpython-310.pyc

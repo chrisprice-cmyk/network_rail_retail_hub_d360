@@ -144,6 +144,9 @@ tasks:
     description: generate a spin
     class_path: qbrix.tools.utils.qbrix_org_generator.Spin
 
+  analytics_manager:
+    class_path: qbrix.tools.data.qbrix_analytics.AnalyticsManager
+
   #------------------------------------#
   # DATA TOOL INTEGRATION              #
   #------------------------------------#
