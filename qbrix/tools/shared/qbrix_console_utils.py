@@ -78,6 +78,9 @@ class CreateBanner(Command, ABC):
         self.env = self._get_env()
 
     def _banner_string(self):
+         #if we are running in a headless runner- tty will not be there.
+        if self.width ==0: return
+        
         output_string = self.border_char * self.width + "\n"
         for text_line in self.text_box:
             output_string += self.border_char + " " + text_line + " " + self.border_char + "\n"
@@ -85,6 +88,9 @@ class CreateBanner(Command, ABC):
         return output_string
 
     def _generate_list(self):
+        
+        #if we are running in a headless runner- tty will not be there.
+        if self.width ==0: return []
         # Split the input text into separate paragraphs before formatting the
         # length.
         box_width = self.width - 4
@@ -102,4 +108,10 @@ class CreateBanner(Command, ABC):
 
 
 def get_terminal_width():
-    return int(subprocess.check_output(['stty', 'size']).split()[1])
+      #if we are running in a headless runner- tty will not be there.
+    try:
+        return int(subprocess.check_output(['stty', 'size']).split()[1])
+    except Exception as e:
+        print(e)
+    return 0
+    
