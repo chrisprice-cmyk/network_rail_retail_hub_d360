@@ -122,9 +122,11 @@ class AnalyticsManager(BaseTask, ABC):
             log.info(f"Relating dataset to app: {app_name}")
             shane_query = f"{shane_query} -a {app_name}"
 
-          with subprocess.Popen(shlex.split(shane_query), stdout=subprocess.PIPE) as process:
-            while process.poll == None: 
-              print(f"Output from stdout: {process.stdout.read1().decode('utf-8')}")
+          related_json_file = f"{self.dataset_folder}/{dataset_name}.json"
+          if os.path.exists(related_json_file):
+            shane_query = f"{shane_query} -m {related_json_file}"
+
+          process = subprocess.Popen(shlex.split(shane_query), stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 
           if process.returncode != 0:
             log.error(process.stderr)
