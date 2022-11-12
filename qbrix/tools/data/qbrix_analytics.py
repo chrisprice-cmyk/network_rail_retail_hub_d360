@@ -1,4 +1,4 @@
-
+import json
 from abc import ABC
 from multiprocessing import process
 from pathlib import Path
@@ -46,9 +46,17 @@ class AnalyticsManager(BaseTask, ABC):
 
     def cleanup_null_values(self, file_location):
       log.info(f"Cleaning {file_location}... ")
-      # Runs twice to allow for formatted and unformatted files. Potentially replace with regex?
-      replace_file_text(file_location, f"\"defaultValue\": \"null\"", f"\"defaultValue\": \"0\"")
-      replace_file_text(file_location, f"\"defaultValue\":\"null\"", f"\"defaultValue\": \"0\"")
+      
+      with open(file_location, 'r') as f:
+          data = json.load(f)
+
+      if data is not None:
+        for o in data["objects"][0]["fields"]:
+          if "defaultValue" in o and "type" in o and o["type"] == "Numeric":
+            o["defaultValue"] = "0" if o["defaultValue"].lower() == "null" else o["defaultValue"]
+
+        with open(file_location, 'w') as f:
+          json.dump(data, f)
 
     def download_datasets(self):
 
@@ -90,7 +98,7 @@ class AnalyticsManager(BaseTask, ABC):
       if start_pos > -1 and end_pos > -1:
         return file_data[start_pos:end_pos]
       else:
-        return ""
+        return ""    
 
     def upload_dataset_data(self):
       if not os.path.exists("force-app/main/default/wave"):
@@ -128,10 +136,15 @@ class AnalyticsManager(BaseTask, ABC):
 
           process = subprocess.Popen(shlex.split(shane_query), stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 
+          output,error = process.communicate()
+
           if process.returncode != 0:
-            log.error(process.stderr)
+            if error:
+              log.error(error.strip())
           else:
             log.info(f"Uploaded {data_file_location} successfully!")
+            if output:
+              print(output)
 
         else:
 
@@ -154,5 +167,3 @@ class AnalyticsManager(BaseTask, ABC):
         case _:
           log.debug("Analytics Manager was called without a valid mode.")
           exit
-  
-
