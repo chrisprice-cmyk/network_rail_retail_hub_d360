@@ -155,8 +155,9 @@ tasks:
   deploy_nextgen_data:
     class_path: qbrix.tools.utils.qbrix_nextgen_datatool.RunDataTool
     options:
-      # Replace the DataKey with the Data Collection ID of the collection you want to deploy
-      DataKey: 3cbc53bc-796c-481d-800c-bad0885686c5
+      # Replace the data_keys with the Data Collection ID (or IDs) of the collection(s) you want to deploy
+      data_keys:
+        - 3cbc53bc-796c-481d-800c-bad0885686c5
 
   #------------------------------------#
   # TESTIM INTEGRATION                 #
@@ -176,11 +177,6 @@ tasks:
   # Add Your Custom Tasks here
 
 flows:
-  test_flow:
-    steps:
-      1:
-        task: deploy_nextgen_data
-
   #------------------------------------#
   # STAGE 1 of 3: PRE-QBRIX DEPLOYMENT #
   #------------------------------------#
