@@ -16,6 +16,32 @@ from qbrix.tools.shared.qbrix_console_utils import init_logger
 
 log = init_logger()
 
+def salesforce_query(soql, org_config):
+    if soql != "" and org_config is not None:
+
+        dx_command = f"sfdx force:data:soql:query -q \"{soql}\" --json "
+
+        subprocess.run(f"sfdx config:set instanceUrl={org_config.instance_url}", shell=True, capture_output=True)
+
+        if isinstance(org_config, ScratchOrgConfig):
+            dx_command += " -u {username}".format(username=org_config.username)
+        else:
+            dx_command += " -u {username}".format(username=org_config.access_token)
+
+        result = subprocess.run(dx_command, shell=True, capture_output=True)
+        subprocess.run("sfdx config:unset instanceUrl", shell=True, capture_output=True)
+
+        if result.returncode > 0:
+            log.error(f"Salesforce Query Error - Details: {result.stderr}")
+            return None
+
+        json_result = json.loads(result.stdout)
+        
+        if json_result["result"]["totalSize"] >= 1:
+            return json_result["result"]["records"][0][list(json_result["result"]["records"][0].keys())[1]]
+        else:
+            return None
+
 def QbrixInstallCheck(qbrix_name, org_config):
     log.info(f"Checking for Qbrix: {qbrix_name}")
     subprocess.run(f"sfdx config:set instanceUrl={org_config.instance_url}", shell=True, capture_output=True)

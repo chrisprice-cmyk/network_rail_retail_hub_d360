@@ -152,30 +152,11 @@ tasks:
   #------------------------------------#
   # Note: This section can be removed if you are not using the NextGen Data Tool
 
-  # Do not modify this task
-  data_tool_status:
-    description: Waits for the Data Tool status to be complete within the target org before allowing flow to continue.
-    class_path: cumulusci.tasks.salesforce.custom_settings_wait.CustomSettingValueWait
+  deploy_nextgen_data:
+    class_path: qbrix.tools.utils.qbrix_nextgen_datatool.RunDataTool
     options:
-      object: NXDO__Data_Tool_Status__c
-      field: NXDO__Completed__c
-      value: True
-
-  # Update the value for param1 to your data key
-  data_tool_deploy:
-    description: Executes the command to run the NxDO Data Tool
-    class_path: cumulusci.tasks.apex.anon.AnonymousApexTask
-    options:
-      apex: NXDO.DataTool_Utilities.requestDeploy('%%%PARAM_1%%%', true);
-      param1: 1234
-
-  # Update the value for param1 to your data key
-  data_tool_deploy_test:
-    description: Executes the command to run the NxDO Data Tool from a Scratch org Sandbox Org
-    class_path: cumulusci.tasks.apex.anon.AnonymousApexTask
-    options:
-      apex: NXDO.DataTool_Utilities.requestDeploy('%%%PARAM_1%%%', false);
-      param1: 1234
+      # Replace the DataKey with the Data Collection ID of the collection you want to deploy
+      DataKey: 3cbc53bc-796c-481d-800c-bad0885686c5
 
   #------------------------------------#
   # TESTIM INTEGRATION                 #
@@ -195,6 +176,11 @@ tasks:
   # Add Your Custom Tasks here
 
 flows:
+  test_flow:
+    steps:
+      1:
+        task: deploy_nextgen_data
+
   #------------------------------------#
   # STAGE 1 of 3: PRE-QBRIX DEPLOYMENT #
   #------------------------------------#
