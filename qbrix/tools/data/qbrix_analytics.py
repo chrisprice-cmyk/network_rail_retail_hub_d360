@@ -17,7 +17,7 @@ class AnalyticsManager(BaseTask, ABC):
     Q Brix Analytics Manager handles data which is contained within Analytics CRM Dataset Files. It downloads the data to csv files within the datasets/analytics folder.
 
     You can run the task in 3 modes by setting the 'mode' option to one of the following: \n
-    Download (or d): Which Downloads and Cleans Up The Datasets \n
+    Download (or d): Which Downloads and Cleans Up The Datasets (Note: You still need to download json files when you have uploaded your initial csv, see docs for notes) \n
     Upload (or u): Which Uploads the datasets \n
     Clean (or c): Which cleans existing files \n
     """
@@ -28,7 +28,19 @@ class AnalyticsManager(BaseTask, ABC):
         "required": False
       },
       "mode": {
-        "description": "Options are Download (d), Upload (u) or Clean (c)",
+        "description": "(optional) Data Options are Download (d), Upload (u) or clean (c).",
+        "required": False
+      },
+      "org": {
+        "description": "(optional) Org Alias for target org when not running this task within a flow",
+        "required": False
+      },
+      "share_to_all_internal_users": {
+        "description": "(optional) If set to True, this will auto share the analytics apps to all internal users. Default False",
+        "required": False
+      },
+      "share_to_all_portal_users": {
+        "description": "(optional) If set to True, this will auto share the analytics apps to all portal/community users. Default False",
         "required": False
       }
     }
@@ -37,6 +49,8 @@ class AnalyticsManager(BaseTask, ABC):
         super(AnalyticsManager, self)._init_options(kwargs)
         self.dataset_folder = self.options["dataset_folder"] if "dataset_folder" in self.options else "datasets/analytics"
         self.mode = self.options["mode"] if "mode" in self.options else "upload"
+        self.share_to_all_internal_users = self.options["share_to_all_internal_users"] if "share_to_all_internal_users" in self.options else False
+        self.share_to_all_portal_users = self.options["share_to_all_portal_users"] if "share_to_all_portal_users" in self.options else False
 
     def run_cleaners(self):
       wave_files = glob.glob(self.dataset_folder + "/*.json", recursive=True)
@@ -116,6 +130,8 @@ class AnalyticsManager(BaseTask, ABC):
       if len(wave_dataset_files) > 0:
         subprocess.run(f"sfdx config:set instanceUrl={self.org_config.instance_url}", shell=True, capture_output=True)
 
+      app_names = []
+
       for file in wave_dataset_files:
         dataset_name = Path(file).stem.replace(".wds-meta", "")
         data_file_location = f"{self.dataset_folder}/{dataset_name}.csv"
@@ -129,6 +145,7 @@ class AnalyticsManager(BaseTask, ABC):
           if app_name != "":
             log.info(f"Relating dataset to app: {app_name}")
             shane_query = f"{shane_query} -a {app_name}"
+            app_names.append(app_name)
 
           related_json_file = f"{self.dataset_folder}/{dataset_name}.json"
           if os.path.exists(related_json_file):
@@ -143,12 +160,37 @@ class AnalyticsManager(BaseTask, ABC):
               log.error(error.strip())
           else:
             log.info(f"Uploaded {data_file_location} successfully!")
-            if output:
-              print(output)
 
         else:
 
           log.error(f"Expected to find dataset file at {data_file_location} and it was missing. Please check you have downloaded the dataset data files. Skipping this file.")
+
+      subprocess.run("sfdx config:unset instanceUrl", shell=True, capture_output=True)
+      
+      if self.share_to_all_portal_users or self.share_to_all_internal_users:
+        self.share_app(app_names)
+
+    def share_app(self, app_names):
+
+      extra_cmd = f"sfdx shane:analytics:app:share -u {self.org_config.access_token}"
+
+      if self.share_to_all_portal_users or self.share_to_all_internal_users:
+
+        #Clean Up Names of App Passed to method
+        clean_list = list(dict.fromkeys(app_names))
+
+        # Process Apps
+        for app in clean_list:
+  
+          if self.share_to_all_portal_users:
+            extra_cmd += " --allcsp"
+
+          if self.share_to_all_internal_users:
+            extra_cmd += " --org"
+
+          log.info(f"Sharing Analytics App: {app}")
+          subprocess.run(f"sfdx config:set instanceUrl={self.org_config.instance_url}", shell=True, capture_output=True)
+          subprocess.run(extra_cmd, shell=True, capture_output=True)
 
       subprocess.run("sfdx config:unset instanceUrl", shell=True, capture_output=True)
 

@@ -36,6 +36,8 @@ class CustomFormatter(logging.Formatter):
 
 
 def init_logger():
+
+    """ Initiates the custom logger for Q Brix Extensions """
     if not logging.getLogger(__name__).hasHandlers():
         logger = logging.getLogger(__name__)
         logger.setLevel(logging.DEBUG)
@@ -55,9 +57,12 @@ def init_logger():
 
 
 class CreateBanner(Command, ABC):
+
+    task_docs = """Creates a full width banner in the console with the provided text"""
+
     task_options = {
         "text": {
-            "description": "Text you want to show as a banner",
+            "description": "Text you want to show in a banner. If you leave this blank it will show the current Q Brix details.",
             "required": False
         }
     }

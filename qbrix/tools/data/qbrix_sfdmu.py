@@ -16,6 +16,10 @@ SCRATCHORG_LOAD_COMMAND = "sfdx sfdmu:run --sourceusername CSVFILE --targetusern
 
 class SFDMULoad(SFDXBaseTask):
 
+    task_docs = """
+    Custom Task for Running Data Uploads with the SFDMU Plugin.
+    """
+
     keychain_class = BaseProjectKeychain
     task_options={
         "pathtoexportjson": {
