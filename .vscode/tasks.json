@@ -335,7 +335,7 @@
         }
       },
       {
-        "label": "Q BRIX [SAVE]: Review Changes in org",
+        "label": "Q BRIX [SAVE]: Review a List of Changes in org",
         "type": "shell",
         "command": "cci task run list_changes --org ${input:OrgAlias}",
         "group": "build",
@@ -428,6 +428,21 @@
         "label": "Q BRIX [DEPLOY]: Deploy specific folder to specified org",
         "type": "shell",
         "command": "cci task run deploy --path ${input:FolderString} --org ${input:OrgAlias}",
+        "group": "build",
+        "problemMatcher": [],
+        "presentation": {
+          "reveal": "always",
+          "revealProblems": "onProblem",
+          "focus": true,
+          "echo": false,
+          "showReuseMessage": false,
+          "panel": "shared"
+        }
+      },
+      {
+        "label": "Q BRIX [RETRIEVE]: Download Data for Analytics Datasets",
+        "type": "shell",
+        "command": "cci task run analytics_manager --mode d --org ${input:OrgAlias}",
         "group": "build",
         "problemMatcher": [],
         "presentation": {

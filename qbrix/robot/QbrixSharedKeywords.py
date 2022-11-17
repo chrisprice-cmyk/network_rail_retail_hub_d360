@@ -259,7 +259,7 @@ class QbrixSharedKeywords(BaseLibrary):
             sleep(1)
             button_to_click = self.browser.get_element(f":nth-match(frame,1) >>> input:has-text('Go!')")
             self.browser.click(button_to_click)
-            sleep(3)
+            sleep(6)
             search_header = self.browser.get_element(
                 ":nth-match(frame,2) >>> xpath=//*[@id=\"new\"]/div/div[3]/div/div[2]/table/tbody/tr[2]/th")
             self.browser.click(search_header)

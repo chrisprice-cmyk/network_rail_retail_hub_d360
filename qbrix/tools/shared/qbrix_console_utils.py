@@ -1,5 +1,6 @@
 import datetime
 import logging
+import shlex
 import subprocess
 import textwrap
 from abc import ABC
@@ -119,4 +120,15 @@ def get_terminal_width():
     except Exception as e:
         print(e)
     return 0
+
+def run_command(command):
+      process = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
+      while True:
+          output = process.stdout.readline().rstrip().decode('utf-8')
+          if output == '' and process.poll() is not None:
+              break
+          if output:
+              print(output.strip())
+      rc = process.poll()
+      return rc
     

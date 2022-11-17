@@ -30,6 +30,7 @@ class QbrixSchedulerKeywords(BaseLibrary):
             self.browser.click(toggle_switch)
             sleep(3)
         self.browser.wait_for_elements_state("label:has-text('Aggregate Resource Use')", ElementState.visible, '30s')
+        sleep(3)
         checked2 = "checked" in self.browser.get_element_states("label:has-text('Aggregate Resource Use')")
         if not checked2:
             toggle_switch2 = self.browser.get_element("label:has-text('Aggregate Resource Use')")

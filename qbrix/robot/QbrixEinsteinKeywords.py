@@ -22,15 +22,18 @@ class QbrixEinsteinKeywords(BaseLibrary):
         Enable Einstein Analytics CRM within Salesforce Org
         """
         self.shared.go_to_setup_admin_page("InsightsSetupGettingStarted/home")
-        sleep(5)
-        QbrixSharedKeywords().click_button_with_text("Enable CRM Analytics")
-        sleep(30)
+        self.browser.wait_for_elements_state("h1:has-text('Getting Started')", ElementState.visible, '60s')
+        sleep(10)
+        if "visible" in self.browser.get_element_states("button:has-text('Enable CRM Analytics')"):
+            QbrixSharedKeywords().click_button_with_text("Enable CRM Analytics")
+            sleep(30)
 
     def go_to_campaign_insights_setup_page(self):
         """
         Go directly to the Campaign Insights setup page
         """
         self.shared.go_to_setup_admin_page("CampaignInsights/home")
+        sleep(10)
 
     def go_to_opportunity_insights_setup_page(self):
         """
