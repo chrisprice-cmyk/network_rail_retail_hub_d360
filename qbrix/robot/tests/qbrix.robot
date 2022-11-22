@@ -218,18 +218,7 @@ Add Service Presence Statuses to Profile
     Add Service Presence Statuses to Profile    System Administrator    Chat - Available
     Add Service Presence Statuses to Profile    System Administrator    Messaging - Available
     Add Service Presence Statuses to Profile    System Administrator    Phone - Available
-# -----------------------------------------------------------------------------------------------------------------------------------------
-# Validation Counts
-# -----------------------------------------------------------------------------------------------------------------------------------------
-
-Validate Data Rows Exist
-    Validate Minimal Rowcount    Account 1
-    Validate Minimal Rowcount    Account 1    Name!=''
-    Validate Maximum Rowcount    Account 300 Name!=''
-    Validate Range Rowcount    Account 1    300    Name!=''
-    Validate Minimal Rowcount    Contact 1
-    Validate Minimal Rowcount    Contact 1    Name!=''
-    Validate Exact Rowcount    Product2    52
+    
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # Chat Agent Configurations
 # -----------------------------------------------------------------------------------------------------------------------------------------
