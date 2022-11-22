@@ -72,6 +72,9 @@ class HealthChecker(BaseTask, ABC):
         test_list.append("qbrix/tools/data/__pycache__")
         test_list.append("qbrix/tools/testing/__pycache__")
         test_list.append("tasks/custom/__pycache__")
+        test_list.append("validationresult.json")
+        test_list.append("*_results.xml")
+
         upsert_gitignore_entries(test_list)
 
         replace_file_text(".gitignore", ".vscode/", "")

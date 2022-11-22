@@ -463,6 +463,8 @@ def clean_project_files():
         check_and_delete_file("playwright-log.txt")
         check_and_delete_file("output.xml")
         check_and_delete_file("report.html")
+        check_and_delete_file("validationresult.json")
+
     except Exception() as e:
         log.info(f"Failed to Clean Up Project Files. Error Message: {e}")
 

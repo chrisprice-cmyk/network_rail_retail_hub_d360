@@ -153,6 +153,17 @@ tasks:
   analytics_manager:
     class_path: qbrix.tools.data.qbrix_analytics.AnalyticsManager
 
+  validate_qbrix:
+    description: Validates the qbrix
+    class_path: cumulusci.tasks.robotframework.Robot
+    options:
+      suites: qbrix_local/robot/tests/validate.robot
+      vars: browser:headlesschrome
+      test: Validate Qbrix
+      options:
+        report: None
+        log: None
+        output: None
   #------------------------------------#
   # DATA TOOL INTEGRATION              #
   #------------------------------------#
@@ -256,7 +267,7 @@ flows:
   validate_qbrix:
     steps:
       1:
-        task: None
+        task: validate_qbrix
 
   #------------------------------------#
   # QBRIX DATA                         #

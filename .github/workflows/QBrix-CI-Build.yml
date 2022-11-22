@@ -120,6 +120,14 @@ jobs:
       - name: Install Behave Feature Testing
         run: pip install behave
 
+      #install Pandas
+      - name: Install Pandas
+        run: pip install pandas
+
+      #install Pandassql
+      - name: Install Pandasql
+        run: pip install pandasql
+
       # Install Vlocity
       - name: Install Vlocity
         run: npm install --location=global vlocity
@@ -167,7 +175,43 @@ jobs:
       - name: run deploy_qbrix
         run: cci flow run deploy_qbrix --org build__dev
 
-      #TODO: Add Run Tests
+      #CCI Run Deploy - timeout at 12 hours
+      - name: run deploy_qbrix
+        run: cci flow run deploy_qbrix --org build__dev
+
+      - name: run validate
+        run: cci flow run validate_qbrix --org build__dev
+
+      - name: Check file existence
+        id: check_validationresults_present
+        uses: andstor/file-existence-action@v2
+        with:
+          files: "${{ github.workspace }}/validationresult.json"
+
+      - name: Read Validation Results file - if present
+        if: steps.check_validationresults_present.outputs.files_exists == 'true'
+        id: read_validationresults_file
+        uses: andstor/file-reader-action@v1
+        with:
+          path: "${{ github.workspace }}/validationresult.json"
+
+      - name: upload the validation results - if present
+        if: ((github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main') && steps.check_validationresults_present.outputs.files_exists == 'true')
+        uses: fjogeleit/http-request-action@v1
+        with:
+          url: "https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixValidationService/${{ github.repository }}"
+          method: "POST"
+          customHeaders: '{"Content-Type": "application/json","Authorization": "Bearer ${{ steps.qlabs_accesstoken.outputs.value }}"}'
+          data: "${{ steps.read_validationresults_file.outputs.contents }}"
+
+      - name: clear existing validation results - not file present
+        if: ((github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main') && steps.check_validationresults_present.outputs.files_exists == 'false')
+        uses: fjogeleit/http-request-action@v1
+        with:
+          url: "https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixValidationService/${{ github.repository }}"
+          method: "POST"
+          customHeaders: '{"Content-Type": "application/json","Authorization": "Bearer ${{ steps.qlabs_accesstoken.outputs.value }}"}'
+          data: '{"results":[]}'
 
       # Clean up scratch orgs
       - name: Delete the scratch Org
