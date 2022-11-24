@@ -496,23 +496,23 @@ def update_file_api_versions(project_api_version):
     results.extend(lwc_files)
     for f in results:
         try:
-            FART.fartbetween(f, "<apiVersion>", "</apiVersion>", project_api_version)
+            FART.fartbetween(FART,f, "<apiVersion>", "</apiVersion>", project_api_version, None)
             log.info(f"[OK] File Updated: {f}")
         except:
             log.error(f"[FAILED] File Update Failed: {f}")
     # Handle Single Files
     if exists("files/package.xml"):
         try:
-            FART.fartbetween("files/package.xml", "<apiVersion>", "</apiVersion>", project_api_version)
+            FART.fartbetween(FART, "files/package.xml", "<version>", "</version>", project_api_version, None)
             log.info(f"[OK] File Updated: files/package.xml")
-        except:
-            log.error(f"[FAILED] File Update files/package.xml")
+        except Exception as e:
+            log.error(f"[FAILED] File Update files/package.xml - Error: {e}")
     if exists("sfdx-project.json"):
         try:
             update_json_file_value("sfdx-project.json", "sourceApiVersion", project_api_version)
             log.info(f"[OK] File Updated: sfdx-project.json")
-        except:
-            log.error(f"[FAILED] File Update sfdx-project.json")
+        except Exception as e:
+            log.error(f"[FAILED] File Update sfdx-project.json - Error: {e}")
 
 def upsert_gitignore_entries(list_entries):
 
