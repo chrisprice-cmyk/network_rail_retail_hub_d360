@@ -3,6 +3,7 @@ from time import sleep
 from Browser import ElementState, SelectAttribute
 from cumulusci.robotframework.base_library import BaseLibrary
 from qbrix.robot.QbrixSharedKeywords import QbrixSharedKeywords
+from cumulusci.robotframework.SalesforceAPI import SalesforceAPI
 
 
 class QbrixSalesCloudKeywords(BaseLibrary):
@@ -10,6 +11,7 @@ class QbrixSalesCloudKeywords(BaseLibrary):
     def __init__(self):
         super().__init__()
         self._browser = None
+        self._salesforceapi = None
         self.shared = QbrixSharedKeywords()
 
     @property
@@ -18,16 +20,20 @@ class QbrixSalesCloudKeywords(BaseLibrary):
             self._browser = self.builtin.get_library_instance("Browser")
         return self._browser
 
+    @property
+    def salesforceapi(self):
+        if self._salesforceapi is None:
+            self._salesforceapi = SalesforceAPI()
+        return self._salesforceapi
+
     def enable_forecasts(self):
         """Go directly to the Field Service admin page"""
 
-        forecase_toggle_selector = "label:has-text('Inactive')"
-
+        enable_forecasts_toggle = "span.slds-checkbox_off"
         self.shared.go_to_setup_admin_page("Forecasting3Settings/home")
-        visible = "visible" in self.browser.get_element_states(forecase_toggle_selector)
+        visible = "visible" in self.browser.get_element_states(enable_forecasts_toggle)
         if visible:
-            toggle_switch = self.browser.get_element(forecase_toggle_selector)
-            self.browser.click(toggle_switch)
+            self.browser.click(enable_forecasts_toggle)
             sleep(2)
 
     def enable_contacts_to_multiple_accounts(self):
@@ -79,14 +85,29 @@ class QbrixSalesCloudKeywords(BaseLibrary):
             self.browser.click("iframe >>> :nth-match(a:text-is('Enable Users'):right-of(span.label:text-is('CEO')),1)")
             sleep(5)
             existing_list = self.browser.get_select_options("iframe >>> #duel_select_1")
-            if len(existing_list) > 0 and not any(d['label'] == 'Admin User' for d in existing_list):
-                self.browser.select_options_by("iframe >>> td.selectCell:has-text('Available Users') >> select",
-                                               SelectAttribute.text, "Admin User")
-                self.browser.click("iframe >>> img.rightArrowIcon")
-                sleep(1)
-                self.browser.click("iframe >>> .btn:text-is('Save')")
-            else:
-                self.browser.click("iframe >>> .btn:text-is('Cancel')")
+
+            results = self.salesforceapi.soql_query(f"SELECT FirstName, LastName FROM User WHERE ProfileId IN (SELECT ID FROM Profile WHERE Name = 'System Administrator') AND UserRoleId IN (SELECT ID FROM UserRole WHERE Name = 'CEO') AND FirstName != '' AND LastName != 'Bot'")
+            if results and results["totalSize"] > 0:
+                for record in results["records"]:
+                    name = record["FirstName"] + ' ' + record["LastName"]
+                    existing_list = self.browser.get_select_options("iframe >>> #duel_select_1")
+
+                    print(f"name: {name}")
+                    print(existing_list)
+
+
+                    changes_made = False
+                    if len(existing_list) > 0 and not any(d['label'] == name for d in existing_list):
+                        self.browser.select_options_by("iframe >>> td.selectCell:has-text('Available Users') >> select",SelectAttribute.text, name)
+                        self.browser.click("iframe >>> img.rightArrowIcon")
+                        changes_made = True
+                
+                if changes_made:
+                    self.browser.click("iframe >>> .btn:text-is('Save')")
+                else:
+                    self.browser.click("iframe >>> .btn:text-is('Cancel')")
+
+            
             sleep(8)
 
         # Setup Elliot Executive for VP of Sales
@@ -134,4 +155,4 @@ class QbrixSalesCloudKeywords(BaseLibrary):
             sleep(3)
             enable_button_to_click = self.browser.get_element("iframe >>> .btn[value='Save']")
             self.browser.click(enable_button_to_click)
-            sleep(4)
+            sleep(10)

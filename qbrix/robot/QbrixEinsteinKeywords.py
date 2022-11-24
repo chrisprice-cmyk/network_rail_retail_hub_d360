@@ -109,7 +109,7 @@ class QbrixEinsteinKeywords(BaseLibrary):
         checked2 = "checked" in self.browser.get_element_states(":nth-match(span.slds-checkbox--faux,2)")
         if not checked2:
             self.browser.click(":nth-match(span.slds-checkbox--faux,2)")
-            sleep(1)
+            sleep(5)
 
     def enable_einstein_prediction_builder(self):
         """ Enable Einstein Prediction Builder """
@@ -126,7 +126,7 @@ class QbrixEinsteinKeywords(BaseLibrary):
         enabled = "enabled" in self.browser.get_element_states(".slds-button:has-text('Get Started')")
         if enabled:
             self.browser.click(".slds-button:has-text('Get Started')")
-            sleep(2)
+            sleep(5)
 
     def enable_einstein_forecasting(self):
         self.shared.go_to_setup_admin_page("ForecastingPrediction/home")
@@ -135,17 +135,17 @@ class QbrixEinsteinKeywords(BaseLibrary):
         enabled = "enabled" in self.browser.get_element_states(".slds-button:has-text('Enable')")
         if enabled:
             self.browser.click(".slds-button:has-text('Enable')")
-            sleep(2)
+            sleep(20)
 
     def enable_call_coaching_eci(self):
         self.shared.go_to_setup_admin_page("CallCoachingSettings/home")
         self.browser.wait_for_elements_state("h1:has-text('Einstein Conversation Insights')", ElementState.visible,
                                              '30s')
-        sleep(2)
+        sleep(5)
         checked = "checked" in self.browser.get_element_states(":nth-match(span.slds-checkbox_faux,1)")
         if not checked:
             self.browser.click(":nth-match(span.slds-checkbox_faux,1)")
-            sleep(1)
+            sleep(10)
 
     def enable_einstein_classification(self):
         self.shared.go_to_setup_admin_page("EinsteinCaseClassification/home")
@@ -155,5 +155,5 @@ class QbrixEinsteinKeywords(BaseLibrary):
             "div.case-classification-pref >> label.slds-checkbox_toggle:text-is('Einstein Classification Apps')")
         if not checked:
             self.browser.click("label.slds-checkbox_toggle:has-text('Einstein Classification Apps')")
-            sleep(1)
+            sleep(5)
 

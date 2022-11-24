@@ -20,28 +20,36 @@ class QbrixSchedulerKeywords(BaseLibrary):
 
     def enable_scheduler(self):
         """ Enables Salesforce Scheduler """
-        self.shared.go_to_setup_admin_page("LightningSchedulerSettings/home")
-        self.browser.wait_for_elements_state("h2:has-text('Event Management')", ElementState.visible, '30s')
-        self.browser.wait_for_elements_state("label:has-text('Appointment Distribution')", ElementState.visible, '30s')
-        checked = "checked" in self.browser.get_element_states("label:has-text('Appointment Distribution')")
-        if not checked:
-            self.browser.wait_for_elements_state("label:has-text('Appointment Distribution')", ElementState.visible, '30s')
-            toggle_switch = self.browser.get_element("label:has-text('Appointment Distribution')")
-            self.browser.click(toggle_switch)
-            sleep(3)
-        self.browser.wait_for_elements_state("label:has-text('Aggregate Resource Use')", ElementState.visible, '30s')
-        sleep(3)
-        checked2 = "checked" in self.browser.get_element_states("label:has-text('Aggregate Resource Use')")
-        if not checked2:
-            toggle_switch2 = self.browser.get_element("label:has-text('Aggregate Resource Use')")
-            self.browser.click(toggle_switch2)
-            sleep(3)
-        self.browser.wait_for_elements_state("label:has-text('Multi-Resource Scheduling')", ElementState.visible, '30s')
-        checked3 = "checked" in self.browser.get_element_states("label:has-text('Multi-Resource Scheduling')")
-        if not checked3:
-            toggle_switch3 = self.browser.get_element("label:has-text('Multi-Resource Scheduling')")
-            self.browser.click(toggle_switch3)
-            sleep(3)
+        
+        settings_page_url = "LightningSchedulerSettings/home"
+        wait_for_title = "h2:has-text('Event Management')"
+        
+        # Go To Scheduler Setup
+        self.shared.go_to_setup_admin_page(settings_page_url)
+        self.browser.wait_for_elements_state(wait_for_title, ElementState.visible, '30s')
+
+        # Enable Appointment Distribution
+        appointment_dist_selector = "span.slds-form-element__label:has-text('Appointment Distribution')"
+        self.browser.wait_for_elements_state(appointment_dist_selector, ElementState.visible, '30s')
+        if not "checked" in self.browser.get_element_states(appointment_dist_selector):
+            self.browser.click(appointment_dist_selector)
+            sleep(2)
+            self.shared.go_to_setup_admin_page(settings_page_url)
+
+        # Enable Aggregate Resource Use
+        agg_resource_selector = "span.slds-form-element__label:has-text('Aggregate Resource Use')"
+        self.browser.wait_for_elements_state(agg_resource_selector, ElementState.visible, '30s')
+        if not "checked" in self.browser.get_element_states(agg_resource_selector):
+            self.browser.click(agg_resource_selector)
+            sleep(2)
+            self.shared.go_to_setup_admin_page(settings_page_url)
+
+        # Enable Multi-Resource Scheduling
+        multi_resource_selector = "span.slds-form-element__label:has-text('Multi-Resource Scheduling')"
+        self.browser.wait_for_elements_state(multi_resource_selector, ElementState.visible, '30s')
+        if not "checked" in self.browser.get_element_states(multi_resource_selector):
+            self.browser.click(multi_resource_selector)
+            sleep(2)
 
     def create_appointment_assignment_policies(self):
         """ Creates the Appointment Assignment Policies """

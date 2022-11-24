@@ -22,12 +22,24 @@ class QbrixFieldServiceKeywords(BaseLibrary):
         """
         Enables Field Service Setting in Salesforce Setup
         """
-        self.shared.go_to_setup_admin_page("FieldServiceSettings/home", 20)
-        checked = "checked" in self.browser.get_element_states("label:has-text('Field Service')")
-        if not checked:
-            toggle_switch = self.browser.get_element("label:has-text('Field Service')")
-            self.browser.click(toggle_switch)
+        
+        # Go To Field Service Setup
+        self.shared.go_to_setup_admin_page("FieldServiceSettings/home", 10)
+
+        # Enable Field Service Setting
+        field_service_toggle_selector = "span.slds-form-element__label:has-text('Field Service')"
+        self.browser.wait_for_elements_state(field_service_toggle_selector, ElementState.visible, '30s')
+        if not "checked" in self.browser.get_element_states(field_service_toggle_selector):
+            self.browser.click(field_service_toggle_selector)
             sleep(10)
+
+    def go_to_field_service_admin_page(self):
+        """Go directly to the Field Service admin page"""
+
+        # Go To Field Service Package Settings Page
+        self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/n/FSL__Field_Service_Settings")
+        self.browser.wait_for_elements_state(":nth-match(iframe,1) >>> h1:has-text('Getting Started')", ElementState.visible, '120s')
+
 
     def field_service_sdo_config(self):
         """ Go to Field Service Settings and configure additional settings for demo use """
@@ -118,11 +130,8 @@ class QbrixFieldServiceKeywords(BaseLibrary):
 
         sleep(5)
 
-    def go_to_field_service_admin_page(self):
-        """Go directly to the Field Service admin page"""
-        self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/n/FSL__Field_Service_Settings")
-        self.browser.wait_for_elements_state(":nth-match(iframe,1) >>> h1:has-text('Getting Started')",
-                                             ElementState.visible, '120s')
+
+
 
     def enable_all_field_service_permission_sets(self):
         """
@@ -131,19 +140,29 @@ class QbrixFieldServiceKeywords(BaseLibrary):
         self.go_to_field_service_admin_page()
         self.browser.click(":nth-match(iframe,1) >>> div.settings-tab:has-text('Permission Sets')")
         sleep(30)
-        elements = self.browser.get_elements(":nth-match(iframe,1) >>> div:text-is('Create Permissions')")
-        sleep(10)
-        for elem in elements:
-            visible = "visible" in self.browser.get_element_states(elem)
-            if visible:
-                self.browser.click(elem)
-                sleep(30)
-        elements = self.browser.get_elements(":nth-match(iframe,1) >>> div:text-is('Update Permissions')")
-        for elem in elements:
-            visible = "visible" in self.browser.get_element_states(elem)
-            if visible:
-                self.browser.click(elem)
-                sleep(30)
+
+        create_permission_selector = ":nth-match(iframe,1) >>> div:text-is('Create Permissions')"
+        update_permission_selector = ":nth-match(iframe,1) >>> div:text-is('Update Permissions')"
+
+        for x in range(0, 4):
+
+            print(f"Check {x}")
+
+            if x == 0 or x ==1:
+                current_selector = create_permission_selector
+            
+            if x == 2 or x == 3:
+                current_selector = update_permission_selector
+
+            permission_button_elements = self.browser.get_elements(current_selector)
+
+            if permission_button_elements is None:
+                continue
+            else:
+                for permission_button in permission_button_elements:
+                    if "visible" in self.browser.get_element_states(permission_button):
+                        self.browser.click(permission_button)
+                        sleep(30)
 
     def disable_field_service_status_transitions(self):
         """
