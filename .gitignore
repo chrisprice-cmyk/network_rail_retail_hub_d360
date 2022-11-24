@@ -62,7 +62,7 @@ qbrix/tools/shared/__pycache__
 qbrix/tools/data/__pycache__
 qbrix/tools/testing/__pycache__
 
-#Stewart
+#Extra
 .idea/
 tasks/custom/__pycache__
 qbrix/.idea/workspace.xml
