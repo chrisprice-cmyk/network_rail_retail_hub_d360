@@ -1,6 +1,6 @@
 from time import sleep
 
-from Browser import ElementState
+from Browser import ElementState, SelectAttribute
 from cumulusci.robotframework.base_library import BaseLibrary
 from qbrix.robot.QbrixSharedKeywords import QbrixSharedKeywords
 
@@ -28,6 +28,95 @@ class QbrixFieldServiceKeywords(BaseLibrary):
             toggle_switch = self.browser.get_element("label:has-text('Field Service')")
             self.browser.click(toggle_switch)
             sleep(10)
+
+    def field_service_sdo_config(self):
+        """ Go to Field Service Settings and configure additional settings for demo use """
+
+        # Go to Field Service Settings
+        self.go_to_field_service_admin_page()
+
+        # Enable Schedule Bundling
+
+        menu_scheduling_selector = ":nth-match(iframe,1) >>> id=SettingsMenu >> div.menuItem >> span:text-is('Scheduling'):visible"
+        tabs_bundling_selector = ":nth-match(iframe,1) >>> div.settings-tab:has-text('Bundling')"
+        checkbox_bundling_selector = ":nth-match(iframe,1) >>> div.setting-row-container:has-text('Bundle your service appointments') >> div.slds-checkbox"
+        save_button_selector = ":nth-match(iframe,1) >>> div.save-footer >> div.save-button:visible"
+
+        self.browser.click(menu_scheduling_selector)
+        sleep(2)
+        self.browser.click(tabs_bundling_selector)
+        sleep(2)
+        if "visible" not in self.browser.get_element_states(":nth-match(iframe,1) >>> p:has-text('Service appointment bundles are active.')"):
+            self.browser.click(checkbox_bundling_selector)
+            self.browser.click(save_button_selector)
+            sleep(2)
+
+        # Setup Dispatcher UI - Custom Actions
+
+        menu_dispatcher_ui_selector = ":nth-match(iframe,1) >>> id=SettingsMenu >> div.menuItem >> span:text-is('Dispatcher Console UI'):visible"
+        drag_jumps_selector = ":nth-match(iframe,1) >>> div.setting-row-container:has-text('Drag jumps on gantt') >> input.input-settings"
+        gantt_settings_selector = ":nth-match(iframe,1) >>> div.settings-tab:has-text('Updating the Gantt')"
+        gantt_refresh_selector = ":nth-match(iframe,1) >>> div.setting-row-container:has-text('Seconds between Gantt refreshes') >> input.input-settings"
+        tabs_custom_actions_selector = ":nth-match(iframe,1) >>> div.settings-tab:has-text('Custom Actions')"
+        action_cat_selector = ":nth-match(iframe,1) >>> id=CA-GanttSection >> div:text-is('Mass Actions')"
+        new_action_btn_selector = ":nth-match(iframe,1) >>> id=CA-newAction"
+        new_action_label_selector = ":nth-match(iframe,1) >>> div.CA-field-container:has-text('Label in Dispatcher Console') >> input.CA-input-label"
+        vf_page_selector = ":nth-match(iframe,1) >>> div.CA-field-container:has-text('Visualforce') >> select.select-setting"
+        custom_perm_selector = ":nth-match(iframe,1) >>> div.CA-field-container:has-text('Required Custom Permission') >> select.select-setting"
+
+        self.browser.click(menu_dispatcher_ui_selector)
+
+        # Configure Gantt Jumps
+        self.browser.fill_text(drag_jumps_selector, "15")
+        self.browser.click(save_button_selector)
+        sleep(5)
+
+        # Gantt Updates
+        self.browser.click(gantt_settings_selector)
+        sleep(1)
+        self.browser.fill_text(gantt_refresh_selector, "10")
+        self.browser.click(save_button_selector)
+        sleep(5)
+
+        # Check and Enable Custom Actions
+        self.browser.click(tabs_custom_actions_selector)
+        sleep(15)
+        self.browser.click(action_cat_selector)
+        sleep(1)
+        
+        
+        # Create Demo Bundle
+        if "visible" not in self.browser.get_element_states(":nth-match(iframe,1) >>> div.singleCustomAction:has-text('Create Demo Bundle')"):
+            self.browser.click(new_action_btn_selector)
+            sleep(2)
+            self.browser.fill_text(new_action_label_selector, "Create Demo Bundle")
+            self.browser.select_options_by(vf_page_selector, SelectAttribute.text, "SDO_FSL_Launch_Create_Bundles_Flow")
+            self.browser.select_options_by(custom_perm_selector, SelectAttribute.text, "Gantt and List - Bundle and Unbundle")
+            self.browser.click(save_button_selector)
+            sleep(5)
+
+        # Create Sliding Demo Data
+        if "visible" not in self.browser.get_element_states(":nth-match(iframe,1) >>> div.singleCustomAction:has-text('Create Sliding Demo Data')"):
+            self.browser.click(new_action_btn_selector)
+            sleep(2)
+            self.browser.fill_text(new_action_label_selector, "Create Sliding Demo Data")
+            self.browser.select_options_by(vf_page_selector, SelectAttribute.text, "SDO_FSL_Launch_Sliding_Flow_Launch_Slide")
+            self.browser.select_options_by(custom_perm_selector, SelectAttribute.text, "Bulk Schedule")
+            self.browser.click(save_button_selector)
+            sleep(5)
+
+        # Setup Optimization
+        menu_optimize_selector = ":nth-match(iframe,1) >>> id=SettingsMenu >> div.menuItem >> span:text-is('Optimization'):visible"
+        optimization_checkbox_selector = ":nth-match(iframe,1) >>> div.slds-media:has-text('Optimization Insights') >> div.transitions-checkbox >> span.toggled-label:text-is('ON')"
+
+        self.browser.click(menu_optimize_selector)
+        sleep(1)
+        if "visible" not in self.browser.get_element_states(optimization_checkbox_selector):
+            self.browser.click(optimization_checkbox_selector)
+            self.browser.click(save_button_selector)
+            sleep(5)
+
+        sleep(5)
 
     def go_to_field_service_admin_page(self):
         """Go directly to the Field Service admin page"""
