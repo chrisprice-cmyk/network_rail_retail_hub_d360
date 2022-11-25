@@ -92,19 +92,24 @@ class RunDataTool(BaseTask, ABC):
           progress = check_job_json["progress"]
 
           if status == "completed":
+            et = time.time()
+            elapsed_time = et - st
+            log.info(f"Job Complete! Total Time: " + time.strftime("%H:%M:%S", time.gmtime(elapsed_time)))
             break
 
           if status == "active":
-            log.info(f"NextGen Data Tool: Job ID {job_id} still deploying...")
+            log.info(f"NextGen Data Tool: Job ID {job_id} still deploying...{progress}%")
+
+          if status == "failed":
+            log.error(f"The data load job has failed. Job ID: {job_id}")
+            break
           
           if status != "active" and status != "completed":
-            log.debug(f"NextGen Data Tool: Unsupported status ({status}) read. Stopping deployment")
-            exit
+            log.error(f"NextGen Data Tool: Unsupported status ({status}) read. Stopping deployment")
+            break
 
           sleep(2)
           timeout += 1
 
           
-        et = time.time()
-        elapsed_time = et - st
-        log.info(f"Job Complete! Total Time: " + time.strftime("%H:%M:%S", time.gmtime(elapsed_time)))
+        
