@@ -56,6 +56,26 @@ class QbrixValidationKeywords(BaseLibrary):
         self.__writeresultstofile()
         raise Exception(exceptionMessage)
     
+    
+    def __recordIgnoredResult(self,resulttype:str,name:str,details:str=None,datatag=None):
+        
+        if(details is None):
+            details=""
+            
+        if(datatag is None):
+            datatag=""
+
+        res={}
+        res['type']=resulttype    
+        res['name']=name    
+        res['status']="Ignored"   
+        res['details']=details    
+        res['datatag']=datatag
+                    
+        self.validationresults["results"].append(res)
+        self.__writeresultstofile()
+        
+    
     def __recordFailureResult(self,resulttype:str,name:str,details:str=None,datatag=None):
         
         if(details is None):
@@ -104,7 +124,7 @@ class QbrixValidationKeywords(BaseLibrary):
             tmpFile.close()
                     
         
-    def validate_minimal_rowcount(self, targetobject, count, filter=None, tooling=False, continueonfail=True,datatag=None):
+    def validate_minimal_rowcount(self, targetobject, count, filter=None, tooling=False, continueonfail=True,datatag=None,targetruntime:str="ALL"):
         """
         Validate that the rows for the target object and filter do not go below the minimal count
         :param targetobject: The target object you want to lookup
@@ -116,6 +136,12 @@ class QbrixValidationKeywords(BaseLibrary):
 
         resulttype="Data"
         resultname=f'Validate Minimal Count of {targetobject} for {count} rows'
+        
+        #Check the runtime to see if this validation should be run on the org type
+        if(self.__isapplicableruntime(targetruntime)==False):
+             self.__recordIgnoredResult(resulttype,resultname,f"IGNORED::targetruntime {targetruntime} does not apply to this org",datatag=datatag)
+             return
+            
 
         if targetobject is None:
             self.__recordFailureResultException(resulttype,resultname,"A target object must be specified",datatag=datatag)
@@ -136,7 +162,7 @@ class QbrixValidationKeywords(BaseLibrary):
         
         pass
 
-    def validate_exact_rowcount(self, targetobject, count, filter=None, tooling=False, continueonfail=True,datatag=None):
+    def validate_exact_rowcount(self, targetobject, count, filter=None, tooling=False, continueonfail=True,datatag=None,targetruntime:str="ALL"):
         """
         Validate that the rows for the target object and filter match the expected count
         :param targetobject: Target Object you want to lookup
@@ -148,6 +174,13 @@ class QbrixValidationKeywords(BaseLibrary):
 
         resulttype="Data"
         resultname=f'Validate Exact Count of {targetobject} for {count} rows'
+        
+        
+        #Check the runtime to see if this validation should be run on the org type
+        if(self.__isapplicableruntime(targetruntime)==False):
+             self.__recordIgnoredResult(resulttype,resultname,f"IGNORED::targetruntime {targetruntime} does not apply to this org",datatag=datatag)
+             return
+
         
         if targetobject is None:
             self.__recordFailureResultException(resulttype,resultname,"A target object must be specified",datatag=datatag)
@@ -167,7 +200,7 @@ class QbrixValidationKeywords(BaseLibrary):
         self.__recordPassingResult(resulttype,resultname,f"Exact count met. Found: {foundcnt}",datatag=datatag)
         pass
 
-    def validate_maximum_rowcount(self, targetobject, count, filter=None, tooling=False, continueonfail=True,datatag=None):
+    def validate_maximum_rowcount(self, targetobject, count, filter=None, tooling=False, continueonfail=True,datatag=None,targetruntime:str="ALL"):
         """
         Validate that the rows for the target object and filter do not exceed the expected count
         :param targetobject: Object to lookup
@@ -179,6 +212,13 @@ class QbrixValidationKeywords(BaseLibrary):
 
         resulttype="Data"
         resultname=f'Validate Maximum Count of {targetobject} for {count} rows'
+        
+        
+        #Check the runtime to see if this validation should be run on the org type
+        if(self.__isapplicableruntime(targetruntime)==False):
+             self.__recordIgnoredResult(resulttype,resultname,f"IGNORED::targetruntime {targetruntime} does not apply to this org",datatag=datatag)
+             return
+
 
         if targetobject is None:
             self.__recordFailureResultException(resulttype,resultname,"A target object must be specified",datatag=datatag)
@@ -198,7 +238,7 @@ class QbrixValidationKeywords(BaseLibrary):
         self.__recordPassingResult(resulttype,resultname,f"Max count met. Found: {foundcnt}",datatag=datatag)
         pass
 
-    def validate_range_rowcount(self, targetobject, lowercount, uppercount, filter=None, tooling=False, continueonfail=True,datatag=None):
+    def validate_range_rowcount(self, targetobject, lowercount, uppercount, filter=None, tooling=False, continueonfail=True,datatag=None,targetruntime:str="ALL"):
         """Validate the count of the rows for the specified object and filter is >= lower value and <= upper value
         :param targetobject: Target object you are going to lookup
         :param lowercount: Minimum number for the range you want to specify. e.g. 0 if the range is 0-10
@@ -209,6 +249,11 @@ class QbrixValidationKeywords(BaseLibrary):
         """
         resulttype="Data"
         resultname=f'Validate Range Count of {targetobject} between {lowercount} and {uppercount} rows'
+        
+        #Check the runtime to see if this validation should be run on the org type
+        if(self.__isapplicableruntime(targetruntime)==False):
+             self.__recordIgnoredResult(resulttype,resultname,f"IGNORED::targetruntime {targetruntime} does not apply to this org",datatag=datatag)
+             return
 
         if targetobject is None:
             self.__recordFailureResultException("A target object must be specified",datatag=datatag)
@@ -235,13 +280,18 @@ class QbrixValidationKeywords(BaseLibrary):
         self.__recordPassingResult(resulttype,resultname,f"Range count met. Found: {foundcnt}",datatag=datatag)
         pass
 
-    def find_record_count(self, targetobject, filter=None, tooling=False):
+    def find_record_count(self, targetobject, filter=None, tooling=False,targetruntime:str="ALL"):
         """Locate the record count for the target object and given filter
         :param targetobject: Target Object
         :param filter: (Optional) SOQL Filter for the target object (e.g. MyCustomField__c = 'Example')
         :param tooling: (Optional) Set to True if the target object requires the Tooling API
         :return: Returns record count, if records are found, otherwise returns None.
         """
+        
+        #Check the runtime to see if this validation should be run on the org type
+        if(self.__isapplicableruntime(targetruntime)==False):
+             self.__recordIgnoredResult(resulttype,resultname,f"IGNORED::targetruntime {targetruntime} does not apply to this org",datatag=datatag)
+             return
 
         if targetobject is None or targetobject=="":
             raise Exception("A target object must be specified")
@@ -286,7 +336,7 @@ class QbrixValidationKeywords(BaseLibrary):
         return False
     
     
-    def validate_entity_contains(self,targetobjectlabel:str,layer:str,findfilter:str,continueonfail=True,datatag=None):
+    def validate_entity_contains(self,targetobjectlabel:str,layer:str,findfilter:str,continueonfail=True,datatag=None,targetruntime:str="ALL"):
         
         """Allows a validation to treat metadata for the specified object as a queryable object via SQL and DataFrames
         :param targetobjectlabel: The object that metadata will be extracted via the REST api.
@@ -301,6 +351,13 @@ class QbrixValidationKeywords(BaseLibrary):
         
         resulttype="Metadata"
         resultname=f'Validate that {targetobjectlabel} has {layer}'
+        
+        #Check the runtime to see if this validation should be run on the org type
+        if(self.__isapplicableruntime(targetruntime)==False):
+             self.__recordIgnoredResult(resulttype,resultname,f"IGNORED::targetruntime {targetruntime} does not apply to this org",datatag=datatag)
+             return
+         
+         
         sobjectset =self.cumulusci.sf.describe()["sobjects"]
         #self.shared.log_to_file(f"SOjectKeys::{sobjectset}")
         for x in sobjectset:
@@ -370,7 +427,7 @@ class QbrixValidationKeywords(BaseLibrary):
             self.__recordFailureResultException(resulttype, resultname,message,datatag=datatag)
         
     
-    def validate_with_testim(self,testimscriptname:str,continueonfail=True,datatag=None):
+    def validate_with_testim(self,testimscriptname:str,continueonfail=True,datatag=None,targetruntime:str="ALL"):
         
         """Runs the specified Testim Script and determines if the script ran or failed.
         :param testimscriptname: Testim Script to run
@@ -380,6 +437,11 @@ class QbrixValidationKeywords(BaseLibrary):
 
         resulttype="UI-Testim"
         resultname=f'Validate via Testim Script {testimscriptname}'
+        
+        #Check the runtime to see if this validation should be run on the org type
+        if(self.__isapplicableruntime(targetruntime)==False):
+             self.__recordIgnoredResult(resulttype,resultname,f"IGNORED::targetruntime {targetruntime} does not apply to this org",datatag=datatag)
+             return
         
         #No script name no start
         if(testimscriptname is None or testimscriptname == ""):
@@ -449,6 +511,22 @@ class QbrixValidationKeywords(BaseLibrary):
 
         return None
         
+    def __isapplicableruntime(self,targetruntime:str="ALL"):
+        if(targetruntime=="ALL"): return True
+        
+        results = self.cumulusci.sf.query_all(f"SELECT IsSandbox FROM Organization ")
+        
+        if results["totalSize"] == 1:
+            
+            if(targetruntime=="SCRATCHONLY" and bool(results["records"][0]["IsSandbox"])):
+                return True
+            
+            if(targetruntime=="PRODONLY" and bool(results["records"][0]["IsSandbox"])==False):
+                return True
+        
+        #fail closed
+        return False
+    
             
             
 

@@ -146,6 +146,10 @@ class QbrixEinsteinKeywords(BaseLibrary):
         if not checked:
             self.browser.click(":nth-match(span.slds-checkbox_faux,1)")
             sleep(10)
+            
+            #deal with popup
+            self.browser.click(".slds-button:has-text('Got It')")
+            sleep(4)
 
     def enable_einstein_classification(self):
         self.shared.go_to_setup_admin_page("EinsteinCaseClassification/home")
@@ -156,4 +160,3 @@ class QbrixEinsteinKeywords(BaseLibrary):
         if not checked:
             self.browser.click("label.slds-checkbox_toggle:has-text('Einstein Classification Apps')")
             sleep(5)
-
