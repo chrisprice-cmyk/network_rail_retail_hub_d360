@@ -102,6 +102,7 @@ Add Case Wrap Up Model
 Add Case Classification Model
     Enable Einstein Classification
     Create Case Classification Model
+    
 #
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # MARKETING TESTS
@@ -196,8 +197,14 @@ Chat Buttons and Automated Invitations
 Check and Enable Scheduler Setting
     Enable Scheduler
 
+Create Scheduler Service Chat Buttons
+    Create A Chat Button And Automated Invitations    Scheduler - Chronos    SDO_Scheduler_Chronos_Bot
+
 Check and Create Appointment Assignment Polcies
     Create Appointment Assignment Policies
+
+Create Chronos Chat Button
+    Create A Chat Button And Automated Invitations    Scheduler - Chronos    SDO_Scheduler_Chronos_Bot
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # Survey Setup
 # -----------------------------------------------------------------------------------------------------------------------------------------
@@ -218,7 +225,7 @@ Add Service Presence Statuses to Profile
     Add Service Presence Statuses to Profile    System Administrator    Chat - Available
     Add Service Presence Statuses to Profile    System Administrator    Messaging - Available
     Add Service Presence Statuses to Profile    System Administrator    Phone - Available
-    
+
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # Chat Agent Configurations
 # -----------------------------------------------------------------------------------------------------------------------------------------
@@ -226,3 +233,10 @@ Add Service Presence Statuses to Profile
 Add Profile to Chat Agent Configuration
     Add Profile To Chat Configuration    Chat Representatives    System Administrator
     Add Profile To Chat Configuration    Chat Representatives    SDO-Service
+
+# -----------------------------------------------------------------------------------------------------------------------------------------
+# Apex Operations
+# -----------------------------------------------------------------------------------------------------------------------------------------
+
+Apex Classes Compile
+    Compile All Apex  300
