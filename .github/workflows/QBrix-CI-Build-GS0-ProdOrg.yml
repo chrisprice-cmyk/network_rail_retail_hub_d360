@@ -191,7 +191,7 @@ jobs:
           method: "POST"
           customHeaders: '{"Content-Type": "application/json","Authorization": "Bearer ${{ steps.qlabs_accesstoken.outputs.value }}"}'
           data: "${{ steps.read_validationresults_file.outputs.contents }}"
-          timeout: 30
+          timeout: 30000
 
       - name: clear existing validation results - not file present
         if: ((github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main') && steps.check_validationresults_present.outputs.files_exists == 'false')
