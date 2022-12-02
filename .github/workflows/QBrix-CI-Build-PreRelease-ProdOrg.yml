@@ -131,6 +131,10 @@ jobs:
       # Install sfdmu
       - name: Install sfdmu
         run: sfdx plugins:install sfdmu
+      
+      # Install Shane Plugin - use echo y to bypass prompt
+      - name: Install Shane Plugin
+        run: echo y | sfdx plugins:install shane-sfdx-plugins
 
       - name: Set CCI DevHub Username
         run: cci service connect devhub --username DEVHUB_ACCT
