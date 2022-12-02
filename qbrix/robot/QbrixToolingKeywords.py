@@ -25,60 +25,64 @@ class QbrixToolingKeywords(BaseLibrary):
     def enable_q_passport(self):
         """ Enables Q Passport Connected App Settings"""
         self.shared.go_to_setup_admin_page("ConnectedApplication/home")
+        sleep(10)
         self.browser.click("iframe >>> a:text-is('Q_Passport')")
-        sleep(2)
+        sleep(10)
         self.browser.click("iframe >>> .btn:has-text('Edit Policies')")
-        sleep(2)
+        sleep(10)
         self.browser.select_options_by("iframe >>> #userpolicy", SelectAttribute.text,
                                        "Admin approved users are pre-authorized")
-        sleep(1)
+        sleep(10)
         self.browser.click("iframe >>> .btn:has-text('Save')")
-        sleep(1)
+        sleep(2)
 
     def enable_demo_boost(self):
         """ Enables Demo Boost Connected App Settings"""
         self.shared.go_to_setup_admin_page("ConnectedApplication/home")
+        sleep(10)
         self.browser.click("iframe >>> a:text-is('Demo Boost')")
-        sleep(2)
+        sleep(10)
         self.browser.click("iframe >>> .btn:has-text('Edit Policies')")
-        sleep(2)
+        sleep(10)
         self.browser.select_options_by("iframe >>> #userpolicy", SelectAttribute.text,
                                        "Admin approved users are pre-authorized")
-        sleep(1)
+        sleep(10)
         self.browser.click("iframe >>> .btn:has-text('Save')")
-        sleep(1)
+        sleep(2)
 
     def enable_demo_wizard(self):
         """ Enables Demo Wizard Connected App Settings"""
         self.shared.go_to_setup_admin_page("ConnectedApplication/home")
+        sleep(10)
         self.browser.click("iframe >>> a:text-is('Demo Wizard')")
-        sleep(2)
+        sleep(10)
         self.browser.click("iframe >>> .btn:has-text('Edit Policies')")
-        sleep(2)
+        sleep(10)
         self.browser.select_options_by("iframe >>> #userpolicy", SelectAttribute.text,
                                        "Admin approved users are pre-authorized")
-        sleep(1)
+        sleep(10)
         self.browser.click("iframe >>> .btn:has-text('Save')")
-        sleep(1)
+        sleep(2)
 
     def enable_data_tool(self):
         """ Enables Data Tool Connected App Settings"""
         self.shared.go_to_setup_admin_page("ConnectedApplication/home")
+        sleep(10)
         self.browser.click("iframe >>> a:text-is('NXDO Data Tool')")
-        sleep(2)
+        sleep(10)
         self.browser.click("iframe >>> .btn:has-text('Edit Policies')")
-        sleep(2)
+        sleep(10)
         self.browser.select_options_by("iframe >>> #userpolicy", SelectAttribute.text,
                                        "Admin approved users are pre-authorized")
-        sleep(2)
+        sleep(10)
         self.browser.click("iframe >>> .btn:has-text('Save')")
-        sleep(2)
+        sleep(10)
         self.browser.click("iframe >>> .btn:has-text('Manage Profiles')")
-        sleep(2)
+        sleep(10)
         checked = "checked" in self.browser.get_element_states(
             "iframe >>> tr:has-text('System Administrator') >> input")
         if not checked:
             self.browser.click("iframe >>> tr:has-text('System Administrator') >> input")
-            sleep(2)
+            sleep(10)
             self.browser.click("iframe >>> .btn:has-text('Save')")
             sleep(2)
