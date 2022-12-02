@@ -69,7 +69,7 @@ jobs:
           method: "POST"
           customHeaders: '{"Content-Type": "application/json","Authorization": "Bearer ${{ steps.qlabs_accesstoken.outputs.value }}"}'
           data: '{"qbrixname": "${{ github.repository }}-R0", "buildstatus": "Running"}'
-          timeout: 30
+          timeout: 30000
 
       #- name: Setup
       #  run: sudo apt install software-properties-common -y & sudo add-apt-repository ppa:deadsnakes/ppa
@@ -195,7 +195,7 @@ jobs:
           method: "POST"
           customHeaders: '{"Content-Type": "application/json","Authorization": "Bearer ${{ steps.qlabs_accesstoken.outputs.value }}"}'
           data: "${{ steps.read_validationresults_file.outputs.contents }}"
-          timeout: 30
+          timeout: 30000
 
       - name: clear existing validation results - not file present
         if: ((github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main') && steps.check_validationresults_present.outputs.files_exists == 'false')
@@ -205,7 +205,7 @@ jobs:
           method: "POST"
           customHeaders: '{"Content-Type": "application/json","Authorization": "Bearer ${{ steps.qlabs_accesstoken.outputs.value }}"}'
           data: '{"results":[]}'
-          timeout: 30
+          timeout: 30000
 
       # Clean up scratch orgs
       - name: Delete the scratch Org
@@ -220,7 +220,7 @@ jobs:
           method: "POST"
           customHeaders: '{"Content-Type": "application/json","Authorization": "Bearer ${{ steps.qlabs_accesstoken.outputs.value }}"}'
           data: '{"qbrixname": "${{ github.repository }}-R0", "buildstatus": "Failed"}'
-          timeout: 30
+          timeout: 30000
 
       - name: success status
         if: ${{ success() && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
@@ -230,4 +230,4 @@ jobs:
           method: "POST"
           customHeaders: '{"Content-Type": "application/json","Authorization": "Bearer ${{ steps.qlabs_accesstoken.outputs.value }}"}'
           data: '{"qbrixname": "${{ github.repository }}-R0", "buildstatus": "Passed"}'
-          timeout: 30
+          timeout: 30000
