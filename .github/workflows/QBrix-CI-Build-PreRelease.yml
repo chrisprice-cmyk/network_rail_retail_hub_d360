@@ -154,7 +154,7 @@ jobs:
         uses: nick-fields/retry@v2
         with:
           timeout_minutes: 60
-          max_attempts: 2
+          max_attempts: 3
           retry_on: error
           command: cci task run spin_request --mode TEMPLATE --cciorg build__dev --devhubuser ${{ secrets.QBRIX_DEVHUB_USERACCOUNT }} --instance ${TEMPLATE_INSTANCE} --devhubconsumerkey ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }} --devhubjwtkeyfile devhub.key --templateid ${TEMPLATEID} --githubpat ${{ secrets.QBRIX_GITHUB_PAT}}
 
@@ -163,16 +163,24 @@ jobs:
         if: env.USE_TEMPLATE == 'false'
         run: cci org import build__dev build__dev
 
-      #CCI Run Deploy - timeout at 12 hours
+      #CCI Run Deploy - timeout at 24 hours
       - name: run deploy_qbrix
-        run: cci flow run deploy_qbrix --org build__dev
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 1440
+          retry_on: error
+          max_attempts: 2
+          command: cci flow run deploy_qbrix --org build__dev
+          on_retry_command: cci error info
 
-      #CCI Run Deploy - timeout at 12 hours
-      - name: run deploy_qbrix
-        run: cci flow run deploy_qbrix --org build__dev
-
-      - name: run validate
-        run: cci flow run validate_qbrix --org build__dev
+      - name: run qbrix validate
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 1440
+          retry_on: error
+          max_attempts: 2
+          command: cci flow run validate_qbrix --org build__dev
+          on_retry_command: cci error info
 
       - name: Check file existence
         id: check_validationresults_present
