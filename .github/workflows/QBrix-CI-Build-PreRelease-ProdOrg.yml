@@ -131,7 +131,7 @@ jobs:
       # Install sfdmu
       - name: Install sfdmu
         run: sfdx plugins:install sfdmu
-      
+
       # Install Shane Plugin - use echo y to bypass prompt
       - name: Install Shane Plugin
         run: echo y | sfdx plugins:install shane-sfdx-plugins
@@ -151,7 +151,7 @@ jobs:
           timeout_minutes: 60
           max_attempts: 5
           retry_on: error
-          command: cci task run spin_request --mode SCRATCH --scratch_config ${GITHUB_WORKSPACE}/orgs/dev.json --devhubuser ${{ secrets.QBRIX_DEVHUB_USERACCOUNT }} --cciorg build__dev --devhubconsumerkey ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }} --devhubjwtkeyfile devhub.key --githubpat ${{ secrets.QBRIX_GITHUB_PAT}}
+          command: cci task run spin_request --mode SCRATCH --scratch_config ${GITHUB_WORKSPACE}/orgs/dev.json --devhubuser ${{ secrets.QBRIX_DEVHUB_USERACCOUNT }} --cciorg dev --devhubconsumerkey ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }} --devhubjwtkeyfile devhub.key --githubpat ${{ secrets.QBRIX_GITHUB_PAT}}
 
       - name: generate production org - if the evn variable to use a template is set to true - we connect to the devhub that is enabled to provision an org.
         if: env.USE_TEMPLATE == 'true'
@@ -160,12 +160,7 @@ jobs:
           timeout_minutes: 60
           max_attempts: 3
           retry_on: error
-          command: cci task run spin_request --mode TEMPLATE --cciorg build__dev --devhubuser ${{ secrets.QBRIX_DEVHUB_USERACCOUNT }} --instance ${TEMPLATE_INSTANCE} --devhubconsumerkey ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }} --devhubjwtkeyfile devhub.key --templateid ${TEMPLATEID} --githubpat ${{ secrets.QBRIX_GITHUB_PAT}}
-
-      # Import the org
-      - name: import the org
-        if: env.USE_TEMPLATE == 'false'
-        run: cci org import build__dev build__dev
+          command: cci task run spin_request --mode TEMPLATE --cciorg dev --devhubuser ${{ secrets.QBRIX_DEVHUB_USERACCOUNT }} --instance ${TEMPLATE_INSTANCE} --devhubconsumerkey ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }} --devhubjwtkeyfile devhub.key --templateid ${TEMPLATEID} --githubpat ${{ secrets.QBRIX_GITHUB_PAT}}
 
       #CCI Run Deploy - timeout at 24 hours
       - name: run deploy_qbrix
@@ -174,7 +169,7 @@ jobs:
           timeout_minutes: 1440
           retry_on: error
           max_attempts: 2
-          command: cci flow run deploy_qbrix --org build__dev
+          command: cci flow run deploy_qbrix --org dev
           on_retry_command: cci error info
 
       - name: run qbrix validate
@@ -183,7 +178,7 @@ jobs:
           timeout_minutes: 1440
           retry_on: error
           max_attempts: 2
-          command: cci flow run validate_qbrix --org build__dev
+          command: cci flow run validate_qbrix --org dev
           on_retry_command: cci error info
 
       - name: Check file existence

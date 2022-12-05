@@ -436,7 +436,7 @@ class Spin(SFDXBaseTask):
         sleep(10)
         self.logger.info(f"Signup Request Id: {self.signuprequestid }")
         
-    def _submitscratchorg(self):
+    def _submitscratchorg(self,retrycount=0):
  
         result = subprocess.run([
             f"{self._buildscratchorgcommand()}"],
@@ -448,8 +448,19 @@ class Spin(SFDXBaseTask):
         
         self.logger.info(jsonresult)
         
-        if(jsonresult["status"]!=0):
+        if(jsonresult["status"]!=0 
+           and jsonresult["result"]["name"]=='REQUEST_LIMIT_EXCEEDED' 
+           and retrycount<3):
+            #REQUEST_LIMIT_EXCEEDED - pause a few seconds to give api limits a breather
+            sleep(15)
+            retrycount+=1
+            self._submitscratchorg(retrycount=retrycount)
+        
+        if(jsonresult["status"]!=0 ):
             raise CommandException("Scratch Org Create Failed.")  
+        
+        if(jsonresult["status"]==0):
+            self.spinusername = jsonresult["result"]["username"]
         
    
     def _buildsignupcommand(self):
@@ -596,8 +607,7 @@ class Spin(SFDXBaseTask):
         if(self.cciorg is None):
             raise CommandException("Target CCI Org has not been set and cannot import a spin username.")
         
-        cmd = f"cci org import {signupusername} {self.cciorg}"
-        result = subprocess.run([f"{cmd}" ],shell=True, capture_output=True)
+        result = subprocess.run([f"cci org import {signupusername} {self.cciorg}"],shell=True, capture_output=True)
         self.logger.info(result.stdout)
         
     def _run_task(self):
@@ -622,6 +632,13 @@ class Spin(SFDXBaseTask):
                 raise CommandException("Scratch org config not set.")
             
             self._submitscratchorg()
+            
+        self.logger.info(self.cciorg)
+        self.logger.info(self.mode)
+        self.logger.info(self.spinusername)
+        
+        self._importspinusertocciorg(self.spinusername)
+            
             
         #deploy any qbrixs prior 
         self._deployqbrix()
