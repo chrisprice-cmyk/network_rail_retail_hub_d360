@@ -20,6 +20,7 @@ env:
   USE_TEMPLATE: true
   TEMPLATEID: LATEST
   TEMPLATE_INSTANCE: NA135
+  SFDX_DISABLE_DNS_CHECK: true
 
 jobs:
   build:
@@ -27,6 +28,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+
+      - name: Disable TCP/UDP Offloading (Linux)
+        shell: bash
+        run: sudo ethtool -K eth0 tx off rx off
 
       - name: Core Setup - key for jwt auth
         run: echo "${{ secrets.QBRIX_DEVHUB_PRIVATE_KEY }}" > devhub.key
