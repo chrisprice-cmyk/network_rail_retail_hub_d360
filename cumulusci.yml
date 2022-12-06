@@ -164,6 +164,7 @@ tasks:
         report: None
         log: None
         output: None
+
   #------------------------------------#
   # DATA TOOL INTEGRATION              #
   #------------------------------------#
@@ -234,12 +235,6 @@ flows:
       3:
         flow: post_qbrix_deploy
 
-  # Deploys just the contents of this q brix with any essential dependencies
-  deploy_qbrix_min:
-    steps:
-      1:
-        flow: deploy_qbrix
-
   # Deploys the q brix into a TSO or Production Org
   deploy_qbrix_tso:
     steps:
@@ -286,6 +281,12 @@ flows:
   #
   # NOTE: These flows should not need to be modified and allow for legacy integration and default overrides.
   #
+
+  # Deploys just the contents of this q brix with any essential dependencies
+  deploy_qbrix_min:
+    steps:
+      1:
+        flow: deploy_qbrix
 
   # Legacy flow to redirect to the new flow for deploying data.
   generate_qbrix_data:
