@@ -38,6 +38,10 @@ class RunPreflight(BaseTask, ABC):
         "org": {
           "description": "org alias",
           "required": False
+        },
+        "source_dependencies": {
+            "description": "Add a list of GitHub Q Brix Repo Locations which you want to check and install pre-deployment",
+            "required": False
         }
     }
 
@@ -50,6 +54,7 @@ class RunPreflight(BaseTask, ABC):
       self.base_config_only_scratch = self.options["base_config_only_scratch"] if "base_config_only_scratch" in self.options else False
       self.info_mode = self.options["info_mode"] if "info_mode" in self.options else False
       self.only_base_config = self.options["only_base_config"] if "only_base_config" in self.options else False
+      self.source_dependencies = self.options["source_dependencies"] if "source_dependencies" in self.options else None
 
     def scratch_org_tasks(self):
       if self.include_base_config:
@@ -84,6 +89,48 @@ class RunPreflight(BaseTask, ABC):
           log.error(f"Q Brix Register has failed with return code: {result}")
       else:
         log.info(f"[INFO ONLY] Org with alias {self.org_config.name} would have the Q Brix Package installed if it is not already installed")
+
+      if self.source_dependencies:
+
+        log.info("Checking Sources")
+
+        for source in list(self.source_dependencies):
+
+          log.info(f"Checking {source} is pre-installed in org.")
+          source_found = False
+
+          for key, valuedict in self.project_config.sources.items():
+
+            if source in dict(valuedict).get("github"):
+              repo_qbrix_name = source.rsplit('/', 1)[-1]
+              source_found = True
+
+              if repo_qbrix_name == "QBrix-0-xDO-BaseConfig" or repo_qbrix_name == "QBrix-0-xDO-BaseData":
+                log.debug("Skipping Base Config and Base Data Repos, these should be handled with the options on this task instead.")
+                continue
+             
+              if not QbrixInstallCheck(repo_qbrix_name, self.org_config):
+                if not self.info_mode:
+                  log.info(f"Installing {repo_qbrix_name}")
+                  result = run_command(command=f"cci flow run {key}:deploy_qbrix --org {self.org_config.name}")
+                  if result == 0:
+                    log.info(f"{repo_qbrix_name} Checked and Deployed")
+                  else:
+                    log.error(f"{repo_qbrix_name} has failed with return code: {result}")
+                else:
+                  log.info(f"[INFO ONLY] Org with alias {self.org_config.name} would have the {repo_qbrix_name} installed if it is not already installed, using command {key}:deploy_qbrix --org {self.org_config.name}")
+
+          if source_found == False:
+            log.error(f"You have requested a source Q Brix is pre-installed, although it is not present in your project sources. Please add {source} to your project sources in the cumulusci.yml file and try again.")
+            continue
+
+      else:
+
+        log.info("No sources defined for pre-install. Skipping")
+
+          
+          
+
 
     def deploy_base_config_and_data(self):
 
@@ -120,15 +167,14 @@ class RunPreflight(BaseTask, ABC):
         log.info("*** RUNNING AS INFORMATION MODE - NO TASKS WILL ACTUALLY BE RUN ***")
         
       self.scratch_org_mode = True if isinstance(self.org_config, ScratchOrgConfig) else False
-
-      self.shared_tasks()
-
       if self.scratch_org_mode:
         log.info("Running in Scratch Org Mode")
         self.scratch_org_tasks()
       else:
         log.info("Running in Production Org Mode")
         self.production_org_tasks()
+
+      self.shared_tasks()
 
       log.info("Preflight Complete")
 
