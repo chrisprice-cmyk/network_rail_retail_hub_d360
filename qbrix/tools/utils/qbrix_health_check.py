@@ -1,7 +1,7 @@
 from abc import ABC
 from qbrix.tools.shared.qbrix_console_utils import init_logger
 from qbrix.tools.shared.qbrix_project_tasks import *
-from qbrix.tools.shared.qbrix_project_tasks import clean_project_files, check_api_versions
+from qbrix.tools.shared.qbrix_project_tasks import clean_project_files, check_api_versions, check_permset_group_files
 
 log = init_logger()
 
@@ -78,6 +78,9 @@ class HealthChecker(BaseTask, ABC):
         upsert_gitignore_entries(test_list)
 
         replace_file_text(".gitignore", ".vscode/", "")
+
+        # Check Permission Set Group Files are set to Outdated
+        check_permset_group_files()
 
         log.info("Health Check: All Checks completed.")
 

@@ -536,4 +536,15 @@ def upsert_gitignore_entries(list_entries):
         if len(entries_to_append) > 0:
             for e in entries_to_append:
                 git_file.write(f"{e}\n")
+
+def check_permset_group_files():
+    psg_files = glob.glob("force-app/main/default/permissionsetgroups" + "/**/*.permissionsetgroup-meta.xml", recursive=True)
+
+    if len(psg_files) > 0:
+        log.info("Checking Permission Set Group Files...")
+        for psg in psg_files:
+            log.info(f"Checking {psg} file configuration.")
+            FART.fartbetween(FART,psg, "<status>", "</status>", "Outdated", None)
+    else:
+        log.info("No Permission Set Group Files in Project, skipping check.")
     
