@@ -73,9 +73,10 @@ class RunPreflight(BaseTask, ABC):
         if not self.info_mode:
           result = run_command(command=f"cci task run deploy_settings --org {self.org_config.name}")
           if result == 0:
-            log.info("Q Brix Register Checked and Deployed")
+            log.info("Settings Checked and Deployed")
           else:
-            log.error(f"Q Brix Register has failed with return code: {result}")
+            log.error(f"Settings deployment has failed with error detail: {result}")
+            raise Exception(f"{result}") 
       else:
         log.info("No Settings Directory Found, skipping")
 
@@ -87,6 +88,7 @@ class RunPreflight(BaseTask, ABC):
           log.info("Q Brix Register Checked and Deployed")
         else:
           log.error(f"Q Brix Register has failed with return code: {result}")
+          raise Exception(f"{result}") 
       else:
         log.info(f"[INFO ONLY] Org with alias {self.org_config.name} would have the Q Brix Package installed if it is not already installed")
 
@@ -117,20 +119,15 @@ class RunPreflight(BaseTask, ABC):
                     log.info(f"{repo_qbrix_name} Checked and Deployed")
                   else:
                     log.error(f"{repo_qbrix_name} has failed with return code: {result}")
+                    raise Exception(f"{result}") 
                 else:
                   log.info(f"[INFO ONLY] Org with alias {self.org_config.name} would have the {repo_qbrix_name} installed if it is not already installed, using command {key}:deploy_qbrix --org {self.org_config.name}")
 
           if source_found == False:
             log.error(f"You have requested a source Q Brix is pre-installed, although it is not present in your project sources. Please add {source} to your project sources in the cumulusci.yml file and try again.")
             continue
-
       else:
-
         log.info("No sources defined for pre-install. Skipping")
-
-          
-          
-
 
     def deploy_base_config_and_data(self):
 
@@ -144,6 +141,7 @@ class RunPreflight(BaseTask, ABC):
             log.info("Q Brix Base Config Checked and Deployed")
           else:
             log.error(f"Q Brix Base Config has failed with return code: {result}")
+            raise Exception(f"{result}") 
         else:
           log.info(f"[INFO ONLY] Org with alias {self.org_config.name} would have the Q Brix Base Config installed if it is not already installed")
 
@@ -156,6 +154,7 @@ class RunPreflight(BaseTask, ABC):
               log.info("Q Brix Base Data Checked and Deployed")
             else:
               log.error(f"Q Brix Base Data has failed with return code: {result}")
+              raise Exception(f"{result}") 
           else:
             log.info(f"[INFO ONLY] Org with alias {self.org_config.name} would have the Q Brix Base Data installed if it is not already installed")
 
