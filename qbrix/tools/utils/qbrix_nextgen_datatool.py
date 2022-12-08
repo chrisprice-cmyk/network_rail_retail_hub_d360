@@ -141,7 +141,7 @@ class RunDataTool(BaseTask, ABC):
           sleep(2)
           timeout += 1
           
-        data_key_number += 1
+        data_load_job_counter += 1
         sleep(self.wait)
           
         
