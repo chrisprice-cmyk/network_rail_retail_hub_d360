@@ -3,6 +3,7 @@ from time import sleep
 from Browser import ElementState, SelectAttribute
 from cumulusci.robotframework.base_library import BaseLibrary
 from qbrix.robot.QbrixSharedKeywords import QbrixSharedKeywords
+from cumulusci.robotframework.SalesforceAPI import SalesforceAPI
 
 
 class QbrixFieldServiceKeywords(BaseLibrary):
@@ -11,12 +12,19 @@ class QbrixFieldServiceKeywords(BaseLibrary):
         super().__init__()
         self._browser = None
         self.shared = QbrixSharedKeywords()
+        self._salesforceapi = None
 
     @property
     def browser(self):
         if self._browser is None:
             self._browser = self.builtin.get_library_instance("Browser")
         return self._browser
+
+    @property
+    def salesforceapi(self):
+        if self._salesforceapi is None:
+            self._salesforceapi = SalesforceAPI()
+        return self._salesforceapi
 
     def enable_field_service(self):
         """
@@ -33,12 +41,26 @@ class QbrixFieldServiceKeywords(BaseLibrary):
             self.browser.click(field_service_toggle_selector)
             sleep(10)
 
+    def get_fsapp_id(self):
+        results = self.salesforceapi.soql_query(f"SELECT DurableId FROM AppDefinition where Label = 'Field Service Admin' LIMIT 1")
+
+        if results["totalSize"] == 1:
+            return results["records"][0]["DurableId"]
+
+        return None
+
     def go_to_field_service_admin_page(self):
         """Go directly to the Field Service admin page"""
 
+        # Get the AppID for Field Service Admin
+        app_id = self.get_fsapp_id()
+
+        # Go to the app
+        self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/app/{app_id}", timeout = '30s')
+
         # Go To Field Service Package Settings Page
-        self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/n/FSL__Field_Service_Settings")
-        self.browser.wait_for_elements_state(":nth-match(iframe,1) >>> h1:has-text('Getting Started')", ElementState.visible, '120s')
+        self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/n/FSL__Field_Service_Settings", timeout = '30s')
+        self.browser.wait_for_elements_state("iframe >>> h1:has-text('Getting Started'):visible", ElementState.visible, '120s')
 
 
     def field_service_sdo_config(self):
