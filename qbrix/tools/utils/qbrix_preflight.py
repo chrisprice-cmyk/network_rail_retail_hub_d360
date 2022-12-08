@@ -71,7 +71,7 @@ class RunPreflight(BaseTask, ABC):
       if os.path.exists("force-app/main/default/settings"):
         log.info("Settings directory found. Deploying.")
         if not self.info_mode:
-          result = run_command(command=f"cci task run deploy_settings --org {self.org_config.name}")
+          result = run_command(command=f"cci task run deploy_settings --org {self.org_config.name}", cwd=os.getcwd())
           if result == 0:
             log.info("Settings Checked and Deployed")
           else:
@@ -83,7 +83,7 @@ class RunPreflight(BaseTask, ABC):
       # Check and Deploy Q Brix Register
       if not self.info_mode:
         log.info(f"Deploying Q Brix Registration to Org {self.org_config.name}")
-        result = run_command(command=f"cci task run base:check_register --org {self.org_config.name}")
+        result = run_command(command=f"cci task run base:check_register --org {self.org_config.name}", cwd=os.getcwd())
         if result == 0:
           log.info("Q Brix Register Checked and Deployed")
         else:
@@ -114,12 +114,12 @@ class RunPreflight(BaseTask, ABC):
               if not QbrixInstallCheck(repo_qbrix_name, self.org_config):
                 if not self.info_mode:
                   log.info(f"Installing {repo_qbrix_name}")
-                  result = run_command(command=f"cci flow run {key}:deploy_qbrix --org {self.org_config.name}")
+                  result = run_command(command=f"cci flow run {key}:deploy_qbrix --org {self.org_config.name}", cwd=os.getcwd())
                   if result == 0:
                     log.info(f"{repo_qbrix_name} Checked and Deployed")
                   else:
-                    log.error(f"{repo_qbrix_name} has failed with return code: {result}")
-                    raise Exception(f"{result}") 
+                    log.error(f"{repo_qbrix_name} has failed to install.")
+                    raise Exception(f"{repo_qbrix_name} has failed to install.")
                 else:
                   log.info(f"[INFO ONLY] Org with alias {self.org_config.name} would have the {repo_qbrix_name} installed if it is not already installed, using command {key}:deploy_qbrix --org {self.org_config.name}")
 
@@ -136,7 +136,7 @@ class RunPreflight(BaseTask, ABC):
       if not QbrixInstallCheck("QBrix-0-xDO-BaseConfig", self.org_config):
         if not self.info_mode:
           log.info("Installing Q Brix Base Config")
-          result = run_command(command=f"cci flow run base:deploy_qbrix --org {self.org_config.name}")
+          result = run_command(command=f"cci flow run base:deploy_qbrix --org {self.org_config.name}", cwd=os.getcwd())
           if result == 0:
             log.info("Q Brix Base Config Checked and Deployed")
           else:
@@ -149,7 +149,7 @@ class RunPreflight(BaseTask, ABC):
         if not QbrixInstallCheck("QBrix-0-xDO-BaseData", self.org_config):
           if not self.info_mode:
             log.info("Installing Q Brix Base Data")
-            result = run_command(command=f"cci flow run base:deploy_qbrix_base_data --org {self.org_config.name}")
+            result = run_command(command=f"cci flow run base:deploy_qbrix_base_data --org {self.org_config.name}", cwd=os.getcwd())
             if result == 0:
               log.info("Q Brix Base Data Checked and Deployed")
             else:
@@ -160,7 +160,7 @@ class RunPreflight(BaseTask, ABC):
 
     def _run_task(self):
 
-      log.info("Starting QBrix Preflight Checks")
+      log.info("Starting QBrix Preflight Check")
 
       if self.info_mode:
         log.info("*** RUNNING AS INFORMATION MODE - NO TASKS WILL ACTUALLY BE RUN ***")
