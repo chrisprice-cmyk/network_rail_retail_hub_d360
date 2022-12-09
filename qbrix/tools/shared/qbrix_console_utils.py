@@ -1,6 +1,4 @@
-import datetime
 import logging
-import shlex
 import subprocess
 import sys
 import textwrap
@@ -23,7 +21,7 @@ class CustomFormatter(logging.Formatter):
         super().__init__()
         self.fmt = fmt
         self.FORMATS = {
-            logging.DEBUG: self.grey + self.fmt + self.reset,
+            logging.DEBUG: self.yellow + self.fmt + self.reset,
             logging.INFO: self.blue + self.fmt + self.reset,
             logging.WARNING: self.yellow + self.fmt + self.reset,
             logging.ERROR: self.red + self.fmt + self.reset,
@@ -32,8 +30,7 @@ class CustomFormatter(logging.Formatter):
 
     def format(self, record):
         log_fmt = self.FORMATS.get(record.levelno)
-        formatter = logging.Formatter(log_fmt,
-                                      "%Y-%m-%d %H:%M:%S")
+        formatter = logging.Formatter(log_fmt, "%Y-%m-%d %H:%M:%S")
         return formatter.format(record)
 
 
@@ -84,7 +81,8 @@ class CreateBanner(Command, ABC):
 
     def _banner_string(self):
         # if we are running in a headless runner- tty will not be there.
-        if self.width == 0: return
+        if self.width == 0:
+            return
 
         output_string = self.border_char * self.width + "\n"
         for text_line in self.text_box:
@@ -121,19 +119,19 @@ def get_terminal_width():
     return 0
 
 
-def run_command(command, cwd = "."):
-
+def run_command(command, cwd="."):
     sys.stdout.write(f"Running Command: {command} in directory {cwd}\n")
     sys.stdout.flush()
 
-    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd, bufsize=1, universal_newlines=True, shell=True)
+    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd, bufsize=1,
+                               universal_newlines=True, shell=True)
 
     for line in process.stdout:
         sys.stdout.write(line)
         sys.stdout.flush()
 
     if process.poll() == 1:
-        sys.stderr.write(process.stderr)
+        sys.stderr.write(process.stderr.read())
         sys.stderr.flush()
 
     print("Subprocess Completed with code: " + str(process.poll()))

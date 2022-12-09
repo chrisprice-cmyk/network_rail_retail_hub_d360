@@ -30,7 +30,7 @@ class QbrixFieldServiceKeywords(BaseLibrary):
         """
         Enables Field Service Setting in Salesforce Setup
         """
-        
+
         # Go To Field Service Setup
         self.shared.go_to_setup_admin_page("FieldServiceSettings/home", 10)
 
@@ -41,27 +41,13 @@ class QbrixFieldServiceKeywords(BaseLibrary):
             self.browser.click(field_service_toggle_selector)
             sleep(10)
 
-    def get_fsapp_id(self):
-        results = self.salesforceapi.soql_query(f"SELECT DurableId FROM AppDefinition where Label = 'Field Service Admin' LIMIT 1")
-
-        if results["totalSize"] == 1:
-            return results["records"][0]["DurableId"]
-
-        return None
-
     def go_to_field_service_admin_page(self):
         """Go directly to the Field Service admin page"""
-
-        # Get the AppID for Field Service Admin
-        app_id = self.get_fsapp_id()
-
-        # Go to the app
-        self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/app/{app_id}", timeout = '30s')
-
+        self.shared.go_to_app("Field Service Admin")
         # Go To Field Service Package Settings Page
-        self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/n/FSL__Field_Service_Settings", timeout = '30s')
-        self.browser.wait_for_elements_state("iframe >>> h1:has-text('Getting Started'):visible", ElementState.visible, '120s')
-
+        self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/n/FSL__Field_Service_Settings", timeout='30s')
+        self.browser.wait_for_elements_state("iframe >>> h1:has-text('Getting Started'):visible", ElementState.visible,
+                                             '120s')
 
     def field_service_sdo_config(self):
         """ Go to Field Service Settings and configure additional settings for demo use """
@@ -80,7 +66,8 @@ class QbrixFieldServiceKeywords(BaseLibrary):
         sleep(2)
         self.browser.click(tabs_bundling_selector)
         sleep(2)
-        if "visible" not in self.browser.get_element_states(":nth-match(iframe,1) >>> p:has-text('Service appointment bundles are active.')"):
+        if "visible" not in self.browser.get_element_states(
+                ":nth-match(iframe,1) >>> p:has-text('Service appointment bundles are active.')"):
             self.browser.click(checkbox_bundling_selector)
             self.browser.click(save_button_selector)
             sleep(2)
@@ -117,24 +104,27 @@ class QbrixFieldServiceKeywords(BaseLibrary):
         sleep(15)
         self.browser.click(action_cat_selector)
         sleep(1)
-        
-        
+
         # Create Demo Bundle
-        if "visible" not in self.browser.get_element_states(":nth-match(iframe,1) >>> div.singleCustomAction:has-text('Create Demo Bundle')"):
+        if "visible" not in self.browser.get_element_states(
+                ":nth-match(iframe,1) >>> div.singleCustomAction:has-text('Create Demo Bundle')"):
             self.browser.click(new_action_btn_selector)
             sleep(2)
             self.browser.fill_text(new_action_label_selector, "Create Demo Bundle")
             self.browser.select_options_by(vf_page_selector, SelectAttribute.text, "SDO_FSL_Launch_Create_Bundles_Flow")
-            self.browser.select_options_by(custom_perm_selector, SelectAttribute.text, "Gantt and List - Bundle and Unbundle")
+            self.browser.select_options_by(custom_perm_selector, SelectAttribute.text,
+                                           "Gantt and List - Bundle and Unbundle")
             self.browser.click(save_button_selector)
             sleep(5)
 
         # Create Sliding Demo Data
-        if "visible" not in self.browser.get_element_states(":nth-match(iframe,1) >>> div.singleCustomAction:has-text('Create Sliding Demo Data')"):
+        if "visible" not in self.browser.get_element_states(
+                ":nth-match(iframe,1) >>> div.singleCustomAction:has-text('Create Sliding Demo Data')"):
             self.browser.click(new_action_btn_selector)
             sleep(2)
             self.browser.fill_text(new_action_label_selector, "Create Sliding Demo Data")
-            self.browser.select_options_by(vf_page_selector, SelectAttribute.text, "SDO_FSL_Launch_Sliding_Flow_Launch_Slide")
+            self.browser.select_options_by(vf_page_selector, SelectAttribute.text,
+                                           "SDO_FSL_Launch_Sliding_Flow_Launch_Slide")
             self.browser.select_options_by(custom_perm_selector, SelectAttribute.text, "Bulk Schedule")
             self.browser.click(save_button_selector)
             sleep(5)
@@ -152,9 +142,6 @@ class QbrixFieldServiceKeywords(BaseLibrary):
 
         sleep(5)
 
-
-
-
     def enable_all_field_service_permission_sets(self):
         """
         Enables all Field Service Permission Sets and also updates Permissions Sets if there are updates waiting
@@ -170,9 +157,9 @@ class QbrixFieldServiceKeywords(BaseLibrary):
 
             print(f"Check {x}")
 
-            if x == 0 or x ==1:
+            if x == 0 or x == 1:
                 current_selector = create_permission_selector
-            
+
             if x == 2 or x == 3:
                 current_selector = update_permission_selector
 
@@ -223,4 +210,3 @@ class QbrixFieldServiceKeywords(BaseLibrary):
             sleep(5)
             self.browser.click("button:text-is('Save')")
             sleep(5)
-

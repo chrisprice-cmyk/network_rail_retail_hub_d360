@@ -16,6 +16,7 @@ from qbrix.tools.shared.qbrix_console_utils import init_logger
 
 log = init_logger()
 
+
 def salesforce_query(soql, org_config):
     if soql != "" and org_config is not None:
 
@@ -36,11 +37,12 @@ def salesforce_query(soql, org_config):
             return None
 
         json_result = json.loads(result.stdout)
-        
+
         if json_result["result"]["totalSize"] >= 1:
             return json_result["result"]["records"][0][list(json_result["result"]["records"][0].keys())[1]]
         else:
             return None
+
 
 def QbrixInstallCheck(qbrix_name, org_config):
     log.info(f"Checking for Qbrix: {qbrix_name}")
@@ -63,7 +65,7 @@ def QbrixInstallCheck(qbrix_name, org_config):
 
     json_result = json.loads(result.stdout)
 
-    if not 'result' in json_result or len(json_result['result']) == 0:
+    if 'result' not in json_result or len(json_result['result']) == 0:
         log.info("No Q Brix installed")
         return False
 

@@ -2,10 +2,9 @@ from abc import ABC
 from qbrix.tools.shared.qbrix_console_utils import init_logger
 from qbrix.tools.shared.qbrix_project_tasks import *
 from qbrix.tools.shared.qbrix_project_tasks import clean_project_files, check_api_versions, check_permset_group_files
+from cumulusci.core.tasks import BaseTask
 
 log = init_logger()
-
-from cumulusci.core.tasks import BaseTask
 
 
 class HealthChecker(BaseTask, ABC):

@@ -2,7 +2,6 @@ import json
 from time import sleep
 from datetime import datetime
 from typing import Optional
-
 from Browser import ElementState, SelectAttribute
 from cumulusci.robotframework.base_library import BaseLibrary
 from cumulusci.robotframework.SalesforceAPI import SalesforceAPI
@@ -33,6 +32,22 @@ class QbrixSharedKeywords(BaseLibrary):
         """
         self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/setup/SetupOneHome/home")
         self.browser.wait_for_elements_state("h1:has-text('Home')", ElementState.visible, '30s')
+
+    def go_to_app(self, app_name):
+        """
+        Looks up the Application ID and then opens that app in the session.
+        :param app_name: The name of the app (NOT the api name)
+        :return:
+
+        if app_name:
+            # Get the Application ID
+            results = self.salesforceapi.soql_query(f"SELECT DurableId FROM AppDefinition where Label = '{app_name}' LIMIT 1")
+
+            if results["totalSize"] == 1:
+                app_id = results["records"][0]["DurableId"]
+
+                # Go to the app
+                self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/app/{app_id}", timeout='30s')
 
     def set_org_wide_email(self, org_wide_email_address: Optional[str] = "sdo@salesforce.com"):
         """
@@ -376,7 +391,7 @@ class QbrixSharedKeywords(BaseLibrary):
         Locates the ID of a Live Chat User Config by Master Label. See: select id, MasterLabel from
         LiveChatUserConfig
         :param configname: Live Chat User Configuration Name (Use the Master Label not the api name)
-        :return: Returns Salesforce ID for the Live Chat User Configuration, if found. Otherwise returns None.
+        :return: Returns Salesforce ID for the Live Chat User Configuration, if found. Otherwise, returns None.
         """
         if configname is None:
             raise Exception("Live Chat User Config Name must be specified")
