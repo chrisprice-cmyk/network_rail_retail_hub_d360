@@ -38,6 +38,7 @@ class QbrixSharedKeywords(BaseLibrary):
         Looks up the Application ID and then opens that app in the session.
         :param app_name: The name of the app (NOT the api name)
         :return:
+        """
 
         if app_name:
             # Get the Application ID

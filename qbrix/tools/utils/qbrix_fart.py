@@ -13,13 +13,10 @@ from cumulusci.core.exceptions import CommandException
 from cumulusci.core.keychain import BaseProjectKeychain
 
 
-
 class FART(Command):
-
-
     keychain_class = BaseProjectKeychain
-    
-    task_options={
+
+    task_options = {
         "srcfile": {
             "description": "Directory path to the export.json to upload",
             "required": True
@@ -29,45 +26,45 @@ class FART(Command):
             "required": False,
             "default": "Text"
         },
-          "soql": {
+        "soql": {
             "description": "For run mode of SQOL, the soql statement to use in scalar mode to.",
             "required": False
         },
-          "find": {
+        "find": {
             "description": "Text pattern to locate in the source file.",
             "required": False
         }
-          ,
-          "findleft": {
+        ,
+        "findleft": {
             "description": "Left pattern string to locate in the text of the source file.",
             "required": False
         }
-          
-          ,
-          "findright": {
+
+        ,
+        "findright": {
             "description": "Right side of pattern to find in the text of the source file.",
             "required": False
         }
-          ,
-          "replacewith": {
+        ,
+        "replacewith": {
             "description": "Value to replace every instance of the find value in the source file.",
             "required": False
         }
-          ,
-          "org": {
+        ,
+        "org": {
             "description": "Value to replace every instance of the find value in the source file.",
             "required": False
         },
-           "format": {
+        "format": {
             "description": "Format pattern to apply to the supplied replacewith or located value from a soql statement",
             "required": False
         }
 
     }
-   
+
     def _init_options(self, kwargs):
         super(Command, self)._init_options(kwargs)
-    
+
     @property
     def keychain_cls(self):
         klass = self.get_keychain_class()
@@ -84,7 +81,7 @@ class FART(Command):
     @abstractmethod
     def get_keychain_key(self):
         return None
-    
+
     def _load_keychain(self):
         if self.keychain is not None:
             return
@@ -96,63 +93,62 @@ class FART(Command):
         else:
             self.keychain = self.keychain_cls(self.project_config, keychain_key)
             self.project_config.keychain = self.keychain
-        
+
     def _prepruntime(self):
-        
+
         if ("org" in self.options and not self.options["org"] is None) and self.keychain is None:
             self._load_keychain()
             self.logger.info("Org passed in but no keychain found in runtime")
-            
+
         if "srcfile" not in self.options or not self.options["srcfile"]:
             raise ValueError('No source file provided to analyze.')
         else:
             self.fartpath = self.options["srcfile"]
-            
+
         if "mode" not in self.options or not self.options["mode"]:
             self.fartmode = "Text"
         else:
             self.fartmode = self.options["mode"]
-            
-        #universal
+
+        # universal
         if "replacewith" not in self.options or not self.options["replacewith"]:
             self.fartreplacewith = None
         else:
             self.fartreplacewith = self.options["replacewith"]
 
-        #universal
+        # universal
         if "find" not in self.options or not self.options["find"]:
-                self.fartfind= None
+            self.fartfind = None
         else:
             self.fartfind = self.options["find"]
-            
-        #format the replacewith value - we want {0} 
+
+        # format the replacewith value - we want {0}
         if "format" not in self.options or not self.options["format"]:
-                self.formatval= None
+            self.formatval = None
         else:
             self.formatval = self.options["format"]
-            if(not "{0}" in self.formatval):
+            if "{0}" not in self.formatval:
                 self.formatval = None
-                
-        #universal
+
+        # universal
         if "tooling" not in self.options or not self.options["tooling"]:
-                self.tooling= False
+            self.tooling = False
         else:
-            self.tooling =  bool(self.options["tooling"])
-            
-        
-        if self.fartmode=="Between" or self.fartmode=="SOQL-Between":
+            self.tooling = bool(self.options["tooling"])
+
+        if self.fartmode == "Between" or self.fartmode == "SOQL-Between":
             if "findleft" not in self.options or not self.options["findleft"]:
                 self.fartfindleft = None
             else:
                 self.fartfindleft = self.options["findleft"]
-                
+
             if "findright" not in self.options or not self.options["findright"]:
                 self.fartfindright = None
             else:
                 self.fartfindright = self.options["findright"]
 
-        if self.fartmode=="SOQL" or self.fartmode=="SOQL-Between":
-            
+        if self.fartmode == "SOQL" or self.fartmode == "SOQL-Between":
+
             if "soql" not in self.options or not self.options["soql"]:
                 self.soql = None
             else:
@@ -160,49 +156,49 @@ class FART(Command):
 
             if not self.org_config.access_token is None:
                 self.accesstoken = self.org_config.access_token
-                
+
             if not self.org_config.instance_url is None:
-                self.instanceurl =self.org_config.instance_url
-        
+                self.instanceurl = self.org_config.instance_url
 
     def run(self):
-        if self.fartmode =="Text":
+        if self.fartmode == "Text":
             self.runwithtext()
-            
-        if self.fartmode =="Between":
+
+        if self.fartmode == "Between":
             self.runtextbetween()
-            
-        if self.fartmode =="SOQL":
+
+        if self.fartmode == "SOQL":
             self.runwithsoql()
-            
-        if self.fartmode =="SOQL-Between":
+
+        if self.fartmode == "SOQL-Between":
             self.runwithsoqlbetween()
-            
+
     def runwithtext(self):
-        self.fart(self.fartpath, self.fartfind, self.fartreplacewith,self.formatval)
-        
+        self.fart(self.fartpath, self.fartfind, self.fartreplacewith, self.formatval)
+
     def runtextbetween(self):
-        self.fartbetween(self.fartpath, self.fartfindleft, self.fartfindright, self.fartreplacewith,self.formatval)
+        self.fartbetween(self.fartpath, self.fartfindleft, self.fartfindright, self.fartreplacewith, self.formatval)
 
     def runwithsoql(self):
-        if(self.soql is None or self.soql==""):
+        if self.soql is None or self.soql == "":
             return
-        
-        subprocess.run([f"sfdx config:set instanceUrl={self.instanceurl}"], shell=True,capture_output=True)
- 
-        self.fartsoql(self.fartpath,self.fartfind, self.accesstoken, self.soql,self.formatval,self.tooling)
-        
-    def runwithsoqlbetween(self):
-        
-        if(self.soql is None or self.soql==""):
-            return
-        
-        if(self.fartfindleft is None or self.fartfindright is None):
-            return
-        
-        subprocess.run([f"sfdx config:set instanceUrl={self.instanceurl}"], shell=True,capture_output=True)
 
-        self.fartsoqlbetween(self.fartpath, self.fartfindleft, self.fartfindright, self.accesstoken, self.soql,self.formatval,self.tooling)
+        subprocess.run([f"sfdx config:set instanceUrl={self.instanceurl}"], shell=True, capture_output=True)
+
+        self.fartsoql(self.fartpath, self.fartfind, self.accesstoken, self.soql, self.formatval, self.tooling)
+
+    def runwithsoqlbetween(self):
+
+        if self.soql is None or self.soql == "":
+            return
+
+        if self.fartfindleft is None or self.fartfindright is None:
+            return
+
+        subprocess.run([f"sfdx config:set instanceUrl={self.instanceurl}"], shell=True, capture_output=True)
+
+        self.fartsoqlbetween(self.fartpath, self.fartfindleft, self.fartfindright, self.accesstoken, self.soql,
+                             self.formatval, self.tooling)
 
     def _run_task(self):
         self._prepruntime()
@@ -215,33 +211,30 @@ class FART(Command):
                 message += "\nstderr: {}".format(stderr.read().decode("utf-8"))
             self.logger.error(message)
             raise CommandException(message)
-        
-        
-    def fart(self,srcfile: str, find: str, replacewith: str,formatval:str):
-        
-        
+
+    def fart(self, srcfile: str, find: str, replacewith: str, formatval: str):
+
         if os.path.isfile(srcfile):
             with open(f"{srcfile}", "r") as tmpFile:
                 defcontents = tmpFile.read()
                 tmpFile.close()
-                
+
                 print(defcontents)
 
-                #if defcontents.find(find) == -1:
-                if(formatval is None):
+                # if defcontents.find(find) == -1:
+                if formatval is None:
                     defcontentsmodified = defcontents.replace(find, replacewith)
                 else:
                     defcontentsmodified = defcontents.replace(find, formatval.format(replacewith))
-                    
 
                 with open(f"{srcfile}", "w") as tmpFile:
                     tmpFile.write(defcontentsmodified)
                     tmpFile.close()
-                
+
         else:
             print("Provided Source File cannot be found:")
-                        
-    def fartbetween(self,srcfile: str, left: str, right: str, replacewith: str,formatval:str):
+
+    def fartbetween(self, srcfile: str, left: str, right: str, replacewith: str, formatval: str):
         if os.path.isfile(srcfile):
             with open(f"{srcfile}", "r") as tmpFile:
                 defcontents = tmpFile.read()
@@ -256,27 +249,27 @@ class FART(Command):
                     return
 
                 midContents = defcontents[startIndex:endIndex]
-                
-                if(formatval is None):
-                    defcontentsmodified = defcontents.replace(f"{left}{midContents}{right}", f"{left}{replacewith}{right}")
+
+                if (formatval is None):
+                    defcontentsmodified = defcontents.replace(f"{left}{midContents}{right}",
+                                                              f"{left}{replacewith}{right}")
                 else:
-                    defcontentsmodified = defcontents.replace(f"{left}{midContents}{right}", f"{left}{formatval.format(replacewith)}{right}")
-                    
-            
+                    defcontentsmodified = defcontents.replace(f"{left}{midContents}{right}",
+                                                              f"{left}{formatval.format(replacewith)}{right}")
+
                 with open(f"{srcfile}", "w") as tmpFile:
                     tmpFile.write(defcontentsmodified)
                     tmpFile.close()
-                    
-    def getsoqldata(self,sfdxuser: str, soql: str,tooling:bool=False):
+
+    def getsoqldata(self, sfdxuser: str, soql: str, tooling: bool = False):
         if sfdxuser is None or soql is None:
             return None
 
-        cmd =f"sfdx force:data:soql:query -u {sfdxuser} -q \"{soql}\" --json"
-        
-        if(tooling):
-            cmd =f"{cmd} -t"
+        cmd = f"sfdx force:data:soql:query -u {sfdxuser} -q \"{soql}\" --json"
 
-            
+        if (tooling):
+            cmd = f"{cmd} -t"
+
         result = subprocess.run([cmd], shell=True, capture_output=True)
 
         if result is None:
@@ -292,16 +285,15 @@ class FART(Command):
         # fallback
         return None
 
-
-    def fartsoql(self, srcfile: str, find: str, sfdxaccesstoken: str, soql: str,formatval:str,tooling:bool=False):
-        replacewith = self.getsoqldata(sfdxaccesstoken, soql,tooling)
-        if replacewith is None:
-            return 
-        self.fart(srcfile, find, replacewith,formatval)
-
-
-    def fartsoqlbetween(self, srcfile: str, left: str, right: str, sfdxaccesstoken: str, soql: str,formatval:str,tooling:bool=False):
-        replacewith = self.getsoqldata(sfdxaccesstoken, soql,tooling)
+    def fartsoql(self, srcfile: str, find: str, sfdxaccesstoken: str, soql: str, formatval: str, tooling: bool = False):
+        replacewith = self.getsoqldata(sfdxaccesstoken, soql, tooling)
         if replacewith is None:
             return
-        self.fartbetween(srcfile, left, right, replacewith,formatval)
+        self.fart(srcfile, find, replacewith, formatval)
+
+    def fartsoqlbetween(self, srcfile: str, left: str, right: str, sfdxaccesstoken: str, soql: str, formatval: str,
+                        tooling: bool = False):
+        replacewith = self.getsoqldata(sfdxaccesstoken, soql, tooling)
+        if replacewith is None:
+            return
+        self.fartbetween(srcfile, left, right, replacewith, formatval)

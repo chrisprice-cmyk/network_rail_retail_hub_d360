@@ -39,7 +39,7 @@ def replace_file_text(file_location, old_text, new_text):
 
 def get_qbrix_repo_url():
     """ Get Repo URL for current Q Brix
-    :return: Returns the github repo url for the Q Brix.
+    :return: Returns the GitHub repo url for the Q Brix.
     """
     result = None
     try:
@@ -226,7 +226,7 @@ def find_missing_features(main_features_file, check_features_file):
 
             if add_feature:
                 missing_features.append(missing_feature.lower())
-                missing_feature_count += 1               
+                missing_feature_count += 1
 
         if len(missing_features) == 0:
             log.info(
@@ -407,7 +407,7 @@ def download_and_unzip(url: Optional[str] = DEFAULT_UPDATE_LOCATION, archive_pas
 
 
 def check_and_update_old_class_refs():
-        # Health Check
+    # Health Check
     replace_file_text("cumulusci.yml", "tasks.custom.qbrix_utils.HealthChecker",
                       "qbrix.tools.utils.qbrix_health_check.HealthChecker")
 
@@ -496,7 +496,7 @@ def update_file_api_versions(project_api_version):
     results.extend(lwc_files)
     for f in results:
         try:
-            FART.fartbetween(FART,f, "<apiVersion>", "</apiVersion>", project_api_version, None)
+            FART.fartbetween(FART, f, "<apiVersion>", "</apiVersion>", project_api_version, None)
             log.info(f"[OK] File Updated: {f}")
         except:
             log.error(f"[FAILED] File Update Failed: {f}")
@@ -514,8 +514,8 @@ def update_file_api_versions(project_api_version):
         except Exception as e:
             log.error(f"[FAILED] File Update sfdx-project.json - Error: {e}")
 
-def upsert_gitignore_entries(list_entries):
 
+def upsert_gitignore_entries(list_entries):
     if len(list_entries) == 0:
         log.debug("Updated .gitignore file skipped. No entries passed to check.")
         return
@@ -532,19 +532,20 @@ def upsert_gitignore_entries(list_entries):
                     entries_to_append.append(entry.lower())
             else:
                 continue
-        
+
         if len(entries_to_append) > 0:
             for e in entries_to_append:
                 git_file.write(f"{e}\n")
 
+
 def check_permset_group_files():
-    psg_files = glob.glob("force-app/main/default/permissionsetgroups" + "/**/*.permissionsetgroup-meta.xml", recursive=True)
+    psg_files = glob.glob("force-app/main/default/permissionsetgroups" + "/**/*.permissionsetgroup-meta.xml",
+                          recursive=True)
 
     if len(psg_files) > 0:
         log.info("Checking Permission Set Group Files...")
         for psg in psg_files:
             log.info(f"Checking {psg} file configuration.")
-            FART.fartbetween(FART,psg, "<status>", "</status>", "Outdated", None)
+            FART.fartbetween(FART, psg, "<status>", "</status>", "Outdated", None)
     else:
         log.info("No Permission Set Group Files in Project, skipping check.")
-    

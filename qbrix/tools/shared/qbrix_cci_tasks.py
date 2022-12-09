@@ -1,5 +1,5 @@
-import logging
 import subprocess
+
 from qbrix.tools.shared.qbrix_console_utils import init_logger
 
 log = init_logger()

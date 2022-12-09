@@ -1,8 +1,14 @@
-import yaml
 from abc import ABC
 from cumulusci.core.tasks import BaseTask
 from qbrix.tools.shared.qbrix_project_tasks import download_and_unzip, replace_file_text
 from qbrix.tools.shared.qbrix_console_utils import init_logger
+from abc import ABC
+
+from cumulusci.core.tasks import BaseTask
+
+from qbrix.tools.shared.qbrix_console_utils import init_logger
+from qbrix.tools.shared.qbrix_project_tasks import download_and_unzip, replace_file_text
+
 log = init_logger()
 
 

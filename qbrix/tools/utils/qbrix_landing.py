@@ -9,7 +9,6 @@ log = init_logger()
 
 
 class RunLanding(BaseTask, ABC):
-
     task_docs = """
     Runs Post Deployment checks and deployments for target Salesforce orgs.
 
@@ -22,49 +21,43 @@ class RunLanding(BaseTask, ABC):
             "required": False
         },
         "org": {
-          "description": "org alias",
-          "required": False
+            "description": "org alias",
+            "required": False
         }
     }
 
     salesforce_task = True
 
     def _init_options(self, kwargs):
-      super(RunLanding, self)._init_options(kwargs)
-      self.scratch_org_mode = False
-      self.info_mode = self.options["info_mode"] if "info_mode" in self.options else False
+        super(RunLanding, self)._init_options(kwargs)
+        self.scratch_org_mode = False
+        self.info_mode = self.options["info_mode"] if "info_mode" in self.options else False
 
     def scratch_org_tasks(self):
-      pass
+        pass
 
     def production_org_tasks(self):
-      pass
+        pass
 
     def shared_tasks(self):
-      pass
+        pass
 
     def _run_task(self):
 
-      log.info("Starting QBrix Post-Deployment Checks")
+        log.info("Starting QBrix Post-Deployment Checks")
 
-      if self.info_mode:
-        log.info("*** RUNNING AS INFORMATION MODE - NO TASKS WILL ACTUALLY BE RUN ***")
+        if self.info_mode:
+            log.info("*** RUNNING AS INFORMATION MODE - NO TASKS WILL ACTUALLY BE RUN ***")
 
-      self.scratch_org_mode = True if isinstance(self.org_config, ScratchOrgConfig) else False
+        self.scratch_org_mode = True if isinstance(self.org_config, ScratchOrgConfig) else False
 
-      self.shared_tasks()
+        self.shared_tasks()
 
-      if self.scratch_org_mode:
-        log.info("Running in Scratch Org Mode")
-        self.scratch_org_tasks()
-      else:
-        log.info("Running in Production Org Mode")
-        self.production_org_tasks()
+        if self.scratch_org_mode:
+            log.info("Running in Scratch Org Mode")
+            self.scratch_org_tasks()
+        else:
+            log.info("Running in Production Org Mode")
+            self.production_org_tasks()
 
-      log.info("Q Brix Post-Deploy Checks Complete")
-
-    
-    
-      
-
-
+        log.info("Q Brix Post-Deploy Checks Complete")

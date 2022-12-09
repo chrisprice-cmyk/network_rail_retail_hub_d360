@@ -12,33 +12,30 @@ from cumulusci.core.exceptions import TaskOptionsError
 from cumulusci.core.exceptions import CommandException
 from cumulusci.core.keychain import BaseProjectKeychain
 
-
 LOAD_COMMAND = "sfdx force:apex:execute "
 
 
 class BatchAnonymousApex(SFDXBaseTask):
-
     keychain_class = BaseProjectKeychain
-    task_options={
-        
+    task_options = {
+
         "filepaths": {
             "description": "When mode is set to File, each file is executed in order",
             "required": False
         }
         ,
-          "org": {
+        "org": {
             "description": "Value to replace every instance of the find value in the source file.",
             "required": False
         }
     }
 
     def _setprojectdefaults(self, instanceurl):
-        subprocess.run([f"sfdx config:set instanceUrl={instanceurl}"], shell=True,capture_output=True)
+        subprocess.run([f"sfdx config:set instanceUrl={instanceurl}"], shell=True, capture_output=True)
 
     def _init_options(self, kwargs):
         super(BatchAnonymousApex, self)._init_options(kwargs)
         self.env = self._get_env()
-        
 
     @property
     def keychain_cls(self):
@@ -56,7 +53,7 @@ class BatchAnonymousApex(SFDXBaseTask):
     @abstractmethod
     def get_keychain_key(self):
         return None
-    
+
     def _load_keychain(self):
         if self.keychain is not None:
             return
@@ -69,61 +66,58 @@ class BatchAnonymousApex(SFDXBaseTask):
             self.keychain = self.keychain_cls(self.project_config, keychain_key)
             self.project_config.keychain = self.keychain
 
-    def _prepruntime(self,a):
-        
-            if ("org" in self.options and not self.options["org"] is None) and self.keychain is None:
-                self._load_keychain()
-                self.logger.info("Org passed in but no keychain found in runtime")
+    def _prepruntime(self, a):
 
-            #if not passed in - fall back to the key ring data
-            if "targetusername" not in self.options or not self.options["targetusername"]:
-                
-                if not isinstance(self.org_config, ScratchOrgConfig):
-                    self.targetusername = self.org_config.access_token
-                else:
-                    self.targetusername = self.org_config.username
-            else:
-                self.targetusername = self.options["targetusername"]
+        if ("org" in self.options and not self.options["org"] is None) and self.keychain is None:
+            self._load_keychain()
+            self.logger.info("Org passed in but no keychain found in runtime")
 
-            #if not passed in - fall back to the key ring data
-            if "accesstoken" not in self.options or not self.options["accesstoken"]:
-                self.accesstoken = self.org_config.access_token
-            else:
-                self.accesstoken = self.options["accesstoken"]
+        # if not passed in - fall back to the key ring data
+        if "targetusername" not in self.options or not self.options["targetusername"]:
 
-            #if not passed in - fall back to the key ring data
-            if "instanceurl" not in self.options or not self.options["instanceurl"]:
-                self.instanceurl = self.org_config.instance_url
+            if not isinstance(self.org_config, ScratchOrgConfig):
+                self.targetusername = self.org_config.access_token
             else:
-                self.instanceurl = self.options["instanceurl"]
-                
-                
-            #iterate the files
-            if "filepaths" in self.options and not self.options["filepaths"] is None:
-                
-                #cast to a dictionary
-                self.filepaths = self.options["filepaths"]
-            else:
-                self.filepaths=[]
-                self.logger.info("No File Paths provided")
+                self.targetusername = self.org_config.username
+        else:
+            self.targetusername = self.options["targetusername"]
 
-        
+        # if not passed in - fall back to the key ring data
+        if "accesstoken" not in self.options or not self.options["accesstoken"]:
+            self.accesstoken = self.org_config.access_token
+        else:
+            self.accesstoken = self.options["accesstoken"]
+
+        # if not passed in - fall back to the key ring data
+        if "instanceurl" not in self.options or not self.options["instanceurl"]:
+            self.instanceurl = self.org_config.instance_url
+        else:
+            self.instanceurl = self.options["instanceurl"]
+
+        # iterate the files
+        if "filepaths" in self.options and not self.options["filepaths"] is None:
+
+            # cast to a dictionary
+            self.filepaths = self.options["filepaths"]
+        else:
+            self.filepaths = []
+            self.logger.info("No File Paths provided")
+
     def _run_task(self):
-        
+
         self._prepruntime(self)
         self._setprojectdefaults(self.instanceurl)
-    
-        if hasattr(self,"filepaths") and not self.filepaths is None:
-            for i,v in enumerate(self.filepaths):
+
+        if hasattr(self, "filepaths") and not self.filepaths is None:
+            for i, v in enumerate(self.filepaths):
                 if os.path.isfile(v):
-                    runthiscmd =f"{LOAD_COMMAND} -f {v} -u {self.accesstoken} --json"
+                    runthiscmd = f"{LOAD_COMMAND} -f {v} -u {self.accesstoken} --json"
                     self.logger.info(f'Running Apex Script in {v}')
-                    resp=subprocess.run([runthiscmd],shell=True, capture_output=True, cwd=self.options.get("dir"))
+                    resp = subprocess.run([runthiscmd], shell=True, capture_output=True, cwd=self.options.get("dir"))
                     self.logger.info(resp.stdout)
                 else:
                     self.logger.error(f"File path {v} is not a valid file")
 
-    
     def _handle_returncode(self, returncode, stderr):
         if returncode:
             message = "Return code: {}".format(returncode)
