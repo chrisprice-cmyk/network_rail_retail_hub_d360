@@ -59,16 +59,41 @@ class QbrixFieldServiceKeywords(BaseLibrary):
 
         menu_scheduling_selector = ":nth-match(iframe,1) >>> id=SettingsMenu >> div.menuItem >> span:text-is('Scheduling'):visible"
         tabs_bundling_selector = ":nth-match(iframe,1) >>> div.settings-tab:has-text('Bundling')"
+        tabs_routing_selector = ":nth-match(iframe,1) >>> div.settings-tab:has-text('Routing')"
         checkbox_bundling_selector = ":nth-match(iframe,1) >>> div.setting-row-container:has-text('Bundle your service appointments') >> div.slds-checkbox"
+        checkbox_streetlevel_selector_status = ":nth-match(iframe,1) >>> div.setting-row-container:has-text('Enable Street Level Routing') >> label.slds-checkbox__label >> input"
+        checkbox_pointtopoint_selector_status = ":nth-match(iframe,1) >>> div.setting-row-container:has-text('Enable Point-to-Point Predictive Routing') >> label.slds-checkbox__label >> input"
+        checkbox_streetlevel_selector = ":nth-match(iframe,1) >>> div.setting-row-container:has-text('Enable Street Level Routing') >> div.slds-checkbox"
+        checkbox_pointtopoint_selector = ":nth-match(iframe,1) >>> div.setting-row-container:has-text('Enable Point-to-Point Predictive Routing') >> div.slds-checkbox"
         save_button_selector = ":nth-match(iframe,1) >>> div.save-footer >> div.save-button:visible"
 
+        scheduling_changes_made = False
         self.browser.click(menu_scheduling_selector)
         sleep(2)
         self.browser.click(tabs_bundling_selector)
-        sleep(2)
-        if "visible" not in self.browser.get_element_states(
-                ":nth-match(iframe,1) >>> p:has-text('Service appointment bundles are active.')"):
+        sleep(5)
+
+        bundle_activation_selector_state = self.browser.get_element_states("iframe >>> div.bundle-settings >> p:text-is('Service appointment bundles are active.')")
+
+        if "visible" not in bundle_activation_selector_state:
             self.browser.click(checkbox_bundling_selector)
+            self.browser.click(save_button_selector)
+            sleep(2)
+
+        self.browser.click(tabs_routing_selector)
+        sleep(2)
+
+        if "checked" in self.browser.get_element_states(checkbox_pointtopoint_selector_status):
+            self.browser.click(checkbox_pointtopoint_selector)
+            sleep(2)
+            scheduling_changes_made = True
+
+        if "checked" in self.browser.get_element_states(checkbox_streetlevel_selector_status):
+            self.browser.click(checkbox_streetlevel_selector)
+            sleep(2)
+            scheduling_changes_made = True
+
+        if scheduling_changes_made:
             self.browser.click(save_button_selector)
             sleep(2)
 
