@@ -24,138 +24,104 @@ class Spin(SFDXBaseTask):
         "devhubuser": {
             "description": "Template Id from a TSO or keyword of LATEST",
             "required": True
-        }
-        ,
-
+        },
         "devhubconsumerkey": {
             "description": "Consumerkey to test JWT authentication",
             "required": False
-        }
-        ,
+        },
         "mode": {
             "description": "type of spin needed. SCRATCH or TEMPLATE",
             "required": False
-        }
-        ,
+        },
         "scratch_config": {
             "description": "path to config json the contains the properties for the scratch org setup",
             "required": False
         },
-
-        "devhubconsumerkey": {
-            "description": "Consumerkey to test JWT authentication",
-            "required": False
-        }
-        ,
-
         "devhubjwtkeyfile": {
             "description": "The on disk jwt private key for JWT authentication",
             "required": False
-        }
-        ,
-
+        },
         "githubpat": {
             "description": "GitHub Personal Access Token to be used to pulldown qbrix repos.",
             "required": False
-        }
-        ,
-
+        },
         "templateid": {
             "description": "Template Id from a TSO or keyword of LATEST",
             "required": False
-        }
-        ,
+        },
         "instance": {
             "description": "The instance to load the template onto",
             "required": False
-        }
-        ,
+        },
         "cciorg": {
             "description": "Once the org is spun up, import the org via cci org import to the aT",
             "required": False
-        }
-        ,
+        },
         "subdomain": {
             "description": "The directly supplied subdomain",
             "required": False,
             "default": "qbrix"
-        }
-        ,
+        },
         "signupemail": {
             "description": "The signup user email. If not provided, will fall back to the email associated to the dev hub user.",
             "required": False
-        }
-        ,
+        },
         "surpresssignupemail": {
             "description": "Template Id from a TSO or keyword of LATEST",
             "required": False,
             "default": True
-        }
-        ,
+        },
         "country": {
             "description": "Country code to place the org.",
             "required": False,
             "default": "US"
-        }
-        ,
+        },
         "language": {
             "description": "Language code for the org",
             "required": False,
             "default": "en"
-        }
-        ,
+        },
         "spinlength": {
             "description": "Number of days < 365 to apply to the spin. If the template source TSO is < than the amount, that will be applied.",
             "required": False,
             "default": 7
-        }
-        ,
+        },
         "runqbrixpostspin": {
             "description": "Template Id from a TSO or keyword of LATEST",
             "required": False
-        }
-        ,
+        },
         "applydefaultpassword": {
             "description": "Template Id from a TSO or keyword of LATEST",
             "required": False,
             "default": 7
-        }
-        ,
+        },
         "retryonerrorcodes": {
             "description": "Template Id from a TSO or keyword of LATEST",
             "required": False,
             "default": "C-99999"
-        }
-        ,
+        },
         "retrycount": {
             "description": "Template Id from a TSO or keyword of LATEST",
             "required": False,
             "default": 1
-        }
-
-        ,
+        },
         "maxwait": {
             "description": "Template Id from a TSO or keyword of LATEST",
             "required": False,
             "default": 60
-        }
-        ,
+        },
         "org": {
             "description": "Value to replace every instance of the find value in the source file.",
             "required": False
-        }
-
-        ,
+        },
         "company": {
             "description": "Company to be associated with the signup request. Default will be Salesforce",
             "required": False
-        }
-        ,
+        },
         "signuprequestid": {
             "description": "Existing signup request id that was submitted to monitor and hook.",
             "required": False
-        }
-        ,
+        },
         "deployqbrix": {
             "description": "Pipe delimited string of QBrix names to deploy once the org is stood up.",
             "required": False
@@ -372,7 +338,7 @@ class Spin(SFDXBaseTask):
         return None
 
     def _getrequestedqbrixfordeploy(self):
-        if (not self.deployqbrix is None):
+        if self.deployqbrix is not None:
             for (x) in self.deployqbrix:
                 if os.path.isdir(os.path.join(".qbrix", x)):
                     self.logger.info(f"qrbix {x} exists. Clearing cache to pull latest")
