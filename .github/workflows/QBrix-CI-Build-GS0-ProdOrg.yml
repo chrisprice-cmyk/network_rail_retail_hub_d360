@@ -50,11 +50,16 @@ jobs:
 
       # We will use a common app with a common key -
       - name: Create SFDX Session for DEV HUB ACCESS
+        if: env.TEMPLATE_INSTANCE != 'GS0'
         run: sfdx auth:jwt:grant -u ${{ secrets.QBRIX_DEVHUB_USERACCOUNT }} -a DEVHUB_ACCT -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }} --setdefaultdevhubusername
+
+      - name: Create SFDX Session for DEV HUB ACCESS - GS0
+        if: env.TEMPLATE_INSTANCE == 'GS0'
+        run: sfdx auth:jwt:grant -u ${{ secrets.QBRIX_DEVHUB_GS0_USERACCOUNT }} -a DEVHUB_ACCT -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }} --setdefaultdevhubusername
 
       # We will use a common app with a common key -
       - name: Create SFDX Session for QLABS Service Account
-        run: sfdx auth:jwt:grant -u ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -a DEVHUB_ACCT -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
+        run: sfdx auth:jwt:grant -u ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
 
       - name: Extract the accesstoken
         run: sfdx force:org:display -u ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} --json > qlab_tmp.json
@@ -156,13 +161,24 @@ jobs:
           timeout_minutes: 60
           max_attempts: 5
           retry_on: error
-          command: cci task run spin_request --mode SCRATCH --scratch_config ${GITHUB_WORKSPACE}/orgs/dev.json --devhubuser ${{ secrets.QBRIX_DEVHUB_USERACCOUNT }} --cciorg dev --devhubconsumerkey ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }} --devhubjwtkeyfile devhub.key --githubpat ${{ secrets.QBRIX_GITHUB_PAT}}
+          command: cci task run spin_request --mode SCRATCH --scratch_config ${GITHUB_WORKSPACE}/orgs/dev.json --devhubuser DEVHUB_ACCT --cciorg dev --devhubconsumerkey ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }} --devhubjwtkeyfile devhub.key --githubpat ${{ secrets.QBRIX_GITHUB_PAT}}
 
       - name: generate production org - if the evn variable to use a template is set to true - we connect to the devhub that is enabled to provision an org.
-        if: env.USE_TEMPLATE == 'true'
+        if: env.USE_TEMPLATE == 'true' && env.TEMPLATE_INSTANCE == 'GS0'
         uses: nick-fields/retry@v2
         with:
-          timeout_minutes: 60
+          timeout_minutes: 90
+          maxwait: 90
+          max_attempts: 3
+          retry_on: error
+          command: cci task run spin_request --mode TEMPLATE --cciorg dev --devhubuser DEVHUB_ACCT --instance ${TEMPLATE_INSTANCE} --devhubconsumerkey ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }} --devhubjwtkeyfile devhub.key --templateid ${TEMPLATEID} --githubpat ${{ secrets.QBRIX_GITHUB_PAT}}
+
+      - name: generate production org - if the evn variable to use a template is set to true - we connect to the devhub that is enabled to provision an org.
+        if: env.USE_TEMPLATE == 'true' && env.TEMPLATE_INSTANCE != 'GS0'
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 90
+          maxwait: 90
           max_attempts: 3
           retry_on: error
           command: cci task run spin_request --mode TEMPLATE --cciorg dev --devhubuser ${{ secrets.QBRIX_DEVHUB_USERACCOUNT }} --instance ${TEMPLATE_INSTANCE} --devhubconsumerkey ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }} --devhubjwtkeyfile devhub.key --templateid ${TEMPLATEID} --githubpat ${{ secrets.QBRIX_GITHUB_PAT}}
