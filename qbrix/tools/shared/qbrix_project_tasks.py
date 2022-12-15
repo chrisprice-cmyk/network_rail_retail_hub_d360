@@ -362,7 +362,7 @@ def check_for_missing_files():
 
 
 def download_and_unzip(url: Optional[str] = DEFAULT_UPDATE_LOCATION, archive_password: Optional[str] = "",
-                       ignore_optional_updates: Optional[bool] = False):
+                       ignore_optional_updates: Optional[bool] = False, q_update: Optional[bool] = False):
     """ Downloads a .zip file and extracts all folders to the root project directory """
 
     log.info("Downloading Update Package")
@@ -372,12 +372,28 @@ def download_and_unzip(url: Optional[str] = DEFAULT_UPDATE_LOCATION, archive_pas
     try:
         zipfile = ZipFile(BytesIO(http_response.read()))
 
+        # Extraction Path
+        extract_path = ""
+
+        # HANDLE Q UPDATE
+        if q_update:
+            if not exists(".qbrix/Update"):
+                log.info("Creating Update Folder")
+                os.mkdir(".qbrix")
+                os.mkdir(".qbrix/Update")
+
+            extract_path = ".qbrix/Update/"
+
+            if exists(".qbrix/Update/xDO-Template-main"):
+                log.info("Removing Old Source")
+                shutil.rmtree(".qbrix/Update/xDO-Template-main")
+
         # CHECK FOR MISSING DIRS AND CREATE THEM
         dir_check_list = [x for x in zipfile.namelist() if x.endswith('/')]
         for d in dir_check_list:
-            if not exists(d):
-                os.mkdir(d)
-                log.info(f"Created New Directory: {d}")
+            if not exists(extract_path + d):
+                os.mkdir(extract_path + d)
+                log.info(f"Created New Directory: {extract_path + d}")
 
         # HANDLE ZIP PASSWORDS
         if archive_password is not None and archive_password != "":
@@ -385,16 +401,17 @@ def download_and_unzip(url: Optional[str] = DEFAULT_UPDATE_LOCATION, archive_pas
 
         # EXTRACT FILES
         log.info("Updating Q Brix files...")
-        zipfile.extractall()
+        zipfile.extractall(path=extract_path)
 
         # Clean Up
+        dirs = glob.glob(".qbrix/Update/**/__pycache__/", recursive=True)
+        for dir in dirs:
+            shutil.rmtree(dir)
         if exists("__MACOSX"):
             shutil.rmtree("__MACOSX")
         if exists("q_update_package"):
             shutil.rmtree("q_update_package")
         if ignore_optional_updates:
-            if exists("OPTIONAL_UPDATES"):
-                shutil.rmtree("OPTIONAL_UPDATES")
             if exists(".qbrix/OPTIONAL_UPDATES"):
                 shutil.rmtree(".qbrix/OPTIONAL_UPDATES")
 
