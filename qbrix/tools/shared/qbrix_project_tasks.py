@@ -377,9 +377,12 @@ def download_and_unzip(url: Optional[str] = DEFAULT_UPDATE_LOCATION, archive_pas
 
         # HANDLE Q UPDATE
         if q_update:
-            if not exists(".qbrix/Update"):
+            if not exists(".qbrix"):
                 log.info("Creating Update Folder")
                 os.mkdir(".qbrix")
+
+            if not exists(".qbrix/Update"):
+                log.info("Creating Update Folder")
                 os.mkdir(".qbrix/Update")
 
             extract_path = ".qbrix/Update/"
