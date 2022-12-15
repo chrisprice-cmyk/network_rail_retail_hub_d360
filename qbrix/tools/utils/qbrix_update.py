@@ -63,8 +63,9 @@ class QBrixUpdater(BaseTask, ABC):
         if exists(folder_path) and remove_existing:
             log.info(f"Removing {folder_path}")
             shutil.rmtree(folder_path)
-        log.info(f"Updating {folder_path} from {update_dir + folder_path}")
-        shutil.copytree(src=update_dir + folder_path, dst=folder_path, dirs_exist_ok=True)      
+        update_path = update_dir + "/" + folder_path
+        log.info(f"Updating {folder_path} from {update_path}")
+        shutil.copytree(src=update_dir + folder_path, dst=folder_path, dirs_exist_ok=True)    
 
     def _run_task(self):
 
@@ -75,10 +76,11 @@ class QBrixUpdater(BaseTask, ABC):
         log.info("Updating Q Brix Library...")
         if download_and_unzip(self.q_branch_location, self.ArchivePassword, False, True):
 
-            # ADD FOLDERS HERE WHICH YOU WANT TO UPDATE IN PROJECT DIRECTORIES
+             # ADD FOLDERS HERE WHICH YOU WANT TO UPDATE IN PROJECT DIRECTORIES
             # PARAM1 = The folder as if it was from the root path
             # PARAM2 = The location where the source files should be located
-            self.update_folder("qbrix", ".qbrix/Update/xDO-Template-main", True)
+            # PARAM3 = If True, it will delete the whole directory in project before updating
+            self.update_folder("qbrix", ".qbrix/Update/xDO-Template-main", False)
             self.update_folder(".vscode", ".qbrix/Update/xDO-Template-main", False)
             self.update_folder(".github", ".qbrix/Update/xDO-Template-main", False)
 
