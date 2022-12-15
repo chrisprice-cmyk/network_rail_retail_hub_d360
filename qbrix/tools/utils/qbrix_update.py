@@ -65,7 +65,7 @@ class QBrixUpdater(BaseTask, ABC):
             shutil.rmtree(folder_path)
         update_path = update_dir + "/" + folder_path
         log.info(f"Updating {folder_path} from {update_path}")
-        shutil.copytree(src=update_dir + folder_path, dst=folder_path, dirs_exist_ok=True)    
+        shutil.copytree(src=update_path, dst=folder_path, dirs_exist_ok=True)    
 
     def _run_task(self):
 
