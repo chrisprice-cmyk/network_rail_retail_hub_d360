@@ -37,7 +37,7 @@
       {
         "label": "Q BRIX [INFO]: List installed Q Brix",
         "type": "shell",
-        "command": "cci task run list_qbrix",
+        "command": "cci task run list_qbrix --org ${input:OrgAlias}",
         "group": "build",
         "problemMatcher": [],
         "presentation": {
