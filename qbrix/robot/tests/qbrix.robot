@@ -149,6 +149,9 @@ Check and Enable Case Swarming
 Create Service Chat Buttons
     Create A Chat Button And Automated Invitations    *Standard Chat Button    SDO_Service_Chat
     Create A Chat Button And Automated Invitations    Service - Sunny Bot    SDO_Service_Sunny_Bot
+
+Create Gl1tch Chat Button
+    Create A Chat Button And Automated Invitations    Service - Gl1tch Bot    SDO_Service_Glitch_Bot
 #
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # Q BRANCH TOOLING TESTS
