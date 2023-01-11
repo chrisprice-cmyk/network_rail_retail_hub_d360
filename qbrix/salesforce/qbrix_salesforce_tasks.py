@@ -435,10 +435,10 @@ class CreateUser(BaseSalesforceApiTask, ABC):
         log.info("Preparing Data for User Record")
 
         # Clean Up Fields which are not available on the User object
-        self._remove_missing_field_schema(data, field_names)
+        data = self._remove_missing_field_schema(data, field_names)
 
         # Check and Update Required Fields
-        self._ensure_required_fields(data, field_names, role, profile)
+        data = self._ensure_required_fields(data, field_names, role, profile)
 
         # Link Contact Record
         if link_contact_record:
@@ -480,6 +480,8 @@ class CreateUser(BaseSalesforceApiTask, ABC):
                 }
             )
             log.info(f"Linked Contact Record ID: {contact_lookup['records'][0]['Id']}")
+        else:
+            log.debug(f"No Contact was found with Firstname {submitted_dict['FirstName']} and Lastname {submitted_dict['LastName']}. Make sure you are inserting any required contact data into the org before running this task.")
         return submitted_dict
 
 
@@ -522,10 +524,10 @@ class CreateUser(BaseSalesforceApiTask, ABC):
                     log.info("Preparing Data for User Record")
 
                     # Clean Up Fields which are not available on the User object
-                    self._remove_missing_field_schema(self.data, field_names)
+                    self.data = self._remove_missing_field_schema(self.data, field_names)
 
                     # Check and Update Required Fields
-                    self._ensure_required_fields(self.data, field_names, self.role, self.profile)
+                    self.data = self._ensure_required_fields(self.data, field_names, self.role, self.profile)
 
                     # Link Contact Record
                     if self.link_contact_record:
