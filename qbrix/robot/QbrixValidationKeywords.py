@@ -404,7 +404,11 @@ class QbrixValidationKeywords(BaseLibrary):
             return
 
         sobjectset = self.cumulusci.sf.describe()["sobjects"]
-        # self.shared.log_to_file(f"SOjectKeys::{sobjectset}")
+        #self.shared.log_to_file(f"SOjectKeys::{sobjectset}")
+        
+         #default message: we did not locate the object to traverse the metadata
+        message = f'Unable to locate the metadata object to locate the layer'
+        
         for x in sobjectset:
 
             foundlabel = x["label"]
@@ -412,11 +416,11 @@ class QbrixValidationKeywords(BaseLibrary):
 
             if foundlabel.lower() == targetobjectlabel.lower() or foundname.lower() == targetobjectlabel.lower():
 
-                # self.shared.log_to_file(f"Found SObject::{foundlabel}")
+                self.shared.log_to_file(f"Found SObject::{foundlabel}")
 
                 targetdescribe = self.cumulusci.sf.__getattr__(targetobjectlabel).describe()
 
-                # self.shared.log_to_file(f"DescKey::{targetdescribe.keys()}")
+                self.shared.log_to_file(f"DescKey::{targetdescribe.keys()}")
                 layerfound = False
                 truelayername = None
                 for key in targetdescribe.keys():
@@ -443,7 +447,7 @@ class QbrixValidationKeywords(BaseLibrary):
                             # self.shared.log_to_file(f"Dropping Col::{col}")
                             df.drop(columns=[col])
 
-                    # self.shared.log_to_file(f"DataFrame::{df.head()}")
+                    self.shared.log_to_file(f"DataFrame::{df.head()}")
 
                     try:
                         if findfilter is not None:
@@ -451,19 +455,23 @@ class QbrixValidationKeywords(BaseLibrary):
                         else:
                             filter = f"SELECT count(*) datacount"
 
+                        self.shared.log_to_file(f"SQL Filter::{filter}")
                         dfqueryres = ps.sqldf(filter)
-                        # self.shared.log_to_file(f"Query Result::{dfqueryres}")
+                        self.shared.log_to_file(f"Query Result::{dfqueryres}")
 
-                        if dfqueryres is not None or (len(dfqueryres) == 1 and dfqueryres[1] == 0):
+                        # the dataframe will have a single row and column 
+                        if dfqueryres is not None and (len(dfqueryres) == 1 and int(dfqueryres.loc[0]['datacount']) > 0):
                             self.__recordPassingResult(resulttype, resultname, f"Metadata contains the specified",
                                                        datatag=datatag)
                             return
-                    except:
-                        message = f'Unable to locate the metadata object to locate the layer'
+                        else:
+                            message = f'Unable to locate the metadata data for the specified object and layer and filter'
+                    except Exception as exception:
+                        message = f'Filter on Metadata did not locate any matching rows of data.'
+                        self.shared.log_to_file(f"Data Frame Check Exception::{exception}")
+                        self.shared.log_to_file("Exception: {}".format(type(exception).__name__))
+                        self.shared.log_to_file("Exception message: {}".format(exception))
                         # we hit an exception - fail closed
-
-        # we did not locate the object to traverse the metadata
-        message = f'Unable to locate the metadata object to locate the layer'
 
         if continueonfail:
             self.__recordFailureResult(resulttype, resultname, message, datatag=datatag)

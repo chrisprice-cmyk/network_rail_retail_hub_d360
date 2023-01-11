@@ -134,6 +134,10 @@ tasks:
   qbrix_installed:
     class_path: qbrix.salesforce.qbrix_salesforce_tasks.QBrixInstalled
 
+  orgconfig_hydrate:
+    description: injects additional context into the orgconfig that can be referenced downstream
+    class_path: qbrix.tools.utils.qbrix_orgconfig_hydrate.NGOrgConfig
+
   deploy_settings:
     description: Checks that Settings have been defined in force-app and deploys them if present
     class_path: cumulusci.tasks.salesforce.Deploy
@@ -203,9 +207,12 @@ flows:
   prepare_org:
     steps:
       1:
+        #inject in additional methods for when clause filtering.
+        task: orgconfig_hydrate
+      2:
         # Deploys settings folder and checks q brix registration package
         task: qbrix_preflight
-      2:
+      3:
         # Dependencies are set in the QBRIX PACKAGE DEPENDENCIES area above.
         task: update_dependencies
         ui_options:
