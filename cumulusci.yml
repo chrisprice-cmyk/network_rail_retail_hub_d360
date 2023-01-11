@@ -157,6 +157,9 @@ tasks:
   analytics_manager:
     class_path: qbrix.tools.data.qbrix_analytics.AnalyticsManager
 
+  user_manager:
+    class_path: qbrix.salesforce.qbrix_salesforce_tasks.CreateUser
+
   validate_qbrix:
     description: Validates the qbrix
     class_path: cumulusci.tasks.robotframework.Robot

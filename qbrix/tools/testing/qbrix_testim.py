@@ -13,6 +13,11 @@ RUN_CMD = "testim --token '{testimtoken}' --project '{testimproject}' --grid '{t
 
 class RunTestim(Command):
     keychain_class = BaseProjectKeychain
+
+    task_docs = """
+    Runs a given Testim script against a Salesforce org.
+    """
+
     task_options = {
         "testimtoken": {
             "description": "Access Token to the Testim services. If not supplied will default to the Env Variable: TESTIM_KEY",

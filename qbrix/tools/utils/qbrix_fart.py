@@ -16,6 +16,10 @@ from cumulusci.core.keychain import BaseProjectKeychain
 class FART(Command):
     keychain_class = BaseProjectKeychain
 
+    task_docs = """
+    Used to find and replace text within files in the project folder, typically pre-deployment. Replacement values can be specified or sourced from a target org using a SOQL statement.
+    """
+
     task_options = {
         "srcfile": {
             "description": "Directory path to the export.json to upload",

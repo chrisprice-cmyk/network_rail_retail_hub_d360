@@ -32,6 +32,10 @@ class OmniScript:
 class OmniscriptAlign(Command):
     keychain_class = BaseProjectKeychain
 
+    task_docs = """
+    Repairs known issues with OmniScript LWC components. If you use these in your project, make sure this task is run before they are deployed.
+    """
+
     task_options = {
         "org": {
             "description": "Value to replace every instance of the find value in the source file.",

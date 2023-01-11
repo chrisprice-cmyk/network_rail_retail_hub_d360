@@ -9,20 +9,14 @@ log = init_logger()
 
 class HealthChecker(BaseTask, ABC):
     task_options = {
-        "RunAllChecks": {
-            "description": "Boolean, which when set to true runs all checks automatically.",
-            "required": False
-        },
-        "SkipCacheRebuild": {
-            "description": "Boolean, Skips the cci cache rebuild if true. Normally used for testing.",
-            "required": False
-        }
     }
+
+    task_docs = """
+    Checks for known configuration issues within the project files and corrects them (if possible). For anything that cannot be automatically repaired, the end user will be prompted for an action or simply shown a detailed error message with guidance on how to resolve the issue. Note that some errors come from outside of Q Brix and may not have additional guidance.
+    """
 
     def _init_options(self, kwargs):
         super(HealthChecker, self)._init_options(kwargs)
-        self.RunAllChecks = self.options["RunAllChecks"] if "RunAllChecks" in self.options else False
-        self.SkipCacheRebuild = self.options["SkipCacheRebuild"] if "SkipCacheRebuild" in self.options else False
 
     def _run_task(self):
         log.info("Health Check: Starting Health Checker Tool")

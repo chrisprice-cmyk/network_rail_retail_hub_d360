@@ -18,7 +18,7 @@ class RunDataTool(BaseTask, ABC):
             "required": True
         },
         "total_timeout": {
-            "description": "Total Timeout in Seconds. Defaults to 1000 seconds.",
+            "description": "Total Timeout in Seconds. Defaults to 8600 seconds.",
             "required": False
         },
         "wait": {
@@ -26,6 +26,10 @@ class RunDataTool(BaseTask, ABC):
             "required": False
         }
     }
+
+    task_docs = """
+    Takes a list of data collection IDs which are then deployed using the NextGen Data Tool. At least one data collection ID must be specified.
+    """
 
     def _init_options(self, kwargs):
         super(RunDataTool, self)._init_options(kwargs)

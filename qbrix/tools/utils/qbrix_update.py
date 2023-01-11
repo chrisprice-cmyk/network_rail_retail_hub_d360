@@ -19,6 +19,12 @@ class QBrixUpdater(BaseTask, ABC):
 
     q_branch_location = "https://qbrix-core-stage.herokuapp.com/qbrix/q_update_package.zip"
 
+    task_docs = """
+    Updated the Q brix Extension Library and other Q Brix related bundles like GitHub Actions and VSCode Extensions in line with the XDO-Template (main branch). 
+
+    Can also be used to update custom scripts and other custom directories from a .zip file which needs to be hosted somewhere (by setting the URL of the .zip file as the UpdateLocation option), in addition the .zip files can also have a password set and you can specify the password using the ArchivePassword option when running the task.
+    """
+
 
     task_options = {
         "UpdateLocation": {
@@ -93,6 +99,7 @@ class QBrixUpdater(BaseTask, ABC):
         tasks_to_update.update({'qbrix_preflight':'qbrix.tools.utils.qbrix_preflight.RunPreflight'})
         tasks_to_update.update({'qbrix_landing':'qbrix.tools.utils.qbrix_landing.RunLanding'})
         tasks_to_update.update({'analytics_manager':'qbrix.tools.data.qbrix_analytics.AnalyticsManager'})
+        tasks_to_update.update({'user_manager':'qbrix.salesforce.qbrix_salesforce_tasks.CreateUser'})
         self._check_and_deploy_class(tasks_to_update)
 
         if self.UpdateLocation:

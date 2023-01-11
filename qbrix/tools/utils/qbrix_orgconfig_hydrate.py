@@ -23,6 +23,10 @@ class NGOrgConfig(SFDXBaseTask):
         }
     }
 
+    task_docs = """
+    Gathers additional information from the source org and adds/updates the org_config collection so that you can then use these throughout your flow steps to define where clauses for tasks.
+    """
+
     def _init_options(self, kwargs):
         super(NGOrgConfig, self)._init_options(kwargs)
         self.env = self._get_env()

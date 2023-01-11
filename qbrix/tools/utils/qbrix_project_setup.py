@@ -10,6 +10,11 @@ log = init_logger()
 
 
 class InitProject(BaseTask, ABC):
+
+    task_docs = """
+    Used to setup the initial project based on the connected Q Brix Repo. Must be run at initial project setup time before you start developing, although can be run anytime there after to update files and settings related to this project.
+    """
+
     task_options = {
         "TestMode": {
             "description": "When in test mode, no files are updated.",

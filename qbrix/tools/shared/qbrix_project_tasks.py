@@ -20,39 +20,50 @@ DEFAULT_UPDATE_LOCATION = "https://qnextgen.s3.us-west-1.amazonaws.com/qbrix/q_u
 
 
 def replace_file_text(file_location, old_text, new_text):
+
     """ Replace specific text within a file
     :param file_location: Relative path and file name of the file you want to replace text within
     :param old_text: Text string to search for
     :param new_text: New text to replace old text
     """
+           
     if not exists(file_location):
-        raise Exception(f"Error: File Path does not exist. Check the file {file_location}")
+        raise Exception(f"Error: File Path does not exist or you do not have access to the given file path. Please check this file path and update as required: {file_location}")
 
-    with open(f"{file_location}", "r") as tmpFile:
-        fcontents = tmpFile.read()
+    try:
+        log.info(f"Opening {file_location}...")
+        with open(f"{file_location}", "r") as tmpFile:
+            file_contents = tmpFile.read()
+    except Exception as e:
+        raise Exception(f"There was an error opening the file with path: {file_location}. Please check the file still exists and that you have access to read it. Error detail: {e}")
 
-    new_fcontents = fcontents.replace(f"{old_text}", f"{new_text}")
+    log.info(f"Searching for all references to '{old_text}' and replacing with '{new_text}'.")
 
-    with open(f"{file_location}", "w") as tmpFile:
-        tmpFile.write(new_fcontents)
+    updated_file_contents = file_contents.replace(f"{old_text}", f"{new_text}")
+
+    try:
+        with open(f"{file_location}", "w") as tmpFile:
+            tmpFile.write(updated_file_contents)
+    except Exception as e:
+        raise Exception(f"There was an error updating the file with path: {file_location}. Please check the file still exists and that you have access to edit it. Error detail: {e}")
 
 
 def get_qbrix_repo_url():
+
     """ Get Repo URL for current Q Brix
     :return: Returns the GitHub repo url for the Q Brix.
     """
-    result = None
+
     try:
         result = subprocess.run("git config --get remote.origin.url", shell=True, capture_output=True).stdout
     except Exception as e:
-        log.error("Failed to get Q Brix Repo URL. Check that you have git installed and you are running this within a "
-                  "Q Brix project.")
+        log.error(f"Unable to access GitHub Repository connected to this project. Please check that you have an internet connection and access to the GitHub Repository and you have git installed on your device. Error Detail: {e}")
 
     if result is None:
-        repo_url = input("Please Enter the URL for the Q brix Repo (e.g. "
-                         "https://www.github.com/sfdc-qbranch/Qbrix-1-repo): ")
-        if repo_url == "":
-            log.error("No Q Brix URL was entered.")
+        repo_url = input("Please Enter the complete URL for the Q brix Repo which should be linked to this project (e.g. https://www.github.com/sfdc-qbranch/Qbrix-1-repo): ")
+        if repo_url == "" or repo_url is None:
+            log.error("A valid GitHub Repo address was not entered. Please ensure that you enter the full URL for the repo.")
+            raise Exception("No GitHub Repo URL found or connected to this project. Skipping task")
     else:
         repo_url = result.decode('utf-8').rstrip().replace(".git", "")
 
@@ -84,6 +95,7 @@ def check_and_delete_dir(dir_path):
     """
 
     if dir_path is None or dir_path == "":
+        log.error("No Directory Path was provided. Skipping task to delete directory.")
         return
     if exists(dir_path):
         try:
@@ -91,7 +103,7 @@ def check_and_delete_dir(dir_path):
             log.info(f"Deleted {dir_path} and its contents (if any)")
             return True
         except:
-            log.error(f"Unable to delete folder: {dir_path}")
+            log.error(f"Unable to delete directory with path: {dir_path}")
             return False
     else:
         log.debug(f"Directory {dir_path} not found. Skipping.")

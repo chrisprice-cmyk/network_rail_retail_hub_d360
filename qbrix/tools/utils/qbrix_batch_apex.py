@@ -17,6 +17,11 @@ LOAD_COMMAND = "sfdx force:apex:execute "
 
 class BatchAnonymousApex(SFDXBaseTask):
     keychain_class = BaseProjectKeychain
+
+    task_docs = """
+    Takes one or more apex script files (defined in the filepaths option) which need to be deployed and runs them against the target org.
+    """
+
     task_options = {
 
         "filepaths": {
