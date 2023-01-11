@@ -90,6 +90,10 @@ class OmniscriptAlign(Command):
     def _run_task(self):
         self._prepruntime()
         self.createworkingarea(self.accesstoken)
+        
+        self.retrieveomniscriptmetadata(self.accesstoken)
+        self.pushomniscriptmetadata(self.accesstoken)
+        
         self.retrievelwcs(self.accesstoken)
 
         targetnamespace = self.determinenamespace(self.accesstoken)
@@ -177,6 +181,46 @@ class OmniscriptAlign(Command):
 
         except BaseException as err:
             self.logger.error(f"Pull LWCs-> Unexpected {err}")
+            
+            
+    ###
+    # Download the OmniScript Metadata
+    ###
+    def retrieveomniscriptmetadata(self, username: str):
+
+        """Get all the OmniScript Metadata locally."""
+
+        try:
+
+            hashname = hashlib.md5(username.encode()).hexdigest()
+            qbrixtempdir = self.getqbrixdir(hashname)
+
+            # now we need to inject a sfdx session and into the cci runtimee for that temp dir
+            subprocess.run([
+                               f"export SFDX_ACCESS_TOKEN='{self.accesstoken}' && sfdx force:auth:accesstoken:store --instanceurl {self.instanceurl} -a {hashname} --noprompt --json --loglevel DEBUG  && sfdx force:source:retrieve -u {hashname} -m OmniScript"],
+                           shell=True, capture_output=True, cwd=qbrixtempdir)
+
+        except BaseException as err:
+            self.logger.error(f"Pull OmniScript-> Unexpected {err}")
+
+    ###
+    # Push It back up
+    ###
+    def pushomniscriptmetadata(self, username: str):
+
+        """Push up the OmniScript Metadata back up to the org."""
+
+        try:
+
+            hashname = hashlib.md5(username.encode()).hexdigest()
+            qbrixtempdir = self.getqbrixdir(hashname)
+
+            # now we need to inject a sfdx session and into the cci runtimee for that temp dir
+            subprocess.run([f"sfdx force:source:deploy -u {hashname} -m OmniScript"], shell=True,
+                           capture_output=True, cwd=qbrixtempdir)
+
+        except BaseException as err:
+            self.logger.error(f"Push OmniScript-> Unexpected {err}")
 
     ###
     #

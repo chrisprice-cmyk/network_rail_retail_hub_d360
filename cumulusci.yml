@@ -160,6 +160,9 @@ tasks:
   user_manager:
     class_path: qbrix.salesforce.qbrix_salesforce_tasks.CreateUser
 
+  omniscript_align:
+    class_path: qbrix.tools.utils.qbrix_chiro.OmniscriptAlign
+
   validate_qbrix:
     description: Validates the qbrix
     class_path: cumulusci.tasks.robotframework.Robot
