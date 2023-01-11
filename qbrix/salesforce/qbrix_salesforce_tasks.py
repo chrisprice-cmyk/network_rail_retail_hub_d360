@@ -211,8 +211,8 @@ class CreateUser(BaseSalesforceApiTask, ABC):
 
         submitted_fields = list(submitted_dict.keys())
         for key in submitted_fields:
-            if key not in field_names:
-                log.debug(f"The field with api name '{key}' has been removed from this deployment, as it is not present (or accessible) in the target org.")
+            if key not in field_names or str(key).endswith("Id"):
+                log.debug(f"The field with api name '{key}' has been removed from this deployment, as it is either not present (or accessible) in the target org or it cannot be used by this task.")
                 del submitted_dict[key]
         return submitted_dict
 
@@ -297,7 +297,10 @@ class CreateUser(BaseSalesforceApiTask, ABC):
 
         # Check If Upsert Can be Used
         if self.upsert_field in submitted_dict.keys():
-            upsert_result = api.upsert(self.upsert_field, submitted_dict)
+            log.info("UPSERT MODE")
+            clean_dict_for_upsert = submitted_dict
+            del clean_dict_for_upsert[self.upsert_field]
+            upsert_result = api.User.upsert(f"{self.upsert_field}/{submitted_dict.get(self.upsert_field)}", clean_dict_for_upsert)
             if str(upsert_result).startswith("2"):
                 log.info("Upsert Completed! Loading record information...")
                 user_info = api.query(f"SELECT Id FROM User WHERE {self.upsert_field} = '{submitted_dict.get(self.upsert_field)}' AND IsActive = True LIMIT 1")
@@ -314,7 +317,11 @@ class CreateUser(BaseSalesforceApiTask, ABC):
         user_lookup = api.query(f"SELECT Id FROM User WHERE FirstName = '{submitted_dict.get('FirstName')}' AND LastName = '{submitted_dict.get('LastName')}' AND IsActive = True LIMIT 1")
         if user_lookup["totalSize"] == 0:
             log.info("Creating new User record...")
-            result = api.User.create(submitted_dict)
+            try:
+                result = api.User.create(submitted_dict)
+            except Exception as e:
+                log.error(f"Record Failed to Create. Details: {e}")
+                return
             if result["id"]:
                 log.info("Record Created with ID: " + result["id"])
                 return result["id"]
@@ -323,7 +330,11 @@ class CreateUser(BaseSalesforceApiTask, ABC):
                 return
         else:
             user_id = user_lookup["records"][0]["Id"]
-            result = api.User.update(user_id, submitted_dict)
+            try:
+                result = api.User.update(user_id, submitted_dict)
+            except Exception as e:
+                log.error(f"Record Failed to Update. Details: {e}")
+                return
             if str(result).startswith("2"):
                 log.info("Record Updated!")
                 return user_id
@@ -449,21 +460,29 @@ class CreateUser(BaseSalesforceApiTask, ABC):
         # Load Data
         final_user_id = self._load_data(data)
 
-        log.info("Final User Record ID: " + final_user_id)
+        
 
-        # Handle Profile Image Upload
-        if user_profile_image:
-            log.info("Adding User Profile Image...")
-            self._upload_user_profile_image(final_user_id, user_profile_image)
-            
-        # Handle Permissions
-        if permission_set_api_names:
-            log.info("Assigning Permission Sets...")
-            self._assign_permission("PermissionSet", final_user_id, permission_set_api_names)
+        if final_user_id:
 
-        if permission_set_group_api_names: 
-            log.info("Assigning Permission Set Groups...")
-            self._assign_permission("PermissionSetGroup", final_user_id, permission_set_group_api_names)
+            log.info("Final User Record ID: " + final_user_id)
+
+            # Handle Profile Image Upload
+            if user_profile_image:
+                log.info("Adding User Profile Image...")
+                self._upload_user_profile_image(final_user_id, user_profile_image)
+                
+            # Handle Permissions
+            if permission_set_api_names:
+                log.info("Assigning Permission Sets...")
+                self._assign_permission("PermissionSet", final_user_id, permission_set_api_names)
+
+            if permission_set_group_api_names: 
+                log.info("Assigning Permission Set Groups...")
+                self._assign_permission("PermissionSetGroup", final_user_id, permission_set_group_api_names)
+
+        else:
+
+            log.error("User Failed to insert...skipping")
 
     def _link_contact_record(self, submitted_dict):
 
@@ -538,21 +557,27 @@ class CreateUser(BaseSalesforceApiTask, ABC):
                     # Load Data
                     final_user_id = self._load_data(self.data)
 
-                    log.info("Final User Record ID: " + final_user_id)
+                    
 
-                    # Handle Profile Image Upload
-                    if self.user_profile_image:
-                        log.info("Adding User Profile Image...")
-                        self._upload_user_profile_image(final_user_id, self.user_profile_image)
-                        
-                    # Handle Permissions
-                    if self.permission_set_api_names:
-                        log.info("Assigning Permission Sets...")
-                        self._assign_permission("PermissionSet", final_user_id, self.permission_set_api_names)
+                    if final_user_id:
 
-                    if self.permission_set_group_api_names: 
-                        log.info("Assigning Permission Set Groups...")
-                        self._assign_permission("PermissionSetGroup", final_user_id, self.permission_set_group_api_names)
+                        log.info("Final User Record ID: " + final_user_id)
+
+                        # Handle Profile Image Upload
+                        if self.user_profile_image:
+                            log.info("Adding User Profile Image...")
+                            self._upload_user_profile_image(final_user_id, self.user_profile_image)
+                            
+                        # Handle Permissions
+                        if self.permission_set_api_names:
+                            log.info("Assigning Permission Sets...")
+                            self._assign_permission("PermissionSet", final_user_id, self.permission_set_api_names)
+
+                        if self.permission_set_group_api_names: 
+                            log.info("Assigning Permission Set Groups...")
+                            self._assign_permission("PermissionSetGroup", final_user_id, self.permission_set_group_api_names)
+                    else:
+                        log.error("User Failed to insert. Skipping...")
 
         else:
             log.error("Failed to connect to Salesforce Org, please try again.")
