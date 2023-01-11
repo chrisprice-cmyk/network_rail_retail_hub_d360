@@ -141,7 +141,7 @@ class CreateUser(BaseSalesforceApiTask, ABC):
             "required": False
         },
         "user_profile_image": {
-            "description": "Local file location for the image you want to assign to the user profile. (BETA) Use the keyword AUTO to automatically generate an image for the user.",
+            "description": "Local file location for the image you want to assign to the user profile. (COMING SOON) Use the keyword AUTO to automatically generate an image for the user.",
             "required": False
         },
         "upsert_field": {
@@ -150,6 +150,10 @@ class CreateUser(BaseSalesforceApiTask, ABC):
         },
         "path": {
             "description": "Path to yml file containing user record entries. Setting this will ignore anything set for other options. Setting this enables bulk mode and ignores other options.",
+            "required": False
+        },
+        "link_contact_record": {
+            "description": "Links user to related Contact record, using firstname and lastname to lookup the record. Set to True to enable this feature.",
             "required": False
         },
     }
@@ -166,6 +170,7 @@ class CreateUser(BaseSalesforceApiTask, ABC):
         self.user_profile_image = self.options["user_profile_image"] if "user_profile_image" in self.options else None
         self.upsert_field = self.options["upsert_field"] if "upsert_field" in self.options else "External_ID__c"
         self.path = self.options["path"] if "path" in self.options else None
+        self.link_contact_record = self.options["link_contact_record"] if "link_contact_record" in self.options else False
     
     def _time_since_modified(self, path):
         
@@ -424,6 +429,7 @@ class CreateUser(BaseSalesforceApiTask, ABC):
         user_profile_image = user_record_data["user_profile_image"]
         permission_set_api_names = user_record_data["permission_set_api_names"]
         permission_set_group_api_names = user_record_data["permission_set_group_api_names"]
+        link_contact_record = user_record_data["link_contact_record"]
 
         log.info(f"Creating User with the following details: \n{json.dumps(data, indent=1, sort_keys=True)}")
         log.info("Preparing Data for User Record")
@@ -433,6 +439,11 @@ class CreateUser(BaseSalesforceApiTask, ABC):
 
         # Check and Update Required Fields
         self._ensure_required_fields(data, field_names, role, profile)
+
+        # Link Contact Record
+        if link_contact_record:
+            data  = self._link_contact_record(data)
+
         log.info("Data Ready to upload")
 
         # Load Data
@@ -453,6 +464,23 @@ class CreateUser(BaseSalesforceApiTask, ABC):
         if permission_set_group_api_names: 
             log.info("Assigning Permission Set Groups...")
             self._assign_permission("PermissionSetGroup", final_user_id, permission_set_group_api_names)
+
+    def _link_contact_record(self, submitted_dict):
+
+        """
+        Links the related Contact Record using Firstname and Lastname.
+        """
+
+        api = self.sf
+        contact_lookup = api.query(f"SELECT Id FROM Contact WHERE FirstName = '{submitted_dict['FirstName']}' AND LastName = '{submitted_dict['LastName']}' LIMIT 1")
+        if contact_lookup["totalSize"] == 1:
+            submitted_dict.update(
+                {
+                "ContactId": contact_lookup["records"][0]["Id"]
+                }
+            )
+            log.info(f"Linked Contact Record ID: {contact_lookup['records'][0]['Id']}")
+        return submitted_dict
 
 
     def _run_task(self):
@@ -498,6 +526,11 @@ class CreateUser(BaseSalesforceApiTask, ABC):
 
                     # Check and Update Required Fields
                     self._ensure_required_fields(self.data, field_names, self.role, self.profile)
+
+                    # Link Contact Record
+                    if self.link_contact_record:
+                        self.data  = self._link_contact_record(self.data)
+
                     log.info("Data Ready to upload")
 
                     # Load Data
