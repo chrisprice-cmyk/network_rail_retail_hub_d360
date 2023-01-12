@@ -84,7 +84,7 @@ class QbrixSharedKeywords(BaseLibrary):
             startpos = setup_page_url.find('lightning/setup/') + len('lightning/setup/')
             endpos = len(setup_page_url)
             setup_page_url = setup_page_url[startpos:endpos]
-        self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/setup/{setup_page_url}")
+        self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/setup/{setup_page_url}", timeout='30s')
         sleep(sleep_length)
 
     def set_lightning_toggle(self, new_state: str):
