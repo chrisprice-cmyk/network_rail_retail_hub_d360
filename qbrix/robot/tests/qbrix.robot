@@ -152,6 +152,9 @@ Create Service Chat Buttons
 
 Create Gl1tch Chat Button
     Create A Chat Button And Automated Invitations    Service - Gl1tch Bot    SDO_Service_Glitch_Bot
+
+Create Manny Chat Button
+    Create A Chat Button And Automated Invitations    MFG - Manny Bot    MFG_Service_Manny_Bot
 #
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # Q BRANCH TOOLING TESTS
