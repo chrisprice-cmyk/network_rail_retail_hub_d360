@@ -55,7 +55,15 @@ class QbrixSharedKeywords(BaseLibrary):
         Sets and org wide email address for the target org, defaulting to the sdo address
         :param org_wide_email_address: (Optional) Email Address to use as new org wide email, although this parameter will default to sdo@salesforce.com
         """
+        
         self.go_to_setup_admin_page("OrgWideEmailAddresses/home")
+        sleep(3)
+        #Yes this is a hack and yes it feels like you think it does...HACK to get around init ui
+        self.go_to_setup_admin_page("SetupOneHome/home")
+        sleep(3)
+        self.go_to_setup_admin_page("OrgWideEmailAddresses/home")
+        sleep(3)
+        
         self.browser.wait_for_elements_state(
             "iframe >>> h2:text-is('Organization-Wide Email Addresses for User Selection and Default No-Reply Use')",
             ElementState.visible, '15s')
