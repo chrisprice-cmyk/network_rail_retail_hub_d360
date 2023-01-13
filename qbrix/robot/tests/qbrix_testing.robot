@@ -3,6 +3,7 @@ Resource          cumulusci/robotframework/SalesforcePlaywright.robot
 Library           qbrix/robot/QbrixSharedKeywords.py
 Library           qbrix/robot/QbrixEinsteinKeywords.py
 Library           qbrix/robot/QbrixServiceKeywords.py
+Library           qbrix/robot/QbrixToolingKeywords.py
 Suite Setup       Run keywords
 ...               Set browser timeout    60 seconds
 ...               AND    Open test browser    wait=false
@@ -22,5 +23,5 @@ Suite Teardown    Close browser
 # Note: The default timeout for this is 60 seconds but if you have a long running process, ensure you change the value above next to "Set browser timeout" to something more suitable for the overall timeout for everything you are running.
 #
 Run Automation
-    Enable Einstein Classification
-    Add Case Wrap Up Model
+    enable_data_tool
+
