@@ -11,6 +11,7 @@ Library           qbrix/robot/QbrixSurveysKeywords.py
 Library           qbrix/robot/QbrixVraKeywords.py
 Library           qbrix/robot/QbrixServiceKeywords.py
 Library           qbrix/robot/QbrixToolingKeywords.py
+Library           qbrix/robot/QbrixManufacturingKeywords.py
 Suite Setup       Run keywords
 ...               Set browser timeout    900 seconds
 ...               AND    Open test browser    wait=false
