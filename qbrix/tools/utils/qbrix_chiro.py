@@ -40,6 +40,20 @@ class OmniscriptAlign(Command):
         "org": {
             "description": "Value to replace every instance of the find value in the source file.",
             "required": False
+        },
+         "excludelwcs": {
+            "description": "List of LWC Names to not patch. These are names as the would appear from SFDX and not in the UI.",
+            "required": False
+        }
+         ,
+         "excludeomniscripts": {
+            "description": "List of OmniScripts Names to not reimport. These are names as the would appear from SFDX and not in the UI.",
+            "required": False
+        }
+         ,
+         "excludeomniuicards": {
+            "description": "List of OmniUiCard Names to not reimport. These are names as the would appear from SFDX and not in the UI.",
+            "required": False
         }
     }
 
@@ -86,16 +100,44 @@ class OmniscriptAlign(Command):
 
         if not self.org_config.instance_url is None:
             self.instanceurl = self.org_config.instance_url
+            
+        
+        if "excludeomniscripts" in self.options and not self.options["excludeomniscripts"] is None:
+
+            # cast to a dictionary
+            self.excludeomniscripts = self.options["excludeomniscripts"]
+        else:
+            self.excludeomniscripts = []
+            self.logger.info("No OmniScripts to Exclude ")
+         
+        if "excludeomniuicards" in self.options and not self.options["excludeomniuicards"] is None:
+
+            # cast to a dictionary
+            self.excludeomniuicards = self.options["excludeomniuicards"]
+        else:
+            self.excludeomniuicards = []
+            self.logger.info("No OmniUiCards to Exclude")
+            
+         
+        if "excludelwcs" in self.options and not self.options["excludelwcs"] is None:
+
+            # cast to a dictionary
+            self.excludelwcs = self.options["excludelwcs"]
+        else:
+            self.excludelwcs = []
+            self.logger.info("No LWCs to Exclude")
 
     def _run_task(self):
         self._prepruntime()
-        self.createworkingarea(self.accesstoken)
+        self.create_working_area(self.accesstoken)
         
-        self.retrieveomniscriptmetadata(self.accesstoken)
-        self.pushomniscriptmetadata(self.accesstoken)
         
-        self.retrievelwcs(self.accesstoken)
-
+        self.retrieve_metadata(self.accesstoken)
+        self.prune_content(self.accesstoken)
+        
+        self.push_omniuicard_metadata(self.accesstoken)
+        self.push_omniscript_metadata(self.accesstoken)
+        
         targetnamespace = self.determinenamespace(self.accesstoken)
         oslist = self.getoslist(self.accesstoken, targetnamespace)
 
@@ -105,7 +147,7 @@ class OmniscriptAlign(Command):
         if len(oslist) > 0:
             self.updatelwcsondisk(self.accesstoken, oslist)
 
-        self.pushlwcs(self.accesstoken)
+        self.push_lwcs(self.accesstoken)
 
     def _handle_returncode(self, returncode, stderr):
         if returncode:
@@ -125,7 +167,7 @@ class OmniscriptAlign(Command):
     ###
     # Creates a starting sfdx working project directory to do the work in
     ###
-    def createworkingarea(self, username: str):
+    def create_working_area(self, username: str):
 
         """Creates a temp working area on disk to update the lwc definitions."""
 
@@ -146,10 +188,60 @@ class OmniscriptAlign(Command):
                        capture_output=True,
                        cwd=qbrixtempdir)
 
+    
+    def retrieve_metadata(self, username: str):
+
+        """Get all the Metadata locally."""
+
+        try:
+
+            hashname = hashlib.md5(username.encode()).hexdigest()
+            qbrixtempdir = self.getqbrixdir(hashname)
+
+            # now we need to inject a sfdx session and into the cci runtimee for that temp dir
+            subprocess.run([
+                               f"export SFDX_ACCESS_TOKEN='{self.accesstoken}' && sfdx force:auth:accesstoken:store --instanceurl {self.instanceurl} -a {hashname} --noprompt --json --loglevel DEBUG  && sfdx force:source:retrieve -u {hashname} -m OmniScript,OmniUiCard,LightningComponentBundle"],
+                           shell=True, capture_output=True, cwd=qbrixtempdir)
+                        
+        except BaseException as err:
+            self.logger.error(f"Pull Metadata-> Unexpected {err}")
+            
+    def prune_content(self,username:str):
+        try:
+
+            hashname = hashlib.md5(username.encode()).hexdigest()
+            qbrixtempdir = self.getqbrixdir(hashname)
+            
+            for i in self.excludelwcs:
+                target =f"{qbrixtempdir}/force-app/main/default/lwc/{i}"
+                self.logger.info(f"Searching For::{target}")
+                if os.path.isdir(target):
+                    shutil.rmtree(target)
+                    self.logger.info(f"Pruned::{target}")
+                    
+            for i in self.excludeomniscripts:
+                target =f"{qbrixtempdir}/force-app/main/default/omniScripts/{i}.os-meta.xml"
+                self.logger.info(f"Searching For::{target}")
+                if os.path.isfile(target):
+                    os.remove(target)
+                    self.logger.info(f"Pruned::{target}")
+                    
+            for i in self.excludeomniuicards:
+                target =f"{qbrixtempdir}/force-app/main/default/omniUiCard/{i}.ouc-meta.xml"
+                self.logger.info(f"Searching For::{target}")
+                if os.path.isfile(target):
+                    os.remove(target)
+                    self.logger.info(f"Pruned::{target}")
+                        
+                    
+
+        except BaseException as err:
+            self.logger.error(f"Pull LWCs-> Unexpected {err}")
+            
     ###
     # Download the compiled LWCs that are already in the org.
     ###
-    def retrievelwcs(self, username: str):
+    def retrieve_lwcs(self, username: str):
 
         """Get all the LWCs locally to modify their contents."""
 
@@ -166,7 +258,7 @@ class OmniscriptAlign(Command):
         except BaseException as err:
             self.logger.error(f"Pull LWCs-> Unexpected {err}")
 
-    def pushlwcs(self, username: str):
+    def push_lwcs(self, username: str):
 
         """Push up the modified LWCs back up to the org."""
 
@@ -186,7 +278,7 @@ class OmniscriptAlign(Command):
     ###
     # Download the OmniScript Metadata
     ###
-    def retrieveomniscriptmetadata(self, username: str):
+    def retrieve_omniscript_metadata(self, username: str):
 
         """Get all the OmniScript Metadata locally."""
 
@@ -206,7 +298,7 @@ class OmniscriptAlign(Command):
     ###
     # Push It back up
     ###
-    def pushomniscriptmetadata(self, username: str):
+    def push_omniscript_metadata(self, username: str):
 
         """Push up the OmniScript Metadata back up to the org."""
 
@@ -217,6 +309,46 @@ class OmniscriptAlign(Command):
 
             # now we need to inject a sfdx session and into the cci runtimee for that temp dir
             subprocess.run([f"sfdx force:source:deploy -u {hashname} -m OmniScript"], shell=True,
+                           capture_output=True, cwd=qbrixtempdir)
+
+        except BaseException as err:
+            self.logger.error(f"Push OmniScript-> Unexpected {err}")
+            
+            
+    ###
+    # Download the OmniScript Metadata
+    ###
+    def retrieve_omniuicard_metadata(self, username: str):
+
+        """Get all the OmniUiCard Metadata locally."""
+
+        try:
+
+            hashname = hashlib.md5(username.encode()).hexdigest()
+            qbrixtempdir = self.getqbrixdir(hashname)
+
+            # now we need to inject a sfdx session and into the cci runtimee for that temp dir
+            subprocess.run([
+                               f"export SFDX_ACCESS_TOKEN='{self.accesstoken}' && sfdx force:auth:accesstoken:store --instanceurl {self.instanceurl} -a {hashname} --noprompt --json --loglevel DEBUG  && sfdx force:source:retrieve -u {hashname} -m OmniUiCard"],
+                           shell=True, capture_output=True, cwd=qbrixtempdir)
+            
+        except BaseException as err:
+            self.logger.error(f"Pull OmniScript-> Unexpected {err}")
+
+    ###
+    # Push It back up
+    ###
+    def push_omniuicard_metadata(self, username: str):
+
+        """Push up the OmniUiCard Metadata back up to the org."""
+
+        try:
+
+            hashname = hashlib.md5(username.encode()).hexdigest()
+            qbrixtempdir = self.getqbrixdir(hashname)
+
+            # now we need to inject a sfdx session and into the cci runtimee for that temp dir
+            subprocess.run([f"sfdx force:source:deploy -u {hashname} -m OmniUiCard"], shell=True,
                            capture_output=True, cwd=qbrixtempdir)
 
         except BaseException as err:

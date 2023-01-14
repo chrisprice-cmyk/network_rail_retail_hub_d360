@@ -42,7 +42,8 @@ class QbrixSharedKeywords(BaseLibrary):
 
         if app_name:
             # Get the Application ID
-            results = self.salesforceapi.soql_query(f"SELECT DurableId FROM AppDefinition where Label = '{app_name}' LIMIT 1")
+            results = self.salesforceapi.soql_query(
+                f"SELECT DurableId FROM AppDefinition where Label = '{app_name}' LIMIT 1")
 
             if results["totalSize"] == 1:
                 app_id = results["records"][0]["DurableId"]
@@ -55,7 +56,15 @@ class QbrixSharedKeywords(BaseLibrary):
         Sets and org wide email address for the target org, defaulting to the sdo address
         :param org_wide_email_address: (Optional) Email Address to use as new org wide email, although this parameter will default to sdo@salesforce.com
         """
+
         self.go_to_setup_admin_page("OrgWideEmailAddresses/home")
+        sleep(3)
+        # Yes this is a hack and yes it feels like you think it does...HACK to get around init ui
+        self.go_to_setup_admin_page("SetupOneHome/home")
+        sleep(3)
+        self.go_to_setup_admin_page("OrgWideEmailAddresses/home")
+        sleep(3)
+
         self.browser.wait_for_elements_state(
             "iframe >>> h2:text-is('Organization-Wide Email Addresses for User Selection and Default No-Reply Use')",
             ElementState.visible, '15s')
@@ -78,14 +87,57 @@ class QbrixSharedKeywords(BaseLibrary):
         :param setup_page_url: Requires the section of the URL Path which comes after lightning/setup
         :param sleep_length: (Optional) Set the length of time (in seconds) which the robot will wait for the page to load. Defaults to 2 seconds.
         """
-        if setup_page_url is None:
+
+        # Handle empty URL
+        if setup_page_url is None or setup_page_url == "":
             raise Exception("URL Text must be specified")
+
+        # Handle full url being passed in
         if "lightning/setup" in setup_page_url:
             startpos = setup_page_url.find('lightning/setup/') + len('lightning/setup/')
             endpos = len(setup_page_url)
             setup_page_url = setup_page_url[startpos:endpos]
-        self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/setup/{setup_page_url}", timeout='30s')
-        sleep(sleep_length)
+
+        # Go To Page
+        try:
+            self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/setup/{setup_page_url}", timeout='30s')
+
+            # Handler for help messages
+            if self.browser.get_element_count("iframe") > 1:
+                if self.browser.get_element_count("iframe >> btn:has-text('Dismiss')") > 0:
+                    for elem in self.browser.get_elements("iframe >> btn:has-text('Dismiss')"):
+                        self.browser.click(elem)
+
+            # Allow time for page load to complete
+            sleep(sleep_length)
+        except Exception as e:
+            self.browser.take_screenshot()
+            raise e
+
+    def iframe_handler(self):
+
+        """
+        Add to selector statements to handle iframes in Salesforce LEX UI
+        :return:
+        """
+
+        # If no iframes are found, return empty selector
+        if self.browser.get_element_count("iframe") == 0:
+            return ""
+
+        if self.browser.get_element_count("iframe") > 1:
+            # Handles Console Layouts and Setup Pages where guidance prompts have opened
+            if self.browser.get_element_count("div.mainContentMark") == 1:
+                return "div.mainContentMark >> iframe >>>"
+
+            # Handles LEX Setup Pages with embedded Classic UI Settings Pages
+            if self.browser.get_element_count("div.oneAlohaPage") == 1:
+                return "div.oneAlohaPage >> iframe >>>"
+        else:
+            # Handles all areas where there is only one iframe
+            return "iframe >>>"
+
+        return ""
 
     def set_lightning_toggle(self, new_state: str):
         """
@@ -125,7 +177,7 @@ class QbrixSharedKeywords(BaseLibrary):
         if uses_iframe:
             button_selector = f":nth-match(iframe,1) >>> button:has-text('{button_text}')"
 
-        self.browser.wait_for_elements_state(button_selector, ElementState.visible, '15s')
+        self.browser.wait_for_elements_state(button_selector, ElementState.visible, '30s')
 
         button_visible = "visible" in self.browser.get_element_states(button_selector)
         if button_visible:
@@ -166,7 +218,8 @@ class QbrixSharedKeywords(BaseLibrary):
             self.browser.click(button_to_click)
             sleep(1)
 
-    def wait_for_page_title(self, page_title: str, title_element_type: Optional[str] = "h1", wait_time: Optional[str] = "10s", uses_iframe: Optional[bool] = True):
+    def wait_for_page_title(self, page_title: str, title_element_type: Optional[str] = "h1",
+                            wait_time: Optional[str] = "10s", uses_iframe: Optional[bool] = True):
         """
         Waits for a title on a lightning page to be loaded based on title text and optional element type.
 
@@ -181,7 +234,8 @@ class QbrixSharedKeywords(BaseLibrary):
 
         iframe_selector = ":nth-match(iframe,1) >>> " if uses_iframe else ""
 
-        self.browser.wait_for_elements_state(f"{iframe_selector}{title_element_type}:text-is('{page_title}')", ElementState.visible, wait_time)
+        self.browser.wait_for_elements_state(f"{iframe_selector}{title_element_type}:text-is('{page_title}')",
+                                             ElementState.visible, wait_time)
 
     def enable_omnichannel_for_bot(self, button_name: str, queue_name: str):
         """
@@ -227,7 +281,8 @@ class QbrixSharedKeywords(BaseLibrary):
         self.go_to_setup_admin_page("LiveChatButtonSettings/home")
         self.browser.wait_for_elements_state("iframe >>> h1:has-text('Chat Buttons')", ElementState.visible, '60s')
         sleep(10)
-        visible = "visible" in self.browser.get_element_states(f"iframe >>> .listRelatedObject:has-text('{buttonName}')")
+        visible = "visible" in self.browser.get_element_states(
+            f"iframe >>> .listRelatedObject:has-text('{buttonName}')")
         if not visible:
             self.click_input_button_in_iframe_with_text('New')
             self.browser.wait_for_elements_state("iframe >>> h3:has-text('Basic Information')", ElementState.visible,
@@ -410,10 +465,8 @@ class QbrixSharedKeywords(BaseLibrary):
             return results["records"][0]["Id"]
 
         return None
-    
-    
 
-    def compile_all_apex(self,waittime="120"):
+    def compile_all_apex(self, waittime="120"):
         """
         Does an Apex Recompile of all Classes
         :param waittime: Max wait time for the compile to run. Default is 2 minutes. 
@@ -422,5 +475,5 @@ class QbrixSharedKeywords(BaseLibrary):
         sleep(10)
         self.browser.click("iframe >>> id=all_classes_page:theTemplate:messagesForm:compileAll")
         sleep(10)
-        self.browser.wait_for_elements_state("iframe >>> h4:has-text('Compilation Complete')", ElementState.visible, f'{waittime}s')
-    
+        self.browser.wait_for_elements_state("iframe >>> h4:has-text('Compilation Complete')", ElementState.visible,
+                                             f'{waittime}s')
