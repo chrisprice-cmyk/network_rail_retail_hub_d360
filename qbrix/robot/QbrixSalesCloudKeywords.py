@@ -156,3 +156,15 @@ class QbrixSalesCloudKeywords(BaseLibrary):
             enable_button_to_click = self.browser.get_element("iframe >>> .btn[value='Save']")
             self.browser.click(enable_button_to_click)
             sleep(10)
+
+    def enable_sales_agreements(self):
+        """
+        Enables Sales Agreement Setting in Salesforce Setup
+        """
+        self.shared.go_to_setup_admin_page("SalesAgreementSettings/home")
+        self.browser.wait_for_elements_state(".setupcontent:has-text('Enable Sales Agreements')",
+                                             ElementState.visible, '30s')
+        checked = "checked" in self.browser.get_element_states("span.slds-checkbox_faux")
+        if not checked:
+            self.browser.click("span.slds-checkbox_faux")
+            sleep(1)

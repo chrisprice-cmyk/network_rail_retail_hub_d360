@@ -136,6 +136,9 @@ Check and Update Forecast Hiararchy Settings
 
 Check and Enable Opportunity Splits
     Enable Opportunity Splits
+
+Enable Sales Agreements
+    Enable Sales Agreements
 #
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # SERVICE CLOUD TESTS
