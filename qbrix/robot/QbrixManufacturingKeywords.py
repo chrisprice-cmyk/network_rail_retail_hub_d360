@@ -53,13 +53,14 @@ class QbrixManufacturingKeywords(BaseLibrary):
                 self.browser.click(index_confirmation_selector)
                 sleep(2)
 
-    def enable_sales_agreements(self, store_name):
+    def enable_sales_agreements(self):
         """
         Enables Sales Agreement Setting in Salesforce Setup
         """
-        enable_sa_toggle = "span.slds-checkbox_off"
         self.shared.go_to_setup_admin_page("SalesAgreementSettings/home")
-        visible = "visible" in self.browser.get_element_states(enable_sa_toggle)
-        if visible:
-            self.browser.click(enable_sa_toggle)
-            sleep(2)
+        self.browser.wait_for_elements_state(".setupcontent:has-text('Enable Sales Agreements')",
+                                             ElementState.visible, '30s')
+        checked = "checked" in self.browser.get_element_states("span.slds-checkbox_faux")
+        if not checked:
+            self.browser.click("span.slds-checkbox_faux")
+            sleep(1)
