@@ -53,15 +53,17 @@ def _run_task(task):
     return task.return_values
 
 
-def run_cci_task(class_path, org_name="dev", **options):
+def run_cci_task(task_name, org_name="dev", **options):
 
     """
     Runs a given task using the given class_path and optional org name along with optional options.
 
     Example Usage:
 
-    run_cci_task('cumulusci.tasks.salesforce.Deploy', 'dev', path='force-app')
+    run_cci_task('deploy', 'dev', path='force-app')
     """
+
+    
 
     if getattr(CURRENT_TASK, "stack", None) and CURRENT_TASK.stack[0].project_config:
         _project_config = CURRENT_TASK.stack[0].project_config
@@ -73,15 +75,22 @@ def run_cci_task(class_path, org_name="dev", **options):
     else:
         _org = CliRuntime().project_config.keychain.get_org(org_name)
 
-    task_class = import_global(class_path)
-    task_config = _parse_task_options(options, task_class, TaskConfig())
+    task_config = CliRuntime().project_config.get_task(task_name)
+    task_class = import_global(task_config.class_path)
+    task_config = _parse_task_options(options, task_class, task_config)
     task = task_class(
         task_config.project_config or _project_config,
         task_config,
         org_config=_org,
-        logger=log,
     )
-    return _run_task(task)
+    
+    try:
+        _run_task(task)
+        return True
+    except Exception as e:
+        log.error(f"{e}")
+        return False 
+
 
 
 def run_cci_flow(flow_name, org_name="dev", **options):
@@ -96,7 +105,14 @@ def run_cci_flow(flow_name, org_name="dev", **options):
 
     org_config = CliRuntime().project_config.keychain.get_org(org_name)
     flow_coordinator = CliRuntime().get_flow(flow_name, options=options)
-    flow_coordinator.run(org_config)
+
+    try:
+        flow_coordinator.run(org_config)
+        return True
+    except Exception as e:
+        log.error(f"{e}")
+        return False 
+    
 
 # This has been added and left as a general test runner for testing only
 class testRun(BaseTask):
