@@ -1,14 +1,11 @@
 import subprocess
+from abc import ABC
 
 from qbrix.tools.shared.qbrix_console_utils import init_logger
 from cumulusci.core.utils import import_global
 from cumulusci.core.exceptions import TaskOptionsError
-from cumulusci.core.config import ScratchOrgConfig, TaskConfig, FlowConfig
 from cumulusci.core.tasks import CURRENT_TASK, BaseTask
 from cumulusci.cli.runtime import CliRuntime
-from cumulusci.core.config.org_config import OrgConfig
-from cumulusci.core.config.project_config import BaseProjectConfig
-from cumulusci.core.flowrunner import FlowCoordinator
 
 log = init_logger()
 
@@ -54,7 +51,6 @@ def _run_task(task):
 
 
 def run_cci_task(task_name, org_name="dev", **options):
-
     """
     Runs a given task using the given class_path and optional org name along with optional options.
 
@@ -62,8 +58,6 @@ def run_cci_task(task_name, org_name="dev", **options):
 
     run_cci_task('deploy', 'dev', path='force-app')
     """
-
-    
 
     if getattr(CURRENT_TASK, "stack", None) and CURRENT_TASK.stack[0].project_config:
         _project_config = CURRENT_TASK.stack[0].project_config
@@ -83,18 +77,16 @@ def run_cci_task(task_name, org_name="dev", **options):
         task_config,
         org_config=_org,
     )
-    
+
     try:
         _run_task(task)
         return True
     except Exception as e:
         log.error(f"{e}")
-        return False 
-
+        return False
 
 
 def run_cci_flow(flow_name, org_name="dev", **options):
-
     """
     Runs a given flow using the flow name and optional org name along with optional options.
 
@@ -111,11 +103,11 @@ def run_cci_flow(flow_name, org_name="dev", **options):
         return True
     except Exception as e:
         log.error(f"{e}")
-        return False 
-    
+        return False
 
-# This has been added and left as a general test runner for testing only
-class testRun(BaseTask):
+
+class TestRun(BaseTask, ABC):
+    # This has been added and left as a general test runner for testing only
     task_options = {
         "org": {
             "description": "Org alias",
@@ -124,4 +116,4 @@ class testRun(BaseTask):
     }
 
     def _run_task(self):
-        run_cci_flow("base:deploy_qbrix", "mfgido")
+        pass

@@ -1,14 +1,11 @@
 from genericpath import isfile
 import json
 import os
-import re
-import sys
 import subprocess
 from abc import abstractmethod
 
 from cumulusci.core.config import ScratchOrgConfig
 from cumulusci.tasks.sfdx import SFDXBaseTask
-from cumulusci.core.exceptions import TaskOptionsError
 from cumulusci.core.exceptions import CommandException
 from cumulusci.core.keychain import BaseProjectKeychain
 
@@ -27,8 +24,7 @@ class BatchAnonymousApex(SFDXBaseTask):
         "filepaths": {
             "description": "When mode is set to File, each file is executed in order",
             "required": False
-        }
-        ,
+        },
         "org": {
             "description": "Value to replace every instance of the find value in the source file.",
             "required": False
@@ -113,7 +109,7 @@ class BatchAnonymousApex(SFDXBaseTask):
         self._prepruntime(self)
         self._setprojectdefaults(self.instanceurl)
 
-        if hasattr(self, "filepaths") and not self.filepaths is None:
+        if hasattr(self, "filepaths") and self.filepaths is not None:
             for i, v in enumerate(self.filepaths):
                 if os.path.isfile(v):
                     runthiscmd = f"{LOAD_COMMAND} -f {v} -u {self.accesstoken} --json"

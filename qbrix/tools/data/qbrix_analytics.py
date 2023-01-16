@@ -11,6 +11,35 @@ from qbrix.tools.shared.qbrix_project_tasks import *
 log = init_logger()
 
 
+def cleanup_null_values(file_location):
+    log.info(f"Cleaning {file_location}... ")
+
+    with open(file_location, 'r') as f:
+        data = json.load(f)
+
+    if data is not None:
+        for o in data["objects"][0]["fields"]:
+            if "defaultValue" in o and "type" in o and o["type"] == "Numeric":
+                o["defaultValue"] = "0" if o["defaultValue"].lower() == "null" else o["defaultValue"]
+
+        with open(file_location, 'w') as f:
+            json.dump(data, f)
+
+
+def get_app_name(file_location):
+    with open(file_location, 'r') as file:
+        file.seek(0)
+        file_data = file.read()
+
+    start_pos = file_data.find("<application>") + len("<application>")
+    end_pos = file_data.find("</application>")
+
+    if start_pos > -1 and end_pos > -1:
+        return file_data[start_pos:end_pos]
+    else:
+        return ""
+
+
 class AnalyticsManager(BaseTask, ABC):
     task_docs = """
     Q Brix Analytics Manager handles data which is contained within Analytics CRM Dataset Files. It downloads the data to csv files within the datasets/analytics folder.
@@ -57,22 +86,8 @@ class AnalyticsManager(BaseTask, ABC):
     def run_cleaners(self):
         wave_files = glob.glob(self.dataset_folder + "/*.json", recursive=True)
         for wave in wave_files:
-            self.cleanup_null_values(wave)
+            cleanup_null_values(wave)
         log.info("Cleaning Completed!")
-
-    def cleanup_null_values(self, file_location):
-        log.info(f"Cleaning {file_location}... ")
-
-        with open(file_location, 'r') as f:
-            data = json.load(f)
-
-        if data is not None:
-            for o in data["objects"][0]["fields"]:
-                if "defaultValue" in o and "type" in o and o["type"] == "Numeric":
-                    o["defaultValue"] = "0" if o["defaultValue"].lower() == "null" else o["defaultValue"]
-
-            with open(file_location, 'w') as f:
-                json.dump(data, f)
 
     def download_datasets(self):
 
@@ -105,19 +120,6 @@ class AnalyticsManager(BaseTask, ABC):
 
         subprocess.run("sfdx config:unset instanceUrl", shell=True, capture_output=True)
 
-    def get_app_name(self, file_location):
-        with open(file_location, 'r') as file:
-            file.seek(0)
-            file_data = file.read()
-
-        start_pos = file_data.find("<application>") + len("<application>")
-        end_pos = file_data.find("</application>")
-
-        if start_pos > -1 and end_pos > -1:
-            return file_data[start_pos:end_pos]
-        else:
-            return ""
-
     def upload_dataset_data(self):
         if not os.path.exists("force-app/main/default/wave"):
             log.info("No Source Analytics Folder Found. Skipping Dataset Deployment.")
@@ -140,7 +142,7 @@ class AnalyticsManager(BaseTask, ABC):
         for file in wave_dataset_files:
             dataset_name = Path(file).stem.replace(".wds-meta", "")
             data_file_location = f"{self.dataset_folder}/{dataset_name}.csv"
-            app_name = self.get_app_name(file)
+            app_name = get_app_name(file)
             shane_query = f"sfdx shane:analytics:dataset:upload -f {data_file_location} -n {dataset_name} -u {self.org_config.access_token}"
 
             if os.path.exists(data_file_location):

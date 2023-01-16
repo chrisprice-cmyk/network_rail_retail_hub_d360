@@ -30,14 +30,11 @@ class RunTestim(Command):
         "testimgrid": {
             "description": "Testim grid. If not supplied will default to Testim-Grid",
             "required": False
-        }
-        ,
+        },
         "testimname": {
             "description": "Testim test name.",
             "required": True
-        }
-
-        ,
+        },
         "accesstoken": {
             "description": "Passed in accesstoken associated to the targetusername and instance url.",
             "required": False
@@ -45,13 +42,11 @@ class RunTestim(Command):
         "parameters": {
             "description": "A dictionary of parameters.",
             "required": False
-        }
-        ,
+        },
         "parameterfile": {
             "description": "Relative path to the parameter file to be passed into the Testim test",
             "required": False
-        }
-        ,
+        },
         "org": {
             "description": "Value to replace every instance of the find value in the source file.",
             "required": False
@@ -153,7 +148,7 @@ class RunTestim(Command):
             parmsdic = self.options["parameters"]
             parmsfilename = f"{uuid.uuid4().hex}.json"
             parmsdata = json.dumps(parmsdic)  # default
-            if (parameterscollapsevalues):
+            if parameterscollapsevalues:
 
                 mainkey = list(parmsdic.keys())[0]
                 result = []

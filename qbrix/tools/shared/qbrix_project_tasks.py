@@ -37,7 +37,7 @@ def replace_file_text(file_location, old_text, new_text):
     except Exception as e:
         raise Exception(f"There was an error opening the file with path: {file_location}. Please check the file still exists and that you have access to read it. Error detail: {e}")
 
-    log.info(f"Searching for all references to '{old_text}' and replacing with '{new_text}'.")
+    # log.info(f"Searching for all references to '{old_text}' and replacing with '{new_text}'.")
 
     updated_file_contents = file_contents.replace(f"{old_text}", f"{new_text}")
 
@@ -53,13 +53,13 @@ def get_qbrix_repo_url():
     """ Get Repo URL for current Q Brix
     :return: Returns the GitHub repo url for the Q Brix.
     """
-
+    result = None
     try:
         result = subprocess.run("git config --get remote.origin.url", shell=True, capture_output=True).stdout
     except Exception as e:
         log.error(f"Unable to access GitHub Repository connected to this project. Please check that you have an internet connection and access to the GitHub Repository and you have git installed on your device. Error Detail: {e}")
 
-    if result is None:
+    if not result:
         repo_url = input("Please Enter the complete URL for the Q brix Repo which should be linked to this project (e.g. https://www.github.com/sfdc-qbranch/Qbrix-1-repo): ")
         if repo_url == "" or repo_url is None:
             log.error("A valid GitHub Repo address was not entered. Please ensure that you enter the full URL for the repo.")
@@ -102,8 +102,8 @@ def check_and_delete_dir(dir_path):
             shutil.rmtree(f"{dir_path}")
             log.info(f"Deleted {dir_path} and its contents (if any)")
             return True
-        except:
-            log.error(f"Unable to delete directory with path: {dir_path}")
+        except Exception as e:
+            log.error(f"Unable to delete directory with path: {dir_path}. {e}")
             return False
     else:
         log.debug(f"Directory {dir_path} not found. Skipping.")
@@ -123,8 +123,8 @@ def check_and_delete_file(file_path):
             os.remove(f"{file_path}")
             log.info(f"File Deleted: {file_path}")
             return True
-        except:
-            log.error(f"Unable to remove file: {file_path}")
+        except Exception as e:
+            log.error(f"Unable to remove file: {file_path}. {e}")
             return False
     else:
         log.debug(f"File {file_path} not found. Skipping.")
@@ -250,8 +250,8 @@ def find_missing_features(main_features_file, check_features_file):
         missing_features.sort()
 
         return missing_features
-    except:
-        raise Exception("[ERROR] Failed to compare files.")
+    except Exception as e:
+        raise Exception(f"[ERROR] Failed to compare files. {e}")
 
 
 def check_org_config_files(auto: Optional[bool] = False):
@@ -420,8 +420,8 @@ def download_and_unzip(url: Optional[str] = DEFAULT_UPDATE_LOCATION, archive_pas
 
         # Clean Up
         dirs = glob.glob(".qbrix/Update/**/__pycache__/", recursive=True)
-        for dir in dirs:
-            shutil.rmtree(dir)
+        for folder in dirs:
+            shutil.rmtree(folder)
         if exists("__MACOSX"):
             shutil.rmtree("__MACOSX")
         if exists("q_update_package"):
@@ -530,8 +530,8 @@ def update_file_api_versions(project_api_version):
         try:
             FART.fartbetween(FART, f, "<apiVersion>", "</apiVersion>", project_api_version, None)
             log.info(f"[OK] File Updated: {f}")
-        except:
-            log.error(f"[FAILED] File Update Failed: {f}")
+        except Exception as e:
+            log.error(f"[FAILED] File Update Failed: {f} - {e}")
     # Handle Single Files
     if exists("files/package.xml"):
         try:

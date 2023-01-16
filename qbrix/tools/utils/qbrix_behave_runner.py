@@ -31,8 +31,7 @@ class BehaveRunner(Command):
             "description": "Upload the results to the qbrix report bucket. True or False. ",
             "required": False,
             "default": False
-        }
-        ,
+        },
         "org": {
             "description": "What CCI org to run the test against.",
             "required": False
@@ -127,7 +126,7 @@ class BehaveRunner(Command):
         else:
             self.instanceurl = self.options["instanceurl"]
 
-        if (self.instanceurl[-1] == '/'):
+        if self.instanceurl[-1] == '/':
             self.instanceurl = self.instanceurl.rstrip(self.instanceurl[-1])
 
     def buildcommand(self):
@@ -159,7 +158,7 @@ class BehaveRunner(Command):
 
             finallist = []
             for file in os.listdir("reports"):
-                if not file in currentreports:
+                if file not in currentreports:
                     finallist.append(file)
 
             for file in finallist:

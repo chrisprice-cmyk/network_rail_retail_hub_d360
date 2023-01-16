@@ -93,7 +93,8 @@ class CreateBanner(Command, ABC):
     def _generate_list(self):
 
         # if we are running in a headless runner- tty will not be there.
-        if self.width == 0: return []
+        if self.width == 0:
+            return []
         # Split the input text into separate paragraphs before formatting the
         # length.
         box_width = self.width - 4
@@ -120,6 +121,13 @@ def get_terminal_width():
 
 
 def run_command(command, cwd="."):
+    """
+    Runs a command in the shell
+    :param command: string command statement
+    :param cwd: (Optional) Current Working Directory override
+    :return: code (0 = success, 1 or above = error/failure)
+    """
+
     sys.stdout.write(f"Running Command: {command} in directory {cwd}\n")
     sys.stdout.flush()
 
