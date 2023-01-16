@@ -5,7 +5,7 @@ import os
 import shutil
 from os.path import exists
 from cumulusci.core.tasks import BaseTask
-from qbrix.tools.shared.qbrix_console_utils import init_logger
+from qbrix.tools.shared.qbrix_console_utils import init_logger, run_command
 from qbrix.tools.shared.qbrix_project_tasks import download_and_unzip, replace_file_text
 
 log = init_logger()
@@ -110,6 +110,7 @@ class QBrixUpdater(BaseTask, ABC):
             log.info("Q Brix Update Complete!")
         else:
             log.info("Update File Changed. Running Update Script against in case of changes to the updater")
-            self._run_task()
+            run_command("cci task run update_qbrix")
+
 
 
