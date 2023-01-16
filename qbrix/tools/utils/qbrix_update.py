@@ -95,6 +95,7 @@ class QBrixUpdater(BaseTask, ABC):
             log.info("Update File unchanged")
         else:
             log.info("Update File Changed")
+            log.info("Re-Running Code")
             self._run_task()
 
         # Add new custom tasks
