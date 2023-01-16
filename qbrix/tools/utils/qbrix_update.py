@@ -107,6 +107,8 @@ class QBrixUpdater(BaseTask, ABC):
                 download_and_unzip(self.UpdateLocation, self.ArchivePassword, self.IgnoreOptionalUpdates)
                 log.info("Custom Update Complete")
 
+            os.remove(".qbrix/qbrix_update.py")
+
             log.info("Q Brix Update Complete!")
         else:
             log.info("Update File Changed. Running Update Script against in case of changes to the updater")
