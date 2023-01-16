@@ -1,14 +1,10 @@
-from abc import ABC
-from cumulusci.core.tasks import BaseTask
-from qbrix.tools.shared.qbrix_project_tasks import download_and_unzip, replace_file_text
-from qbrix.tools.shared.qbrix_console_utils import init_logger
+import filecmp
+
 from abc import ABC
 import os
 import shutil
 from os.path import exists
-
 from cumulusci.core.tasks import BaseTask
-
 from qbrix.tools.shared.qbrix_console_utils import init_logger
 from qbrix.tools.shared.qbrix_project_tasks import download_and_unzip, replace_file_text
 
@@ -16,7 +12,6 @@ log = init_logger()
 
 
 class QBrixUpdater(BaseTask, ABC):
-
     q_branch_location = "https://qbrix-core-stage.herokuapp.com/qbrix/q_update_package.zip"
 
     task_docs = """
@@ -24,7 +19,6 @@ class QBrixUpdater(BaseTask, ABC):
 
     Can also be used to update custom scripts and other custom directories from a .zip file which needs to be hosted somewhere (by setting the URL of the .zip file as the UpdateLocation option), in addition the .zip files can also have a password set and you can specify the password using the ArchivePassword option when running the task.
     """
-
 
     task_options = {
         "UpdateLocation": {
@@ -66,12 +60,15 @@ class QBrixUpdater(BaseTask, ABC):
                 log.info(f"Custom task: {key} already exists so skipping.")
 
     def update_folder(self, folder_path, update_dir, remove_existing):
-        if exists(folder_path) and remove_existing:
-            log.info(f"Removing {folder_path}")
-            shutil.rmtree(folder_path)
-        update_path = update_dir + "/" + folder_path
-        log.info(f"Updating {folder_path} from {update_path}")
-        shutil.copytree(src=update_path, dst=folder_path, dirs_exist_ok=True)    
+        try:
+            if exists(folder_path) and remove_existing:
+                log.info(f"Removing {folder_path}")
+                shutil.rmtree(folder_path)
+            update_path = update_dir + "/" + folder_path
+            log.info(f"Updating {folder_path} from {update_path}")
+            shutil.copytree(src=update_path, dst=folder_path, dirs_exist_ok=True)
+        except Exception as e:
+            log.error(f"Update Failed: Error details... {e}")
 
     def _run_task(self):
 
@@ -79,10 +76,11 @@ class QBrixUpdater(BaseTask, ABC):
 
         log.info("Starting Q Brix Update...")
 
+        shutil.copyfile("qbrix/tools/utils/qbrix_update.py", ".qbrix/qbrix_update.py")
+
         log.info("Updating Q Brix Library...")
         if download_and_unzip(self.q_branch_location, self.ArchivePassword, False, True):
-
-             # ADD FOLDERS HERE WHICH YOU WANT TO UPDATE IN PROJECT DIRECTORIES
+            # ADD FOLDERS HERE WHICH YOU WANT TO UPDATE IN PROJECT DIRECTORIES
             # PARAM1 = The folder as if it was from the root path
             # PARAM2 = The location where the source files should be located
             # PARAM3 = If True, it will delete the whole directory in project before updating
@@ -93,17 +91,21 @@ class QBrixUpdater(BaseTask, ABC):
             # Finally Clean Up Cached Folder
             shutil.rmtree(".qbrix/Update")
 
+        if filecmp.cmp(".qbrix/qbrix_update.py", "qbrix/tools/utils/qbrix_update.py"):
+            log.info("Update File unchanged")
+        else:
+            log.info("Update File Changed")
+            self._run_task()
 
         # Add new custom tasks
         tasks_to_update = {}
-        tasks_to_update.update({'qbrix_preflight':'qbrix.tools.utils.qbrix_preflight.RunPreflight'})
-        tasks_to_update.update({'qbrix_landing':'qbrix.tools.utils.qbrix_landing.RunLanding'})
-        tasks_to_update.update({'analytics_manager':'qbrix.tools.data.qbrix_analytics.AnalyticsManager'})
-        tasks_to_update.update({'user_manager':'qbrix.salesforce.qbrix_salesforce_tasks.CreateUser'})
+        tasks_to_update.update({'qbrix_preflight': 'qbrix.tools.utils.qbrix_preflight.RunPreflight'})
+        tasks_to_update.update({'qbrix_landing': 'qbrix.tools.utils.qbrix_landing.RunLanding'})
+        tasks_to_update.update({'analytics_manager': 'qbrix.tools.data.qbrix_analytics.AnalyticsManager'})
+        tasks_to_update.update({'user_manager': 'qbrix.salesforce.qbrix_salesforce_tasks.CreateUser'})
         self._check_and_deploy_class(tasks_to_update)
 
         if self.UpdateLocation:
-
             log.info("Running Custom Update....")
             download_and_unzip(self.UpdateLocation, self.ArchivePassword, self.IgnoreOptionalUpdates)
             log.info("Custom Update Complete")
