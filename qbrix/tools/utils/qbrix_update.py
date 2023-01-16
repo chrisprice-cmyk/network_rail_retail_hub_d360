@@ -93,22 +93,23 @@ class QBrixUpdater(BaseTask, ABC):
 
         if filecmp.cmp(".qbrix/qbrix_update.py", "qbrix/tools/utils/qbrix_update.py"):
             log.info("Update File unchanged")
+
+            # Add new custom tasks
+            tasks_to_update = {}
+            tasks_to_update.update({'qbrix_preflight': 'qbrix.tools.utils.qbrix_preflight.RunPreflight'})
+            tasks_to_update.update({'qbrix_landing': 'qbrix.tools.utils.qbrix_landing.RunLanding'})
+            tasks_to_update.update({'analytics_manager': 'qbrix.tools.data.qbrix_analytics.AnalyticsManager'})
+            tasks_to_update.update({'user_manager': 'qbrix.salesforce.qbrix_salesforce_tasks.CreateUser'})
+            self._check_and_deploy_class(tasks_to_update)
+
+            if self.UpdateLocation:
+                log.info("Running Custom Update....")
+                download_and_unzip(self.UpdateLocation, self.ArchivePassword, self.IgnoreOptionalUpdates)
+                log.info("Custom Update Complete")
+
+            log.info("Q Brix Update Complete!")
         else:
-            log.info("Update File Changed")
-            log.info("Re-Running Code")
+            log.info("Update File Changed. Running Update Script against in case of changes to the updater")
             self._run_task()
 
-        # Add new custom tasks
-        tasks_to_update = {}
-        tasks_to_update.update({'qbrix_preflight': 'qbrix.tools.utils.qbrix_preflight.RunPreflight'})
-        tasks_to_update.update({'qbrix_landing': 'qbrix.tools.utils.qbrix_landing.RunLanding'})
-        tasks_to_update.update({'analytics_manager': 'qbrix.tools.data.qbrix_analytics.AnalyticsManager'})
-        tasks_to_update.update({'user_manager': 'qbrix.salesforce.qbrix_salesforce_tasks.CreateUser'})
-        self._check_and_deploy_class(tasks_to_update)
 
-        if self.UpdateLocation:
-            log.info("Running Custom Update....")
-            download_and_unzip(self.UpdateLocation, self.ArchivePassword, self.IgnoreOptionalUpdates)
-            log.info("Custom Update Complete")
-
-        log.info("Q Brix Update Complete!")
