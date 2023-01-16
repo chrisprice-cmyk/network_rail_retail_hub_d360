@@ -162,7 +162,7 @@ tasks:
 
   omniscript_align:
     class_path: qbrix.tools.utils.qbrix_chiro.OmniscriptAlign
-    
+
   validate_qbrix:
     description: Validates the qbrix
     class_path: cumulusci.tasks.robotframework.Robot
