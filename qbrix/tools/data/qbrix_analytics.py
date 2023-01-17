@@ -1,17 +1,22 @@
+import glob
 import json
+import os
+import subprocess
 from abc import ABC
-from multiprocessing import process
 from pathlib import Path
 import shlex
-import time
 from cumulusci.core.tasks import BaseTask
 from qbrix.tools.shared.qbrix_console_utils import init_logger
-from qbrix.tools.shared.qbrix_project_tasks import *
 
 log = init_logger()
 
 
 def cleanup_null_values(file_location):
+
+    if not str(file_location).endswith(".json"):
+        log.error(f"The file provided was not a json file. File Location: {file_location}")
+        return
+
     log.info(f"Cleaning {file_location}... ")
 
     with open(file_location, 'r') as f:
@@ -27,6 +32,18 @@ def cleanup_null_values(file_location):
 
 
 def get_app_name(file_location):
+
+    if not file_location:
+        log.error("File was not passed. Skipping file")
+        return None
+
+    if not os.path.exists(file_location):
+        log.error(f"The file provided doesn't exist or you do not have permissions to access it. File location: {file_location}")
+        return None
+
+    if not str(file_location).endswith(".wds-meta.xml"):
+        log.debug(f"A file has been passed to an Analytics method, which is not in the expected file format (i.e. File Extension should be .wds-meta.xml). This method will continue to review the file although there may be unexpected results. Please check the file {file_location}")
+
     with open(file_location, 'r') as file:
         file.seek(0)
         file_data = file.read()
@@ -75,13 +92,10 @@ class AnalyticsManager(BaseTask, ABC):
 
     def _init_options(self, kwargs):
         super(AnalyticsManager, self)._init_options(kwargs)
-        self.dataset_folder = self.options[
-            "dataset_folder"] if "dataset_folder" in self.options else "datasets/analytics"
+        self.dataset_folder = self.options["dataset_folder"] if "dataset_folder" in self.options else "datasets/analytics"
         self.mode = self.options["mode"] if "mode" in self.options else "upload"
-        self.share_to_all_internal_users = self.options[
-            "share_to_all_internal_users"] if "share_to_all_internal_users" in self.options else False
-        self.share_to_all_portal_users = self.options[
-            "share_to_all_portal_users"] if "share_to_all_portal_users" in self.options else False
+        self.share_to_all_internal_users = self.options["share_to_all_internal_users"] if "share_to_all_internal_users" in self.options else False
+        self.share_to_all_portal_users = self.options["share_to_all_portal_users"] if "share_to_all_portal_users" in self.options else False
 
     def run_cleaners(self):
         wave_files = glob.glob(self.dataset_folder + "/*.json", recursive=True)
@@ -92,7 +106,7 @@ class AnalyticsManager(BaseTask, ABC):
     def download_datasets(self):
 
         if not os.path.exists("force-app/main/default/wave"):
-            log.info("No Analytics Folder Found. Skipping Dataset Deployment.")
+            log.debug("No Analytics Folder Found. Skipping Dataset Download.")
             return
 
         wave_dataset_files = glob.glob("force-app/main/default/wave" + "/*.wds-meta.xml", recursive=True)
@@ -121,12 +135,13 @@ class AnalyticsManager(BaseTask, ABC):
         subprocess.run("sfdx config:unset instanceUrl", shell=True, capture_output=True)
 
     def upload_dataset_data(self):
+
         if not os.path.exists("force-app/main/default/wave"):
-            log.info("No Source Analytics Folder Found. Skipping Dataset Deployment.")
+            log.debug("No Source Analytics Folder Found at the expected location (force-app/main/default/wave). Skipping Dataset Deployment.")
             return
 
         if not os.path.exists(self.dataset_folder):
-            log.info("No Analytics Datasets Folder Found. Skipping Dataset Deployment.")
+            log.debug(f"No Analytics Datasets Folder Found at expected location ({self.dataset_folder}). Skipping Dataset Deployment.")
             return
 
         self.run_cleaners()
@@ -134,8 +149,7 @@ class AnalyticsManager(BaseTask, ABC):
         wave_dataset_files = glob.glob("force-app/main/default/wave" + "/*.wds-meta.xml", recursive=True)
 
         if len(wave_dataset_files) > 0:
-            subprocess.run(f"sfdx config:set instanceUrl={self.org_config.instance_url}", shell=True,
-                           capture_output=True)
+            subprocess.run(f"sfdx config:set instanceUrl={self.org_config.instance_url}", shell=True, capture_output=True)
 
         app_names = []
 
@@ -180,6 +194,9 @@ class AnalyticsManager(BaseTask, ABC):
 
     def share_app(self, app_names):
 
+        if not app_names:
+            return
+
         extra_cmd = f"sfdx shane:analytics:app:share -u {self.org_config.access_token}"
 
         if self.share_to_all_portal_users or self.share_to_all_internal_users:
@@ -197,8 +214,7 @@ class AnalyticsManager(BaseTask, ABC):
                     extra_cmd += " --org"
 
                 log.info(f"Sharing Analytics App: {app}")
-                subprocess.run(f"sfdx config:set instanceUrl={self.org_config.instance_url}", shell=True,
-                               capture_output=True)
+                subprocess.run(f"sfdx config:set instanceUrl={self.org_config.instance_url}", shell=True, capture_output=True)
                 subprocess.run(extra_cmd, shell=True, capture_output=True)
 
         subprocess.run("sfdx config:unset instanceUrl", shell=True, capture_output=True)
@@ -216,5 +232,5 @@ class AnalyticsManager(BaseTask, ABC):
             case "clean" | "c":
                 self.run_cleaners()
             case _:
-                log.debug("Analytics Manager was called without a valid mode.")
-                exit
+                log.debug("QBrix Analytics Manager was called without a valid mode set.")
+                return

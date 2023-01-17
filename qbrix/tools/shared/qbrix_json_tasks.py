@@ -18,6 +18,9 @@ def remove_json_entry(file_location, key_name):
     if not exists(file_location):
         raise Exception(f"Error: File Path does not exist. Check the file {file_location}")
 
+    if not str(file_location).endswith(".json"):
+        raise Exception(f"Error: File provided is not a json file. Check the file {file_location}")
+
     try:
         with open(file_location) as json_file:
             json_file_data = json.load(json_file)
@@ -44,6 +47,9 @@ def get_json_file_value(file_location, key_name):
 
     if not exists(file_location):
         raise Exception(f"Error: File Path does not exist. Check the file {file_location}")
+
+    if not str(file_location).endswith(".json"):
+        raise Exception(f"Error: File provided is not a json file. Check the file {file_location}")
 
     try:
         with open(file_location) as json_file:
@@ -72,6 +78,9 @@ def update_json_file_value(file_location, key_name, new_value):
 
     if not exists(file_location):
         raise Exception(f"Error: File Path does not exist. Check the file {file_location}")
+
+    if not str(file_location).endswith(".json"):
+        raise Exception(f"Error: File provided is not a json file. Check the file {file_location}")
 
     log.info(f"Updating file: {file_location}, setting key: {key_name} to a new value of :{new_value}")
 

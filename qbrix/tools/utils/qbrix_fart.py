@@ -1,14 +1,8 @@
 import json
 import os
-import re
-import sys
 import subprocess
-import keyring
 from abc import abstractmethod
-
-from cumulusci.core.config import ScratchOrgConfig
 from cumulusci.tasks.command import Command
-from cumulusci.core.exceptions import TaskOptionsError
 from cumulusci.core.exceptions import CommandException
 from cumulusci.core.keychain import BaseProjectKeychain
 
@@ -37,24 +31,19 @@ class FART(Command):
         "find": {
             "description": "Text pattern to locate in the source file.",
             "required": False
-        }
-        ,
+        },
         "findleft": {
             "description": "Left pattern string to locate in the text of the source file.",
             "required": False
-        }
-
-        ,
+        },
         "findright": {
             "description": "Right side of pattern to find in the text of the source file.",
             "required": False
-        }
-        ,
+        },
         "replacewith": {
             "description": "Value to replace every instance of the find value in the source file.",
             "required": False
-        }
-        ,
+        },
         "org": {
             "description": "Value to replace every instance of the find value in the source file.",
             "required": False
@@ -158,10 +147,10 @@ class FART(Command):
             else:
                 self.soql = self.options["soql"]
 
-            if not self.org_config.access_token is None:
+            if self.org_config.access_token is not None:
                 self.accesstoken = self.org_config.access_token
 
-            if not self.org_config.instance_url is None:
+            if self.org_config.instance_url is not None:
                 self.instanceurl = self.org_config.instance_url
 
     def run(self):
@@ -254,7 +243,7 @@ class FART(Command):
 
                 midContents = defcontents[startIndex:endIndex]
 
-                if (formatval is None):
+                if formatval is None:
                     defcontentsmodified = defcontents.replace(f"{left}{midContents}{right}",
                                                               f"{left}{replacewith}{right}")
                 else:
@@ -271,7 +260,7 @@ class FART(Command):
 
         cmd = f"sfdx force:data:soql:query -u {sfdxuser} -q \"{soql}\" --json"
 
-        if (tooling):
+        if tooling:
             cmd = f"{cmd} -t"
 
         result = subprocess.run([cmd], shell=True, capture_output=True)

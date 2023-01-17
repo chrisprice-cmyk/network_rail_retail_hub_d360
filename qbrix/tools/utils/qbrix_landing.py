@@ -1,9 +1,7 @@
 from abc import ABC
 from cumulusci.core.tasks import BaseTask
 from cumulusci.core.config import ScratchOrgConfig
-from qbrix.tools.shared.qbrix_console_utils import init_logger, run_command
-from qbrix.tools.shared.qbrix_project_tasks import *
-from qbrix.salesforce.qbrix_salesforce_tasks import *
+from qbrix.tools.shared.qbrix_console_utils import init_logger
 
 log = init_logger()
 

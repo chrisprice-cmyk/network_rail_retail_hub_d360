@@ -1,14 +1,9 @@
-from genericpath import isfile
 import json
 import requests
-import os
-import re
-import sys
-import subprocess
+
 from abc import abstractmethod
 from cumulusci.core.config import ScratchOrgConfig
 from cumulusci.tasks.sfdx import SFDXBaseTask
-from cumulusci.core.exceptions import TaskOptionsError
 from cumulusci.core.exceptions import CommandException
 from cumulusci.core.keychain import BaseProjectKeychain
 
@@ -89,40 +84,37 @@ class NGOrgConfig(SFDXBaseTask):
             self.instanceurl = self.options["instanceurl"]
 
         self._inject_max_runtime()
-        
-        
+
     def _inject_max_runtime(self):
-        
+
         if self.org_config.max_org_api_version is None:
             self.org_config.max_org_api_version = self._get_org_max_api_version()
-            
+
         if self.org_config.is_qbrix_installed is None:
             self.org_config.is_qbrix_installed = self._is_qbrix_installed
-            
 
-    def _is_qbrix_installed(self,qbrixname):
-        
+    def _is_qbrix_installed(self, qbrixname):
+
         url = f"{self.instanceurl}/services/data/v56.0/query/?q=select+MasterLabel+from+xDO_Base_QBrix_Register__mdt+where+MasterLabel='{qbrixname}'"
         headers = {
-        'Authorization': f'Bearer {self.accesstoken}',
-        'Content-Type': 'application/json'
+            'Authorization': f'Bearer {self.accesstoken}',
+            'Content-Type': 'application/json'
         }
         response = requests.request("GET", url, headers=headers)
-        #print(response.text)
-        data =json.loads(response.text)
+        # print(response.text)
+        data = json.loads(response.text)
         self.logger.info(data["totalSize"])
         return data["totalSize"] == 1
 
-        
     def _get_org_max_api_version(self):
-        
+
         url = f"{self.instanceurl}/services/data/"
         headers = {
-        'Authorization': f'Bearer {self.accesstoken}',
-        'Content-Type': 'application/json'
+            'Authorization': f'Bearer {self.accesstoken}',
+            'Content-Type': 'application/json'
         }
         response = requests.request("GET", url, headers=headers)
-        data =json.loads(response.text)
+        data = json.loads(response.text)
         self.logger.info(response.text)
 
         return float(data[-1]['version'])
@@ -130,7 +122,7 @@ class NGOrgConfig(SFDXBaseTask):
     def _run_task(self):
 
         self._prepruntime(self)
-        
+
     def _handle_returncode(self, returncode, stderr):
         if returncode:
             message = "Return code: {}".format(returncode)

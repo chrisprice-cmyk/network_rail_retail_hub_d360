@@ -9,7 +9,7 @@ from typing import Optional
 from urllib.request import urlopen
 from zipfile import ZipFile
 
-from qbrix.tools.shared.qbrix_json_tasks import *
+from qbrix.tools.shared.qbrix_json_tasks import update_json_file_value, get_json_file_value, remove_json_entry
 from qbrix.tools.shared.qbrix_console_utils import init_logger
 from qbrix.tools.utils.qbrix_fart import FART
 from qbrix.tools.shared.qbrix_cci_tasks import rebuild_cci_cache

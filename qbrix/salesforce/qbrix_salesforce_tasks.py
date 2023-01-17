@@ -5,23 +5,19 @@ import pathlib
 import subprocess
 import yaml
 from abc import ABC
-from typing import Optional
 from datetime import datetime, timedelta
 
 import click
 from cumulusci.core.config import ScratchOrgConfig
-from cumulusci.core.config.org_config import OrgConfig
-from cumulusci.core.dependencies.dependencies import PackageVersionIdDependency, PackageNamespaceVersionDependency, \
-    BaseGitHubDependency, UnmanagedGitHubRefDependency
+from cumulusci.core.dependencies.dependencies import PackageVersionIdDependency, PackageNamespaceVersionDependency, UnmanagedGitHubRefDependency
 from cumulusci.core.dependencies.resolvers import dependency_filter_ignore_deps, get_static_dependencies
 from cumulusci.core.exceptions import CumulusCIException
 from cumulusci.tasks.salesforce.update_dependencies import UpdateDependencies
 from cumulusci.tasks.sfdx import SFDXOrgTask
 from cumulusci.core.tasks import BaseTask
-from qbrix.tools.shared.qbrix_console_utils import init_logger, run_command
+from qbrix.tools.shared.qbrix_console_utils import init_logger
 from cumulusci.tasks.salesforce import BaseSalesforceApiTask
-from cumulusci.core.utils import process_bool_arg, process_list_of_pairs_dict_arg
-from cumulusci.tasks.salesforce.users.photos import UploadProfilePhoto
+from cumulusci.core.utils import process_list_of_pairs_dict_arg
 
 log = init_logger()
 now = datetime.now()
@@ -96,9 +92,31 @@ def QbrixInstallCheck(qbrix_name, org_config):
         return False
 
 
+def _time_since_modified(path):
+    """
+    Returns the time since the target file was last modified
+    """
+
+    timestamp = os.path.getmtime(str(path))
+    last_modified = datetime.fromtimestamp(timestamp)
+    return datetime.now() - last_modified
+
+
+def _remove_missing_field_schema(submitted_dict, field_names):
+    """
+    Removes keys and related values from a submitted dict containing User fields and values, which are not present in the target org.
+    """
+
+    submitted_fields = list(submitted_dict.keys())
+    for key in submitted_fields:
+        if key not in field_names or str(key).endswith("Id"):
+            log.debug(f"The field with api name '{key}' has been removed from this deployment, as it is either not present (or accessible) in the target org or it cannot be used by this task.")
+            del submitted_dict[key]
+    return submitted_dict
+
+
 class CreateUser(BaseSalesforceApiTask, ABC):
     salesforce_task = True
-    
 
     task_docs = """
     Overview: Creates a user or multiple user records in a target org.
@@ -171,26 +189,19 @@ class CreateUser(BaseSalesforceApiTask, ABC):
         self.upsert_field = self.options["upsert_field"] if "upsert_field" in self.options else "External_ID__c"
         self.path = self.options["path"] if "path" in self.options else None
         self.link_contact_record = self.options["link_contact_record"] if "link_contact_record" in self.options else False
-    
-    def _time_since_modified(self, path):
-        
-        """
-        Returns the time since the target file was last modified
-        """
-        
-        timestamp = os.path.getmtime(str(path))
-        last_modified = datetime.fromtimestamp(timestamp)
-        return datetime.now() - last_modified
 
-    def _get_user_desc(self, tmp_file_location = ".qbrix/user_object_desc.json"):
+    def _get_user_desc(self, tmp_file_location=None):
 
         """
         Gets the Object Describe information for the User Object in the target org. This is also cached via a file in .qbrix directory.
         """
 
+        if not tmp_file_location:
+            tmp_file_location = ".qbrix/user_object_desc.json"
+
         TTL = timedelta(minutes=10)
 
-        if os.path.exists(tmp_file_location) and self._time_since_modified(tmp_file_location) <= TTL:
+        if os.path.exists(tmp_file_location) and _time_since_modified(tmp_file_location) <= TTL:
             log.info("Loading cached File...")
             with open(tmp_file_location, "r") as user_detail_file:
                 return json.load(user_detail_file)
@@ -200,21 +211,9 @@ class CreateUser(BaseSalesforceApiTask, ABC):
             user_details = api.User.describe()
             if not os.path.exists(".qbrix"):
                 os.mkdir(".qbrix")
-            with open (tmp_file_location, "w") as user_detail_file:
-                json.dump(user_details,user_detail_file)
+            with open(tmp_file_location, "w") as user_detail_file:
+                json.dump(user_details, user_detail_file)
             return user_details
-
-    def _remove_missing_field_schema(self, submitted_dict, field_names):
-        """
-        Removes keys and related values from a submitted dict containing User fields and values, which are not present in the target org.
-        """
-
-        submitted_fields = list(submitted_dict.keys())
-        for key in submitted_fields:
-            if key not in field_names or str(key).endswith("Id"):
-                log.debug(f"The field with api name '{key}' has been removed from this deployment, as it is either not present (or accessible) in the target org or it cannot be used by this task.")
-                del submitted_dict[key]
-        return submitted_dict
 
     def _ensure_required_fields(self, submitted_dict, field_names, role, profile):
         """
@@ -340,15 +339,15 @@ class CreateUser(BaseSalesforceApiTask, ABC):
                 return user_id
             else:
                 log.error("Record Failed to Update. User ID: " + user_id)
-                return 
-    
+                return
+
     def _upload_user_profile_image(self, user_id, path_to_image):
         """
         Uploads and assigns a user profile image
         """
 
         if str(path_to_image).upper() == "AUTO":
-            return 
+            return
 
         if not os.path.exists(path_to_image):
             log.error(f"Image file path ({path_to_image}) does not exist. Please check file path and try again.")
@@ -446,21 +445,19 @@ class CreateUser(BaseSalesforceApiTask, ABC):
         log.info("Preparing Data for User Record")
 
         # Clean Up Fields which are not available on the User object
-        data = self._remove_missing_field_schema(data, field_names)
+        data = _remove_missing_field_schema(data, field_names)
 
         # Check and Update Required Fields
         data = self._ensure_required_fields(data, field_names, role, profile)
 
         # Link Contact Record
         if link_contact_record:
-            data  = self._link_contact_record(data)
+            data = self._link_contact_record(data)
 
         log.info("Data Ready to upload")
 
         # Load Data
         final_user_id = self._load_data(data)
-
-        
 
         if final_user_id:
 
@@ -470,13 +467,13 @@ class CreateUser(BaseSalesforceApiTask, ABC):
             if user_profile_image:
                 log.info("Adding User Profile Image...")
                 self._upload_user_profile_image(final_user_id, user_profile_image)
-                
+
             # Handle Permissions
             if permission_set_api_names:
                 log.info("Assigning Permission Sets...")
                 self._assign_permission("PermissionSet", final_user_id, permission_set_api_names)
 
-            if permission_set_group_api_names: 
+            if permission_set_group_api_names:
                 log.info("Assigning Permission Set Groups...")
                 self._assign_permission("PermissionSetGroup", final_user_id, permission_set_group_api_names)
 
@@ -495,7 +492,7 @@ class CreateUser(BaseSalesforceApiTask, ABC):
         if contact_lookup["totalSize"] == 1:
             submitted_dict.update(
                 {
-                "ContactId": contact_lookup["records"][0]["Id"]
+                    "ContactId": contact_lookup["records"][0]["Id"]
                 }
             )
             log.info(f"Linked Contact Record ID: {contact_lookup['records'][0]['Id']}")
@@ -503,9 +500,7 @@ class CreateUser(BaseSalesforceApiTask, ABC):
             log.debug(f"No Contact was found with Firstname {submitted_dict['FirstName']} and Lastname {submitted_dict['LastName']}. Make sure you are inserting any required contact data into the org before running this task.")
         return submitted_dict
 
-
     def _run_task(self):
-        
 
         api = self.sf
 
@@ -543,21 +538,19 @@ class CreateUser(BaseSalesforceApiTask, ABC):
                     log.info("Preparing Data for User Record")
 
                     # Clean Up Fields which are not available on the User object
-                    self.data = self._remove_missing_field_schema(self.data, field_names)
+                    self.data = _remove_missing_field_schema(self.data, field_names)
 
                     # Check and Update Required Fields
                     self.data = self._ensure_required_fields(self.data, field_names, self.role, self.profile)
 
                     # Link Contact Record
                     if self.link_contact_record:
-                        self.data  = self._link_contact_record(self.data)
+                        self.data = self._link_contact_record(self.data)
 
                     log.info("Data Ready to upload")
 
                     # Load Data
                     final_user_id = self._load_data(self.data)
-
-                    
 
                     if final_user_id:
 
@@ -567,13 +560,13 @@ class CreateUser(BaseSalesforceApiTask, ABC):
                         if self.user_profile_image:
                             log.info("Adding User Profile Image...")
                             self._upload_user_profile_image(final_user_id, self.user_profile_image)
-                            
+
                         # Handle Permissions
                         if self.permission_set_api_names:
                             log.info("Assigning Permission Sets...")
                             self._assign_permission("PermissionSet", final_user_id, self.permission_set_api_names)
 
-                        if self.permission_set_group_api_names: 
+                        if self.permission_set_group_api_names:
                             log.info("Assigning Permission Set Groups...")
                             self._assign_permission("PermissionSetGroup", final_user_id, self.permission_set_group_api_names)
                     else:

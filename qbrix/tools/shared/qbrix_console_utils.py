@@ -2,6 +2,7 @@ import logging
 import subprocess
 import sys
 import textwrap
+import shlex
 from abc import ABC
 
 from cumulusci.tasks.command import Command
@@ -120,29 +121,41 @@ def get_terminal_width():
     return 0
 
 
-def run_command(command, cwd="."):
+def run_command(command, cwd=None):
     """
-    Runs a command in the shell
+    Runs a command as a subprocess and returns the result code
     :param command: string command statement
     :param cwd: (Optional) Current Working Directory override
     :return: code (0 = success, 1 or above = error/failure)
     """
 
-    sys.stdout.write(f"Running Command: {command} in directory {cwd}\n")
-    sys.stdout.flush()
+    if not cwd:
+        cwd = "."
 
-    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd, bufsize=1,
-                               universal_newlines=True, shell=True)
+    if not command:
+        print("No Command Passed. Returning.")
+        return None
 
-    for line in process.stdout:
-        sys.stdout.write(line)
-        sys.stdout.flush()
+    print(f"Running Command: {command} in directory {cwd}\n")
 
-    if process.poll() == 1:
-        sys.stderr.write(process.stderr.read())
-        sys.stderr.flush()
+    log = init_logger()
 
-    print("Subprocess Completed with code: " + str(process.poll()))
+    try:
+        with subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8', text=True) as proc:
+            errs = []
+            for line in proc.stdout:
+                if line:
+                    log.info(line)
+            for line in proc.stderr:
+                if line:
+                    errs.append(line)
+            stdout, _ = proc.communicate()
+        result = subprocess.CompletedProcess(command, proc.returncode, stdout, "\n".join(errs))
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        log.error("Subprocess Timeout. Killing Process")
+    except Exception as e:
+        proc.kill()
+        log.error(f"Subprocess Failed. Error details: {e}")
 
-    rc = process.poll()
-    return rc
+    return result.returncode

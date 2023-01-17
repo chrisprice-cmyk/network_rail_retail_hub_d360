@@ -2,12 +2,17 @@ from abc import ABC
 
 from cumulusci.core.tasks import BaseTask
 from qbrix.tools.shared.qbrix_console_utils import init_logger
-from qbrix.tools.shared.qbrix_project_tasks import *
+from qbrix.tools.shared.qbrix_project_tasks import update_file_api_versions, delete_standard_fields
 
 log = init_logger()
 
 
 class MassFileOps(BaseTask, ABC):
+
+    task_docs = """
+    Q Brix Mass Operations Utility has a number of helpful methods to save time when developing projects which store Salesforce metadata.
+    """
+
     task_options = {}
 
     def _init_options(self, kwargs):
@@ -15,7 +20,7 @@ class MassFileOps(BaseTask, ABC):
 
     def _run_task(self):
         log.info(f""" 
-        \nQ BRIX - MASS OPERATION UTILITIES\n\n
+        \nQ BRIX - MASS OPERATIONS UTILITY\n\n
         OPTION  DESCRIPTION\n
         [1]     Update File APIs - Updates Apex Classes and LWC/Aura Components with Q Brix API Version\n
         [2]     Delete Standard Fields - Removes standard fields within object folders\n
@@ -34,8 +39,8 @@ class MassFileOps(BaseTask, ABC):
                     delete_standard_fields()
                     log.info("Update Complete!")
             case "e":
-                log.info("Exiting Mass Operations Utilities")
+                log.info("Exiting Q Brix Mass Operations Utility")
                 exit()
             case _:
-                log.error("Invalid Menu Option Selected. Please choose a valid option from the list above.")
+                log.error("Invalid Menu Option Entered. Please choose a valid option from the list above.")
         self._run_task()

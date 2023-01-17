@@ -1,17 +1,12 @@
 import json
 import os
-import re
-import sys
 import subprocess
 import keyring
 import hashlib
 import shutil
 
 from abc import abstractmethod
-
-from cumulusci.core.config import ScratchOrgConfig
 from cumulusci.tasks.command import Command
-from cumulusci.core.exceptions import TaskOptionsError
 from cumulusci.core.exceptions import CommandException
 from cumulusci.core.keychain import BaseProjectKeychain
 
@@ -227,8 +222,6 @@ class OmniscriptAlign(Command):
                     os.remove(target)
                     self.logger.info(f"Pruned::{target}")
 
-
-
         except BaseException as err:
             self.logger.error(f"Pull LWCs-> Unexpected {err}")
 
@@ -404,7 +397,8 @@ class OmniscriptAlign(Command):
             f"sfdx force:data:soql:query -u {username} -q \"SELECT NamespacePrefix FROM PackageLicense where NamespacePrefix in ('omnistudio','vlocity_cmt','vlocity_ps','vlocity_ins') LIMIT 1\" --json"],
             shell=True, capture_output=True, cwd=qbrixtempdir)
 
-        if result is None: return "omnistudio"
+        if result is None:
+            return "omnistudio"
 
         print(result.stdout)
         jsonresult = json.loads(result.stdout)
@@ -416,7 +410,8 @@ class OmniscriptAlign(Command):
         return "omnistudio"
 
     def updatelwcsondisk(self, username: str, oslist):
-        if oslist is None or len(oslist) == 0: return;
+        if oslist is None or len(oslist) == 0:
+            return
         try:
 
             hashname = hashlib.md5(username.encode()).hexdigest()

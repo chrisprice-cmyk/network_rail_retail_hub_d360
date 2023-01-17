@@ -1,16 +1,10 @@
-from concurrent.futures import process
-import json
 import os
-import re
-import sys
 import subprocess
 import keyring
-import uuid
 from abc import abstractmethod
 
 from cumulusci.core.config import ScratchOrgConfig
 from cumulusci.tasks.command import Command
-from cumulusci.core.exceptions import TaskOptionsError
 from cumulusci.core.exceptions import CommandException
 from cumulusci.core.keychain import BaseProjectKeychain
 

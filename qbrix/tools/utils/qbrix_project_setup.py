@@ -1,10 +1,13 @@
 import glob
+import os
 from abc import ABC
 from datetime import datetime
+from os.path import exists
 
 from cumulusci.core.tasks import BaseTask
 from qbrix.tools.shared.qbrix_console_utils import init_logger
-from qbrix.tools.shared.qbrix_project_tasks import *
+from qbrix.tools.shared.qbrix_project_tasks import download_and_unzip, get_qbrix_repo_url, replace_file_text
+from qbrix.tools.shared.qbrix_json_tasks import update_json_file_value
 
 log = init_logger()
 

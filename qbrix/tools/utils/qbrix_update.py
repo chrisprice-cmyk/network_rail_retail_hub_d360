@@ -113,6 +113,3 @@ class QBrixUpdater(BaseTask, ABC):
         else:
             log.info("Update File Changed. Running Update Script against in case of changes to the updater")
             run_command("cci task run update_qbrix")
-
-
-

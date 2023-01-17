@@ -50,7 +50,7 @@ def _run_task(task):
     return task.return_values
 
 
-def run_cci_task(task_name, org_name="dev", **options):
+def run_cci_task(task_name, org_name=None, **options):
     """
     Runs a given task using the given class_path and optional org name along with optional options.
 
@@ -58,6 +58,9 @@ def run_cci_task(task_name, org_name="dev", **options):
 
     run_cci_task('deploy', 'dev', path='force-app')
     """
+
+    if not org_name:
+        org_name = "dev"
 
     if getattr(CURRENT_TASK, "stack", None) and CURRENT_TASK.stack[0].project_config:
         _project_config = CURRENT_TASK.stack[0].project_config
@@ -86,7 +89,7 @@ def run_cci_task(task_name, org_name="dev", **options):
         return False
 
 
-def run_cci_flow(flow_name, org_name="dev", **options):
+def run_cci_flow(flow_name, org_name=None, **options):
     """
     Runs a given flow using the flow name and optional org name along with optional options.
 
@@ -94,6 +97,9 @@ def run_cci_flow(flow_name, org_name="dev", **options):
 
     run_cci_flow('deploy_qbrix', 'dev')
     """
+
+    if not org_name:
+        org_name = "dev"
 
     org_config = CliRuntime().project_config.keychain.get_org(org_name)
     flow_coordinator = CliRuntime().get_flow(flow_name, options=options)

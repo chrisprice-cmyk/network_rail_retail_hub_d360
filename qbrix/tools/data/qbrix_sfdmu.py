@@ -1,13 +1,10 @@
 import json
 import os
-import re
-import sys
 import subprocess
 from abc import abstractmethod
 
 from cumulusci.core.config import ScratchOrgConfig
 from cumulusci.tasks.sfdx import SFDXBaseTask
-from cumulusci.core.exceptions import TaskOptionsError
 from cumulusci.core.exceptions import CommandException
 from cumulusci.core.keychain import BaseProjectKeychain
 
@@ -33,13 +30,11 @@ class SFDMULoad(SFDXBaseTask):
         "instanceurl": {
             "description": "Instance url for the targetusername.",
             "required": False
-        }
-        ,
+        },
         "accesstoken": {
             "description": "Passed in accesstoken associated to the targetusername and instance url.",
             "required": False
-        }
-        ,
+        },
         "org": {
             "description": "Value to replace every instance of the find value in the source file.",
             "required": False
@@ -168,7 +163,7 @@ class SFDMULoad(SFDXBaseTask):
         self.options["command"] = self._get_command()
         output = []
 
-        cmdtorun = self._get_command();
+        cmdtorun = self._get_command()
         resp = subprocess.run([f"{cmdtorun}"], shell=True, capture_output=True, cwd=self.options.get("dir"))
 
         # resp = output[0].decode("utf-8")
