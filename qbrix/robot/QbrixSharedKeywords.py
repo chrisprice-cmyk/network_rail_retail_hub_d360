@@ -58,14 +58,9 @@ class QbrixSharedKeywords(BaseLibrary):
         """
         self.go_to_setup_admin_page("OrgWideEmailAddresses/home")
         sleep(3)
-        # Yes this is a hack and yes it feels like you think it does...HACK to get around init ui
-        # self.go_to_setup_admin_page("SetupOneHome/home")
-        # sleep(3)
-        # self.go_to_setup_admin_page("OrgWideEmailAddresses/home")
-        # sleep(3)
         iframe_handler = self.iframe_handler()
         self.browser.wait_for_elements_state(f"{iframe_handler} h2:text-is('Organization-Wide Email Addresses for User Selection and Default No-Reply Use')", ElementState.visible, '15s')
-        if "visible" not in self.browser.get_element_states(f"{iframe_handler} td:has-text('{org_wide_email_address}')"):
+        if self.browser.get_element_count(f"{iframe_handler} td:has-text('{org_wide_email_address}')") == 0:
             self.browser.click(f"{iframe_handler} .btn:has-text('Add')")
             sleep(2)
             self.browser.fill_text(f"{iframe_handler} tr:has-text('Display Name') >> input", "Default Email")
