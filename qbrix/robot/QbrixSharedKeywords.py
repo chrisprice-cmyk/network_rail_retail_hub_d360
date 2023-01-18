@@ -97,9 +97,10 @@ class QbrixSharedKeywords(BaseLibrary):
 
             # Handler for help messages
             if self.browser.get_element_count("iframe") > 1:
-                if self.browser.get_element_count("iframe >> btn:has-text('Dismiss')") > 0:
-                    for elem in self.browser.get_elements("iframe >> btn:has-text('Dismiss')"):
+                if self.browser.get_element_count("button:has-text('Dismiss')") > 0:
+                    for elem in self.browser.get_elements("button:has-text('Dismiss')"):
                         self.browser.click(elem)
+                        sleep(1)
 
             # Allow time for page load to complete
             sleep(sleep_length)
