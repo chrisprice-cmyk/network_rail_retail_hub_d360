@@ -76,7 +76,11 @@ class QBrixUpdater(BaseTask, ABC):
 
         log.info("Starting Q Brix Update...")
 
-        shutil.copyfile("qbrix/tools/utils/qbrix_update.py", ".qbrix/qbrix_update.py")
+        if not os.path.exists(".qbrix"):
+            os.mkdir(".qbrix")
+
+        if os.path.exists("qbrix/tools/utils/qbrix_update.py"):
+            shutil.copyfile("qbrix/tools/utils/qbrix_update.py", ".qbrix/qbrix_update.py")
 
         log.info("Updating Q Brix Library...")
         if download_and_unzip(self.q_branch_location, self.ArchivePassword, False, True):
