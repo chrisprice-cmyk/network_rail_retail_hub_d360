@@ -23,17 +23,21 @@ class QbrixSurveysKeywords(BaseLibrary):
         Enables Salesforce Survey Setting in target Salesforce Org
         """
         sleep(5)
-        self.shared.go_to_setup_admin_page("SurveySettings/home", 12)
-        survey_toggle = "[class=\"toggle slds-p-left_medium\"]"
+        try:
+            self.shared.go_to_setup_admin_page("SurveySettings/home", 12)
+            survey_toggle = "[class=\"toggle slds-p-left_medium\"]"
 
-        if self.browser.get_element_count(survey_toggle) == 1:
-            self.browser.wait_for_elements_state(survey_toggle, ElementState.visible, '30s')
-            toggle_switch = self.browser.get_element(survey_toggle)
+            if self.browser.get_element_count(survey_toggle) == 1:
+                self.browser.wait_for_elements_state(survey_toggle, ElementState.visible, '30s')
+                toggle_switch = self.browser.get_element(survey_toggle)
 
-            # use hover and click for aura toggle to behave
-            self.browser.hover(toggle_switch)
-            self.browser.click(toggle_switch)
-            sleep(10)
+                # use hover and click for aura toggle to behave
+                self.browser.hover(toggle_switch)
+                self.browser.click(toggle_switch)
+                sleep(10)
+        except Exception as e:
+            self.browser.take_screenshot()
+            raise e
 
     def set_survey_default_community(self, communityname: str):
         """

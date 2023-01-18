@@ -25,6 +25,7 @@ project:
   custom:
     # ADD YOUR DETAILS HERE FOR Q BRIX REGISTRATION
     # It is recommended you run "Setup New Q Brix Project" from the VSCode Build Tasks to set these as it will also update other files
+    # Guidance: https://confluence.internal.salesforce.com/display/QNEXTGENDEMOS/Setup+Qbrix+Task
     qbrix_owner_name: "OWNER NAME HERE"
     qbrix_owner_team: "OWNER TEAM HERE"
     qbrix_publisher_name: "OWNER OR PUBLISHER NAME HERE"
@@ -48,15 +49,10 @@ project:
   #------------------------------------#
   # QBRIX PACKAGE DEPENDENCIES         #
   #------------------------------------#
-  #ADD MANAGED & UNMANAGED PACKAGE DEPENDENCIES HERE. OTHER CCI PROJECTS CAN ALSO BE LINKED PROVIDING THEY WORK WITH JUST A DEPLOY METHOD.
+  # ADD MANAGED & UNMANAGED PACKAGE DEPENDENCIES HERE. OTHER CCI PROJECTS CAN ALSO BE LINKED PROVIDING THEY WORK WITH JUST A DEPLOY METHOD.
+  # Guidance: https://confluence.internal.salesforce.com/display/QNEXTGENDEMOS/Package+Install
 
   dependencies:
-  #--Examples:
-  #   - github: GitHubRepoURLHere (Note: This MUST be a CumulusCI Project and doesn't support custom installs, use sources if thats needed)
-  #   - version_id: UnmanagedPackageIDHere
-  #   - namespace: ManagedPackageNamespaceHere (Note: Lightning Components need to use the package ID and are treated as an unmanaged package)
-  #     version: ManagedPackageVersionNumberHere
-  #--Add Project Level Dependencies Below
 
 #--Add Project Sources here--
 sources:
@@ -64,6 +60,7 @@ sources:
   # QBRIX SOURCES                      #
   #------------------------------------#
   # Add Q Brix Sources here. These must be located on GitHub and be a CCI Project or Q Brix Project.
+  # Guidance: https://confluence.internal.salesforce.com/display/QNEXTGENDEMOS/QBrix+Dependencies
 
   base:
     github: https://github.com/sfdc-qbranch/QBrix-0-xDO-BaseConfig
@@ -179,25 +176,19 @@ tasks:
   # DATA TOOL INTEGRATION              #
   #------------------------------------#
   # Note: This section can be removed if you are not using the NextGen Data Tool
+  # Guide: https://confluence.internal.salesforce.com/display/QNEXTGENDEMOS/NextGen+Data+Tool
 
   deploy_nextgen_data:
     class_path: qbrix.tools.utils.qbrix_nextgen_datatool.RunDataTool
-    options:
-      # Replace the data_keys with the Data Collection ID (or IDs) of the collection(s) you want to deploy
-      data_keys:
-        - 3cbc53bc-796c-481d-800c-bad0885686c5
 
   #------------------------------------#
   # TESTIM INTEGRATION                 #
   #------------------------------------#
-  # Replace the testimname parameter value with the name of the script you want to run.
   # Note: This section can be removed if you are not using Testim.
+  # Guide: https://confluence.internal.salesforce.com/display/QNEXTGENDEMOS/Testim-via+CCI+Task
+
   qbrix_task_Testim:
-    description: "Run Testim Script"
     class_path: qbrix.tools.testing.qbrix_testim.RunTestim
-    options:
-      testimname: "REPLACE WITH NAME OF SCRIPT"
-      pass_env: true
 
   #------------------------------------#
   # CUSTOM TASKS                       #
