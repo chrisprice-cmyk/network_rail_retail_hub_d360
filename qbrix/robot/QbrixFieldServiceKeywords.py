@@ -235,3 +235,28 @@ class QbrixFieldServiceKeywords(BaseLibrary):
             sleep(5)
             self.browser.click("button:text-is('Save')")
             sleep(5)
+
+    def relax_security_on_fs_apps(self, connected_app_label):
+        """
+        Relaxes Security Options on the Fields Service Mobile Apps. Should only be used for demo purposes.
+        """
+        self.shared.go_to_setup_admin_page("ConnectedApplication/home")
+        iframe_selector = self.shared.iframe_handler()
+        self.browser.wait_for_elements_state(f"{iframe_selector} h1:text-is('Connected Apps')", ElementState.visible, "15s")
+        self.browser.click(f"{iframe_selector} a:text-is('{connected_app_label}')")
+        self.browser.wait_for_elements_state(f"{iframe_selector} h2.mainTitle:text-is('Connected App Detail')", ElementState.visible, "15s")
+        self.browser.click(f"{iframe_selector} .btn:has-text('Edit Policies')")
+        self.browser.wait_for_elements_state(f"{iframe_selector} h2.mainTitle:text-is('Connected App Edit')", ElementState.visible, "15s")
+        self.browser.select_options_by(f"{iframe_selector} #ippolicy", SelectAttribute.text, "Relax IP restrictions")
+        sleep(1)
+        self.browser.select_options_by(f"{iframe_selector} #MobileSessionTimeout", SelectAttribute.text, "--None--")
+        sleep(1)
+        self.browser.select_options_by(f"{iframe_selector} #PinLength", SelectAttribute.text, "--None--")
+        sleep(1)
+        self.browser.click(f"{iframe_selector} .btn:has-text('Save')")
+        self.browser.wait_for_elements_state(f"{iframe_selector} h2.mainTitle:text-is('Connected App Detail')", ElementState.visible, "15s")
+
+
+    def relax_security_for_connected_apps(self):
+        self.relax_security_on_fs_apps("Salesforce Field Service for iOS")
+        self.relax_security_on_fs_apps("Salesforce Field Service for Android")
