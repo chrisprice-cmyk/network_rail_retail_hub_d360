@@ -115,21 +115,32 @@ class QbrixSharedKeywords(BaseLibrary):
         :return:
         """
 
-        # If no iframes are found, return empty selector
+        sleep(2)
+
         if self.browser.get_element_count("iframe") == 0:
-            return ""
+            retries = 0
+            while retries < 4:
+                retries += 1
+                sleep(2)
+                if self.browser.get_element_count("iframe") == 0 and retries == 3:
+                    return ""
+                if self.browser.get_element_count("iframe") > 0:
+                    self.iframe_handler()
 
-        if self.browser.get_element_count("iframe") > 1:
-            # Handles Console Layouts and Setup Pages where guidance prompts have opened
-            if self.browser.get_element_count("div.mainContentMark") == 1:
-                return "div.mainContentMark >> iframe >>>"
+        # Handles Console Layouts and Setup Pages where guidance prompts have opened
+        if self.browser.get_element_count("div.mainContentMark") == 1:
+            return "div.mainContentMark >> iframe >>>"
 
-            # Handles LEX Setup Pages with embedded Classic UI Settings Pages
-            if self.browser.get_element_count("div.oneAlohaPage") == 1:
-                return "div.oneAlohaPage >> iframe >>>"
-        else:
-            # Handles all areas where there is only one iframe
+        # Handles LEX Setup Pages with embedded Classic UI Settings Pages or older LEX Setup Pages
+        if self.browser.get_element_count("div.oneAlohaPage") == 1:
+            return "div.oneAlohaPage >> iframe >>>"
+
+        # Handles other situations
+        if self.browser.get_element_count("iframe") == 1 and (self.browser.get_element_count("div.oneAlohaPage") < 1 or self.browser.get_element_count("div.mainContentMark") < 1):
             return "iframe >>>"
+
+        if self.browser.get_element_count("iframe") > 1 and (self.browser.get_element_count("div.oneAlohaPage") < 1 or self.browser.get_element_count("div.mainContentMark") < 1):
+            return "nth-match(iframe, 1) >>>"
 
         return ""
 

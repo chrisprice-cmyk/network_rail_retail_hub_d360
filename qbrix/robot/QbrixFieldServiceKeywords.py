@@ -46,26 +46,27 @@ class QbrixFieldServiceKeywords(BaseLibrary):
         self.shared.go_to_app("Field Service Admin")
         # Go To Field Service Package Settings Page
         self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/n/FSL__Field_Service_Settings", timeout='30s')
-        self.browser.wait_for_elements_state("iframe >>> h1:has-text('Getting Started'):visible", ElementState.visible,
-                                             '120s')
+        iframe_selector = self.shared.iframe_handler()
+        self.browser.wait_for_elements_state(f"{iframe_selector} h1:has-text('Getting Started'):visible", ElementState.visible, '120s')
 
     def field_service_sdo_config(self):
         """ Go to Field Service Settings and configure additional settings for demo use """
 
         # Go to Field Service Settings
         self.go_to_field_service_admin_page()
+        iframe_selector = self.shared.iframe_handler()
 
         # Enable Schedule Bundling
-
-        menu_scheduling_selector = ":nth-match(iframe,1) >>> id=SettingsMenu >> div.menuItem >> span:text-is('Scheduling'):visible"
-        tabs_bundling_selector = ":nth-match(iframe,1) >>> div.settings-tab:has-text('Bundling')"
-        tabs_routing_selector = ":nth-match(iframe,1) >>> div.settings-tab:has-text('Routing')"
-        checkbox_bundling_selector = ":nth-match(iframe,1) >>> div.setting-row-container:has-text('Bundle your service appointments') >> div.slds-checkbox"
-        checkbox_streetlevel_selector_status = ":nth-match(iframe,1) >>> div.setting-row-container:has-text('Enable Street Level Routing') >> label.slds-checkbox__label >> input"
-        checkbox_pointtopoint_selector_status = ":nth-match(iframe,1) >>> div.setting-row-container:has-text('Enable Point-to-Point Predictive Routing') >> label.slds-checkbox__label >> input"
-        checkbox_streetlevel_selector = ":nth-match(iframe,1) >>> div.setting-row-container:has-text('Enable Street Level Routing') >> div.slds-checkbox"
-        checkbox_pointtopoint_selector = ":nth-match(iframe,1) >>> div.setting-row-container:has-text('Enable Point-to-Point Predictive Routing') >> div.slds-checkbox"
-        save_button_selector = ":nth-match(iframe,1) >>> div.save-footer >> div.save-button:visible"
+        print("Enabling Scheduling")
+        menu_scheduling_selector = f"{iframe_selector} id=SettingsMenu >> div.menuItem >> span:text-is('Scheduling'):visible"
+        tabs_bundling_selector = f"{iframe_selector} div.settings-tab:has-text('Bundling')"
+        tabs_routing_selector = f"{iframe_selector} div.settings-tab:has-text('Routing')"
+        checkbox_bundling_selector = f"{iframe_selector} div.setting-row-container:has-text('Bundle your service appointments') >> div.slds-checkbox"
+        checkbox_streetlevel_selector_status = f"{iframe_selector} div.setting-row-container:has-text('Enable Street Level Routing') >> label.slds-checkbox__label >> input"
+        checkbox_pointtopoint_selector_status = f"{iframe_selector} div.setting-row-container:has-text('Enable Point-to-Point Predictive Routing') >> label.slds-checkbox__label >> input"
+        checkbox_streetlevel_selector = f"{iframe_selector} div.setting-row-container:has-text('Enable Street Level Routing') >> div.slds-checkbox"
+        checkbox_pointtopoint_selector = f"{iframe_selector} div.setting-row-container:has-text('Enable Point-to-Point Predictive Routing') >> div.slds-checkbox"
+        save_button_selector = f"{iframe_selector} div.save-footer >> div.save-button:visible"
 
         scheduling_changes_made = False
         self.browser.click(menu_scheduling_selector)
@@ -73,7 +74,7 @@ class QbrixFieldServiceKeywords(BaseLibrary):
         self.browser.click(tabs_bundling_selector)
         sleep(5)
 
-        bundle_activation_selector_state = self.browser.get_element_states("iframe >>> div.bundle-settings >> p:text-is('Service appointment bundles are active.')")
+        bundle_activation_selector_state = self.browser.get_element_states(f"{iframe_selector} div.bundle-settings >> p:text-is('Service appointment bundles are active.')")
 
         if "visible" not in bundle_activation_selector_state:
             self.browser.click(checkbox_bundling_selector)
@@ -98,17 +99,17 @@ class QbrixFieldServiceKeywords(BaseLibrary):
             sleep(2)
 
         # Setup Dispatcher UI - Custom Actions
-
-        menu_dispatcher_ui_selector = ":nth-match(iframe,1) >>> id=SettingsMenu >> div.menuItem >> span:text-is('Dispatcher Console UI'):visible"
-        drag_jumps_selector = ":nth-match(iframe,1) >>> div.setting-row-container:has-text('Drag jumps on gantt') >> input.input-settings"
-        gantt_settings_selector = ":nth-match(iframe,1) >>> div.settings-tab:has-text('Updating the Gantt')"
-        gantt_refresh_selector = ":nth-match(iframe,1) >>> div.setting-row-container:has-text('Seconds between Gantt refreshes') >> input.input-settings"
-        tabs_custom_actions_selector = ":nth-match(iframe,1) >>> div.settings-tab:has-text('Custom Actions')"
-        action_cat_selector = ":nth-match(iframe,1) >>> id=CA-GanttSection >> div:text-is('Mass Actions')"
-        new_action_btn_selector = ":nth-match(iframe,1) >>> id=CA-newAction"
-        new_action_label_selector = ":nth-match(iframe,1) >>> div.CA-field-container:has-text('Label in Dispatcher Console') >> input.CA-input-label"
-        vf_page_selector = ":nth-match(iframe,1) >>> div.CA-field-container:has-text('Visualforce') >> select.select-setting"
-        custom_perm_selector = ":nth-match(iframe,1) >>> div.CA-field-container:has-text('Required Custom Permission') >> select.select-setting"
+        print("Dispatcher UI")
+        menu_dispatcher_ui_selector = f"{iframe_selector} id=SettingsMenu >> div.menuItem >> span:text-is('Dispatcher Console UI'):visible"
+        drag_jumps_selector = f"{iframe_selector} div.setting-row-container:has-text('Drag jumps on gantt') >> input.input-settings"
+        gantt_settings_selector = f"{iframe_selector} div.settings-tab:has-text('Updating the Gantt')"
+        gantt_refresh_selector = f"{iframe_selector} div.setting-row-container:has-text('Seconds between Gantt refreshes') >> input.input-settings"
+        tabs_custom_actions_selector = f"{iframe_selector} div.settings-tab:has-text('Custom Actions')"
+        action_cat_selector = f"{iframe_selector} id=CA-GanttSection >> div:text-is('Mass Actions')"
+        new_action_btn_selector = f"{iframe_selector} id=CA-newAction"
+        new_action_label_selector = f"{iframe_selector} div.CA-field-container:has-text('Label in Dispatcher Console') >> input.CA-input-label"
+        vf_page_selector = f"{iframe_selector} div.CA-field-container:has-text('Visualforce') >> select.select-setting"
+        custom_perm_selector = f"{iframe_selector} div.CA-field-container:has-text('Required Custom Permission') >> select.select-setting"
 
         self.browser.click(menu_dispatcher_ui_selector)
 
@@ -128,39 +129,43 @@ class QbrixFieldServiceKeywords(BaseLibrary):
         self.browser.click(tabs_custom_actions_selector)
         sleep(15)
         self.browser.click(action_cat_selector)
-        sleep(1)
+        sleep(2)
+
+        custom_actions_added = False
 
         # Create Demo Bundle
-        if "visible" not in self.browser.get_element_states(
-                ":nth-match(iframe,1) >>> div.singleCustomAction:has-text('Create Demo Bundle')"):
+        if self.browser.get_element_count(f"{iframe_selector} #CA-ActionsList >> div.singleCustomAction:has-text('Create Demo Bundle')") == 0:
             self.browser.click(new_action_btn_selector)
-            sleep(2)
+            sleep(1)
+            self.browser.click(f"{iframe_selector} #CA-ActionsList >> div.singleCustomAction:has-text('My Action')")
+            sleep(1)
             self.browser.fill_text(new_action_label_selector, "Create Demo Bundle")
             self.browser.select_options_by(vf_page_selector, SelectAttribute.text, "SDO_FSL_Launch_Create_Bundles_Flow")
-            self.browser.select_options_by(custom_perm_selector, SelectAttribute.text,
-                                           "Gantt and List - Bundle and Unbundle")
-            self.browser.click(save_button_selector)
-            sleep(5)
+            self.browser.select_options_by(custom_perm_selector, SelectAttribute.text, "Gantt and List - Bundle and Unbundle")
+            custom_actions_added = True
 
         # Create Sliding Demo Data
-        if "visible" not in self.browser.get_element_states(
-                ":nth-match(iframe,1) >>> div.singleCustomAction:has-text('Create Sliding Demo Data')"):
+        if "visible" not in self.browser.get_element_states(f"{iframe_selector} div.singleCustomAction:has-text('Create Sliding Demo Data')"):
             self.browser.click(new_action_btn_selector)
-            sleep(2)
+            sleep(1)
+            self.browser.click(f"{iframe_selector} #CA-ActionsList >> div.singleCustomAction:has-text('My Action')")
+            sleep(1)
             self.browser.fill_text(new_action_label_selector, "Create Sliding Demo Data")
-            self.browser.select_options_by(vf_page_selector, SelectAttribute.text,
-                                           "SDO_FSL_Launch_Sliding_Flow_Launch_Slide")
+            self.browser.select_options_by(vf_page_selector, SelectAttribute.text, "SDO_FSL_Launch_Sliding_Flow_Launch_Slide")
             self.browser.select_options_by(custom_perm_selector, SelectAttribute.text, "Bulk Schedule")
+            custom_actions_added = True
+         
+        if custom_actions_added:
             self.browser.click(save_button_selector)
             sleep(5)
 
         # Setup Optimization
-        menu_optimize_selector = ":nth-match(iframe,1) >>> id=SettingsMenu >> div.menuItem >> span:text-is('Optimization'):visible"
-        optimization_checkbox_selector = ":nth-match(iframe,1) >>> div.slds-media:has-text('Optimization Insights') >> div.transitions-checkbox >> span.toggled-label:text-is('ON')"
+        menu_optimize_selector = f"{iframe_selector} id=SettingsMenu >> div.menuItem >> span:text-is('Optimization'):visible"
+        optimization_checkbox_selector = f"{iframe_selector} div.slds-media:has-text('Optimization Insights') >> div.transitions-checkbox >> span.toggled-label:text-is('OFF')"
 
         self.browser.click(menu_optimize_selector)
         sleep(1)
-        if "visible" not in self.browser.get_element_states(optimization_checkbox_selector):
+        if self.browser.get_element_count(optimization_checkbox_selector) == 1:
             self.browser.click(optimization_checkbox_selector)
             self.browser.click(save_button_selector)
             sleep(5)
@@ -172,11 +177,12 @@ class QbrixFieldServiceKeywords(BaseLibrary):
         Enables all Field Service Permission Sets and also updates Permissions Sets if there are updates waiting
         """
         self.go_to_field_service_admin_page()
-        self.browser.click(":nth-match(iframe,1) >>> div.settings-tab:has-text('Permission Sets')")
+        iframe_selector = self.shared.iframe_handler()
+        self.browser.click(f"{iframe_selector} div.settings-tab:has-text('Permission Sets')")
         sleep(30)
 
-        create_permission_selector = ":nth-match(iframe,1) >>> div:text-is('Create Permissions')"
-        update_permission_selector = ":nth-match(iframe,1) >>> div:text-is('Update Permissions')"
+        create_permission_selector = f"{iframe_selector} div:text-is('Create Permissions')"
+        update_permission_selector = f"{iframe_selector} div:text-is('Update Permissions')"
 
         for x in range(0, 4):
 
@@ -203,22 +209,23 @@ class QbrixFieldServiceKeywords(BaseLibrary):
         Disables Field Service Status Transitions
         """
         self.go_to_field_service_admin_page()
-        self.browser.click(":nth-match(iframe,1) >>> span:text-is('Service Appointment Life Cycle')")
-        self.browser.wait_for_elements_state(":nth-match(iframe,1) >>> h1:text-is('Service Appointment Life Cycle')",
+        iframe_selector = self.shared.iframe_handler()
+        self.browser.click(f"{iframe_selector} span:text-is('Service Appointment Life Cycle')")
+        self.browser.wait_for_elements_state(f"{iframe_selector} h1:text-is('Service Appointment Life Cycle')",
                                              ElementState.visible, '15s')
-        self.browser.click(":nth-match(iframe,1) >>> div.settings-tab:has-text('Status Transitions')")
+        self.browser.click(f"{iframe_selector} div.settings-tab:has-text('Status Transitions')")
         self.browser.wait_for_elements_state(
-            ":nth-match(iframe,1) >>> div:text-is('Service Appointment Status Transitions')", ElementState.visible,
+            f"{iframe_selector} div:text-is('Service Appointment Status Transitions')", ElementState.visible,
             '15s')
         visible = "visible" in self.browser.get_element_states(
-            ":nth-match(iframe,1) >>> :nth-match(span.innerCheckboxValue.unchecked, 1)")
+            f"{iframe_selector} :nth-match(span.innerCheckboxValue.unchecked, 1)")
         if not visible:
             toggle_switch = self.browser.get_element(
-                ":nth-match(iframe,1) >>> :nth-match(span.innerCheckboxValue.checked, 1)")
+                f"{iframe_selector} :nth-match(span.innerCheckboxValue.checked, 1)")
             self.browser.click(toggle_switch)
-            self.browser.click(":nth-match(iframe,1) >>> .ng-scope:nth-child(2) >> #SettingContainer .save-button")
+            self.browser.click(f"{iframe_selector} .ng-scope:nth-child(2) >> #SettingContainer .save-button")
             self.browser.wait_for_elements_state(
-                ":nth-match(iframe,1) >>> .ng-scope:nth-child(2) >> span:text-is('Your changes were saved.')",
+                f"{iframe_selector} .ng-scope:nth-child(2) >> span:text-is('Your changes were saved.')",
                 ElementState.visible, '10s')
 
     def disable_field_service_integration(self):
