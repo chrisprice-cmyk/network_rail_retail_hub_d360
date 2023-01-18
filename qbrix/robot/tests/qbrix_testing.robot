@@ -5,8 +5,8 @@ Library           qbrix/robot/QbrixEinsteinKeywords.py
 Library           qbrix/robot/QbrixServiceKeywords.py
 Library           qbrix/robot/QbrixToolingKeywords.py
 Suite Setup       Run keywords
-...               Set browser timeout    60 seconds
-...               AND    Open test browser    wait=false
+...               Open test browser    wait=false
+...               AND   Set browser timeout    900 seconds
 ...               AND    Go To Lightning Setup Home
 Suite Teardown    Close browser
 
@@ -20,7 +20,7 @@ Suite Teardown    Close browser
 #
 # The above will allow you to see what the robot is doing and also generate a log of what is happening. See the output.xml file afterwards to help diagnose issues.
 #
-# Note: The default timeout for this is 60 seconds but if you have a long running process, ensure you change the value above next to "Set browser timeout" to something more suitable for the overall timeout for everything you are running.
+# Note: The default timeout for this is 900 seconds but if you have a long running process, ensure you change the value above next to "Set browser timeout" to something more suitable for the overall timeout for everything you are running.
 #
 Run Automation
     enable_data_tool

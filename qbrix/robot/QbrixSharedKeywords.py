@@ -30,7 +30,7 @@ class QbrixSharedKeywords(BaseLibrary):
         """
         Goes directly to set up home page in Lightning UI
         """
-        self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/setup/SetupOneHome/home")
+        self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/setup/SetupOneHome/home", timeout="90s")
         self.browser.wait_for_elements_state("h1:has-text('Home')", ElementState.visible, '30s')
 
     def go_to_app(self, app_name):
@@ -95,15 +95,25 @@ class QbrixSharedKeywords(BaseLibrary):
         try:
             self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/setup/{setup_page_url}", timeout='30s')
 
-            # Handler for help messages
-            if self.browser.get_element_count("iframe") > 1:
-                if self.browser.get_element_count("button:has-text('Dismiss')") > 0:
-                    for elem in self.browser.get_elements("button:has-text('Dismiss')"):
-                        self.browser.click(elem)
-                        sleep(1)
+            # Handlers for help messages and new feature modals
+            
+            if self.browser.get_element_count("button:has-text('Dismiss')") > 0:
+                for elem in self.browser.get_elements("button:has-text('Dismiss')"):
+                    try:
+                        self.browser.click(selector=elem, force=True, noWaitAfter=True)
+                    except:
+                        continue
+
+            if self.browser.get_element_count("div.modal-container:visible") > 0:
+                for elem in self.browser.get_elements("div.modal-container:visible >> button:has-text('Close this window')"):
+                    try:
+                        self.browser.click(selector=elem, force=True, noWaitAfter=True)
+                    except:
+                        continue
 
             # Allow time for page load to complete
             sleep(sleep_length)
+            
         except Exception as e:
             self.browser.take_screenshot()
             raise e
@@ -200,10 +210,11 @@ class QbrixSharedKeywords(BaseLibrary):
 
         if button_text is None:
             raise Exception("Button Text must be specified")
-        visible = "visible" in self.browser.get_element_states(
-            f":nth-match(iframe,1) >>> button:has-text('{button_text}')")
+
+        iframe_handler = self.iframe_handler()
+        visible = "visible" in self.browser.get_element_states(f"{iframe_handler} button:has-text('{button_text}')")
         if visible:
-            button_to_click = self.browser.get_element(f":nth-match(iframe,1) >>> button:has-text('{button_text}')")
+            button_to_click = self.browser.get_element(f"{iframe_handler} button:has-text('{button_text}')")
             self.browser.click(button_to_click)
             sleep(1)
 
