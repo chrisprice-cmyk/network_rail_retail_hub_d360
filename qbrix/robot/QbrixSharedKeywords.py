@@ -56,18 +56,22 @@ class QbrixSharedKeywords(BaseLibrary):
         Sets and org wide email address for the target org, defaulting to the sdo address
         :param org_wide_email_address: (Optional) Email Address to use as new org wide email, although this parameter will default to sdo@salesforce.com
         """
-        self.go_to_setup_admin_page("OrgWideEmailAddresses/home")
-        sleep(3)
-        iframe_handler = self.iframe_handler()
-        self.browser.wait_for_elements_state(f"{iframe_handler} h2:text-is('Organization-Wide Email Addresses for User Selection and Default No-Reply Use')", ElementState.visible, '15s')
-        if self.browser.get_element_count(f"{iframe_handler} td:has-text('{org_wide_email_address}')") == 0:
-            self.browser.click(f"{iframe_handler} .btn:has-text('Add')")
-            sleep(2)
-            self.browser.fill_text(f"{iframe_handler} tr:has-text('Display Name') >> input", "Default Email")
-            self.browser.fill_text(f"{iframe_handler} tr:has-text('Email Address') >> input", org_wide_email_address)
-            self.browser.select_options_by(f"{iframe_handler} tr:has-text('Purpose') >> select", SelectAttribute.text, "User Selection and Default No-Reply Address")
-            self.browser.click(f"{iframe_handler} :nth-match(.btn:text-is('Save'), 1)")
-            sleep(2)
+        try:
+            self.go_to_setup_admin_page("OrgWideEmailAddresses/home")
+            sleep(3)
+            iframe_handler = self.iframe_handler()
+            self.browser.wait_for_elements_state(f"{iframe_handler} h2:text-is('Organization-Wide Email Addresses for User Selection and Default No-Reply Use')", ElementState.visible, '15s')
+            if self.browser.get_element_count(f"{iframe_handler} td:has-text('{org_wide_email_address}')") == 0:
+                self.browser.click(f"{iframe_handler} div.pbHeader >> input.btn:text-is('Add')")
+                sleep(3)
+                self.browser.fill_text(f"{iframe_handler} tr:has-text('Display Name') >> input", "Default Email")
+                self.browser.fill_text(f"{iframe_handler} tr:has-text('Email Address') >> input", org_wide_email_address)
+                self.browser.select_options_by(f"{iframe_handler} tr:has-text('Purpose') >> select", SelectAttribute.text, "User Selection and Default No-Reply Address")
+                self.browser.click(f"{iframe_handler} :nth-match(.btn:text-is('Save'), 1)")
+                sleep(2)
+        except Exception as e:
+            self.browser.take_screenshot()
+            raise e
 
     def go_to_setup_admin_page(self, setup_page_url: str, sleep_length: Optional[int] = 2):
         """
