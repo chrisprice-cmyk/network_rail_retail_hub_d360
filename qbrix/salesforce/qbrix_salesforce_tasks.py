@@ -174,6 +174,10 @@ class CreateUser(BaseSalesforceApiTask, ABC):
             "description": "Links user to related Contact record, using firstname and lastname to lookup the record. Set to True to enable this feature.",
             "required": False
         },
+        "manager_external_id": {
+            "description": "External ID for the User record who is the manager for the current record",
+            "required": False
+        }
     }
 
     def _init_options(self, kwargs):
@@ -181,14 +185,13 @@ class CreateUser(BaseSalesforceApiTask, ABC):
         self.data = process_list_of_pairs_dict_arg(self.options["data"]) if "data" in self.options else None
         self.role = self.options["role"] if "role" in self.options else None
         self.profile = self.options["profile"] if "profile" in self.options else None
-        self.permission_set_api_names = list(
-            self.options["permission_set_api_names"]) if "permission_set_api_names" in self.options else None
-        self.permission_set_group_api_names = list(self.options[
-                                                       "permission_set_group_api_names"]) if "permission_set_group_api_names" in self.options else None
+        self.permission_set_api_names = list(self.options["permission_set_api_names"]) if "permission_set_api_names" in self.options else None
+        self.permission_set_group_api_names = list(self.options["permission_set_group_api_names"]) if "permission_set_group_api_names" in self.options else None
         self.user_profile_image = self.options["user_profile_image"] if "user_profile_image" in self.options else None
         self.upsert_field = self.options["upsert_field"] if "upsert_field" in self.options else "External_ID__c"
         self.path = self.options["path"] if "path" in self.options else None
         self.link_contact_record = self.options["link_contact_record"] if "link_contact_record" in self.options else False
+        self.manager_external_id = self.options["manager_external_id"] if "manager_external_id" in self.options else False
 
     def _get_user_desc(self, tmp_file_location=None):
 
@@ -215,7 +218,7 @@ class CreateUser(BaseSalesforceApiTask, ABC):
                 json.dump(user_details, user_detail_file)
             return user_details
 
-    def _ensure_required_fields(self, submitted_dict, field_names, role, profile):
+    def _ensure_required_fields(self, submitted_dict, field_names, role, profile, manager = None):
         """
         Checks that all required fields have a value, even if none were passed in, except for FirstName and LastName which are required.
         """
@@ -232,6 +235,11 @@ class CreateUser(BaseSalesforceApiTask, ABC):
         if "Alias" not in submitted_dict.keys():
             generated_alias = str(submitted_dict.get("FirstName"))[0:1].lower() + str(submitted_dict.get("LastName"))[0:4].lower()
             submitted_dict.update({"Alias": generated_alias})
+            #submitted_dict.update({"CommunityNickname": generated_alias})
+        else:
+            trimmed_alias = str(submitted_dict.get("Alias"))[0:7]
+            submitted_dict.update({"Alias": trimmed_alias})
+            #submitted_dict.update({"CommunityNickname": trimmed_alias})
 
         if "DefaultGroupNotificationFrequency" not in submitted_dict.keys():
             submitted_dict.update({"DefaultGroupNotificationFrequency": "N"})
@@ -260,10 +268,10 @@ class CreateUser(BaseSalesforceApiTask, ABC):
             submitted_dict.update({"TimeZoneSidKey": "America/Los_Angeles"})
 
         if "UserPermissionsInteractionUser" not in submitted_dict.keys():
-            submitted_dict.update({"UserPermissionsInteractionUser": True})
+            submitted_dict.update({"UserPermissionsInteractionUser": False})
 
         if "UserPermissionsMarketingUser" not in submitted_dict.keys():
-            submitted_dict.update({"UserPermissionsMarketingUser": True})
+            submitted_dict.update({"UserPermissionsMarketingUser": False})
 
         if "UserPermissionsOfflineUser" not in submitted_dict.keys():
             submitted_dict.update({"UserPermissionsOfflineUser": False})
@@ -271,11 +279,12 @@ class CreateUser(BaseSalesforceApiTask, ABC):
         api = self.sf
 
         # Lookup Role
-        role_id = api.query(f"SELECT Id FROM UserRole WHERE Name = '{role}' LIMIT 1")["records"][0]["Id"]
-        if not role_id:
-            raise Exception("User Creation Failed to get Role ID for provided Role: " + role)
-        if "UserRoleId" not in submitted_dict.keys():
-            submitted_dict.update({"UserRoleId": role_id})
+        if role:
+            role_id = api.query(f"SELECT Id FROM UserRole WHERE Name = '{role}' LIMIT 1")["records"][0]["Id"]
+            if not role_id:
+                raise Exception("User Creation Failed to get Role ID for provided Role: " + role)
+            if "UserRoleId" not in submitted_dict.keys():
+                submitted_dict.update({"UserRoleId": role_id})
 
         # Lookup Profile
         profile_id = api.query(f"SELECT Id FROM Profile WHERE Name = '{profile}' LIMIT 1")["records"][0]["Id"]
@@ -283,6 +292,15 @@ class CreateUser(BaseSalesforceApiTask, ABC):
             raise Exception("User Creation Failed to get Profile ID for provided Profile: " + profile)
         if "ProfileId" not in submitted_dict.keys():
             submitted_dict.update({"ProfileId": profile_id})
+
+        # Lookup Manager
+        if manager:
+            manager_id = api.query(f"SELECT Id FROM User Where External_ID__c = '{manager}' LIMIT 1")["records"][0]["Id"]
+            if not manager_id:
+                log.debug(f"No User Record found for the manger external id provided. {manager}")
+            else:
+                submitted_dict.update({"ManagerId": manager_id})
+
 
         return submitted_dict
 
@@ -294,8 +312,10 @@ class CreateUser(BaseSalesforceApiTask, ABC):
 
         api = self.sf
 
+        print(submitted_dict)
+
         # Check If Upsert Can be Used
-        if self.upsert_field in submitted_dict.keys():
+        if self.upsert_field in submitted_dict.keys() and "ContactId" not in submitted_dict.keys():
             log.info("UPSERT MODE")
             clean_dict_for_upsert = submitted_dict
             del clean_dict_for_upsert[self.upsert_field]
@@ -313,7 +333,11 @@ class CreateUser(BaseSalesforceApiTask, ABC):
                 return
 
         # Check for Existing User and create or update a record as required
-        user_lookup = api.query(f"SELECT Id FROM User WHERE FirstName = '{submitted_dict.get('FirstName')}' AND LastName = '{submitted_dict.get('LastName')}' AND IsActive = True LIMIT 1")
+        External_ID = submitted_dict.get(self.upsert_field)
+        where_clause = f"(FirstName = '{submitted_dict.get('FirstName')}' AND LastName = '{submitted_dict.get('LastName')}') AND IsActive = True"
+        if External_ID:
+            where_clause = f"((FirstName = '{submitted_dict.get('FirstName')}' AND LastName = '{submitted_dict.get('LastName')}') OR ({self.upsert_field} = '{submitted_dict.get(self.upsert_field)}')) AND IsActive = True "
+        user_lookup = api.query(f"SELECT Id FROM User WHERE {where_clause} LIMIT 1")
         if user_lookup["totalSize"] == 0:
             log.info("Creating new User record...")
             try:
@@ -434,12 +458,13 @@ class CreateUser(BaseSalesforceApiTask, ABC):
     def _process_user_record(self, user_record_data, field_names):
 
         data = user_record_data["data"]
-        role = user_record_data["role"]
+        role = user_record_data["role"] if "role" in dict(user_record_data).keys() else None
         profile = user_record_data["profile"]
-        user_profile_image = user_record_data["user_profile_image"]
-        permission_set_api_names = user_record_data["permission_set_api_names"]
-        permission_set_group_api_names = user_record_data["permission_set_group_api_names"]
-        link_contact_record = user_record_data["link_contact_record"]
+        user_profile_image = user_record_data["user_profile_image"] if "user_profile_image" in dict(user_record_data).keys() else None
+        permission_set_api_names = user_record_data["permission_set_api_names"] if "permission_set_api_names" in dict(user_record_data).keys() else None
+        permission_set_group_api_names = user_record_data["permission_set_group_api_names"] if "permission_set_group_api_names" in dict(user_record_data).keys() else None
+        link_contact_record = user_record_data["link_contact_record"] if "link_contact_record" in dict(user_record_data).keys() else None
+        manager = user_record_data["manager_external_id"] if "manager_external_id" in dict(user_record_data).keys() else None
 
         log.info(f"Creating User with the following details: \n{json.dumps(data, indent=1, sort_keys=True)}")
         log.info("Preparing Data for User Record")
@@ -448,7 +473,7 @@ class CreateUser(BaseSalesforceApiTask, ABC):
         data = _remove_missing_field_schema(data, field_names)
 
         # Check and Update Required Fields
-        data = self._ensure_required_fields(data, field_names, role, profile)
+        data = self._ensure_required_fields(data, field_names, role, profile, manager)
 
         # Link Contact Record
         if link_contact_record:
@@ -541,7 +566,7 @@ class CreateUser(BaseSalesforceApiTask, ABC):
                     self.data = _remove_missing_field_schema(self.data, field_names)
 
                     # Check and Update Required Fields
-                    self.data = self._ensure_required_fields(self.data, field_names, self.role, self.profile)
+                    self.data = self._ensure_required_fields(self.data, field_names, self.role, self.profile, self.manager_external_id)
 
                     # Link Contact Record
                     if self.link_contact_record:
