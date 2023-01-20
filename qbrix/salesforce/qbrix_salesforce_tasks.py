@@ -402,55 +402,72 @@ class CreateUser(BaseSalesforceApiTask, ABC):
 
     def _assign_permission(self, mode, user_id, api_names):
 
-        match str(mode).upper():
-            case "PERMISSIONSET":
+        """
+        Assigns Permission Sets or Permission Set Groups based on the mode. 
+
+        Permission Sets use mode: PERMISSIONSET
+        Permission Set Groups use mode: PERMISSIONSETGROUP
+
+        User Record ID and the api names (as a list) are also required.
+        """
+
+        if mode:
+            if str(mode).upper() == "PERMISSIONSET":
                 object_name = "PermissionSet"
                 message_name = "Permission Set"
                 lookup_field = "Name"
                 assignment_field = "PermissionSetId"
-            case "PERMISSIONSETGROUP":
+            
+            if str(mode).upper() == "PERMISSIONSETGROUP":
                 object_name = "PermissionSetGroup"
                 message_name = "Permission Set Group"
                 lookup_field = "DeveloperName"
                 assignment_field = "PermissionSetGroupId"
-            case _:
+
+            if str(mode).upper() != "PERMISSIONSETGROUP" or str(mode).upper() != "PERMISSIONSET":
+                log.error(f"Error: Invalid mode passed. Only Permission Sets (PERMISSIONSET) and Permission Set Groups (PERMISSIONSETGROUP) are supported. Mode passed: {mode}")
                 return False
 
-        # Loop Through Permission Set Names
-        for perm in list(api_names):
 
-            api = self.sf
+            # Loop Through Permission Set Names
+            for perm in list(api_names):
 
-            # Check for labels and non api names
-            if " " in perm:
-                log.debug(f"{message_name} {perm} is not a valid api name for a {message_name}. Please check the api names are valid and try again. Continuing to next record.")
-                continue
+                api = self.sf
 
-            # Check Permission Set Exists
-            permission_set_query = api.query(f"SELECT Id FROM {object_name} WHERE {lookup_field} = '{perm}' LIMIT 1")
-            if permission_set_query["totalSize"] == 0:
-                log.debug(f"{message_name} with api name {perm} was not found in the target org, skipping assignment.")
-                continue
+                # Check for labels and non api names
+                if " " in perm:
+                    log.debug(f"{message_name} {perm} is not a valid api name for a {message_name}. Please check the api names are valid and try again. Continuing to next record.")
+                    continue
+
+                # Check Permission Set Exists
+                permission_set_query = api.query(f"SELECT Id FROM {object_name} WHERE {lookup_field} = '{perm}' LIMIT 1")
+                if permission_set_query["totalSize"] == 0:
+                    log.debug(f"{message_name} with api name {perm} was not found in the target org, skipping assignment.")
+                    continue
+                else:
+                    permission_set_id = permission_set_query["records"][0]["Id"]
+
+                # Check for existing Permission Set Assignment
+                permission_set_assignment_query = api.query(f"SELECT Id FROM PermissionSetAssignment WHERE AssigneeId = '{user_id}' AND {assignment_field} = '{permission_set_id}' LIMIT 1")
+                if permission_set_assignment_query["totalSize"] == 1:
+                    log.info(f"{message_name} with api name {perm} has already been assigned to the user. Skipping...")
+                    continue
+
+                # Create Permission Set Assignment
+                permset_creation_result = api.PermissionSetAssignment.create(
+                    {
+                        "AssigneeId": user_id,
+                        str(assignment_field): permission_set_id
+                    }
+                )
+                if permset_creation_result["id"]:
+                    log.info(f"{message_name} (With API Name: {perm}) has been assigned (ID: {permset_creation_result['id']})!")
+                else:
+                    log.error(f"{message_name} (With API Name: {perm}) failed to assign. Moving onto next {message_name} (if any). Details: {permset_creation_result}")
+                    return False
+
             else:
-                permission_set_id = permission_set_query["records"][0]["Id"]
-
-            # Check for existing Permission Set Assignment
-            permission_set_assignment_query = api.query(f"SELECT Id FROM PermissionSetAssignment WHERE AssigneeId = '{user_id}' AND {assignment_field} = '{permission_set_id}' LIMIT 1")
-            if permission_set_assignment_query["totalSize"] == 1:
-                log.info(f"{message_name} with api name {perm} has already been assigned to the user. Skipping...")
-                continue
-
-            # Create Permission Set Assignment
-            permset_creation_result = api.PermissionSetAssignment.create(
-                {
-                    "AssigneeId": user_id,
-                    str(assignment_field): permission_set_id
-                }
-            )
-            if permset_creation_result["id"]:
-                log.info(f"{message_name} (With API Name: {perm}) has been assigned (ID: {permset_creation_result['id']})!")
-            else:
-                log.error(f"{message_name} (With API Name: {perm}) failed to assign. Moving onto next {message_name} (if any). Details: {permset_creation_result}")
+                log.debug("Error: No Mode was passed for processing. You must pass in a mode.")
                 return False
 
         return True

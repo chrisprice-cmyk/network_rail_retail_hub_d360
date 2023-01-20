@@ -27,20 +27,21 @@ class MassFileOps(BaseTask, ABC):
         [e]     Exit   
     """)
         option = input("\n\nWhich task you like to run? (Enter the option number) : ")
-        match option.lower():
-            case "1":
-                confirmation = input("\n\nThis will update ALL Apex Classes, Aura Component's and LWC Component's metadata files with the project API Version. Are you sure you want to continue? (y/n) Default y:") or 'y'
-                if confirmation.lower() == 'y':
-                    update_file_api_versions(self.project_config.project__package__api_version)
-                    log.info("Update Complete!")
-            case "2":
-                confirmation = input("\n\nThis will DELETE all Standard/Core Salesforce fields from all object folders within force-app/main/default/objects. Are you sure you want to continue? (y/n) Default y:") or 'y'
-                if confirmation.lower() == 'y':
-                    delete_standard_fields()
-                    log.info("Update Complete!")
-            case "e":
-                log.info("Exiting Q Brix Mass Operations Utility")
-                exit()
-            case _:
-                log.error("Invalid Menu Option Entered. Please choose a valid option from the list above.")
-        self._run_task()
+
+
+        if option.lower() == "1":
+            confirmation = input("\n\nThis will update ALL Apex Classes, Aura Component's and LWC Component's metadata files with the project API Version. Are you sure you want to continue? (y/n) Default y:") or 'y'
+            if confirmation.lower() == 'y':
+                update_file_api_versions(self.project_config.project__package__api_version)
+                log.info("Update Complete!")
+        elif option.lower() == "2":
+            confirmation = input("\n\nThis will DELETE all Standard/Core Salesforce fields from all object folders within force-app/main/default/objects. Are you sure you want to continue? (y/n) Default y:") or 'y'
+            if confirmation.lower() == 'y':
+                delete_standard_fields()
+                log.info("Update Complete!")
+        elif option.lower() == "e":
+            log.info("Exiting Q Brix Mass Operations Utility")
+            exit()
+        else:
+            log.error("Invalid Menu Option Entered. Please choose a valid option from the list above.")
+            self._run_task()

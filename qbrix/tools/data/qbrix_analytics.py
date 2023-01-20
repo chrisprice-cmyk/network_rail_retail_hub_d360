@@ -223,14 +223,12 @@ class AnalyticsManager(BaseTask, ABC):
 
         log.info("Starting QBrix Analytics Manager")
 
-        match self.mode.lower():
-            case "upload" | "u":
-                self.upload_dataset_data()
-            case "download" | "d":
-                self.download_datasets()
-                self.run_cleaners()
-            case "clean" | "c":
-                self.run_cleaners()
-            case _:
-                log.debug("QBrix Analytics Manager was called without a valid mode set.")
-                return
+        if not self.mode or self.mode.lower() == "upload" or self.mode.lower() == "u":
+            self.upload_dataset_data()
+
+        if self.mode.lower() == "download" or self.mode.lower() == "d":
+            self.download_datasets()
+            self.run_cleaners()
+
+        if self.mode.lower() == "clean" or self.mode.lower() == "c":
+            self.run_cleaners()
