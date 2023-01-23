@@ -503,7 +503,7 @@ class Spin(SFDXBaseTask):
                 else:
                     raise CommandException(f"The template has failed for error code: {errorcode}")
 
-            if jsonresult["result"]["Status"] == "In Progress" or jsonresult["result"]["Status"] == "New":
+            if jsonresult["result"]["Status"] == "InProgress" or jsonresult["result"]["Status"] == "New":
                 self.logger.info("Spin still In Progress.")
 
                 return False
