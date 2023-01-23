@@ -30,6 +30,7 @@ class QbrixSharedKeywords(BaseLibrary):
         """
         Goes directly to set up home page in Lightning UI
         """
+        self.browser.set_browser_timeout("900 seconds")
         self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/setup/SetupOneHome/home", timeout="90s")
         self.browser.wait_for_elements_state("h1:has-text('Home')", ElementState.visible, '30s')
 
