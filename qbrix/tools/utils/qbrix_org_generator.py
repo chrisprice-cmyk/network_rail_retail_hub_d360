@@ -1,12 +1,18 @@
+from genericpath import isfile
 import json
 import os
+import re
+import sys
 import subprocess
 import time
 import shutil
+import random
 from abc import abstractmethod
 from time import sleep
 
+from cumulusci.core.config import ScratchOrgConfig
 from cumulusci.tasks.sfdx import SFDXBaseTask
+from cumulusci.core.exceptions import TaskOptionsError
 from cumulusci.core.exceptions import CommandException
 from cumulusci.core.keychain import BaseProjectKeychain
 
@@ -148,7 +154,7 @@ class Spin(SFDXBaseTask):
         return None
 
     def _load_keychain(self):
-        if hasattr(self, 'keychain') is True and self.keychain is not None:
+        if hasattr(self, 'keychain') == True and not self.keychain is None:
             return
 
         keychain_key = self.keychain_key if self.keychain_cls.encrypted else None
@@ -161,7 +167,7 @@ class Spin(SFDXBaseTask):
 
     def _prepruntime(self):
 
-        if hasattr(self, 'keychain') is False or self.keychain is None:
+        if hasattr(self, 'keychain') == False or self.keychain is None:
             self._load_keychain()
 
         # if not passed in - fall back to the key ring data
@@ -222,7 +228,8 @@ class Spin(SFDXBaseTask):
         else:
             self.retrycount = int(self.options["retrycount"])
 
-        if "retryonerrorcodes" not in self.options or self.options["retryonerrorcodes"] is None or self.options["retryonerrorcodes"] == "":
+        if "retryonerrorcodes" not in self.options or self.options["retryonerrorcodes"] is None or self.options[
+            "retryonerrorcodes"] == "":
             self.retryonerrorcodes = []
         else:
             self.retryonerrorcodes = self.options["retryonerrorcodes"].split('|')
@@ -260,7 +267,7 @@ class Spin(SFDXBaseTask):
         if "signuprequestid" not in self.options:
             self.signuprequestid = None
         else:
-            if self.options["signuprequestid"] != "":
+            if (self.options["signuprequestid"] != ""):
                 self.signuprequestid = self.options["signuprequestid"]
             else:
                 self.signuprequestid = None
@@ -284,7 +291,7 @@ class Spin(SFDXBaseTask):
         if "qbrixowner" not in self.options:
             self.qbrixowner = "sfdc-qbranch"
         else:
-            if self.options["qbrixowner"] != "":
+            if (self.options["qbrixowner"] != ""):
                 self.qbrixowner = self.options["qbrixowner"]
             else:
                 self.qbrixowner = "sfdc-qbranch"
@@ -297,14 +304,15 @@ class Spin(SFDXBaseTask):
         else:
             self.githubpat = self.options["githubpat"]
 
-        if "deployqbrix" not in self.options or self.options["deployqbrix"] is None or self.options["deployqbrix"] == "":
+        if "deployqbrix" not in self.options or self.options["deployqbrix"] is None or self.options[
+            "deployqbrix"] == "":
             self.deployqbrix = []
         else:
             self.deployqbrix = self.options["deployqbrix"].split('|')
 
     def _createworkingarea(self):
 
-        if os.path.isdir('.qbrix') is False:
+        if os.path.isdir('.qbrix') == False:
             os.mkdir('.qbrix')
 
         subprocess.run([f"sfdx force:project:create --projectname {self.devhubuser} --json"], shell=True,
@@ -319,8 +327,7 @@ class Spin(SFDXBaseTask):
             f"sfdx force:data:soql:query -u {self.devhubuser} -q \"SELECT ID FROM TrialTemplate Order By CreatedDate DESC LIMIT 1\" --json"],
             shell=True, capture_output=True, cwd=os.path.join('.qbrix', self.devhubuser))
 
-        if result is None:
-            return None
+        if result is None: return None
 
         jsonresult = json.loads(result.stdout)
 
@@ -383,8 +390,7 @@ class Spin(SFDXBaseTask):
             f"sfdx force:data:record:create -u {self.devhubuser} -s SignupRequest -v \"{self._buildsignupcommand()}\" --json"],
             shell=True, capture_output=True, cwd=os.path.join('.qbrix', self.devhubuser))
 
-        if result is None:
-            return
+        if result is None: return
 
         jsonresult = json.loads(result.stdout)
         self.logger.info(jsonresult)
@@ -413,23 +419,23 @@ class Spin(SFDXBaseTask):
             retrycount += 1
             self._submitscratchorg(retrycount=retrycount)
 
-        if jsonresult["status"] != 0:
+        if (jsonresult["status"] != 0):
             raise CommandException("Scratch Org Create Failed.")
 
-        if jsonresult["status"] == 0:
+        if (jsonresult["status"] == 0):
             self.spinusername = jsonresult["result"]["username"]
 
     def _buildsignupcommand(self):
 
         cmd = f"trialdays={self.spinlength} company={self.company} lastname=Eng firstname=Demo username={self.spinusername} subdomain={self.subdomain} country={self.country} templateId={self.resolvedtemplateid}"
 
-        if self.instance is not None:
+        if not self.instance is None:
             cmd = f"{cmd} instance={self.instance}"
 
-        if self.signupemail is not None:
+        if not self.signupemail is None:
             cmd = f"{cmd} signupemail={self.signupemail}"
 
-        if self.surpresssignupemail is not None:
+        if not self.surpresssignupemail is None:
             cmd = f"{cmd} IsSignupEmailSuppressed={self.surpresssignupemail}"
 
         self.logger.info(cmd)
@@ -451,7 +457,7 @@ class Spin(SFDXBaseTask):
         self.spinusername = f"demo.eng@.{ml}.qbrix"
 
     def _generatesubdomain(self):
-        if self.subdomain is None:
+        if (self.subdomain is None):
             t = time.time()
             ml = int(t * 1000)
             self.subdomain = f"qbrix-{ml}"
@@ -497,7 +503,7 @@ class Spin(SFDXBaseTask):
                 else:
                     raise CommandException(f"The template has failed for error code: {errorcode}")
 
-            if jsonresult["result"]["Status"] == "In Progress" or jsonresult["result"]["Status"] == "New":
+            if jsonresult["result"]["Status"] == "InProgress" or jsonresult["result"]["Status"] == "New":
                 self.logger.info("Spin still In Progress.")
 
                 return False
@@ -507,7 +513,7 @@ class Spin(SFDXBaseTask):
                 if self.devhubconsumerkey is not None and self.devhubjwtkeyfile is not None:
 
                     self.logger.info("Spin Successful. Waiting to verify JWT connectivity...")
-                    sleep(30)  # TODO: expose as parameter
+                    sleep(600)  #force pause for 10 minutes to give SF core time to do the voodoo needed
                     self.spinusername = jsonresult["result"]["Username"]
                     self._forcelogout(self.spinusername)
                     spinjwtresult = self._connectspinviajwt(jsonresult["result"]["Username"])
@@ -515,9 +521,9 @@ class Spin(SFDXBaseTask):
                     while spinjwtresult["status"] == 1:
                         spinjwtresult = self._connectspinviajwt(jsonresult["result"]["Username"])
                         maxjwt = maxjwt - 1
-                        sleep(60)
+                        sleep(90)
                         self.logger.info("Waiting to connect JWT...")
-                        if maxjwt == 0:
+                        if (maxjwt == 0):
                             raise CommandException(
                                 "Unable to establish JWT authentication to template spin within poll time")
 
@@ -549,7 +555,7 @@ class Spin(SFDXBaseTask):
         cmd = f"sfdx auth:jwt:grant --username {signupusername} --jwtkeyfile {self.devhubjwtkeyfile} --clientid \"{self.devhubconsumerkey}\" --json"
         self.logger.info(cmd)
 
-        if self.cciorg is not None:
+        if (not self.cciorg is None):
             cmd = f"{cmd} --setalias {self.cciorg}"
 
         result = subprocess.run([f"{cmd}"], shell=True, capture_output=True)
@@ -577,6 +583,9 @@ class Spin(SFDXBaseTask):
         if self.mode == "TEMPLATE":
 
             if self.signuprequestid is None:
+                #from 5 to 90 we will random pause to create some delay 
+                randomwaith = random.randrange(5, 90, 1)
+                sleep(randomwaith)
                 self._submittemplate()
 
             self._monitorrequest()
