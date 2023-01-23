@@ -139,7 +139,7 @@ class QbrixEinsteinKeywords(BaseLibrary):
 
     def enable_call_coaching_eci(self):
         self.shared.go_to_setup_admin_page("CallCoachingSettings/home")
-        self.browser.wait_for_elements_state("div:has-text('Conversation Insights Are Here!')", ElementState.visible,
+        self.browser.wait_for_elements_state("header:has-text('Conversation Insights Are Here!')", ElementState.visible,
                                              '30s')
         sleep(10)
 
