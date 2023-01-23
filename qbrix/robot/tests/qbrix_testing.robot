@@ -4,11 +4,12 @@ Library           qbrix/robot/QbrixSharedKeywords.py
 Library           qbrix/robot/QbrixEinsteinKeywords.py
 Library           qbrix/robot/QbrixServiceKeywords.py
 Library           qbrix/robot/QbrixToolingKeywords.py
-Suite Setup       Run keywords
-...               Open test browser    wait=false
-...               AND   Set browser timeout    900 seconds
-...               AND    Go To Lightning Setup Home
-Suite Teardown    Close browser
+
+Suite Setup         Run keywords
+...                     Open test browser    wait=false
+...                     AND    Set browser timeout    900 seconds
+...                     AND    Go To Lightning Setup Home
+Suite Teardown      Close browser
 
 *** Test Cases ***
 #

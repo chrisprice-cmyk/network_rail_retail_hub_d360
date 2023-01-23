@@ -1,22 +1,24 @@
 *** Settings ***
-Resource          cumulusci/robotframework/SalesforcePlaywright.robot
-Library           qbrix/robot/QbrixSharedKeywords.py
-Library           qbrix/robot/QbrixEinsteinKeywords.py
-Library           qbrix/robot/QbrixFieldServiceKeywords.py
-Library           qbrix/robot/QbrixMarketingKeywords.py
-Library           qbrix/robot/QbrixNetZeroKeywords.py
-Library           qbrix/robot/QbrixSalesCloudKeywords.py
-Library           qbrix/robot/QbrixSchedulerKeywords.py
-Library           qbrix/robot/QbrixSurveysKeywords.py
-Library           qbrix/robot/QbrixVraKeywords.py
-Library           qbrix/robot/QbrixServiceKeywords.py
-Library           qbrix/robot/QbrixToolingKeywords.py
-Library           qbrix/robot/QbrixManufacturingKeywords.py
-Suite Setup       Run keywords
-...               Open test browser   wait=false
-...               AND   Set browser timeout 900 seconds
-...               AND   Go To Lightning Setup Home
-Suite Teardown    Close browser
+Resource            cumulusci/robotframework/SalesforcePlaywright.robot
+Library             qbrix/robot/QbrixSharedKeywords.py
+Library             qbrix/robot/QbrixEinsteinKeywords.py
+Library             qbrix/robot/QbrixFieldServiceKeywords.py
+Library             qbrix/robot/QbrixMarketingKeywords.py
+Library             qbrix/robot/QbrixNetZeroKeywords.py
+Library             qbrix/robot/QbrixSalesCloudKeywords.py
+Library             qbrix/robot/QbrixSchedulerKeywords.py
+Library             qbrix/robot/QbrixSurveysKeywords.py
+Library             qbrix/robot/QbrixVraKeywords.py
+Library             qbrix/robot/QbrixServiceKeywords.py
+Library             qbrix/robot/QbrixToolingKeywords.py
+Library             qbrix/robot/QbrixManufacturingKeywords.py
+
+Suite Setup         Run keywords
+...                     Open test browser    wait=false
+...                     AND    Set browser timeout    900 seconds
+...                     AND    Go To Lightning Setup Home
+Suite Teardown      Close browser
+
 
 *** Test Cases ***
 #
@@ -103,7 +105,7 @@ Add Case Wrap Up Model
 Add Case Classification Model
     Enable Einstein Classification
     Create Case Classification Model
-    
+
 #
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # MARKETING TESTS
@@ -249,4 +251,4 @@ Add Profile to Chat Agent Configuration
 # -----------------------------------------------------------------------------------------------------------------------------------------
 
 Apex Classes Compile
-    Compile All Apex  300
+    Compile All Apex    300
