@@ -21,6 +21,7 @@ env:
   TEMPLATEID: LATEST
   TEMPLATE_INSTANCE: NA135
   SFDX_DISABLE_DNS_CHECK: true
+  ACTIONS_ALLOW_UNSECURE_COMMANDS: true
 
 jobs:
   build:
@@ -35,14 +36,6 @@ jobs:
 
       - name: Core Setup - key for jwt auth
         run: echo "${{ secrets.QBRIX_DEVHUB_PRIVATE_KEY }}" > devhub.key
-
-      # Install Node
-      #- name: Install Node
-      #  run: sudo apt install nodejs
-
-      # Install NPM
-      #- name: Install NPM
-      #  run: sudo apt install npm
 
       # Install SFDX
       - name: Install SFDX
@@ -73,19 +66,25 @@ jobs:
           url: "https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixBuildService"
           method: "POST"
           customHeaders: '{"Content-Type": "application/json","Authorization": "Bearer ${{ steps.qlabs_accesstoken.outputs.value }}"}'
-          data: '{"qbrixname": "${{ github.repository }}-R0-ProdOrg", "buildstatus": "Running"}'
+          data: '{"qbrixname": "${{ github.event.repository.name }}-R0-ProdOrg", "buildstatus": "Running"}'
           timeout: 30000
 
-      #- name: Setup
-      #  run: sudo apt install software-properties-common -y & sudo add-apt-repository ppa:deadsnakes/ppa
+      #determine if there is a template or instance override defined in qlabs for this build config
+      - name: get qlabs config settings
+        id: qlab_config_settings
+        uses: fjogeleit/http-request-action@v1
+        with:
+          url: "https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixBuildServiceProperties?workflowconfigid=${{ github.event.repository.name }}-R0-ProdOrg"
+          method: "GET"
+          customHeaders: '{"Content-Type": "application/json","Authorization": "Bearer ${{ steps.qlabs_accesstoken.outputs.value }}"}'
+          timeout: 30000
 
-      #install Python 3.9
-      #- name: Install Python
-      #  run: sudo apt install python3.9
-
-      #install PIP
-      #- name: Install PIP
-      #  run: sudo apt-get -y install python3-pip
+      - name: extract qlabs config setting
+        run: |
+          echo ${{ steps.qlab_config_settings.outputs.response }}
+          echo ${{ fromJson(steps.qlab_config_settings.outputs.response).templateid }}
+          echo "::set-env name=TEMPLATEID::${{ fromJson(steps.qlab_config_settings.outputs.response).templateid }}"
+          echo "::set-env name=TEMPLATE_INSTANCE::${{ fromJson(steps.qlab_config_settings.outputs.response).template_instance }}"
 
       #install Python Test Resources
       - name: Install Python Test Resources
