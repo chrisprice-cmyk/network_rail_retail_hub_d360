@@ -25,7 +25,7 @@ class QbrixMarketingKeywords(BaseLibrary):
                                              '15s')
         self.browser.click(".slds-button:has-text('Send Your First Email')")
         self.browser.wait_for_elements_state(
-            "span:text-is('Complete the necessary steps to send your first Pardot email.')", ElementState.visible,
+            "span:text-is('Complete the required steps to send your first Account Engagement email.')", ElementState.visible,
             '15s')
         checked = "checked" in self.browser.get_element_states(":nth-match(span.slds-checkbox_faux,1)")
         if not checked:
