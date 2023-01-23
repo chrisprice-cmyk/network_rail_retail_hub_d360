@@ -139,24 +139,9 @@ class QbrixEinsteinKeywords(BaseLibrary):
 
     def enable_call_coaching_eci(self):
         self.shared.go_to_setup_admin_page("CallCoachingSettings/home")
-        self.browser.wait_for_elements_state("h1:has-text('Einstein Conversation Insights')", ElementState.visible,
+        self.browser.wait_for_elements_state("div:has-text('Conversation Insights Are Here!')", ElementState.visible,
                                              '30s')
-        sleep(5)
-        checked = "checked" in self.browser.get_element_states(":nth-match(span.slds-checkbox_faux,1)")
-        if not checked:
-            self.browser.click(":nth-match(span.slds-checkbox_faux,1)")
-            sleep(10)
-            
-            try:
-                enabled = "enabled" in self.browser.get_element_states(".slds-button:has-text('Got It')")
-                if enabled:
-                    #deal with popup
-                    self.browser.click(".slds-button:has-text('Got It')")
-                    sleep(4)
-            except:
-                print("Keep trucking")
-  
-  
+        sleep(10)
 
     def enable_einstein_classification(self):
         self.shared.go_to_setup_admin_page("EinsteinCaseClassification/home")

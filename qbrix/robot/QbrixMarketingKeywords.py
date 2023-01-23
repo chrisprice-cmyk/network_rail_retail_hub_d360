@@ -36,12 +36,12 @@ class QbrixMarketingKeywords(BaseLibrary):
         """ Enables Pardot Connected App Settings"""
         self.shared.go_to_setup_admin_page("ConnectedApplication/home")
         self.browser.click("iframe >>> a:text-is('b2bma_canvas')")
-        sleep(2)
+        sleep(5)
         self.browser.click("iframe >>> .btn:has-text('Edit Policies')")
-        sleep(2)
+        sleep(5)
         self.browser.select_options_by("iframe >>> #userpolicy", SelectAttribute.text,
                                        "Admin approved users are pre-authorized")
-        sleep(1)
+        sleep(4)
         self.browser.click("iframe >>> .btn:has-text('Save')")
         sleep(1)
 
