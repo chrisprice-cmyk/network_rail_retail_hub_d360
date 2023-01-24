@@ -34,6 +34,21 @@ class QbrixSharedKeywords(BaseLibrary):
         self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/setup/SetupOneHome/home", timeout="90s")
         self.browser.wait_for_elements_state("h1:has-text('Home')", ElementState.visible, '30s')
 
+    def disable_mfa(self):
+        self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/setup/SecuritySession/home", timeout="90s")
+        sleep(2)
+        if "checked" in self.browser.get_element_states(f"{self.iframe_handler()} td:has(label:text-is('Require identity verification during multi-factor authentication (MFA) registration')) >> input"):
+            self.browser.click(f"{self.iframe_handler()} td:has(label:text-is('Require identity verification during multi-factor authentication (MFA) registration')) >> input")
+        existing_list = self.browser.get_select_options(f"{self.iframe_handler()} #duel_select_1")
+        if len(existing_list) > 0 and any(d['label'] == 'Multi-Factor Authentication' for d in existing_list):
+            print("MFA")
+            self.browser.select_options_by(f"{self.iframe_handler()} #duel_select_1", SelectAttribute.text, "Multi-Factor Authentication")
+            self.browser.click(f"{self.iframe_handler()} div.duelingListBox >> img.leftArrowIcon")  
+
+        self.browser.click(f"{self.iframe_handler()} input.btn:has-text('Save')")
+        sleep(2)
+
+
     def go_to_app(self, app_name):
         """
         Looks up the Application ID and then opens that app in the session.
