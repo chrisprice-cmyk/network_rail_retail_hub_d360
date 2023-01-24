@@ -1,3 +1,4 @@
+import json
 from time import sleep
 import os
 
@@ -209,7 +210,234 @@ class QbrixCMS(BaseLibrary):
       sleep(1)
       self.browser.click("button.nextButton:visible")
 
+    def generate_product_media_file(self):
+
+      # Get All Active Products which have attached ElectronicMedia
+      results = self.salesforceapi.soql_query(f"SELECT Id, External_ID__c, Name from Product2 WHERE Id IN (Select ProductId from ProductMedia)")
+
+      if results["totalSize"] == 0:
+          print("No Products found with attached media")
+          return
+
+      result_dict = {}
+      self.shared.go_to_app("Commerce - Admin")
+
+      for product in results["records"]:
+
+        product_dict = {}
+
+        #Set External ID
+        product_dict.update({"External_ID__c": product["External_ID__c"]})
+        
+
+        self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/r/Product2/{product['Id']}/view", timeout='30s')
+        sleep(4)
+
+        self.browser.click(f"div.uiTabBar >> span.title:text-is('Media')")
+        sleep(10)
+
+        # Get Product Detail Images (Max. 8)
+        if self.browser.get_element_count(f"article.slds-card:has-text('Product Detail Images'):visible >> img.fileCardImage:visible") > 0:
+          product_detail_image_list = []
+          product_detail_images = self.browser.get_elements(f"article.slds-card:has-text('Product Detail Images'):visible >> img.fileCardImage:visible")
+          if product_detail_images:
+            for prod in product_detail_images:
+              prod_property = self.browser.get_property(prod, "alt")
+              if prod_property:
+                print(prod_property)
+                product_detail_image_list.append(prod_property)
+
+          if len(product_detail_image_list) > 0:
+            product_dict.update({"ProductDetailImages": product_detail_image_list})
+
+        # Get Product List Image (Max. 1)
+        if self.browser.get_element_count(f"article.slds-card:has-text('Product List Image'):visible >> img.fileCardImage:visible") > 0:
+          product_image_list = []
+          product_images = self.browser.get_elements(f"article.slds-card:has-text('Product List Image'):visible >> img.fileCardImage:visible")
+          if product_images:
+            for prod in product_images:
+              prod_property = self.browser.get_property(prod, "alt")
+              if prod_property:
+                print(prod_property)
+                product_image_list.append(prod_property)
+
+          if len(product_image_list) > 0:
+            product_dict.update({"ProductImages": product_image_list})
 
 
-      
+        # Get Attachments (Max. 5)
+        if self.browser.get_element_count(f"article.slds-card:has-text('Attachments'):visible >> span.slds-file__text") > 0:
+          attachment_list = []
+          attachment_images = self.browser.get_elements(f"article.slds-card:has-text('Attachments'):visible >> span.slds-file__text")
+          if attachment_images:
+            for prod in attachment_images:
+              prod_property = self.browser.get_property(prod, "title")
+              if prod_property:
+                print(prod_property)
+                attachment_list.append(prod_property)
+
+          if len(attachment_list) > 0:
+            product_dict.update({"Attachments": attachment_list})
+
+        self.browser.click(f"li.oneConsoleTabItem:has-text('{product['Name']}'):visible >> div.close")
+
+        result_dict.update({f"Product_{product['External_ID__c']}": product_dict})
+
+      # Save dict to file
+      if not os.path.exists("cms_data"):
+        os.makedirs("cms_data", exist_ok=True)  
+
+      with open("cms_data/product_images.json", "w") as save_file:
+        json.dump(result_dict, save_file, indent=2)
+              
+    def reassign_product_media_files(self):
+
+      if not os.path.exists("cms_data/product_images.json"):
+        print("Missing CMS Definition File. Location: cms_data/product_images.json")
+        return
+
+      with open("cms_data/product_images.json", "r") as cms_file:
+        product_dict = json.load(cms_file)
+
+      if product_dict:
+        for product in dict(product_dict).items():
+
+          if product[1]['External_ID__c'] != "Product2.001":
+            continue
+          
+          results = self.salesforceapi.soql_query(f"SELECT Id, External_ID__c, Name from Product2 WHERE External_ID__c = '{product[1]['External_ID__c']}' LIMIT 1")
+
+          if results["totalSize"] == 0:
+              print("No Products found")
+              continue
+
+          self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/r/Product2/{results['records'][0]['Id']}/view", timeout='30s')
+          sleep(4)
+
+          self.browser.click(f"div.uiTabBar >> span.title:text-is('Media')")
+          sleep(5)
+          
+          # Product Detail Images
+          if "ProductDetailImages" in dict(product[1]).keys():
+            
+            for product_detail_image in list(product[1]["ProductDetailImages"]):
+
+              if self.browser.get_element_count(f"article.slds-card:has-text('Product List Image'):visible >> img.fileCardImage:visible") == 8:
+                  continue
+
+              skip = False
+              if self.browser.get_element_count(f"article.slds-card:has-text('Product Detail Images'):visible >> img.fileCardImage:visible") > 0:
+                product_detail_images = self.browser.get_elements(f"article.slds-card:has-text('Product Detail Images'):visible >> img.fileCardImage:visible")
+                if product_detail_images:
+                  for prod in product_detail_images:
+                    prod_property = self.browser.get_property(prod, "alt")
+                    if prod_property:
+                      if prod_property in list(product[1]["ProductDetailImages"]):
+                        skip = True
+
+              if skip:
+                continue
+
+              self.browser.click("article.slds-card:has-text('Product Detail Images'):visible >> button.slds-button:text-is('Add Image')")
+              sleep(7)
+              self.browser.fill_text("sfdc_cms-content-uploader-header.slds-col:visible >> input.slds-input", product_detail_image)
+              sleep(2)
+              
+              search_results = self.browser.get_elements(f"tr.slds-hint-parent:has-text('{product_detail_image}'):visible")
+
+              if len(search_results) == 0:
+                self.browser.click(f"button.slds-button:text-is('Cancel')")
+                sleep(2)
+                continue
+
+              if len(search_results) > 0:
+                self.browser.click("tr:has(span:text-matches('^{}$')) >> th >> span.slds-checkbox_faux".format(product_detail_image))
+                      
+              sleep(1)
+              self.browser.click(f"button.slds-button:text-is('Save')")
+              sleep(5)
+              self.browser.click(f"div.uiTabBar >> span.title:text-is('Media')")
+
+          # Product Images
+          if "ProductImages" in dict(product[1]).keys():
+            
+              for product_image in list(product[1]["ProductImages"]):
+
+                skip = False
+
+                if self.browser.get_element_count(f"article.slds-card:has-text('Product List Image'):visible >> img.fileCardImage:visible") == 1:
+                  continue
+
+                if self.browser.get_element_count(f"article.slds-card:has-text('Product List Image'):visible >> img.fileCardImage:visible") > 0:
+                  product_detail_images = self.browser.get_elements(f"article.slds-card:has-text('Product List Image'):visible >> img.fileCardImage:visible")
+                  if product_detail_images:
+                    for prod in product_detail_images:
+                      prod_property = self.browser.get_property(prod, "alt")
+                      if prod_property:
+                        if prod_property in list(product[1]["ProductImages"]):
+                          skip = True
+
+                if skip:
+                  continue
+
+                self.browser.click("article.slds-card:has-text('Product List Image'):visible >> button.slds-button:text-is('Add Image')")
+                sleep(7)
+                self.browser.fill_text("sfdc_cms-content-uploader-header.slds-col:visible >> input.slds-input", product_image)
+                sleep(2)
+                
+                search_results = self.browser.get_elements(f"tr.slds-hint-parent:has-text('{product_image}'):visible")
+
+                if len(search_results) == 0:
+                  self.browser.click(f"button.slds-button:text-is('Cancel')")
+                  sleep(2)
+                  continue
+
+                if len(search_results) > 0:
+                  self.browser.click("tr:has(span:text-matches('^{}$')) >> th >> span.slds-checkbox_faux".format(product_image))
+                        
+                sleep(1)
+                self.browser.click(f"button.slds-button:text-is('Save')")
+                sleep(5)
+                self.browser.click(f"div.uiTabBar >> span.title:text-is('Media')")
+
+          # Attachments
+          if "Attachments" in dict(product[1]).keys():
+           
+              for attachment in list(product[1]["Attachments"]):
+
+                if self.browser.get_element_count(f"article.slds-card:has-text('Attachments'):visible >> span.slds-file__text") == 5:
+                  continue
+
+                skip = False
+                if self.browser.get_element_count(f"article.slds-card:has-text('Attachments'):visible >> span.slds-file__text") > 0:
+                  product_detail_images = self.browser.get_elements(f"article.slds-card:has-text('Attachments'):visible >> span.slds-file__text")
+                  if product_detail_images:
+                    for prod in product_detail_images:
+                      prod_property = self.browser.get_property(prod, "title")
+                      if prod_property:
+                        if prod_property in list(product[1]["Attachments"]):
+                          skip = True
+
+                if skip:
+                  continue
+
+                self.browser.click("article.slds-card:has-text('Attachments'):visible >> button.slds-button:text-is('Add Attachment')")
+                sleep(7)
+                self.browser.fill_text("sfdc_cms-content-uploader-header.slds-col:visible >> input.slds-input", attachment)
+                sleep(2)
+                
+                search_results = self.browser.get_elements(f"tr.slds-hint-parent:has-text('{attachment}'):visible")
+
+                if len(search_results) == 0:
+                  self.browser.click(f"button.slds-button:text-is('Cancel')")
+                  sleep(2)
+                  continue
+
+                if len(search_results) > 0:
+                  self.browser.click("tr:has(span:text-matches('^{}$')) >> th >> span.slds-checkbox_faux".format(attachment))
+                        
+                sleep(1)
+                self.browser.click(f"button.slds-button:text-is('Save')")
+                sleep(5)
+                self.browser.click(f"div.uiTabBar >> span.title:text-is('Media')")
 
