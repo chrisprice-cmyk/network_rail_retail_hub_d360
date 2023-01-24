@@ -1,15 +1,17 @@
 *** Settings ***
-Resource          cumulusci/robotframework/SalesforcePlaywright.robot
-Library           qbrix/robot/QbrixSharedKeywords.py
-Library           qbrix/robot/QbrixEinsteinKeywords.py
-Library           qbrix/robot/QbrixServiceKeywords.py
-Library           qbrix/robot/QbrixToolingKeywords.py
+Resource            cumulusci/robotframework/SalesforcePlaywright.robot
+Library             qbrix/robot/QbrixSharedKeywords.py
+Library             qbrix/robot/QbrixEinsteinKeywords.py
+Library             qbrix/robot/QbrixServiceKeywords.py
+Library             qbrix/robot/QbrixToolingKeywords.py
+Library             qbrix/robot/QbrixCMS.py
 
 Suite Setup         Run keywords
 ...                     Open test browser    wait=false
 ...                     AND    Set browser timeout    900 seconds
 ...                     AND    Go To Lightning Setup Home
 Suite Teardown      Close browser
+
 
 *** Test Cases ***
 #
@@ -24,5 +26,4 @@ Suite Teardown      Close browser
 # Note: The default timeout for this is 900 seconds but if you have a long running process, ensure you change the value above next to "Set browser timeout" to something more suitable for the overall timeout for everything you are running.
 #
 Run Automation
-    enable_data_tool
-
+    download_all_content
