@@ -92,10 +92,48 @@ class NGOrgConfig(SFDXBaseTask):
 
         if self.org_config.is_qbrix_installed is None:
             self.org_config.is_qbrix_installed = self._is_qbrix_installed
+            
+        if self.org_config.is_object_in_org is None:
+            self.org_config.is_object_in_org = self._is_object_present_in_org
+            
+        if self.org_config.is_psl_in_org is None:
+            self.org_config.is_psl_in_org = self._is_psl_present_in_org
+
 
     def _is_qbrix_installed(self, qbrixname):
 
         url = f"{self.instanceurl}/services/data/v56.0/query/?q=select+MasterLabel+from+xDO_Base_QBrix_Register__mdt+where+MasterLabel='{qbrixname}'"
+        headers = {
+            'Authorization': f'Bearer {self.accesstoken}',
+            'Content-Type': 'application/json'
+        }
+        response = requests.request("GET", url, headers=headers)
+        # print(response.text)
+        data = json.loads(response.text)
+        self.logger.info(data["totalSize"])
+        return data["totalSize"] == 1
+    
+    def _is_object_present_in_org(self, targetobject):
+        
+        #SELECT  QualifiedApiName FROM EntityDefinition Where QualifiedApiName=
+
+        url = f"{self.instanceurl}/services/data/v56.0/query/?q=select+QualifiedApiName+from+EntityDefinition+where+QualifiedApiName='{targetobject}' LIMIT 1"
+        headers = {
+            'Authorization': f'Bearer {self.accesstoken}',
+            'Content-Type': 'application/json'
+        }
+        response = requests.request("GET", url, headers=headers)
+        # print(response.text)
+        data = json.loads(response.text)
+        self.logger.info(data["totalSize"])
+        return data["totalSize"] == 1
+    
+    def _is_psl_present_in_org(self, psl):
+        
+        #e.g. 
+        #SELECT  id,MasterLabel,DeveloperName from PermissionSetLicense where (Masterlabel='OmniStudioDesigner' or DeveloperName='OmniStudioDesigner')
+
+        url = f"{self.instanceurl}/services/data/v56.0/query/?q=select+Id+from+PermissionSetLicense+where(Masterlabel='{psl}' or DeveloperName='{psl}') LIMIT 1"
         headers = {
             'Authorization': f'Bearer {self.accesstoken}',
             'Content-Type': 'application/json'
