@@ -317,12 +317,15 @@ class CreateUser(BaseSalesforceApiTask, ABC):
         # Check If Upsert Can be Used
         if self.upsert_field in submitted_dict.keys() and "ContactId" not in submitted_dict.keys():
             log.info("UPSERT MODE")
+            External_Id_value = submitted_dict.get(self.upsert_field)
             clean_dict_for_upsert = submitted_dict
             del clean_dict_for_upsert[self.upsert_field]
-            upsert_result = api.User.upsert(f"{self.upsert_field}/{submitted_dict.get(self.upsert_field)}", clean_dict_for_upsert)
+            
+            upsert_result = api.User.upsert(f"{self.upsert_field}/{External_Id_value}", clean_dict_for_upsert)
             if str(upsert_result).startswith("2"):
                 log.info("Upsert Completed! Loading record information...")
-                user_info = api.query(f"SELECT Id FROM User WHERE {self.upsert_field} = '{submitted_dict.get(self.upsert_field)}' AND IsActive = True LIMIT 1")
+                print(f"SELECT Id FROM User WHERE {self.upsert_field} = '{External_Id_value}' AND IsActive = True LIMIT 1")
+                user_info = api.query(f"SELECT Id FROM User WHERE {self.upsert_field} = '{External_Id_value}' AND IsActive = True LIMIT 1")
                 if user_info["totalSize"] == 0:
                     log.error("User Upsert Failed. Skipping user...")
                     return
@@ -489,8 +492,9 @@ class CreateUser(BaseSalesforceApiTask, ABC):
         # Clean Up Fields which are not available on the User object
         data = _remove_missing_field_schema(data, field_names)
 
-        # Check and Update Required Fields
+         # Check and Update Required Fields
         data = self._ensure_required_fields(data, field_names, role, profile, manager)
+       
 
         # Link Contact Record
         if link_contact_record:
