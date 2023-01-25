@@ -413,7 +413,6 @@ class CreateUser(BaseSalesforceApiTask, ABC):
 
         User Record ID and the api names (as a list) are also required.
         """
-
         if mode:
             if str(mode).upper() == "PERMISSIONSET":
                 object_name = "PermissionSet"
@@ -427,7 +426,7 @@ class CreateUser(BaseSalesforceApiTask, ABC):
                 lookup_field = "DeveloperName"
                 assignment_field = "PermissionSetGroupId"
 
-            if str(mode).upper() != "PERMISSIONSETGROUP" or str(mode).upper() != "PERMISSIONSET":
+            if str(mode).upper() != "PERMISSIONSETGROUP" and str(mode).upper() != "PERMISSIONSET":
                 log.error(f"Error: Invalid mode passed. Only Permission Sets (PERMISSIONSET) and Permission Set Groups (PERMISSIONSETGROUP) are supported. Mode passed: {mode}")
                 return False
 
@@ -469,9 +468,9 @@ class CreateUser(BaseSalesforceApiTask, ABC):
                     log.error(f"{message_name} (With API Name: {perm}) failed to assign. Moving onto next {message_name} (if any). Details: {permset_creation_result}")
                     return False
 
-            else:
-                log.debug("Error: No Mode was passed for processing. You must pass in a mode.")
-                return False
+        else:
+            log.debug("Error: No Mode was passed for processing. You must pass in a mode.")
+            return False
 
         return True
 
@@ -517,11 +516,11 @@ class CreateUser(BaseSalesforceApiTask, ABC):
             # Handle Permissions
             if permission_set_api_names:
                 log.info("Assigning Permission Sets...")
-                self._assign_permission("PermissionSet", final_user_id, permission_set_api_names)
+                self._assign_permission("PERMISSIONSET", final_user_id, permission_set_api_names)
 
             if permission_set_group_api_names:
                 log.info("Assigning Permission Set Groups...")
-                self._assign_permission("PermissionSetGroup", final_user_id, permission_set_group_api_names)
+                self._assign_permission("PERMISSIONSETGROUP", final_user_id, permission_set_group_api_names)
 
         else:
 
@@ -610,11 +609,11 @@ class CreateUser(BaseSalesforceApiTask, ABC):
                         # Handle Permissions
                         if self.permission_set_api_names:
                             log.info("Assigning Permission Sets...")
-                            self._assign_permission("PermissionSet", final_user_id, self.permission_set_api_names)
+                            self._assign_permission("PERMISSIONSET", final_user_id, self.permission_set_api_names)
 
                         if self.permission_set_group_api_names:
                             log.info("Assigning Permission Set Groups...")
-                            self._assign_permission("PermissionSetGroup", final_user_id, self.permission_set_group_api_names)
+                            self._assign_permission("PERMISSIONSETGROUP", final_user_id, self.permission_set_group_api_names)
                     else:
                         log.error("User Failed to insert. Skipping...")
 
