@@ -292,152 +292,204 @@ class QbrixCMS(BaseLibrary):
               
     def reassign_product_media_files(self):
 
+      """
+      Assigns Media Files stored in Salesforce CMS to the relevant Products in the target org.
+      """
+
+      # Check for default file
       if not os.path.exists("cms_data/product_images.json"):
         print("Missing CMS Definition File. Location: cms_data/product_images.json")
-        return
+        raise Exception("Required file for robot is missing: cms_data/product_images.json. Please check the file and try again.")
 
+      # Process Mapping File
       with open("cms_data/product_images.json", "r") as cms_file:
         product_dict = json.load(cms_file)
 
       if product_dict:
-        for product in dict(product_dict).items():
 
-          if product[1]['External_ID__c'] != "Product2.001":
-            continue
-          
+        # Go to Admin Console
+        self.shared.go_to_app("Commerce - Admin")
+
+        # Setup Selectors
+        media_tab_selector = "div.uiTabBar >> span.title:text-is('Media')"
+
+        # Process Product Records
+        for product in dict(product_dict).items():
+         
           results = self.salesforceapi.soql_query(f"SELECT Id, External_ID__c, Name from Product2 WHERE External_ID__c = '{product[1]['External_ID__c']}' LIMIT 1")
 
           if results["totalSize"] == 0:
-              print("No Products found")
+              print(f"No Products found for the External ID Provided {product[1]['External_ID__c']}. Skipping...")
               continue
 
-          self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/r/Product2/{results['records'][0]['Id']}/view", timeout='30s')
-          sleep(4)
+          try:
+            # Go To Record Page for Product and select Media tab
+            self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/r/Product2/{results['records'][0]['Id']}/view", timeout='30s')
+            self.browser.wait_for_elements_state(media_tab_selector, ElementState.visible, timeout="10s")
+            self.browser.click(media_tab_selector)
+            sleep(8)
+          except TimeoutError:
+            print(f"Unable to access the Media tab for the current Product record with Id ({results['records'][0]['Id']}). Skipping...")
+            continue
+          except Exception as e:
+            raise e
 
-          self.browser.click(f"div.uiTabBar >> span.title:text-is('Media')")
-          sleep(5)
-          
-          # Product Detail Images
-          if "ProductDetailImages" in dict(product[1]).keys():
+          # Process Product Detail Images
+          if "ProductDetailImages" in dict(product[1]).keys() and self.browser.get_element_count(f"article.slds-card:has-text('Product Detail Images'):visible >> img.fileCardImage:visible") < 8:
             
             for product_detail_image in list(product[1]["ProductDetailImages"]):
 
-              if self.browser.get_element_count(f"article.slds-card:has-text('Product List Image'):visible >> img.fileCardImage:visible") == 8:
-                  continue
+              # Check Max. Number of Product Detail Images has not been reached
+              if self.browser.get_element_count(f"article.slds-card:has-text('Product Detail Images'):visible >> img.fileCardImage:visible") == 8:
+                print("The maximum number of images have already been assigned to the Product. Skipping...")
+                continue
 
+              # Check that CMS content has not already been assigned
               skip = False
               if self.browser.get_element_count(f"article.slds-card:has-text('Product Detail Images'):visible >> img.fileCardImage:visible") > 0:
                 product_detail_images = self.browser.get_elements(f"article.slds-card:has-text('Product Detail Images'):visible >> img.fileCardImage:visible")
                 if product_detail_images:
                   for prod in product_detail_images:
                     prod_property = self.browser.get_property(prod, "alt")
+                    print(f"Found alt text: {prod_property}")
                     if prod_property:
                       if prod_property in list(product[1]["ProductDetailImages"]):
+                        print("Skipping duplicate...")
                         skip = True
-
               if skip:
                 continue
 
-              self.browser.click("article.slds-card:has-text('Product Detail Images'):visible >> button.slds-button:text-is('Add Image')")
-              sleep(7)
-              self.browser.fill_text("sfdc_cms-content-uploader-header.slds-col:visible >> input.slds-input", product_detail_image)
-              sleep(2)
-              
-              search_results = self.browser.get_elements(f"tr.slds-hint-parent:has-text('{product_detail_image}'):visible")
+              # Assign New Image
 
-              if len(search_results) == 0:
-                self.browser.click(f"button.slds-button:text-is('Cancel')")
+              self.browser.click("article.slds-card:has-text('Product Detail Images'):visible >> :nth-match(button.slds-button:text-is('Add Image'), 1)")
+              self.browser.wait_for_elements_state("sfdc_cms-content-uploader-header.slds-col:visible >> input.slds-input", ElementState.visible, timeout="10s")
+              self.browser.fill_text("sfdc_cms-content-uploader-header.slds-col:visible >> input.slds-input", product_detail_image)
+              
+              # Handle Search Results
+              try:
                 sleep(2)
+                search_results = self.browser.get_elements(f"tr.slds-hint-parent:has-text('{product_detail_image}'):visible")
+                if len(search_results) == 0:
+                  self.browser.click(f"button.slds-button:text-is('Cancel')")
+                  continue
+                if len(search_results) > 0:
+                  self.browser.click("tr:has(span:text-matches('^{}$')) >> th >> span.slds-checkbox_faux".format(product_detail_image))
+                  self.browser.click(f"button.slds-button:text-is('Save')")
+                  self.browser.wait_for_elements_state(media_tab_selector, ElementState.visible, timeout="15s")
+                  self.browser.click(media_tab_selector)
+              except TimeoutError:
+                print("Unable to find any matches for search results. Skipping...")
+                self.browser.click(f"button.slds-button:text-is('Cancel')")
+                continue
+          else:
+            print("The maximum number of images have already been assigned to the Product or there are no Product Detail Images to process. Skipping...")
+
+          # Process Product List Image
+
+          if "ProductImages" in dict(product[1]).keys() and self.browser.get_element_count(f"article.slds-card:has-text('Product List Image'):visible >> img.fileCardImage:visible") < 1:
+            
+            for product_image in list(product[1]["ProductImages"]):
+
+              # Check Max. Number of Product List Images has not been reached
+              if self.browser.get_element_count(f"article.slds-card:has-text('Product List Image'):visible >> img.fileCardImage:visible") == 1:
+                print("The maximum number of images have already been assigned to the Product. Skipping...")
                 continue
 
-              if len(search_results) > 0:
-                self.browser.click("tr:has(span:text-matches('^{}$')) >> th >> span.slds-checkbox_faux".format(product_detail_image))
-                      
-              sleep(1)
-              self.browser.click(f"button.slds-button:text-is('Save')")
-              sleep(5)
-              self.browser.click(f"div.uiTabBar >> span.title:text-is('Media')")
+              # Check that CMS content has not already been assigned
+              skip = False
+              if self.browser.get_element_count(f"article.slds-card:has-text('Product List Image'):visible >> img.fileCardImage:visible") > 0:
+                product_images = self.browser.get_elements(f"article.slds-card:has-text('Product List Image'):visible >> img.fileCardImage:visible")
+                if product_images:
+                  for prod in product_images:
+                    prod_property = self.browser.get_property(prod, "alt")
+                    print(f"Found alt text: {prod_property}")
+                    if prod_property:
+                      if prod_property in list(product[1]["ProductImages"]):
+                        print("Skipping duplicate...")
+                        skip = True
+              if skip:
+                continue
 
-          # Product Images
-          if "ProductImages" in dict(product[1]).keys():
-            
-              for product_image in list(product[1]["ProductImages"]):
+              # Assign New Image
 
-                skip = False
-
-                if self.browser.get_element_count(f"article.slds-card:has-text('Product List Image'):visible >> img.fileCardImage:visible") == 1:
-                  continue
-
-                if self.browser.get_element_count(f"article.slds-card:has-text('Product List Image'):visible >> img.fileCardImage:visible") > 0:
-                  product_detail_images = self.browser.get_elements(f"article.slds-card:has-text('Product List Image'):visible >> img.fileCardImage:visible")
-                  if product_detail_images:
-                    for prod in product_detail_images:
-                      prod_property = self.browser.get_property(prod, "alt")
-                      if prod_property:
-                        if prod_property in list(product[1]["ProductImages"]):
-                          skip = True
-
-                if skip:
-                  continue
-
-                self.browser.click("article.slds-card:has-text('Product List Image'):visible >> button.slds-button:text-is('Add Image')")
-                sleep(7)
-                self.browser.fill_text("sfdc_cms-content-uploader-header.slds-col:visible >> input.slds-input", product_image)
+              self.browser.click("article.slds-card:has-text('Product List Image'):visible >> :nth-match(button.slds-button:text-is('Add Image'), 1)")
+              self.browser.wait_for_elements_state("sfdc_cms-content-uploader-header.slds-col:visible >> input.slds-input", ElementState.visible, timeout="10s")
+              self.browser.fill_text("sfdc_cms-content-uploader-header.slds-col:visible >> input.slds-input", product_image)
+              
+              # Handle Search Results
+              try:
                 sleep(2)
-                
                 search_results = self.browser.get_elements(f"tr.slds-hint-parent:has-text('{product_image}'):visible")
-
                 if len(search_results) == 0:
                   self.browser.click(f"button.slds-button:text-is('Cancel')")
-                  sleep(2)
                   continue
-
                 if len(search_results) > 0:
-                  self.browser.click("tr:has(span:text-matches('^{}$')) >> th >> span.slds-checkbox_faux".format(product_image))
-                        
-                sleep(1)
-                self.browser.click(f"button.slds-button:text-is('Save')")
-                sleep(5)
-                self.browser.click(f"div.uiTabBar >> span.title:text-is('Media')")
+                  self.browser.click("tr:has(span:text-matches('^{}$')) >> td >> span.slds-radio".format(product_image))
+                  self.browser.click(f"button.slds-button:text-is('Save')")
+                  self.browser.wait_for_elements_state(media_tab_selector, ElementState.visible, timeout="15s")
+                  self.browser.click(media_tab_selector)
+              except TimeoutError:
+                print("Unable to find any matches for search results. Skipping...")
+                self.browser.click(f"button.slds-button:text-is('Cancel')")
+                continue
+          else:
+            print("The maximum number of images have already been assigned to the Product or there are no Product List Images to process. Skipping...")
 
-          # Attachments
-          if "Attachments" in dict(product[1]).keys():
-           
-              for attachment in list(product[1]["Attachments"]):
+          # Process Attachments
 
-                if self.browser.get_element_count(f"article.slds-card:has-text('Attachments'):visible >> span.slds-file__text") == 5:
-                  continue
+          if "Attachments" in dict(product[1]).keys() and self.browser.get_element_count(f"article.slds-card:has-text('Attachments'):visible >> span.slds-file__text") < 5:
+            
+            for product_attachment in list(product[1]["Attachments"]):
 
-                skip = False
-                if self.browser.get_element_count(f"article.slds-card:has-text('Attachments'):visible >> span.slds-file__text") > 0:
-                  product_detail_images = self.browser.get_elements(f"article.slds-card:has-text('Attachments'):visible >> span.slds-file__text")
-                  if product_detail_images:
-                    for prod in product_detail_images:
-                      prod_property = self.browser.get_property(prod, "title")
-                      if prod_property:
-                        if prod_property in list(product[1]["Attachments"]):
-                          skip = True
+              # Check Max. Number of Attachments has not been reached
+              if self.browser.get_element_count(f"article.slds-card:has-text('Attachments'):visible >> span.slds-file__text") == 5:
+                print("The maximum number of attachments have already been assigned to the Product. Skipping...")
+                continue
 
-                if skip:
-                  continue
+              # Check that CMS content has not already been assigned
+              skip = False
+              if self.browser.get_element_count(f"article.slds-card:has-text('Attachments'):visible >> span.slds-file__text") > 0:
+                product_attachments = self.browser.get_elements(f"article.slds-card:has-text('Attachments'):visible >> span.slds-file__text")
+                if product_attachments:
+                  for prod in product_attachments:
+                    prod_property = self.browser.get_property(prod, "title")
+                    print(f"Found title text: {prod_property}")
+                    if prod_property:
+                      if prod_property in list(product[1]["Attachments"]):
+                        print("Skipping duplicate...")
+                        skip = True
+              if skip:
+                continue
 
-                self.browser.click("article.slds-card:has-text('Attachments'):visible >> button.slds-button:text-is('Add Attachment')")
-                sleep(7)
-                self.browser.fill_text("sfdc_cms-content-uploader-header.slds-col:visible >> input.slds-input", attachment)
+              # Assign New Attachment
+
+              self.browser.click("article.slds-card:has-text('Attachments'):visible >> :nth-match(button.slds-button:text-is('Add Attachment'), 1)")
+              self.browser.wait_for_elements_state("sfdc_cms-content-uploader-header.slds-col:visible >> input.slds-input", ElementState.visible, timeout="10s")
+              self.browser.fill_text("sfdc_cms-content-uploader-header.slds-col:visible >> input.slds-input", product_attachment)
+              
+              # Handle Search Results
+              try:
                 sleep(2)
-                
-                search_results = self.browser.get_elements(f"tr.slds-hint-parent:has-text('{attachment}'):visible")
-
+                search_results = self.browser.get_elements(f"tr.slds-hint-parent:has-text('{product_attachment}'):visible")
                 if len(search_results) == 0:
                   self.browser.click(f"button.slds-button:text-is('Cancel')")
-                  sleep(2)
                   continue
-
                 if len(search_results) > 0:
-                  self.browser.click("tr:has(span:text-matches('^{}$')) >> th >> span.slds-checkbox_faux".format(attachment))
-                        
-                sleep(1)
-                self.browser.click(f"button.slds-button:text-is('Save')")
-                sleep(5)
-                self.browser.click(f"div.uiTabBar >> span.title:text-is('Media')")
+                  self.browser.click("tr:has(span:text-matches('^{}$')) >> th >> span.slds-checkbox_faux".format(product_attachment))
+                  self.browser.click(f"button.slds-button:text-is('Save')")
+                  self.browser.wait_for_elements_state(media_tab_selector, ElementState.visible, timeout="15s")
+                  self.browser.click(media_tab_selector)
+              except TimeoutError:
+                print("Unable to find any matches for search results. Skipping...")
+                self.browser.click(f"button.slds-button:text-is('Cancel')")
+                continue
+          else:
+            print("The maximum number of attachments have already been assigned to the Product or there are no Product Attachments to process. Skipping...")
+
+          # Close Tab
+          try:
+            self.browser.click(f"li.oneConsoleTabItem:has-text('{results['records'][0]['Name']}'):visible >> div.close")
+          except:
+            continue
+
 
