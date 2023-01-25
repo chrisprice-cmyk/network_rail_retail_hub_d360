@@ -41,7 +41,7 @@ class RunPreflight(BaseTask, ABC):
             "required": False
         },
         "source_dependencies": {
-            "description": "Add a list of GitHub Q Brix Repo Locations which you want to check and install pre-deployment",
+            "description": "[BETA] ONLY USE IN LEVEL 5 Q BRIX - Add a list of GitHub Q Brix Repo Locations which you want to check and install pre-deployment",
             "required": False
         }
     }

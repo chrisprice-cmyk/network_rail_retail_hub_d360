@@ -218,7 +218,7 @@ class CreateUser(BaseSalesforceApiTask, ABC):
                 json.dump(user_details, user_detail_file)
             return user_details
 
-    def _ensure_required_fields(self, submitted_dict, field_names, role, profile, manager = None):
+    def _ensure_required_fields(self, submitted_dict, field_names, role, profile, manager=None):
         """
         Checks that all required fields have a value, even if none were passed in, except for FirstName and LastName which are required.
         """
@@ -235,11 +235,9 @@ class CreateUser(BaseSalesforceApiTask, ABC):
         if "Alias" not in submitted_dict.keys():
             generated_alias = str(submitted_dict.get("FirstName"))[0:1].lower() + str(submitted_dict.get("LastName"))[0:4].lower()
             submitted_dict.update({"Alias": generated_alias})
-            #submitted_dict.update({"CommunityNickname": generated_alias})
         else:
             trimmed_alias = str(submitted_dict.get("Alias"))[0:7]
             submitted_dict.update({"Alias": trimmed_alias})
-            #submitted_dict.update({"CommunityNickname": trimmed_alias})
 
         if "DefaultGroupNotificationFrequency" not in submitted_dict.keys():
             submitted_dict.update({"DefaultGroupNotificationFrequency": "N"})
@@ -280,27 +278,26 @@ class CreateUser(BaseSalesforceApiTask, ABC):
 
         # Lookup Role
         if role:
-            role_id = api.query(f"SELECT Id FROM UserRole WHERE Name = '{role}' LIMIT 1")["records"][0]["Id"]
-            if not role_id:
+            role_id = api.query(f"SELECT Id FROM UserRole WHERE Name = '{role}' LIMIT 1")
+            if role_id["totalSize"] == 0:
                 raise Exception("User Creation Failed to get Role ID for provided Role: " + role)
-            if "UserRoleId" not in submitted_dict.keys():
-                submitted_dict.update({"UserRoleId": role_id})
+            else:
+                submitted_dict.update({"UserRoleId": role_id["records"][0]["Id"]})
 
         # Lookup Profile
-        profile_id = api.query(f"SELECT Id FROM Profile WHERE Name = '{profile}' LIMIT 1")["records"][0]["Id"]
-        if not profile_id:
+        profile_id = api.query(f"SELECT Id FROM Profile WHERE Name = '{profile}' LIMIT 1")
+        if profile_id["totalSize"] == 0:
             raise Exception("User Creation Failed to get Profile ID for provided Profile: " + profile)
         if "ProfileId" not in submitted_dict.keys():
-            submitted_dict.update({"ProfileId": profile_id})
+            submitted_dict.update({"ProfileId": profile_id["records"][0]["Id"]})
 
         # Lookup Manager
         if manager:
-            manager_id = api.query(f"SELECT Id FROM User Where External_ID__c = '{manager}' LIMIT 1")["records"][0]["Id"]
-            if not manager_id:
+            manager_id = api.query(f"SELECT Id FROM User Where External_ID__c = '{manager}' LIMIT 1")
+            if manager_id["totalSize"] == 0:
                 log.debug(f"No User Record found for the manger external id provided. {manager}")
             else:
-                submitted_dict.update({"ManagerId": manager_id})
-
+                submitted_dict.update({"ManagerId": manager_id["records"][0]["Id"]})
 
         return submitted_dict
 
@@ -317,15 +314,15 @@ class CreateUser(BaseSalesforceApiTask, ABC):
         # Check If Upsert Can be Used
         if self.upsert_field in submitted_dict.keys() and "ContactId" not in submitted_dict.keys():
             log.info("UPSERT MODE")
-            External_Id_value = submitted_dict.get(self.upsert_field)
+            external_id_value = submitted_dict.get(self.upsert_field)
             clean_dict_for_upsert = submitted_dict
             del clean_dict_for_upsert[self.upsert_field]
-            
-            upsert_result = api.User.upsert(f"{self.upsert_field}/{External_Id_value}", clean_dict_for_upsert)
+
+            upsert_result = api.User.upsert(f"{self.upsert_field}/{external_id_value}", clean_dict_for_upsert)
             if str(upsert_result).startswith("2"):
                 log.info("Upsert Completed! Loading record information...")
-                print(f"SELECT Id FROM User WHERE {self.upsert_field} = '{External_Id_value}' AND IsActive = True LIMIT 1")
-                user_info = api.query(f"SELECT Id FROM User WHERE {self.upsert_field} = '{External_Id_value}' AND IsActive = True LIMIT 1")
+                print(f"SELECT Id FROM User WHERE {self.upsert_field} = '{external_id_value}' AND IsActive = True LIMIT 1")
+                user_info = api.query(f"SELECT Id FROM User WHERE {self.upsert_field} = '{external_id_value}' AND IsActive = True LIMIT 1")
                 if user_info["totalSize"] == 0:
                     log.error("User Upsert Failed. Skipping user...")
                     return
@@ -374,6 +371,7 @@ class CreateUser(BaseSalesforceApiTask, ABC):
         """
 
         if str(path_to_image).upper() == "AUTO":
+            log.info("This feature is currently being built. Please provide the path to an image instead.")
             return
 
         if not os.path.exists(path_to_image):
@@ -419,7 +417,7 @@ class CreateUser(BaseSalesforceApiTask, ABC):
                 message_name = "Permission Set"
                 lookup_field = "Name"
                 assignment_field = "PermissionSetId"
-            
+
             if str(mode).upper() == "PERMISSIONSETGROUP":
                 object_name = "PermissionSetGroup"
                 message_name = "Permission Set Group"
@@ -429,7 +427,6 @@ class CreateUser(BaseSalesforceApiTask, ABC):
             if str(mode).upper() != "PERMISSIONSETGROUP" and str(mode).upper() != "PERMISSIONSET":
                 log.error(f"Error: Invalid mode passed. Only Permission Sets (PERMISSIONSET) and Permission Set Groups (PERMISSIONSETGROUP) are supported. Mode passed: {mode}")
                 return False
-
 
             # Loop Through Permission Set Names
             for perm in list(api_names):
@@ -491,9 +488,8 @@ class CreateUser(BaseSalesforceApiTask, ABC):
         # Clean Up Fields which are not available on the User object
         data = _remove_missing_field_schema(data, field_names)
 
-         # Check and Update Required Fields
+        # Check and Update Required Fields
         data = self._ensure_required_fields(data, field_names, role, profile, manager)
-       
 
         # Link Contact Record
         if link_contact_record:
