@@ -151,7 +151,7 @@ tasks:
     description: generate a spin
     class_path: qbrix.tools.utils.qbrix_org_generator.Spin
 
-  UpsertFavorite:
+  upsert_favorite:
     class_path: qbrix.salesforce.qbrix_salesforce_ui.UpsertFavorite
 
   analytics_manager:
