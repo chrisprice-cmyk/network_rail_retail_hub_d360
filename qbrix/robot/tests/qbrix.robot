@@ -36,6 +36,9 @@ Check and Enable Contacts to Multiple Accounts
 
 Set Org Wide Email Address
     Set Org Wide Email
+    
+Disable MFA in Org
+    Disable MFA
 #
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # EINSTEIN TESTS
