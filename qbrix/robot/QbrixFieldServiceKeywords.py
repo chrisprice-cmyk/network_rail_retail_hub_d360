@@ -267,3 +267,48 @@ class QbrixFieldServiceKeywords(BaseLibrary):
     def relax_security_for_connected_apps(self):
         self.relax_security_on_fs_apps("Salesforce Field Service for iOS")
         self.relax_security_on_fs_apps("Salesforce Field Service for Android")
+
+    def select_default_territory(self, territory = None):
+
+        """
+        Sets the Default Territory for the Field Service Dispatcher Console
+        """
+
+        # Set to Default Territory if None passed
+        if not territory:
+            territory = '*San Francisco'
+
+        # Got to Field Service App and load Field Service Tab
+        self.shared.go_to_app("Field Service")
+        sleep(2)
+        self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/n/FSL__FieldService", timeout='90s')
+
+        # Ensure we are viewing territories
+        self.browser.wait_for_elements_state(f"iframe >>> #LeftLocationFilteringButton", ElementState.visible, "120s")
+
+        iframe_selector = self.shared.iframe_handler()
+
+        self.browser.click(f"{iframe_selector} #LeftLocationFilteringButton")
+        sleep(1)
+
+        # Load list of current locations
+        locations_count = self.browser.get_element_count(f'{iframe_selector} div.locationFilterRow')
+
+        if not locations_count:
+            locations_count = 0
+
+        print(f"Found {locations_count} locations on page." )
+
+        if locations_count > 0:
+
+            # Select Location as Favorite and switch to it
+            territory_location_row_selector = f"{iframe_selector} #TF-TerritoriesTree >> div.locationFilterRow:has-text('{territory}')"
+
+            self.browser.click("{} >> label:text-matches('^{}$')".format(territory_location_row_selector, territory.replace('*', '.')))
+            self.browser.click("{} >> svg.slds-icon.favorite-territory".format(territory_location_row_selector))
+            self.browser.click("{} >> span.switch-location".format(territory_location_row_selector)) 
+
+            sleep(1)
+        else:
+            print("No locations loaded. Skipping.")
+
