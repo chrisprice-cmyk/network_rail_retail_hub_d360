@@ -504,8 +504,20 @@ class QbrixSharedKeywords(BaseLibrary):
         :param waittime: Max wait time for the compile to run. Default is 2 minutes. 
         """
         self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/setup/ApexClasses/home")
-        sleep(60)
-        self.browser.click(f"{self.iframe_handler()} >>> id=all_classes_page:theTemplate:messagesForm:compileAll")
-        sleep(60)
-        self.browser.wait_for_elements_state(f"{self.iframe_handler()} >>> h4:has-text('Compilation Complete')", ElementState.visible,
-                                             f'{waittime}s')
+        sleep(30)
+        self.browser.click(f"iframe >>> id=all_classes_page:theTemplate:messagesForm:compileAll")
+        sleep(30)
+        
+        sleep_countdown = 600
+        itcnt=0
+        while itcnt<sleep_countdown:
+            
+             #we are done
+            visible = "visible" in self.browser.get_element_states("iframe >>> h4:has-text('Compilation Complete')")
+            enabled = "enabled" in self.browser.get_element_states("iframe >>> h4:has-text('Compilation Complete')")
+            if visible and enabled:
+                sleep(20)
+                break
+            
+            itcnt+=1
+            sleep(30)  
