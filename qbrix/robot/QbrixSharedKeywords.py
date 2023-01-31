@@ -498,7 +498,7 @@ class QbrixSharedKeywords(BaseLibrary):
 
         return None
 
-    def compile_all_apex(self, waittime="360"):
+    def compile_all_apex(self, waittime="600"):
         """
         Does an Apex Recompile of all Classes
         :param waittime: Max wait time for the compile to run. Default is 2 minutes. 
