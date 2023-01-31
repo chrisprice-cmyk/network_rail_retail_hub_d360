@@ -498,14 +498,14 @@ class QbrixSharedKeywords(BaseLibrary):
 
         return None
 
-    def compile_all_apex(self, waittime="120"):
+    def compile_all_apex(self, waittime="360"):
         """
         Does an Apex Recompile of all Classes
         :param waittime: Max wait time for the compile to run. Default is 2 minutes. 
         """
         self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/setup/ApexClasses/home")
-        sleep(10)
+        sleep(60)
         self.browser.click(f"{self.iframe_handler()}  >>> id=all_classes_page:theTemplate:messagesForm:compileAll")
-        sleep(10)
+        sleep(60)
         self.browser.wait_for_elements_state(f"{self.iframe_handler()}  >>> h4:has-text('Compilation Complete')", ElementState.visible,
                                              f'{waittime}s')
