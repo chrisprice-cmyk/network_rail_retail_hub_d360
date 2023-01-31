@@ -312,3 +312,72 @@ class QbrixFieldServiceKeywords(BaseLibrary):
         else:
             print("No locations loaded. Skipping.")
 
+    def go_to_field_service_mobile_settings_page(self):
+        self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/setup/FieldServiceMobileSettings/home", timeout='90s')
+        sleep(1)
+        self.browser.click(f"{self.shared.iframe_handler()} tr:has-text('Field Service Mobile Settings') >> lightning-button-menu")
+        sleep(1)
+        self.browser.click(f"{self.shared.iframe_handler()} lightning-menu-item.slds-dropdown__item:has-text('Show Details')")
+
+    def create_mobile_app_extension(self, label, type, name, launch_value, object_scope= None, install_url=None, pageReload=True):
+
+        """
+        Creates a mobile app extension
+        """
+
+        # Handle Page Reloads (i.e. If the mobile settings page needs to be reopened)
+        if pageReload:
+            self.go_to_field_service_mobile_settings_page()
+            sleep(2)
+        else:
+            sleep(2)
+
+        # Setup Common Selectors
+        new_button_selector = f"{self.shared.iframe_handler()} div.slds-card__header.slds-grid:has-text('App Extensions') >> button.slds-button:text-is('New')"
+        self.browser.scroll_to_element(new_button_selector)
+
+        # Check for Existing Configuration
+        if self.browser.get_element_count(f"{self.shared.iframe_handler()} th >> div.slds-truncate >> lightning-base-formatted-text:text-is('{label}')") == 0:
+
+            # Open New App Extension Modal
+            self.browser.click(new_button_selector)
+            sleep(1)
+
+            # Enter Details
+
+            # Assign Label
+            self.browser.click("lightning-input:has-text('Label') >> input.slds-input")
+            self.browser.fill_text("lightning-input:has-text('Label') >> input.slds-input", label)
+
+            # Assign Name
+            self.browser.click("lightning-input:has-text('Name') >> input.slds-input")
+            self.browser.fill_text("lightning-input:has-text('Name') >> input.slds-input", name)
+
+            # Assign Launch Value
+            self.browser.click("lightning-input:has-text('Launch Value') >> input.slds-input")
+            self.browser.fill_text("lightning-input:has-text('Launch Value') >> input.slds-input", launch_value)
+
+            # Assign Object Scope (If any)
+            if object_scope:
+                self.browser.click("lightning-input:has-text('Scoped To Object Types') >> input.slds-input")
+                self.browser.fill_text("lightning-input:has-text('Scoped To Object Types') >> input.slds-input", object_scope)
+
+            # Assign Installation URL (If any)
+            if install_url:
+                self.browser.click("lightning-input:has-text('Installation URL') >> input.slds-input")
+                self.browser.fill_text("lightning-input:has-text('Installation URL') >> input.slds-input", install_url)
+
+            # Assign Type
+            self.browser.click("lightning-combobox.type")
+            self.browser.click(f"lightning-base-combobox-item >> span.slds-truncate:text-is('{type}')")
+
+            # Save Changes
+            sleep(1)
+            self.browser.click("button.slds-button:text-is('Save')")
+            sleep(1)
+            if self.browser.get_element_count("div.slds-modal__footer >> lightning-helptext.slds-m-right_small >> button.slds-button_icon-error >> span.slds-assistive-text:has-text('Help')") == 1:
+                print(f"{label} Failed to create. Invalid details.")
+                self.browser.click("button.slds-button:text-is('Cancel')")
+
+        else:
+            print(f"{label} Already Exists... Skipping")
