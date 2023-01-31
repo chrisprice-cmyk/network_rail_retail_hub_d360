@@ -505,7 +505,7 @@ class QbrixSharedKeywords(BaseLibrary):
         """
         self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/setup/ApexClasses/home")
         sleep(60)
-        self.browser.click(f"{self.iframe_handler()}  >>> id=all_classes_page:theTemplate:messagesForm:compileAll")
+        self.browser.click(f"{self.iframe_handler()} >>> id=all_classes_page:theTemplate:messagesForm:compileAll")
         sleep(60)
-        self.browser.wait_for_elements_state(f"{self.iframe_handler()}  >>> h4:has-text('Compilation Complete')", ElementState.visible,
+        self.browser.wait_for_elements_state(f"{self.iframe_handler()} >>> h4:has-text('Compilation Complete')", ElementState.visible,
                                              f'{waittime}s')
