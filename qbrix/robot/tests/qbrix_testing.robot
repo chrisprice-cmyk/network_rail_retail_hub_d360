@@ -1,17 +1,9 @@
 *** Settings ***
-Resource            cumulusci/robotframework/SalesforcePlaywright.robot
-Library             qbrix/robot/QbrixSharedKeywords.py
-Library             qbrix/robot/QbrixEinsteinKeywords.py
-Library             qbrix/robot/QbrixServiceKeywords.py
-Library             qbrix/robot/QbrixToolingKeywords.py
-Library             qbrix/robot/QbrixCMS.py
-Library             qbrix/robot/QbrixFieldServiceKeywords.py
+Resource            qbrix/robot/QRobot.robot
 
 Suite Setup         Run keywords
-...                     Open test browser    wait=false
-...                     AND    Set browser timeout    900 seconds
-...                     AND    Go To Lightning Setup Home
-Suite Teardown      Close browser
+...                     Open Q Browser
+Suite Teardown      QRobot.Close Browser
 
 
 *** Test Cases ***

@@ -1,23 +1,9 @@
 *** Settings ***
-Resource            cumulusci/robotframework/SalesforcePlaywright.robot
-Library             qbrix/robot/QbrixSharedKeywords.py
-Library             qbrix/robot/QbrixEinsteinKeywords.py
-Library             qbrix/robot/QbrixFieldServiceKeywords.py
-Library             qbrix/robot/QbrixMarketingKeywords.py
-Library             qbrix/robot/QbrixNetZeroKeywords.py
-Library             qbrix/robot/QbrixSalesCloudKeywords.py
-Library             qbrix/robot/QbrixSchedulerKeywords.py
-Library             qbrix/robot/QbrixSurveysKeywords.py
-Library             qbrix/robot/QbrixVraKeywords.py
-Library             qbrix/robot/QbrixServiceKeywords.py
-Library             qbrix/robot/QbrixToolingKeywords.py
-Library             qbrix/robot/QbrixManufacturingKeywords.py
+Resource            qbrix/robot/QRobot.robot
 
 Suite Setup         Run keywords
-...                     Open test browser    wait=false
-...                     AND    Set browser timeout    900 seconds
-...                     AND    Go To Lightning Setup Home
-Suite Teardown      Close browser
+...                     Open Q Browser
+Suite Teardown      QRobot.Close Browser
 
 
 *** Test Cases ***
@@ -36,7 +22,7 @@ Check and Enable Contacts to Multiple Accounts
 
 Set Org Wide Email Address
     Set Org Wide Email
-    
+
 Disable MFA in Org
     Disable MFA
 #
