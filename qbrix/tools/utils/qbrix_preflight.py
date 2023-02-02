@@ -103,62 +103,68 @@ class RunPreflight(BaseTask, ABC):
                 f"[INFO ONLY] Org with alias {self.org_config.name} would have the Q Brix Package installed if it is not already installed")
 
         if self.source_dependencies:
+            log.error("THIS FUNCTION IS NOT SUPPORTED AT THIS TIME. PLEASE INSTALL SOURCES USING THE SORUCE_DEPENCENCIES FLOW")
 
-            log.info("Checking Source Dependencies...")
+        #     log.info("Checking Source Dependencies...")
 
-            # Check which Q Brix need to be installed
+        #     # Check which Q Brix need to be installed
 
-            qbrix_install_dict = {}
+        #     qbrix_install_dict = {}
 
-            for source in list(self.source_dependencies):
+        #     for source in list(self.source_dependencies):
 
-                # Clear Invalid Sources
-                if "/" not in source:
-                    log.error(f"{source} is not in a valid format. Please provide the URL to the GitHub repo for the source.")
-                    continue
+        #         # Clear Invalid Sources
+        #         if "/" not in source:
+        #             log.error(f"{source} is not in a valid format. Please provide the URL to the GitHub repo for the source.")
+        #             continue
 
-                # Exclude Known Q Brix which are not supported here
-                if source.rsplit('/', 1)[-1] in {"QBrix-0-xDO-BaseConfig", "QBrix-0-xDO-BaseData", "QBrix-1-xDO-Tool-QBrixRegister"}:
-                    log.debug(f"{source} is one of the Q Brix installed by this function. Please use the correct options to deploy it.")
-                    continue
+        #         # Exclude Known Q Brix which are not supported here
+        #         if source.rsplit('/', 1)[-1] in {"QBrix-0-xDO-BaseConfig", "QBrix-0-xDO-BaseData", "QBrix-1-xDO-Tool-QBrixRegister"}:
+        #             log.debug(f"{source} is one of the Q Brix installed by this function. Please use the correct options to deploy it.")
+        #             continue
 
-                # Get Key Information for Q Brix
-                for key, value_dict in self.project_config.sources.items():
-                    if source in dict(value_dict).get("github"):
-                        qbrix_install_dict.update({key: dict(value_dict).get("github")})
-                    else:
-                        log.error(f"The dependency you requested with name ({source.rsplit('/', 1)[-1]}) was not found in the project source list. Please add it to the source list or remove it from the task > source_dependencies option to remove this error. Moving onto the next dependency (if any)")
-                        continue
+        #         # Get Key Information for Q Brix
+        #         for key, value_dict in self.project_config.sources.items():
+        #             if source.lower() == dict(value_dict).get("github").lower():
+        #                 qbrix_install_dict.update({key: dict(value_dict).get("github")})
 
-                # Install (if required) each Q Brix
-                for qbrix_source_name, qbrix_repo in qbrix_install_dict:
+        #         # if source not in qbrix_install_dict.items():
+        #         #     log.error(f"The dependency you requested with name ({source.rsplit('/', 1)[-1]}) was not found in the project source list. Please add it to the source list or remove it from the task > source_dependencies option to remove this error. Moving onto the next dependency (if any)")
+        #         #     continue
 
-                    repo_qbrix_name = qbrix_repo.rsplit('/', 1)[-1]
+        #     # Install (if required) each Q Brix
+        #     for qbrix_source_name, qbrix_repo in qbrix_install_dict.items():
 
-                    log.info(f"Checking if {repo_qbrix_name} is already installed in Salesforce org with alias ({self.org_config.name})...")
-                    if not QbrixInstallCheck(repo_qbrix_name, self.org_config):
-                        log.info(f"Installing {repo_qbrix_name}")
+        #         repo_qbrix_name = qbrix_repo.rsplit('/', 1)[-1]
 
-                        proc = subprocess.Popen(f"cci flow run {qbrix_source_name}:deploy_qbrix --org {self.org_config.name}",
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE,
-                            shell=True,
-                            cwd=os.getcwd()
-                        )
+        #         log.info(f"Checking if {repo_qbrix_name} is already installed in Salesforce org with alias ({self.org_config.name})...")
+        #         if not QbrixInstallCheck(repo_qbrix_name, self.org_config):
+        #             # log.info(f"Installing {repo_qbrix_name}")
 
-                        while proc.poll() is None:
-                            print(f"{repo_qbrix_name} is still deploying...")
-                            time.sleep(1)
+        #             pass
 
-                        output, error = proc.communicate()
+        #             # project_folder = os.getcwd()
 
-                        if error:
-                            log.error(error.decode("utf-8"))
-                    else:
-                        log.info(f"{repo_qbrix_name} is already installed in Salesforce org with alias ({self.org_config.name}). Moving onto the next dependency (if any).")
-                        continue
-        else:
-            log.info("No source dependencies defined for pre-install. Skipping Task")
+        #             # proc = subprocess.Popen(f"cd {project_folder} && cci flow run {qbrix_source_name}:deploy_qbrix --org {self.org_config.name}",
+        #             #         shell=True,
+        #             #         cwd=project_folder
+        #             #     )
+
+        #             # while proc.poll() is None:
+        #             #     print(f"{repo_qbrix_name} is still deploying...")
+        #             #     time.sleep(1)
+
+        #             # output, error = proc.communicate()
+
+        #             # print(output)
+
+        #             # if error:
+        #             #     log.error(error.decode("utf-8"))
+        #         else:
+        #             log.info(f"{repo_qbrix_name} is already installed in Salesforce org with alias ({self.org_config.name}). Moving onto the next dependency (if any).")
+        #             continue
+        # else:
+        #     log.info("No source dependencies defined for pre-install. Skipping Task")
 
     def deploy_base_config_and_data(self):
 
