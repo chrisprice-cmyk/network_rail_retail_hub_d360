@@ -58,9 +58,8 @@ class QbrixManufacturingKeywords(BaseLibrary):
         Enables Sales Agreement Setting in Salesforce Setup
         """
         self.shared.go_to_setup_admin_page("SalesAgreementSettings/home")
-        self.browser.wait_for_elements_state(".setupcontent:has-text('Enable Sales Agreements')",
-                                             ElementState.visible, '30s')
-        checked = "checked" in self.browser.get_element_states("span.slds-checkbox_faux")
-        if not checked:
-            self.browser.click("span.slds-checkbox_faux")
+        #self.browser.wait_for_elements_state("h1:text-is('Sales Agreements')", ElementState.visible, '30s')
+        sleep(5)
+        if not "checked" in self.browser.get_element_states("div.slds-grid:has-text('Enable Sales Agreements') >> label.slds-checkbox_toggle"):
+            self.browser.click("div.slds-grid:has-text('Enable Sales Agreements') >> label.slds-checkbox_toggle")
             sleep(1)
