@@ -86,6 +86,12 @@ jobs:
           echo "::set-env name=TEMPLATEID::${{ fromJson(steps.qlab_config_settings.outputs.response).templateid }}"
           echo "::set-env name=TEMPLATE_INSTANCE::${{ fromJson(steps.qlab_config_settings.outputs.response).template_instance }}"
           echo "::set-env name=ORG_TARGET_USER::${{ fromJson(steps.qlab_config_settings.outputs.response).org_target_user }}"
+          echo "::set-env name=GITHUB_API_SLEEP_TIME::${{ fromJson(steps.qlab_config_settings.outputs.response).github_api_reset_seconds }}"
+
+      - name: Sleep for ${{env.GITHUB_API_SLEEP_TIME}} seconds per GIT API SLEEP TIME
+        uses: juliangruber/sleep-action@v1
+        with:
+          time: ${{env.GITHUB_API_SLEEP_TIME}}s
 
       #install Python Test Resources
       - name: Install Python Test Resources
