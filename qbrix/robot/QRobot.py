@@ -40,6 +40,7 @@ class QRobot:
 
   def open_q_browser(self, record_video=False):
 
+    # Set Defaults for Browser Instance
     browser = self.builtin.get_variable_value("${BROWSER}", "chrome")
     headless = browser.startswith("headless")
     browser_type = browser[8:] if headless else browser
@@ -47,19 +48,26 @@ class QRobot:
     browser_enum = getattr(SupportedBrowsers, browser_type, None)
     login_url = self.cumulusci.login_url()
 
+    # Enable Video Recording (if requested)
     rec=None
     if record_video:
       rec={"dir": "../video"}
 
+    # Open New Browser
     browser_id = self.browser.new_browser(browser=browser_enum, headless=headless)
     context_id = self.browser.new_context(
         viewport={"width": 1920, "height": 1080}, recordVideo=rec
     )
     self.browser.set_browser_timeout("240 seconds")
-    page_details = self.browser.new_page(login_url)
     sleep(1)
-    landing_url = self.browser.get_url()
-    if not str(landing_url).endswith("/lightning/setup/SetupOneHome/home"):
+
+    # Login to Org
+    page_details = self.browser.new_page()
+    self.browser.go_to(login_url, timeout="120s")
+    sleep(1)
+
+    # Browse to Setup Page if not there already
+    if not str(self.browser.get_url()).endswith("/lightning/setup/SetupOneHome/home"):
       self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/setup/SetupOneHome/home", timeout="120s")
 
     return browser_id, context_id, page_details
