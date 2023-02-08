@@ -63,8 +63,21 @@ class QRobot:
 
     # Login to Org
     page_details = self.browser.new_page()
-    self.browser.go_to(login_url, timeout="120s")
-    sleep(1)
+
+    retries = 0
+    while retries < 4:
+        try:
+            self.browser.go_to(login_url, timeout="120s")
+            sleep(1)
+            if "lightning" in str(self.browser.get_url()):
+                break
+        except Exception as e:
+            print(e)
+            self.browser.take_screenshot()
+            retries += 1
+
+    if retries >= 3:
+        raise Exception("Unable to launch robot. Please try again.")
 
     # Browse to Setup Page if not there already
     if not str(self.browser.get_url()).endswith("/lightning/setup/SetupOneHome/home"):

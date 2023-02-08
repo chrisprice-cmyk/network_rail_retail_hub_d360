@@ -1,8 +1,7 @@
 *** Settings ***
 Resource            qbrix/robot/QRobot.robot
 
-Suite Setup         Run keywords
-...                     Open Q Browser
+Suite Setup         Run keyword    Open Q Browser    record_video=False
 Suite Teardown      QRobot.Close Browser
 
 
