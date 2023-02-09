@@ -150,6 +150,9 @@ Create Gl1tch Chat Button
 
 Create Manny Chat Button
     Create A Chat Button And Automated Invitations    MFG - Manny Bot    MFG_Service_Manny_Bot
+
+Create Stellar Chat Button
+    Create A Chat Button And Automated Invitations    Media - Stellar Bot    MDA_Stellar_Bot
 #
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # Q BRANCH TOOLING TESTS
