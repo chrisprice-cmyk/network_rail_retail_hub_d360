@@ -117,7 +117,7 @@ class QbrixCMS(BaseLibrary):
                     return
 
                 # Select all checkboxes
-
+                no_items = False 
                 while True:
 
                     total_cms_elements = self.browser.get_element(f"{iframe_handler} p.slds-page-header__meta-text")
@@ -125,6 +125,10 @@ class QbrixCMS(BaseLibrary):
                     if total_cms_elements:
 
                         innertext_for_total = self.browser.get_property(f"{iframe_handler} p.slds-page-header__meta-text", "innerText")
+
+                        if innertext_for_total == "0 item(s)":
+                            no_items = True
+                            break
 
                         if innertext_for_total and "+" not in str(innertext_for_total):
                             break
@@ -136,6 +140,9 @@ class QbrixCMS(BaseLibrary):
 
                     else:
                         break
+                
+                if no_items:
+                    return
 
                 elements = self.browser.get_elements(f"{iframe_handler} table.slds-table >> sfdc_cms-content-check-box-button")
                 for elem in elements:
