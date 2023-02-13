@@ -175,6 +175,9 @@ tasks:
         log: None
         output: None
 
+  qbrix_installer_tracking:
+    class_path: qbrix.tools.utils.qbrix_installtracking.InstallRecorder
+
   #------------------------------------#
   # DATA TOOL INTEGRATION              #
   #------------------------------------#
@@ -234,12 +237,14 @@ flows:
   deploy_qbrix:
     steps:
       1:
-        flow: dependencies
+        task: qbrix_installer_tracking
       2:
+        flow: dependencies
+      3:
         task: deploy
         ui_options:
           name: Deploying Q Brix Metadata
-      3:
+      4:
         flow: post_qbrix_deploy
 
   # Deploys the q brix into a TSO or Production Org
