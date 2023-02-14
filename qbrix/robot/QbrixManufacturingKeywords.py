@@ -60,6 +60,16 @@ class QbrixManufacturingKeywords(BaseLibrary):
         self.shared.go_to_setup_admin_page("SalesAgreementSettings/home")
         #self.browser.wait_for_elements_state("h1:text-is('Sales Agreements')", ElementState.visible, '30s')
         sleep(5)
+        if not "checked" in self.browser.get_element_states("div.slds-grid:has-text('Inactive') >> label.slds-checkbox_toggle"):
+            self.browser.click("div.slds-grid:has-text('Inactive') >> label.slds-checkbox_toggle")
+            sleep(1)
+
+    def enable_manufacturing_service_console(self):
+        """
+        Enables Service Console for Manufacturing Setting in Salesforce Setup
+        """
+        self.shared.go_to_setup_admin_page("MfgServiceExcellenceSettings/home")
+        sleep(5)
         if not "checked" in self.browser.get_element_states("div.slds-grid:has-text('Enable Sales Agreements') >> label.slds-checkbox_toggle"):
             self.browser.click("div.slds-grid:has-text('Enable Sales Agreements') >> label.slds-checkbox_toggle")
             sleep(1)

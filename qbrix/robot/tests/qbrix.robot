@@ -244,3 +244,10 @@ Add Profile to Chat Agent Configuration
 
 Apex Classes Compile
     Compile All Apex    300
+
+# -----------------------------------------------------------------------------------------------------------------------------------------
+# Manufacturing Cloud Operations
+# -----------------------------------------------------------------------------------------------------------------------------------------
+
+Enable MFG Service Console
+    Enable Manufacturing Service Console
