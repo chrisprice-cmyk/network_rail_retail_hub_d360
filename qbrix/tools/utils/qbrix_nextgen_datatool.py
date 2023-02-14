@@ -24,7 +24,11 @@ class RunDataTool(BaseTask, ABC):
         "wait": {
             "description": "If defined, this is the total amount of time in seconds which the script will wait between each data load. If only one data collection is defined, this will be the wait time after the data load has completed.",
             "required": False
-        }
+        },
+        "org": {
+            "description": "org alias",
+            "required": False
+        },
     }
 
     task_docs = """
