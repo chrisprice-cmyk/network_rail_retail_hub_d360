@@ -68,8 +68,9 @@ class QbrixManufacturingKeywords(BaseLibrary):
         """
         Enables Service Console for Manufacturing Setting in Salesforce Setup
         """
+        enable_mfgservice_toggle = "span.slds-checkbox_off"
         self.shared.go_to_setup_admin_page("MfgServiceExcellenceSettings/home")
-        sleep(5)
-        if not "checked" in self.browser.get_element_states("div.slds-grid:has-text('Inactive') >> label.slds-checkbox_toggle"):
-            self.browser.click("div.slds-grid:has-text('Inactive') >> label.slds-checkbox_toggle")
-            sleep(1)
+        visible = "visible" in self.browser.get_element_states(enable_mfgservice_toggle)
+        if visible:
+            self.browser.click(enable_mfgservice_toggle)
+            sleep(2)
