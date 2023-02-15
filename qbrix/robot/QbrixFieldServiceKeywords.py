@@ -100,13 +100,13 @@ class QbrixFieldServiceKeywords(BaseLibrary):
 
         # Setup Dispatcher UI - Custom Actions
         print("Dispatcher UI")
-        menu_dispatcher_ui_selector = f"{iframe_selector} id=SettingsMenu >> div.menuItem >> span:text-is('Dispatcher Console UI'):visible"
-        drag_jumps_selector = f"{iframe_selector} div.setting-row-container:has-text('Drag jumps on gantt') >> input.input-settings"
+        menu_dispatcher_ui_selector = f"{iframe_selector} #SettingsMenu >> div.menuItem >> span:text-is('Dispatcher Console UI'):visible"
+        drag_jumps_selector = f"{iframe_selector} div.setting-row-container:has-text('Drag jumps on gantt') >> div.select-container >> input.input-settings"
         gantt_settings_selector = f"{iframe_selector} div.settings-tab:has-text('Updating the Gantt')"
         gantt_refresh_selector = f"{iframe_selector} div.setting-row-container:has-text('Seconds between Gantt refreshes') >> input.input-settings"
         tabs_custom_actions_selector = f"{iframe_selector} div.settings-tab:has-text('Custom Actions')"
-        action_cat_selector = f"{iframe_selector} id=CA-GanttSection >> div:text-is('Mass Actions')"
-        new_action_btn_selector = f"{iframe_selector} id=CA-newAction"
+        action_cat_selector = f"{iframe_selector} #CA-GanttSection >> div:text-is('Mass Actions')"
+        new_action_btn_selector = f"{iframe_selector} #CA-newAction"
         new_action_label_selector = f"{iframe_selector} div.CA-field-container:has-text('Label in Dispatcher Console') >> input.CA-input-label"
         vf_page_selector = f"{iframe_selector} div.CA-field-container:has-text('Visualforce') >> select.select-setting"
         custom_perm_selector = f"{iframe_selector} div.CA-field-container:has-text('Required Custom Permission') >> select.select-setting"
