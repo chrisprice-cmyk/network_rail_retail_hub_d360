@@ -347,7 +347,7 @@ def source_org_feature_checker(skip_rebuild = False, auto=False):
                  "orgs/dev.json")
 
 
-def org_feature_checker():
+def org_feature_checker(auto=False):
     """ Checks and updates the dev_preview.json file with missing features from the dev.json file """
 
     log.info(
@@ -355,7 +355,7 @@ def org_feature_checker():
     missing_features = find_missing_features("orgs/dev_preview.json", "orgs/dev.json")
     if len(missing_features) > 0:
         log.info("Scratch Org Config Check: Missing Features Found. Updating orgs/dev_preview.json file")
-        update_org_file_features("orgs/dev_preview.json", missing_features)
+        update_org_file_features("orgs/dev_preview.json", missing_features, auto)
     else:
         log.info("Scratch Org Config Check: No Missing Features Found")
 

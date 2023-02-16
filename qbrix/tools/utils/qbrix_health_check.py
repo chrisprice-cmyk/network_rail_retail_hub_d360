@@ -44,7 +44,7 @@ class HealthChecker(BaseTask, ABC):
         source_org_feature_checker(False, self.auto)
 
         log.info("Health Check: Checking that dev_preview has all features from dev.")
-        org_feature_checker()
+        org_feature_checker(self.auto)
 
         log.info("Health Check: Checking that scratch org files are configured with required settings")
         check_org_config_files(True)
