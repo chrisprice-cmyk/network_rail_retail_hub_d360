@@ -9,6 +9,10 @@ log = init_logger()
 
 class HealthChecker(BaseTask, ABC):
     task_options = {
+        "auto": {
+            "description": "Auto Accepts all proposed changes.",
+            "required": False
+        },
     }
 
     task_docs = """
@@ -17,6 +21,7 @@ class HealthChecker(BaseTask, ABC):
 
     def _init_options(self, kwargs):
         super(HealthChecker, self)._init_options(kwargs)
+        self.auto = True if "auto" in self.options else False
 
     def _run_task(self):
         log.info("Health Check: Starting Health Checker Tool")
@@ -36,7 +41,7 @@ class HealthChecker(BaseTask, ABC):
         check_api_versions(self.project_config.project__package__api_version)
 
         log.info("Health Check: Checking that orgs/dev.json has all features from all sources related to this Q Brix.")
-        source_org_feature_checker(False)
+        source_org_feature_checker(False, self.auto)
 
         log.info("Health Check: Checking that dev_preview has all features from dev.")
         org_feature_checker()

@@ -315,7 +315,7 @@ def check_api_versions(project_api_version):
         log.info("API Version Check: Updated sfdx-project.json File")
 
 
-def source_org_feature_checker(skip_rebuild: Optional[bool] = False):
+def source_org_feature_checker(skip_rebuild = False, auto=False):
     """ Check all source project dev.json files for missing features from current project dev.json file
     :param skip_rebuild: Set to True when you do no want CumulusCI Cache Rebuilt. Defaults to False
     """
@@ -341,7 +341,7 @@ def source_org_feature_checker(skip_rebuild: Optional[bool] = False):
             main_missing_feature_list.extend(missing_feature_list)
     if len(main_missing_feature_list) > 0:
         main_missing_feature_list.sort()
-        update_org_file_features("orgs/dev.json", main_missing_feature_list)
+        update_org_file_features("orgs/dev.json", main_missing_feature_list, auto)
     else:
         log.info("Source Feature Check: No missing features found when comparing all sources to "
                  "orgs/dev.json")
