@@ -8,6 +8,34 @@ from cumulusci.core.exceptions import CommandException
 from cumulusci.core.keychain import BaseProjectKeychain
 
 
+class NGAbort(SFDXBaseTask):
+    task_options = {
+
+        "message": {
+            "description": "Message to capture when condition is found",
+            "required": False
+        }
+    }
+    
+    def _init_options(self, kwargs):
+        super(NGAbort, self)._init_options(kwargs)
+        self.abortmessage=None
+        
+    def _prepruntime(self):
+
+        # if not passed in - fall back to the key ring data
+        if "message" not in self.options or not self.options["message"]:
+            self.abortmessage ='The when codition was met'
+        else:
+            self.abortmessage =self.options["message"]
+        
+    def _run_task(self):
+        self._prepruntime()
+        raise Exception(f'This QBrix was stopped due to :: {self.abortmessage}')
+        
+        
+    
+
 class NGOrgConfig(SFDXBaseTask):
     keychain_class = BaseProjectKeychain
     task_options = {
@@ -98,11 +126,27 @@ class NGOrgConfig(SFDXBaseTask):
             
         if self.org_config.is_psl_in_org is None:
             self.org_config.is_psl_in_org = self._is_psl_present_in_org
+            
+        if self.org_config.is_namespace_installed is None:
+            self.org_config.is_namespace_installed = self._is_package_namespace_installed
 
 
     def _is_qbrix_installed(self, qbrixname):
 
         url = f"{self.instanceurl}/services/data/v56.0/query/?q=select+MasterLabel+from+xDO_Base_QBrix_Register__mdt+where+MasterLabel='{qbrixname}'"
+        headers = {
+            'Authorization': f'Bearer {self.accesstoken}',
+            'Content-Type': 'application/json'
+        }
+        response = requests.request("GET", url, headers=headers)
+        # print(response.text)
+        data = json.loads(response.text)
+        self.logger.info(data["totalSize"])
+        return data["totalSize"] == 1
+    
+    def _is_package_namespace_installed(self, namespace):
+
+        url = f"{self.instanceurl}/services/data/v56.0/query/?q=select+NamespacePrefix+from+PackageLicense+where+NamespacePrefix='{namespace}'"
         headers = {
             'Authorization': f'Bearer {self.accesstoken}',
             'Content-Type': 'application/json'

@@ -178,6 +178,10 @@ tasks:
   qbrix_installer_tracking:
     class_path: qbrix.tools.utils.qbrix_installtracking.InstallRecorder
 
+  abort_install:
+    description: Aborts the install due to the when condition being met.
+    class_path: qbrix.tools.utils.qbrix_orgconfig_hydrate.NGAbort
+
   #------------------------------------#
   # DATA TOOL INTEGRATION              #
   #------------------------------------#
