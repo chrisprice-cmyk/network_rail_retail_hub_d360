@@ -78,12 +78,24 @@ class QbrixManufacturingKeywords(BaseLibrary):
 
     def enable_automotive_cloud_setting(self):
         """
-        Enables Service Console for Manufacturing Setting in Salesforce Setup
+        Enables Automotive Cloud Setting
         """
-        enable_mfgservice_toggle = "span.slds-checkbox_off"
-        self.shared.go_to_setup_admin_page("MfgServiceExcellenceSettings/home")
-        self.browser.wait_for_elements_state("h2:text-is('Service Console for Manufacturing')", ElementState.visible, '30s')
-        visible = "visible" in self.browser.get_element_states(enable_mfgservice_toggle)
+        enable_autoCloud = "span.slds-checkbox_off"
+        self.shared.go_to_setup_admin_page("AutomotiveFoundationSettings/home")
+        self.browser.wait_for_elements_state("h2:text-is('Automotive')", ElementState.visible, '30s')
+        visible = "visible" in self.browser.get_element_states(enable_autoCloud)
         if visible:
-            self.browser.click(enable_mfgservice_toggle)
+            self.browser.click(enable_autoCloud)
+            sleep(2)
+
+    def enable_automotive_cloud_setting(self):
+        """
+        Enables Automotive Cloud Service Console Setting
+        """
+        enable_autoServi = "span.slds-checkbox_off"
+        self.shared.go_to_setup_admin_page("AutomotiveServiceExcellenceSettings/home")
+        self.browser.wait_for_elements_state("h2:text-is('Service Console for Automotive')", ElementState.visible, '30s')
+        visible = "visible" in self.browser.get_element_states(enable_autoServi)
+        if visible:
+            self.browser.click(enable_autoServi)
             sleep(2)

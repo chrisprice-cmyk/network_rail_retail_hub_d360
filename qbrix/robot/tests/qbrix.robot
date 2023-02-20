@@ -254,3 +254,6 @@ Enable MFG Service Console
 
 Enable Automotive Cloud Setting
     Enable Automotive Cloud Setting
+
+Enable Automotive Cloud Service Console Setting
+    Enable Automotive Cloud Service Console Setting
