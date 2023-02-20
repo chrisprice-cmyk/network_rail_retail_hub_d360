@@ -88,7 +88,7 @@ class QbrixManufacturingKeywords(BaseLibrary):
             self.browser.click(enable_autoCloud)
             sleep(2)
 
-    def enable_automotive_cloud_setting(self):
+    def enable_automotive_cloud_service_console_setting(self):
         """
         Enables Automotive Cloud Service Console Setting
         """
