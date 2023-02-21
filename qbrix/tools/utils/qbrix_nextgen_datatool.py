@@ -113,6 +113,9 @@ class RunDataTool(BaseTask, ABC):
                 # Get Job Status
                 check_job = requests.get(job_status_check_url)
 
+                # print("\nResult\n")
+                # print(check_job.json())
+
                 # Handle issues with job status
                 if check_job.json() is None:
                     if total_retries > 3:
@@ -134,6 +137,10 @@ class RunDataTool(BaseTask, ABC):
                 check_job_json = check_job.json()
                 status = check_job_json["state"]
                 progress = check_job_json["progress"]
+                status_update = "Waiting to start."
+
+                if isinstance(progress, dict):
+                    status_update = f"Running - {progress['progress']}%"
 
                 if status == "completed":
                     et = time.time()
@@ -142,17 +149,18 @@ class RunDataTool(BaseTask, ABC):
                     break
 
                 if status == "active":
-                    log.info(f"NextGen Data Tool: Job ID {job_id} still deploying... Estimated Progress - {progress}%")
+                    log.info(f"NextGen Data Tool: Job ID {job_id}. {status_update}")
 
                 if status == "failed":
                     log.error(f"The data load job has failed. Job ID: {job_id}")
+                    log.error(check_job_json)
                     raise Exception("Data Load Failed")
 
                 if status != "active" and status != "completed":
                     log.error(f"NextGen Data Tool: Unsupported status ({status}) read. Stopping deployment")
                     raise Exception("Data Load Failed. An unsupported status was received from the NextGen Data Tool.")
 
-                sleep(2)
+                sleep(1)
                 timeout += 1
 
             data_load_job_counter += 1
