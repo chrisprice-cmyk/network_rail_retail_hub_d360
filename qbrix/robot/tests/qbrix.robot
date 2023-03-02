@@ -249,7 +249,7 @@ Apex Classes Compile
 # Manufacturing & Automotive Cloud Operations
 # -----------------------------------------------------------------------------------------------------------------------------------------
 
-Enable MFG Service Console
+Enable Manufacturing Service Console
     Enable Manufacturing Service Console
 
 Enable Automotive Cloud Setting
