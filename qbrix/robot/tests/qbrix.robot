@@ -1,9 +1,23 @@
 *** Settings ***
-Resource            qbrix/robot/QRobot.robot
-
-Suite Setup         Run keywords
-...                     Open Q Browser
-Suite Teardown      QRobot.Close Browser
+Resource          cumulusci/robotframework/SalesforcePlaywright.robot
+Library           qbrix/robot/QbrixSharedKeywords.py
+Library           qbrix/robot/QbrixEinsteinKeywords.py
+Library           qbrix/robot/QbrixFieldServiceKeywords.py
+Library           qbrix/robot/QbrixFINSKeywords.py
+Library           qbrix/robot/QbrixMarketingKeywords.py
+Library           qbrix/robot/QbrixManufacturingKeywords.py
+Library           qbrix/robot/QbrixNetZeroKeywords.py
+Library           qbrix/robot/QbrixSalesCloudKeywords.py
+Library           qbrix/robot/QbrixSchedulerKeywords.py
+Library           qbrix/robot/QbrixSurveysKeywords.py
+Library           qbrix/robot/QbrixVraKeywords.py
+Library           qbrix/robot/QbrixServiceKeywords.py
+Library           qbrix/robot/QbrixToolingKeywords.py
+Suite Setup       Run keywords
+...               Set browser timeout    900 seconds
+...               AND    Open test browser    wait=false
+...               AND    Go To Lightning Setup Home
+Suite Teardown    Close browser
 
 
 *** Test Cases ***
@@ -257,3 +271,10 @@ Enable Automotive Cloud Setting
 
 Enable Automotive Cloud Service Console Setting
     Enable Automotive Cloud Service Console Setting
+
+# -----------------------------------------------------------------------------------------------------------------------------------------
+# FINANCIAL SERVICES Cloud Operations
+# -----------------------------------------------------------------------------------------------------------------------------------------
+
+Enable Interest Tagging
+    Enable Interest Tagging
