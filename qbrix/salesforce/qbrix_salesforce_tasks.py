@@ -178,6 +178,11 @@ class CreateUser(BaseSalesforceApiTask, ABC):
             "description": "External ID for the User record who is the manager for the current record",
             "required": False
         }
+        ,
+        "contact_external_id": {
+            "description": "External ID for the contact record to associate to the community user",
+            "required": False
+        }
     }
 
     def _init_options(self, kwargs):
@@ -192,6 +197,7 @@ class CreateUser(BaseSalesforceApiTask, ABC):
         self.path = self.options["path"] if "path" in self.options else None
         self.link_contact_record = self.options["link_contact_record"] if "link_contact_record" in self.options else False
         self.manager_external_id = self.options["manager_external_id"] if "manager_external_id" in self.options else False
+        self.contact_external_id = self.options["contact_external_id"] if "contact_external_id" in self.options else False
 
     def _get_user_desc(self, tmp_file_location=None):
 
@@ -218,7 +224,7 @@ class CreateUser(BaseSalesforceApiTask, ABC):
                 json.dump(user_details, user_detail_file)
             return user_details
 
-    def _ensure_required_fields(self, submitted_dict, field_names, role, profile, manager=None):
+    def _ensure_required_fields(self, submitted_dict, field_names, role, profile, manager=None,contact=None):
         """
         Checks that all required fields have a value, even if none were passed in, except for FirstName and LastName which are required.
         """
@@ -298,7 +304,15 @@ class CreateUser(BaseSalesforceApiTask, ABC):
                 log.debug(f"No User Record found for the manger external id provided. {manager}")
             else:
                 submitted_dict.update({"ManagerId": manager_id["records"][0]["Id"]})
-
+                
+        # Lookup Contact
+        if contact:
+            contact_id = api.query(f"SELECT Id FROM Contact Where External_ID__c = '{contact}' LIMIT 1")
+            if contact_id["totalSize"] == 0:
+                log.debug(f"No Contact Record found for the contact external id provided. {contact}")
+            else:
+                submitted_dict.update({"ContactId": contact_id["records"][0]["Id"]})
+                        
         return submitted_dict
 
     def _load_data(self, submitted_dict):
@@ -481,7 +495,8 @@ class CreateUser(BaseSalesforceApiTask, ABC):
         permission_set_group_api_names = user_record_data["permission_set_group_api_names"] if "permission_set_group_api_names" in dict(user_record_data).keys() else None
         link_contact_record = user_record_data["link_contact_record"] if "link_contact_record" in dict(user_record_data).keys() else None
         manager = user_record_data["manager_external_id"] if "manager_external_id" in dict(user_record_data).keys() else None
-
+        contact = user_record_data["contact_external_id"] if "contact_external_id" in dict(user_record_data).keys() else None
+        
         log.info(f"Creating User with the following details: \n{json.dumps(data, indent=1, sort_keys=True)}")
         log.info("Preparing Data for User Record")
 
@@ -489,7 +504,7 @@ class CreateUser(BaseSalesforceApiTask, ABC):
         data = _remove_missing_field_schema(data, field_names)
 
         # Check and Update Required Fields
-        data = self._ensure_required_fields(data, field_names, role, profile, manager)
+        data = self._ensure_required_fields(data, field_names, role, profile, manager,contact)
 
         # Link Contact Record
         if link_contact_record:
@@ -582,7 +597,7 @@ class CreateUser(BaseSalesforceApiTask, ABC):
                     self.data = _remove_missing_field_schema(self.data, field_names)
 
                     # Check and Update Required Fields
-                    self.data = self._ensure_required_fields(self.data, field_names, self.role, self.profile, self.manager_external_id)
+                    self.data = self._ensure_required_fields(self.data, field_names, self.role, self.profile, self.manager_external_id,self.contact_external_id)
 
                     # Link Contact Record
                     if self.link_contact_record:

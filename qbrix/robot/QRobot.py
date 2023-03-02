@@ -63,8 +63,8 @@ class QRobot:
 
     # Login to Org
     page_details = self.browser.new_page()
-    page = self.browser.get_current_page()
-    page.set_default_navigation_timeout(120000)
+    #page = self.browser.get_current_page()
+    #page.set_default_navigation_timeout(120000)
 
     retries = 0
     while retries < 4:

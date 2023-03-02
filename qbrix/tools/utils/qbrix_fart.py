@@ -212,7 +212,7 @@ class FART(Command):
                 defcontents = tmpFile.read()
                 tmpFile.close()
 
-                print(defcontents)
+                #print(defcontents)
 
                 # if defcontents.find(find) == -1:
                 if formatval is None:
@@ -270,7 +270,7 @@ class FART(Command):
 
         jsonresult = json.loads(result.stdout)
 
-        if jsonresult["result"]["totalSize"] == 1:
+        if jsonresult["result"]["totalSize"] >= 1:
             print(jsonresult["result"]["records"][0][list(jsonresult["result"]["records"][0].keys())[1]])
             # we want the first key (1) after attributes(0). That is the first column and all we want
             return jsonresult["result"]["records"][0][list(jsonresult["result"]["records"][0].keys())[1]]
