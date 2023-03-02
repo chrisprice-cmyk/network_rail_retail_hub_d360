@@ -31,7 +31,7 @@ class QbrixFINSKeywords(BaseLibrary):
         """
         enable_toggle = "span.slds-checkbox_off"
         self.shared.go_to_setup_admin_page("InterestTaggingSettings/home")
-        self.browser.wait_for_elements_state("h2:text-is('Let users access interest tags feature')", ElementState.visible, '30s')
+        self.browser.wait_for_elements_state("p:text-is('Let users access interest tags feature')", ElementState.visible, '30s')
         visible = "visible" in self.browser.get_element_states(enable_toggle)
         if visible:
             self.browser.click(enable_toggle)
