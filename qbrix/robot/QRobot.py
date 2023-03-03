@@ -87,5 +87,5 @@ class QRobot:
 
     return browser_id, context_id, page_details
 
-  def close_browser(self):
+  def close_q_browser(self):
     self.browser.close_browser("ALL")
