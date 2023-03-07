@@ -272,6 +272,19 @@ Enable Automotive Cloud Setting
 Enable Automotive Cloud Service Console Setting
     Enable Automotive Cloud Service Console Setting
 
+
+Enable Account Manager Targets
+    Enable Account Manager Targets
+
+Enable Partner Visit Management
+    Enable Partner Visit Management
+
+Enable Program Based Business
+    Enable Program Based Business
+
+Enable Warranty Lifecycle Management
+    Enable Warranty Lifecycle Management
+
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # FINANCIAL SERVICES Cloud Operations
 # -----------------------------------------------------------------------------------------------------------------------------------------
