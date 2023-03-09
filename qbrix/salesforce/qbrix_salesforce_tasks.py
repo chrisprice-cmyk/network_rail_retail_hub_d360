@@ -158,6 +158,10 @@ class CreateUser(BaseSalesforceApiTask, ABC):
             "description": "List of API names for the Permission Set Groups you want to apply to the newly created User",
             "required": False
         },
+        "permission_set_license_api_names": {
+            "description": "List of API names for the Permission Set Licenses you want to apply to the newly created User",
+            "required": False
+        },
         "user_profile_image": {
             "description": "Local file location for the image you want to assign to the user profile. (COMING SOON) Use the keyword AUTO to automatically generate an image for the user.",
             "required": False
@@ -192,6 +196,7 @@ class CreateUser(BaseSalesforceApiTask, ABC):
         self.profile = self.options["profile"] if "profile" in self.options else None
         self.permission_set_api_names = list(self.options["permission_set_api_names"]) if "permission_set_api_names" in self.options else None
         self.permission_set_group_api_names = list(self.options["permission_set_group_api_names"]) if "permission_set_group_api_names" in self.options else None
+        self.permission_set_license_api_names = list(self.options["permission_set_license_api_names"]) if "permission_set_license_api_names" in self.options else None
         self.user_profile_image = self.options["user_profile_image"] if "user_profile_image" in self.options else None
         self.upsert_field = self.options["upsert_field"] if "upsert_field" in self.options else "External_ID__c"
         self.path = self.options["path"] if "path" in self.options else None
@@ -418,10 +423,11 @@ class CreateUser(BaseSalesforceApiTask, ABC):
     def _assign_permission(self, mode, user_id, api_names):
 
         """
-        Assigns Permission Sets or Permission Set Groups based on the mode. 
+        Assigns Permission Sets or Permission Set Groups or Permission Set Licenses based on the mode. 
 
         Permission Sets use mode: PERMISSIONSET
         Permission Set Groups use mode: PERMISSIONSETGROUP
+        Permission Set Licenses use mode: PERMISSIONSETLICENSE
 
         User Record ID and the api names (as a list) are also required.
         """
@@ -431,15 +437,25 @@ class CreateUser(BaseSalesforceApiTask, ABC):
                 message_name = "Permission Set"
                 lookup_field = "Name"
                 assignment_field = "PermissionSetId"
+                assignment_object="PermissionSetAssignment"
 
             if str(mode).upper() == "PERMISSIONSETGROUP":
                 object_name = "PermissionSetGroup"
                 message_name = "Permission Set Group"
                 lookup_field = "DeveloperName"
                 assignment_field = "PermissionSetGroupId"
+                assignment_object="PermissionSetAssignment"
+                
+            if str(mode).upper() == "PERMISSIONSETLICENSE":
+                object_name = "PermissionSetLicense"
+                message_name = "Permission Set License"
+                lookup_field = "DeveloperName"
+                assignment_field = "PermissionSetLicenseId"
+                assignment_object="PermissionSetLicenseAssign"
 
-            if str(mode).upper() != "PERMISSIONSETGROUP" and str(mode).upper() != "PERMISSIONSET":
-                log.error(f"Error: Invalid mode passed. Only Permission Sets (PERMISSIONSET) and Permission Set Groups (PERMISSIONSETGROUP) are supported. Mode passed: {mode}")
+
+            if str(mode).upper() != "PERMISSIONSETGROUP" and str(mode).upper() != "PERMISSIONSET" and str(mode).upper() != "PERMISSIONSETLICENSE":
+                log.error(f"Error: Invalid mode passed. Only Permission Sets (PERMISSIONSET) or Permission Set Groups (PERMISSIONSETGROUP) or Permission Set Licenses (PERMISSIONSETLICENSE) are supported. Mode passed: {mode}")
                 return False
 
             # Loop Through Permission Set Names
@@ -459,21 +475,35 @@ class CreateUser(BaseSalesforceApiTask, ABC):
                     continue
                 else:
                     permission_set_id = permission_set_query["records"][0]["Id"]
-
-                # Check for existing Permission Set Assignment
-                permission_set_assignment_query = api.query(f"SELECT Id FROM PermissionSetAssignment WHERE AssigneeId = '{user_id}' AND {assignment_field} = '{permission_set_id}' LIMIT 1")
+                    
+                    
+                # Check for existing Permission Set, Group or License has been already assigned
+                permission_set_assignment_query = api.query(f"SELECT Id FROM {assignment_object} WHERE AssigneeId = '{user_id}' AND {assignment_field} = '{permission_set_id}' LIMIT 1")
                 if permission_set_assignment_query["totalSize"] == 1:
                     log.info(f"{message_name} with api name {perm} has already been assigned to the user. Skipping...")
                     continue
+                    
 
-                # Create Permission Set Assignment
-                permset_creation_result = api.PermissionSetAssignment.create(
-                    {
-                        "AssigneeId": user_id,
-                        str(assignment_field): permission_set_id
-                    }
-                )
-                if permset_creation_result["id"]:
+                permset_creation_result = None
+                if str(mode).upper() != "PERMISSIONSETLICENSE" :
+                 
+                    # Create Permission Set Assignment
+                    permset_creation_result = api.PermissionSetAssignment.create(
+                        {
+                            "AssigneeId": user_id,
+                            str(assignment_field): permission_set_id
+                        }
+                    )
+                else:
+                     # Create Permission Set License Assignment
+                    permset_creation_result = api.PermissionSetLicenseAssign.create(
+                        {
+                            "AssigneeId": user_id,
+                            str(assignment_field): permission_set_id
+                        }
+                    )
+                    
+                if not permset_creation_result is None and permset_creation_result["id"]:
                     log.info(f"{message_name} (With API Name: {perm}) has been assigned (ID: {permset_creation_result['id']})!")
                 else:
                     log.error(f"{message_name} (With API Name: {perm}) failed to assign. Moving onto next {message_name} (if any). Details: {permset_creation_result}")
@@ -493,6 +523,7 @@ class CreateUser(BaseSalesforceApiTask, ABC):
         user_profile_image = user_record_data["user_profile_image"] if "user_profile_image" in dict(user_record_data).keys() else None
         permission_set_api_names = user_record_data["permission_set_api_names"] if "permission_set_api_names" in dict(user_record_data).keys() else None
         permission_set_group_api_names = user_record_data["permission_set_group_api_names"] if "permission_set_group_api_names" in dict(user_record_data).keys() else None
+        permission_set_license_api_names = user_record_data["permission_set_license_api_names"] if "permission_set_license_api_names" in dict(user_record_data).keys() else None
         link_contact_record = user_record_data["link_contact_record"] if "link_contact_record" in dict(user_record_data).keys() else None
         manager = user_record_data["manager_external_id"] if "manager_external_id" in dict(user_record_data).keys() else None
         contact = user_record_data["contact_external_id"] if "contact_external_id" in dict(user_record_data).keys() else None
@@ -532,6 +563,10 @@ class CreateUser(BaseSalesforceApiTask, ABC):
             if permission_set_group_api_names:
                 log.info("Assigning Permission Set Groups...")
                 self._assign_permission("PERMISSIONSETGROUP", final_user_id, permission_set_group_api_names)
+                
+            if permission_set_license_api_names:
+                log.info("Assigning Permission Set Licenses...")
+                self._assign_permission("PERMISSIONSETLICENSE", final_user_id, permission_set_license_api_names)
 
         else:
 
@@ -625,6 +660,10 @@ class CreateUser(BaseSalesforceApiTask, ABC):
                         if self.permission_set_group_api_names:
                             log.info("Assigning Permission Set Groups...")
                             self._assign_permission("PERMISSIONSETGROUP", final_user_id, self.permission_set_group_api_names)
+                            
+                        if self.permission_set_license_api_names:
+                            log.info("Assigning Permission Set Licenses...")
+                            self._assign_permission("PERMISSIONSETLICENSE", final_user_id, self.permission_set_license_api_names)
                     else:
                         log.error("User Failed to insert. Skipping...")
 
