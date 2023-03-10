@@ -581,3 +581,151 @@ def check_permset_group_files():
             FART.fartbetween(FART, psg, "<status>", "</status>", "Outdated", None)
     else:
         log.info("No Permission Set Group Files in Project, skipping check.")
+
+def add_prefix(path, prefix):
+    parts = os.path.split(path)
+    return os.path.join(parts[0], prefix + parts[1])
+
+def update_references(old_value, new_value, prefix=''):
+
+    if old_value == 'All':
+        return
+
+    project_path = 'force-app/main/default'
+    reference_pattern = re.compile(rf'(?<!{prefix})\b{old_value}\b')
+
+    for root, dirs, files in os.walk(project_path):
+        for file_name in files:
+            if "external_id__c" in os.path.basename(file_name).lower() or os.path.basename(file_name).lower().startswith("sdo_") or os.path.basename(file_name).lower().startswith("xdo_") or os.path.basename(file_name).lower().startswith("db_"):
+                #print(f"SKIPPED: {file_name}")
+                continue
+
+            if os.path.basename(root) in {"standardValueSets", "roles", "corsWhitelistOrigins"}:
+                continue
+
+            file_path = os.path.join(root, file_name)
+            with open(file_path, 'r') as f:
+                f.seek(0)
+                file_contents = f.read()
+
+            new_contents = reference_pattern.sub(new_value, file_contents)
+            if new_contents != file_contents:
+                with open(file_path, 'w') as f:
+                    f.write(new_contents)
+                    print(f'Updated references for {old_value} in {file_path}')
+
+def assign_prefix_to_files(prefix, parent_folder='force-app/main/default', interactive_mode=False):
+
+    if not prefix:
+        log.error("No prefix defined. Unable to run task.")
+        return
+    else:
+        prefix = prefix.replace("_", "")
+        under_prefix = str(prefix).upper() + "_"
+        open_prefix = str(prefix).upper() + " "
+    
+    if not os.path.exists(parent_folder):
+        log.error("Parent folder doesn't exist. Please correct the folder path and try again.")
+        return
+    
+    PATTERN = re.compile(r'^.+__c$')
+    FILE_PATTERN = re.compile(r'^.+__c.')
+
+    paths_to_rename = []
+   
+    # Find and Update Custom Object Folder Names
+    for root, dirs, files in os.walk(os.path.join(parent_folder, 'objects')):
+        for dir_name in dirs:
+            if PATTERN.match(dir_name) and not dir_name.lower().startswith(prefix.lower()):
+                old_path = os.path.join(root, dir_name)
+                new_path = add_prefix(old_path, under_prefix)
+                print(f'CUSTOM OBJECT DIRECTORY FOUND:\n    Current Path: {old_path}\n    Updated Path: {new_path}')
+                approve_change = False
+                if interactive_mode:
+                    confirmation = input("Are you happy to make this change? (Y/n) : ") or 'y'
+                    if confirmation.lower() == 'y':
+                        approve_change = True
+                    else:
+                        approve_change = False
+                else:
+                    approve_change = True
+                if approve_change:
+                    paths_to_rename.append((old_path, new_path))
+                    update_references(os.path.basename(old_path), os.path.basename(new_path), prefix)
+                
+
+        if root.endswith('compactLayouts') or root.endswith('recordTypes') or root.endswith('businessProcesses'):
+            for file_name in files:
+
+                if root.endswith('listViews') and "All.listView" in file_name:
+                    continue
+
+                if not file_name.lower().startswith(prefix.lower()) and not file_name.lower().startswith('sdo_') and not file_name.lower().startswith('xdo_'):
+                    old_path = os.path.join(root, file_name)
+                    if root.endswith('businessProcesses'):
+                        new_path = add_prefix(old_path, open_prefix)
+                    else:
+                        new_path = add_prefix(old_path, under_prefix)
+                    #os.rename(old_path, new_path)
+                    print(f'CUSTOM OBJECT FILE FOUND:\n    Current Path: {old_path}\n    Updated Path: {new_path}')
+
+                    old_value = os.path.splitext(os.path.basename(old_path))[0].split('.')[0]
+                    new_value = os.path.splitext(os.path.basename(new_path))[0].split('.')[0]
+
+                    approve_change = False
+                    if interactive_mode:
+                        confirmation = input("Are you happy to make this change? (Y/n) : ") or 'y'
+                        if confirmation.lower() == 'y':
+                            approve_change = True
+                        else:
+                            approve_change = False
+                    else:
+                        approve_change = True
+                    if approve_change:
+                        paths_to_rename.append((old_path, new_path))
+                        update_references(old_value, new_value, prefix)
+
+                    
+
+    # Update Custom File Names
+    file_list = glob.glob(f'{parent_folder}/**/*.*-meta.xml', recursive=True)
+
+    for current_file in file_list:
+
+        file_name = os.path.basename(current_file)
+        directory_name = os.path.dirname(current_file)
+
+        if os.path.basename(directory_name) in {"settings", "standardValueSets", "roles", "corsWhitelistOrigins", "layouts", "quickActions"} or "objects" in directory_name:
+            continue
+
+        if "external_id__c" in file_name.lower() or file_name.lower().startswith("sdo_") or file_name.lower().startswith("xdo_") or file_name.lower().startswith(f"{prefix}") or file_name.lower().startswith("db_") or file_name.lower().startswith("standard-"):
+            continue
+
+        old_path = current_file
+        new_path = add_prefix(old_path, under_prefix)
+        #os.rename(old_path, new_path)
+        print(f'PROJECT CUSTOM FILE FOUND:\n    Current Path: {old_path}\n    Updated Path: {new_path}')
+
+        old_value = os.path.splitext(os.path.basename(old_path))[0].split('.')[0]
+        new_value = os.path.splitext(os.path.basename(new_path))[0].split('.')[0]
+
+        approve_change = False
+        if interactive_mode:
+            confirmation = input("Are you happy to make this change? (Y/n) : ") or 'y'
+            if confirmation.lower() == 'y':
+                approve_change = True
+            else:
+                approve_change = False
+        else:
+            approve_change = True
+        if approve_change:
+            paths_to_rename.append((old_path, new_path))
+            update_references(old_value, new_value, prefix)
+        
+        
+
+    # Rename all files and Folders where matches were located
+    sorted_list = sorted(paths_to_rename, key=lambda x: len(x[1]), reverse=True)
+    for path_to_update, new_updated_path in sorted_list:
+        os.rename(path_to_update, new_updated_path)
+        print(f"FILE OR FOLDER RENAMED:\n    Previous Path: {path_to_update}\n    New Path: {new_updated_path}")
