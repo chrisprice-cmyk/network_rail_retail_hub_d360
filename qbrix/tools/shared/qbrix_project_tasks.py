@@ -617,18 +617,19 @@ def update_references(old_value, new_value, prefix=''):
 
 def assign_prefix_to_files(prefix, parent_folder='force-app/main/default', interactive_mode=False):
 
+    # Validation
     if not prefix:
-        log.error("No prefix defined. Unable to run task.")
-        return
-    else:
-        prefix = prefix.replace("_", "")
-        under_prefix = str(prefix).upper() + "_"
-        open_prefix = str(prefix).upper() + " "
+        raise Exception("Error: No prefix provided to the Mass Rename Tool. You must provide a prefix.")
     
     if not os.path.exists(parent_folder):
-        log.error("Parent folder doesn't exist. Please correct the folder path and try again.")
-        return
+        raise Exception("Parent folder doesn't exist. Please correct the folder path and try again.")
+
+    # Generate Prefix Variations
+    prefix = prefix.replace("_", "")
+    under_prefix = str(prefix).upper() + "_"
+    open_prefix = str(prefix).upper() + " "
     
+    # Set Matching Pattern for Cumstom API references
     PATTERN = re.compile(r'^.+__c$')
     FILE_PATTERN = re.compile(r'^.+__c.')
 
@@ -704,7 +705,6 @@ def assign_prefix_to_files(prefix, parent_folder='force-app/main/default', inter
 
         old_path = current_file
         new_path = add_prefix(old_path, under_prefix)
-        #os.rename(old_path, new_path)
         print(f'PROJECT CUSTOM FILE FOUND:\n    Current Path: {old_path}\n    Updated Path: {new_path}')
 
         old_value = os.path.splitext(os.path.basename(old_path))[0].split('.')[0]
@@ -722,8 +722,6 @@ def assign_prefix_to_files(prefix, parent_folder='force-app/main/default', inter
         if approve_change:
             paths_to_rename.append((old_path, new_path))
             update_references(old_value, new_value, prefix)
-        
-        
 
     # Rename all files and Folders where matches were located
     sorted_list = sorted(paths_to_rename, key=lambda x: len(x[1]), reverse=True)

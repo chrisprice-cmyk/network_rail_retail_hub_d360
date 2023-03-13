@@ -56,8 +56,16 @@ class QbrixSalesCloudKeywords(BaseLibrary):
 
     def enable_sales_engagement(self):
         """ Enables Sales Engagement """
-        self.shared.go_to_setup_admin_page("SalesEngagement/home", 10)
-        self.shared.click_button_with_text("Set Up and Enable Sales Engagement")
+
+        self.shared.go_to_setup_admin_page("SalesEngagement/home", 5)
+
+        button_selector = f"{self.shared.iframe_handler()} button.slds-button:has-text('Set Up and Enable Sales Engagement')"
+
+        if "visible" in self.browser.get_element_states(button_selector):
+            self.browser.click(button_selector)
+            sleep(20)
+
+        
 
     def set_guest_on_channel_menu(self, channel_menu_api_name):
 
