@@ -10,6 +10,7 @@ import random
 from abc import abstractmethod
 from time import sleep
 
+import yaml
 from cumulusci.core.config import ScratchOrgConfig
 from cumulusci.tasks.sfdx import SFDXBaseTask
 from cumulusci.core.exceptions import TaskOptionsError
@@ -166,7 +167,6 @@ class Spin(SFDXBaseTask):
             self.project_config.keychain = self.keychain
 
     def _prepruntime(self):
-
         if hasattr(self, 'keychain') == False or self.keychain is None:
             self._load_keychain()
 
@@ -304,22 +304,30 @@ class Spin(SFDXBaseTask):
         else:
             self.githubpat = self.options["githubpat"]
 
-        if "deployqbrix" not in self.options or self.options["deployqbrix"] is None or self.options[
-            "deployqbrix"] == "":
-            self.deployqbrix = []
+
+        if "deployqbrix" in self.options:
+            if self.options["deployqbrix"] is None or self.options["deployqbrix"] == "":
+                self.deployqbrix = []
+            else:
+                self.deployqbrix = self.options["deployqbrix"].split('|')
         else:
-            self.deployqbrix = self.options["deployqbrix"].split('|')
+            with open('cumulusci.yml', 'r') as f:
+                data = yaml.safe_load(f)
+
+            required_qbrix = data.get('project', {}).get('custom', {}).get('required_qbrix', [])
+
+            if len(required_qbrix) > 0:
+                self.deployqbrix.append(required_qbrix)
 
     def _createworkingarea(self):
-
         if os.path.isdir('.qbrix') == False:
             os.mkdir('.qbrix')
 
         subprocess.run([f"sfdx force:project:create --projectname {self.devhubuser} --json"], shell=True,
-                       capture_output=True, cwd=".qbrix")
+            capture_output=True, cwd=".qbrix")
         subprocess.run([f"sfdx force:config:set defaultusername={self.devhubuser} --json"], shell=True,
-                       capture_output=True,
-                       cwd=os.path.join('.qbrix', self.devhubuser))
+            capture_output=True,
+            cwd=os.path.join('.qbrix', self.devhubuser))
 
     def _getlatesttemplate(self):
         self._createworkingarea()
@@ -355,7 +363,6 @@ class Spin(SFDXBaseTask):
             targetdir = os.path.join(".qbrix", x)
 
             if os.path.isdir(targetdir):
-
                 if self.mode == "TEMPLATE":
                     cmd = f"cci org import {self.spinusername} {self.cciorg}"
                 else:
@@ -369,8 +376,8 @@ class Spin(SFDXBaseTask):
                 self.logger.info(f"Running qbix: {cmd} againsts {targetdir}")
 
                 with subprocess.Popen(['cci', 'flow', 'run', 'deploy_qbrix', '--org', self.cciorg],
-                                      stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1,
-                                      universal_newlines=True, cwd=targetdir) as p:
+                        stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1,
+                        universal_newlines=True, cwd=targetdir) as p:
                     for line in p.stdout:
                         self.logger.info(line[20:])  # process line here
 
@@ -381,7 +388,6 @@ class Spin(SFDXBaseTask):
                 self.logger.error(f"{targetdir} is not found")
 
     def _submittemplate(self):
-
         if self.templateid == "LATEST":
             self._getlatesttemplate()
 
@@ -400,7 +406,6 @@ class Spin(SFDXBaseTask):
         self.logger.info(f"Signup Request Id: {self.signuprequestid}")
 
     def _submitscratchorg(self, retrycount=0):
-
         result = subprocess.run([
             f"{self._buildscratchorgcommand()}"],
             shell=True, capture_output=True, cwd=os.path.join('.qbrix', self.devhubuser))
@@ -426,7 +431,6 @@ class Spin(SFDXBaseTask):
             self.spinusername = jsonresult["result"]["username"]
 
     def _buildsignupcommand(self):
-
         cmd = f"trialdays={self.spinlength} company={self.company} lastname=Eng firstname=Demo username={self.spinusername} subdomain={self.subdomain} country={self.country} templateId={self.resolvedtemplateid}"
 
         if not self.instance is None:
@@ -443,7 +447,6 @@ class Spin(SFDXBaseTask):
         return cmd
 
     def _buildscratchorgcommand(self):
-
         cmd = f"sfdx force:org:create --json  -f {self.scratch_config} -w 120 --targetdevhubusername {self.devhubuser} -n --durationdays {self.spinlength} --setalias {self.cciorg}  "
 
         self.logger.info(cmd)
@@ -451,7 +454,6 @@ class Spin(SFDXBaseTask):
         return cmd
 
     def _generateusername(self):
-
         t = time.time()
         ml = int(t * 1000)
         self.spinusername = f"demo.eng@.{ml}.qbrix"
@@ -465,7 +467,6 @@ class Spin(SFDXBaseTask):
         return self.subdomain
 
     def _monitorrequest(self):
-
         maxwait = self.maxwait
         if hasattr(self, "signuprequestid"):
             while not self._checktempaltestatuscomplete():
@@ -481,7 +482,6 @@ class Spin(SFDXBaseTask):
             raise CommandException("No signup request id found.")
 
     def _checktempaltestatuscomplete(self):
-
         if self.signuprequestid is not None:
             result = subprocess.run([
                 f"sfdx force:data:record:get -u {self.devhubuser} -s SignupRequest -i \"{self.signuprequestid}\" --json"],
@@ -509,11 +509,9 @@ class Spin(SFDXBaseTask):
                 return False
 
             if jsonresult["result"]["Status"] == "Success":
-
                 if self.devhubconsumerkey is not None and self.devhubjwtkeyfile is not None:
-
                     self.logger.info("Spin Successful. Waiting to verify JWT connectivity...")
-                    sleep(600)  #force pause for 10 minutes to give SF core time to do the voodoo needed
+                    sleep(600)  # force pause for 10 minutes to give SF core time to do the voodoo needed
                     self.spinusername = jsonresult["result"]["Username"]
                     self._forcelogout(self.spinusername)
                     spinjwtresult = self._connectspinviajwt(jsonresult["result"]["Username"])
@@ -571,7 +569,6 @@ class Spin(SFDXBaseTask):
         self.logger.info(result.stdout)
 
     def _run_task(self):
-
         self._prepruntime()
 
         # we may need to pre pull qbrix down to for pre-deploy
@@ -581,9 +578,8 @@ class Spin(SFDXBaseTask):
         self._createworkingarea()
 
         if self.mode == "TEMPLATE":
-
             if self.signuprequestid is None:
-                #from 5 to 90 we will random pause to create some delay 
+                # from 5 to 90 we will random pause to create some delay
                 randomwaith = random.randrange(5, 90, 1)
                 sleep(randomwaith)
                 self._submittemplate()
