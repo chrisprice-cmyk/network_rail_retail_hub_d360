@@ -311,13 +311,16 @@ class Spin(SFDXBaseTask):
             else:
                 self.deployqbrix = self.options["deployqbrix"].split('|')
         else:
-            with open('cumulusci.yml', 'r') as f:
-                data = yaml.safe_load(f)
+            try:
+                with open('cumulusci.yml', 'r') as f:
+                    data = yaml.safe_load(f)
 
-            required_qbrix = data.get('project', {}).get('custom', {}).get('required_qbrix', [])
+                required_qbrix = data.get('project', {}).get('custom', {}).get('required_qbrix', [])
 
-            if len(required_qbrix) > 0:
-                self.deployqbrix.append(required_qbrix)
+                if len(required_qbrix) > 0:
+                    self.deployqbrix.append(required_qbrix)
+            except:
+                print('No Default Required QBrix Defined YML')
 
     def _createworkingarea(self):
         if os.path.isdir('.qbrix') == False:
