@@ -311,6 +311,7 @@ class Spin(SFDXBaseTask):
             else:
                 self.deployqbrix = self.options["deployqbrix"].split('|')
         else:
+            self.deployqbrix = []
             try:
                 with open('cumulusci.yml', 'r') as f:
                     data = yaml.safe_load(f)
