@@ -732,7 +732,7 @@ def assign_prefix_to_files(prefix, parent_folder='force-app/main/default', inter
 def create_external_id_field(file_path):
     with open(file_path) as file:
         for line in file:
-            object_name = line.strip().title()
+            object_name = line.strip()
             if object_name:
                 object_dir = os.path.join("force-app", "main", "default", "objects", object_name)
                 fields_dir = os.path.join(object_dir, "fields")
