@@ -1,8 +1,9 @@
 from abc import ABC
+import os
 
 from cumulusci.core.tasks import BaseTask
 from qbrix.tools.shared.qbrix_console_utils import init_logger
-from qbrix.tools.shared.qbrix_project_tasks import update_file_api_versions, delete_standard_fields, assign_prefix_to_files
+from qbrix.tools.shared.qbrix_project_tasks import update_file_api_versions, delete_standard_fields, assign_prefix_to_files, create_external_id_field
 
 log = init_logger()
 
@@ -22,9 +23,10 @@ class MassFileOps(BaseTask, ABC):
         log.info(f""" 
         \nQ BRIX - MASS OPERATIONS UTILITY\n\n
         OPTION  DESCRIPTION\n
-        [1]     Update File APIs - Updates Apex Classes and LWC/Aura Components with Q Brix API Version\n
-        [2]     Delete Standard Fields - Removes standard fields within object folders\n
-        [3]     Assign Prefix to all Custom Entities (Folders and References) in Project\n
+        [1]     Update File APIs : Updates Apex Classes and LWC/Aura Components with Q Brix API Version\n
+        [2]     Delete Standard Fields : Removes standard fields within object folders\n
+        [3]     Prefix Generator : Assign Prefix to all Custom Entities (Folders and References) in Project\n
+        [4]     External ID Field Generator : Generate External ID Fields for a list of Object names\n
         [e]     Exit   
     """)
         option = input("\n\nWhich task you like to run? (Enter the option number) : ")
@@ -61,7 +63,11 @@ class MassFileOps(BaseTask, ABC):
             else:
                 print("Confirmation not recieved, exiting.")
                 exit()
-
+        elif option.lower() == "3":
+            file_input = input("\n\nPlease provide the relevent path to the txt file within the project, which holds the names of the objects. (There should be one object api name per line.) : ")
+            if file_input and os.path.exists(file_input):
+                create_external_id_field(file_input)
+                log.info("Update Complete!")
         elif option.lower() == "e":
             log.info("Exiting Q Brix Mass Operations Utility")
             exit()

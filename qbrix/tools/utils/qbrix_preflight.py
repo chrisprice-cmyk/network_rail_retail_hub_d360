@@ -41,15 +41,15 @@ class RunPreflight(BaseTask, ABC):
             "required": False
         },
         "org": {
-            "description": "org alias",
+            "description": "The alias for the connected target org within the CumulusCI Project. Ensure that either this is provided or the access token.",
             "required": False
         },
         "accesstoken": {
-            "description": "Access Token for the target org, if known.",
+            "description": "[Optional] Access Token for the target org, if known.",
             "required": False
         },
         "instanceurl": {
-            "description": "Access Token for the target org, if known.",
+            "description": "[Optional] The Salesforce Instance URL for the target org.",
             "required": False
         }
     }
