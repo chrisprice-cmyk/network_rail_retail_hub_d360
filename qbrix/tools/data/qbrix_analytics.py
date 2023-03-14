@@ -117,7 +117,7 @@ class AnalyticsManager(BaseTask, ABC):
             log.info("Creating Dataset Directory")
             os.mkdir(self.dataset_folder)
 
-        subprocess.run(f"sf config set target-org={self.org_config.instance_url}", shell=True, capture_output=True)
+        subprocess.run(f"sf config set instanceUrl={self.org_config.instance_url}", shell=True, capture_output=True)
 
         for file in wave_dataset_files:
             dataset_name = Path(file).stem.replace(".wds-meta", "")
@@ -132,7 +132,7 @@ class AnalyticsManager(BaseTask, ABC):
             else:
                 log.info(f"Dataset {dataset_name} has been downloaded to {self.dataset_folder}")
 
-        subprocess.run("sf config unset target-org", shell=True, capture_output=True)
+        subprocess.run("sf config unset instanceUrl", shell=True, capture_output=True)
 
     def upload_dataset_data(self):
 
@@ -149,7 +149,7 @@ class AnalyticsManager(BaseTask, ABC):
         wave_dataset_files = glob.glob("force-app/main/default/wave" + "/*.wds-meta.xml", recursive=True)
 
         if len(wave_dataset_files) > 0:
-            subprocess.run(f"sf config set target-org={self.org_config.instance_url}", shell=True, capture_output=True)
+            subprocess.run(f"sf config set instanceUrl={self.org_config.instance_url}", shell=True, capture_output=True)
 
         app_names = []
 
@@ -187,7 +187,7 @@ class AnalyticsManager(BaseTask, ABC):
                 log.error(
                     f"Expected to find dataset file at {data_file_location} and it was missing. Please check you have downloaded the dataset data files. Skipping this file.")
 
-        subprocess.run("sf config unset target-org", shell=True, capture_output=True)
+        subprocess.run("sf config unset instanceUrl", shell=True, capture_output=True)
 
         if self.share_to_all_portal_users or self.share_to_all_internal_users:
             self.share_app(app_names)
@@ -214,10 +214,10 @@ class AnalyticsManager(BaseTask, ABC):
                     extra_cmd += " --org"
 
                 log.info(f"Sharing Analytics App: {app}")
-                subprocess.run(f"sf config set target-org={self.org_config.instance_url}", shell=True, capture_output=True)
+                subprocess.run(f"sf config set instanceUrl={self.org_config.instance_url}", shell=True, capture_output=True)
                 subprocess.run(extra_cmd, shell=True, capture_output=True)
 
-        subprocess.run("sf config unset target-org", shell=True, capture_output=True)
+        subprocess.run("sf config unset instanceUrl", shell=True, capture_output=True)
 
     def _run_task(self):
 
