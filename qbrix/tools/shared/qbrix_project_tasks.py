@@ -733,23 +733,24 @@ def create_external_id_field(file_path):
     with open(file_path) as file:
         for line in file:
             object_name = line.strip().title()
-            object_dir = os.path.join("force-app", "main", "default", "objects", object_name)
-            fields_dir = os.path.join(object_dir, "fields")
-            field_file = os.path.join(fields_dir, "External_ID__c.field-meta.xml")
-            if not os.path.exists(object_dir):
-                os.makedirs(object_dir)
-            if not os.path.exists(fields_dir):
-                os.makedirs(fields_dir)
-            if not os.path.exists(field_file):
-                with open(field_file, "w") as f:
-                    f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-                    f.write('<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">\n')
-                    f.write('    <fullName>External_Id__c</fullName>\n')
-                    f.write('    <externalId>true</externalId>\n')
-                    f.write('    <label>External ID</label>\n')
-                    f.write('    <length>50</length>\n')
-                    f.write('    <required>false</required>\n')
-                    f.write('    <trackTrending>false</trackTrending>\n')
-                    f.write('    <type>Text</type>\n')
-                    f.write('    <unique>false</unique>\n')
-                    f.write('</CustomField>\n')
+            if object_name:
+                object_dir = os.path.join("force-app", "main", "default", "objects", object_name)
+                fields_dir = os.path.join(object_dir, "fields")
+                field_file = os.path.join(fields_dir, "External_ID__c.field-meta.xml")
+                if not os.path.exists(object_dir):
+                    os.makedirs(object_dir)
+                if not os.path.exists(fields_dir):
+                    os.makedirs(fields_dir)
+                if not os.path.exists(field_file):
+                    with open(field_file, "w") as f:
+                        f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+                        f.write('<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">\n')
+                        f.write('    <fullName>External_Id__c</fullName>\n')
+                        f.write('    <externalId>true</externalId>\n')
+                        f.write('    <label>External ID</label>\n')
+                        f.write('    <length>50</length>\n')
+                        f.write('    <required>false</required>\n')
+                        f.write('    <trackTrending>false</trackTrending>\n')
+                        f.write('    <type>Text</type>\n')
+                        f.write('    <unique>false</unique>\n')
+                        f.write('</CustomField>\n')

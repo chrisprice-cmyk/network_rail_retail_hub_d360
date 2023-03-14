@@ -63,7 +63,7 @@ class MassFileOps(BaseTask, ABC):
             else:
                 print("Confirmation not recieved, exiting.")
                 exit()
-        elif option.lower() == "3":
+        elif option.lower() == "4":
             file_input = input("\n\nPlease provide the relevent path to the txt file within the project, which holds the names of the objects. (There should be one object api name per line.) : ")
             if file_input and os.path.exists(file_input):
                 create_external_id_field(file_input)
