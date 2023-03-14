@@ -45,19 +45,23 @@ class InstallRecorder(SFDXBaseTask):
 
     def _init_options(self, kwargs):
         super(SFDXBaseTask, self)._init_options(kwargs)
-        self._trackingdata = None
-        self.qbrixname = None
-        self.context = None
-        self._starttimestamp=datetime.utcnow()
-        self._hooks = ExitHooks()
-        self._hooks.hook()
         
-        if(not self.org_config is None and self.org_config.qbrix_ambient_tracking_id is None):
-            self.org_config.qbrix_ambient_tracking_id=str(uuid.uuid4())
-            self.logger.info(f"Generated Ambient Transient Key::{self.org_config.qbrix_ambient_tracking_id}")
-        else:
-            self.logger.info(f"Existing Ambient Transient Key Found::{self.org_config.qbrix_ambient_tracking_id}")
-        atexit.register(self._exithandler)
+        try:
+            self._trackingdata = None
+            self.qbrixname = None
+            self.context = None
+            self._starttimestamp=datetime.utcnow()
+            self._hooks = ExitHooks()
+            self._hooks.hook()
+            
+            if(not self.org_config is None and self.org_config.qbrix_ambient_tracking_id is None):
+                self.org_config.qbrix_ambient_tracking_id=str(uuid.uuid4())
+                self.logger.info(f"Generated Ambient Transient Key::{self.org_config.qbrix_ambient_tracking_id}")
+            else:
+                self.logger.info(f"Existing Ambient Transient Key Found::{self.org_config.qbrix_ambient_tracking_id}")
+            atexit.register(self._exithandler)
+        except:
+            print('No Tracking')
         
 
     @property

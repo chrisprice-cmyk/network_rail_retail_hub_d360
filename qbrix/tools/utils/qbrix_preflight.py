@@ -60,19 +60,22 @@ class RunPreflight(BaseTask, ABC):
     def _init_options(self, kwargs):
         super(RunPreflight, self)._init_options(kwargs)
 
-        # Initiate Shared Variables
-        self.scratch_org_mode = True if isinstance(self.org_config, ScratchOrgConfig) else False
-        self.targetusername = ""
-        self.accesstoken = self.options["accesstoken"] if "accesstoken" in self.options else self.org_config.access_token
-        self.instanceurl = self.options["instanceurl"] if "instanceurl" in self.options else self.org_config.instance_url
+        try:
+            # Initiate Shared Variables
+            self.scratch_org_mode = True if isinstance(self.org_config, ScratchOrgConfig) else False
+            self.targetusername = ""
+            self.accesstoken = self.options["accesstoken"] if "accesstoken" in self.options else self.org_config.access_token
+            self.instanceurl = self.options["instanceurl"] if "instanceurl" in self.options else self.org_config.instance_url
 
-        # Initiate Options
-        self.include_base_config = self.options["include_base_config"] if "include_base_config" in self.options else False
-        self.base_config_only_scratch = self.options["base_config_only_scratch"] if "base_config_only_scratch" in self.options else False
-        self.info_mode = self.options["info_mode"] if "info_mode" in self.options else False
-        self.only_base_config = self.options["only_base_config"] if "only_base_config" in self.options else False
-        self.skip_settings_deployment = self.options["skip_settings_deployment"] if "skip_settings_deployment" in self.options else False
-        self.skip_hydrate = self.options["skip_hydrate"] if "skip_hydrate" in self.options else False
+            # Initiate Options
+            self.include_base_config = self.options["include_base_config"] if "include_base_config" in self.options else False
+            self.base_config_only_scratch = self.options["base_config_only_scratch"] if "base_config_only_scratch" in self.options else False
+            self.info_mode = self.options["info_mode"] if "info_mode" in self.options else False
+            self.only_base_config = self.options["only_base_config"] if "only_base_config" in self.options else False
+            self.skip_settings_deployment = self.options["skip_settings_deployment"] if "skip_settings_deployment" in self.options else False
+            self.skip_hydrate = self.options["skip_hydrate"] if "skip_hydrate" in self.options else False
+        except:
+            print('Error on Preflight')
 
     def deploy_settings(self):
         # Deploy Settings if Present
