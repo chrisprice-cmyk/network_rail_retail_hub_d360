@@ -807,26 +807,30 @@ def compare_metadata(target_org_alias):
 
     changes = []
 
-    for file_path in new_or_changed:
+    if len(new_or_changed) > 0:
+        log.info(f"{len(new_or_changed)} changes found")
+        log.info("Generating new update package in directory: .qbrix/upgrade_src")
 
-        if os.path.basename(os.path.dirname(file_path)) in {'settings', 'labels'}:
-            print(f"Skipping {file_path} as it contains a high risk metadata type. Review the contents individually.")
-            continue
+        for file_path in new_or_changed:
 
-        changes.append(file_path)
+            if os.path.basename(os.path.dirname(file_path)) in {'settings', 'labels'}:
+                log.info(f"Skipping {file_path} as it contains a high risk metadata type. Review the contents individually.")
+                continue
 
-        # Determine the destination path of the metadata file to copy
-        dst_file_path = os.path.join('.qbrix/upgrade_src', file_path.replace('src/', ''))
+            changes.append(file_path)
 
-        # Create the destination directory if it does not exist
-        dst_directory = os.path.dirname(dst_file_path)
-        if not os.path.exists(dst_directory):
-            os.makedirs(dst_directory)
+            # Determine the destination path of the metadata file to copy
+            dst_file_path = os.path.join('.qbrix/upgrade_src', file_path.replace('src/', ''))
 
-        # Copy the metadata file to the destination directory
-        shutil.copy2(file_path, dst_file_path)
+            # Create the destination directory if it does not exist
+            dst_directory = os.path.dirname(dst_file_path)
+            if not os.path.exists(dst_directory):
+                os.makedirs(dst_directory)
 
-    run_command("sfdx force:source:manifest:create --sourcepath .qbrix/upgrade_src --manifestname .qbrix/upgrade_src/package")
+            # Copy the metadata file to the destination directory
+            shutil.copy2(file_path, dst_file_path)
+
+        run_command("sfdx force:source:manifest:create --sourcepath .qbrix/upgrade_src --manifestname .qbrix/upgrade_src/package")
 
     return changes
 
