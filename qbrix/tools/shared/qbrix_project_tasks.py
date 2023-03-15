@@ -782,34 +782,34 @@ def compare_metadata(target_org_alias):
     if os.path.exists('src'):
         shutil.rmtree('src')
 
-    if os.path.exists('.qbrix/mdapipkg'):
-        shutil.rmtree('.qbrix/mdapipkg')
+    if os.path.exists('mdapipkg'):
+        shutil.rmtree('mdapipkg')
 
-    if os.path.exists('.qbrix/upgrade_src'):
-        shutil.rmtree('.qbrix/upgrade_src')
+    if os.path.exists('upgrade_src'):
+        shutil.rmtree('upgrade_src')
 
     run_command("cci task run dx_convert_from")
 
     # Retrieve metadata from the target org
     log.info(f"Retrieving metadata from the target org with alias {target_org_alias} (This can take a few minutes..)")
-    retrieve_command = f"cci task run dx --command \"force:mdapi:retrieve -r '.qbrix/mdapipkg' -k src/package.xml\" --org {target_org_alias}"
+    retrieve_command = f"cci task run dx --command \"force:mdapi:retrieve -r mdapipkg -k src/package.xml\" --org {target_org_alias}"
     run_command(retrieve_command)
 
     # Unzip the retrieved metadata
     log.info("Unpacking Metadata")
-    unzip_command = f"unzip -o .qbrix/mdapipkg/unpackaged.zip -d .qbrix/mdapipkg/unpackaged"
+    unzip_command = f"unzip -o mdapipkg/unpackaged.zip -d mdapipkg/unpackaged"
     run_command(unzip_command)
 
     # Compare the local and target org's metadata
     log.info("Comparing Metadata")
-    dcmp = filecmp.dircmp('.qbrix/mdapipkg/unpackaged/unpackaged', 'src')
+    dcmp = filecmp.dircmp('mdapipkg/unpackaged/unpackaged', 'src')
     new_or_changed = compare_directories(dcmp)
 
     changes = []
 
     if len(new_or_changed) > 0:
         log.info(f"{len(new_or_changed)} changes found")
-        log.info("Generating new update package in directory: .qbrix/upgrade_src")
+        log.info("Generating new update package in directory: upgrade_src")
 
         for file_path in new_or_changed:
 
@@ -820,7 +820,7 @@ def compare_metadata(target_org_alias):
             changes.append(file_path)
 
             # Determine the destination path of the metadata file to copy
-            dst_file_path = os.path.join('.qbrix/upgrade_src', file_path.replace('src/', ''))
+            dst_file_path = os.path.join('upgrade_src', file_path.replace('src/', ''))
 
             # Create the destination directory if it does not exist
             dst_directory = os.path.dirname(dst_file_path)
@@ -830,7 +830,7 @@ def compare_metadata(target_org_alias):
             # Copy the metadata file to the destination directory
             shutil.copy2(file_path, dst_file_path)
 
-        run_command("sfdx force:source:manifest:create --sourcepath .qbrix/upgrade_src --manifestname .qbrix/upgrade_src/package")
+        run_command("sfdx force:source:manifest:create --sourcepath upgrade_src --manifestname upgrade_src/package")
 
     return changes
 

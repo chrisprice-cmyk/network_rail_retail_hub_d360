@@ -76,7 +76,7 @@ class MassFileOps(BaseTask, ABC):
             if metadata_diff:
                 print("Differences found:")
                 print(metadata_diff)
-                if input("\nWould you like to push these changes? (Y,n)").lower() == 'y':
+                if input("\nWould you like to push these changes? (y/n) ").lower() == 'y':
                     push_result = push_changes(target_org_alias)
                     print("Push result:")
                     print(push_result)
@@ -87,11 +87,11 @@ class MassFileOps(BaseTask, ABC):
             if os.path.exists('src'):
                 shutil.rmtree('src')
 
-            if os.path.exists('.qbrix/mdapipkg'):
-                shutil.rmtree('.qbrix/mdapipkg')
+            if os.path.exists('mdapipkg'):
+                shutil.rmtree('mdapipkg')
 
-            if os.path.exists('.qbrix/upgrade_src'):
-                shutil.rmtree('.qbrix/upgrade_src')
+            if os.path.exists('upgrade_src'):
+                shutil.rmtree('upgrade_src')
         elif option.lower() == "e":
             log.info("Exiting Q Brix Mass Operations Utility")
             exit()
