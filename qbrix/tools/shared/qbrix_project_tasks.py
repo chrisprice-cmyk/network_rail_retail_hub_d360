@@ -7,6 +7,7 @@ import shutil
 import subprocess
 from io import BytesIO
 from os.path import exists
+import sys
 import tempfile
 from typing import Optional
 from urllib.request import urlopen
@@ -762,8 +763,18 @@ def run_command(command):
     process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True)
     output, error = process.communicate()
 
-    if error:
-        raise Exception(error)
+    while True:
+        output = process.stdout.readline().decode('utf-8')
+        error = process.stderr.readline().decode('utf-8')
+        if output == '' and error == '' and process.poll() is not None:
+            break
+        if output:
+            print(output.strip())
+        if error:
+            print(error.strip(), file=sys.stderr)
+
+    process.wait()
+
     return output, error
     
 def compare_directories(dcmp):
@@ -837,7 +848,7 @@ def compare_metadata(target_org_alias):
 def push_changes(target_org_alias):
 
     # Push Changes
-    push_command = f"cci task run deploy --path .qbrix/upgrade_src --org {target_org_alias}"
+    push_command = f"cci task run deploy --path upgrade_src --org {target_org_alias}"
     push_output, push_error = run_command(push_command)
 
     return push_output
