@@ -3,15 +3,20 @@ import time
 import requests
 
 from abc import ABC
+from abc import abstractmethod
 from cumulusci.core.tasks import BaseTask
+from cumulusci.tasks.sfdx import SFDXBaseTask
 from qbrix.tools.shared.qbrix_console_utils import init_logger
 from cumulusci.core.config import ScratchOrgConfig
 from qbrix.salesforce.qbrix_salesforce_tasks import salesforce_query
+from cumulusci.core.keychain import BaseProjectKeychain
+
 
 log = init_logger()
 
 
-class RunDataTool(BaseTask, ABC):
+class RunDataTool(SFDXBaseTask):
+    keychain_class = BaseProjectKeychain
     task_options = {
         "data_keys": {
             "description": "Data Collection Key or keys",
@@ -34,9 +39,51 @@ class RunDataTool(BaseTask, ABC):
     task_docs = """
     Takes a list of data collection IDs which are then deployed using the NextGen Data Tool. At least one data collection ID must be specified.
     """
+    
+    @property
+    def keychain_cls(self):
+        klass = self.get_keychain_class()
+        return klass or self.keychain_class
 
+    @abstractmethod
+    def get_keychain_class(self):
+        return None
+
+    @property
+    def keychain_key(self):
+        return self.get_keychain_key()
+
+    @abstractmethod
+    def get_keychain_key(self):
+        return None
+
+    def _load_keychain(self):
+        if self.keychain is not None:
+            return
+
+        keychain_key = self.keychain_key if self.keychain_cls.encrypted else None
+
+        if self.project_config is None:
+            self.keychain = self.keychain_cls(self.universal_config, keychain_key)
+        else:
+            self.keychain = self.keychain_cls(self.project_config, keychain_key)
+            self.project_config.keychain = self.keychain
+
+    def _prepruntime(self):
+
+        if ("org" in self.options and not self.options["org"] is None) and self.keychain is None:
+            self._load_keychain()
+            self.logger.info("Org passed in but no keychain found in runtime")
+
+        if not self.org_config.access_token is None:
+            self.accesstoken = self.org_config.access_token
+
+        if not self.org_config.instance_url is None:
+            self.instanceurl = self.org_config.instance_url
+            
     def _init_options(self, kwargs):
         super(RunDataTool, self)._init_options(kwargs)
+        self.env = self._get_env()
         self.url = "https://nxdo-data-tool.herokuapp.com/api/jobs/deployment"
         self.data_keys = self.options["data_keys"]
         self.total_timeout = int(self.options["total_timeout"]) if "total_timeout" in self.options else 8600
@@ -44,6 +91,7 @@ class RunDataTool(BaseTask, ABC):
 
     def _run_task(self):
 
+        self._prepruntime()
         log.info("NextGen Data Tool: Starting Data Load")
 
         if not self.data_keys:
@@ -83,8 +131,12 @@ class RunDataTool(BaseTask, ABC):
                 "username": self.org_config.username,
                 "email": email_address,
                 "collection_version_id": f"{data_key}",
-                "is_production": not IsScratchOrg
+                "is_production": not IsScratchOrg,
+                "instance_url": self.instanceurl,
+                "access_token": self.accesstoken
             }
+            
+            #log.info(data)
 
             log.info(
                 f"NextGen Data Tool: Starting Job\n\nRequesting Data Job with the following configuration:\n\nData Collection ID: {data_key}\nUsername: {self.org_config.username}\nEmail: {email_address}\nScratch Org Mode: {IsScratchOrg}\n")
