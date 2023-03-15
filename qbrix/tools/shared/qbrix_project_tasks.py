@@ -1,3 +1,4 @@
+import filecmp
 import glob
 import json
 import os
@@ -6,9 +7,11 @@ import shutil
 import subprocess
 from io import BytesIO
 from os.path import exists
+import tempfile
 from typing import Optional
 from urllib.request import urlopen
 from zipfile import ZipFile
+import xml.etree.ElementTree as ET
 
 from qbrix.tools.shared.qbrix_json_tasks import update_json_file_value, get_json_file_value, remove_json_entry
 from qbrix.tools.shared.qbrix_console_utils import init_logger
@@ -754,3 +757,83 @@ def create_external_id_field(file_path):
                         f.write('    <type>Text</type>\n')
                         f.write('    <unique>false</unique>\n')
                         f.write('</CustomField>\n')
+
+def run_command(command):
+    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True)
+    output, error = process.communicate()
+
+    if error:
+        raise Exception(error)
+    return output, error
+    
+def compare_directories(dcmp):
+    new_or_changed = []
+    for name in dcmp.right_only:
+        new_or_changed.append(os.path.join(dcmp.right, name))
+    for name in dcmp.diff_files:
+        new_or_changed.append(os.path.join(dcmp.right, name))
+    for sub_dcmp in dcmp.subdirs.values():
+        new_or_changed.extend(compare_directories(sub_dcmp))
+    return new_or_changed
+
+def compare_metadata(target_org_alias):
+
+    # Default Org Command
+    if os.path.exists('src'):
+        shutil.rmtree('src')
+
+    if os.path.exists('.qbrix/mdapipkg'):
+        shutil.rmtree('.qbrix/mdapipkg')
+
+    if os.path.exists('.qbrix/upgrade_src'):
+        shutil.rmtree('.qbrix/upgrade_src')
+
+    run_command("cci task run dx_convert_from")
+
+    # Retrieve metadata from the target org
+    log.info(f"Retrieving metadata from the target org with alias {target_org_alias} (This can take a few minutes..)")
+    retrieve_command = f"cci task run dx --command \"force:mdapi:retrieve -r '.qbrix/mdapipkg' -k src/package.xml\" --org {target_org_alias}"
+    run_command(retrieve_command)
+
+    # Unzip the retrieved metadata
+    log.info("Unpacking Metadata")
+    unzip_command = f"unzip -o .qbrix/mdapipkg/unpackaged.zip -d .qbrix/mdapipkg/unpackaged"
+    run_command(unzip_command)
+
+    # Compare the local and target org's metadata
+    log.info("Comparing Metadata")
+    dcmp = filecmp.dircmp('.qbrix/mdapipkg/unpackaged/unpackaged', 'src')
+    new_or_changed = compare_directories(dcmp)
+
+    changes = []
+
+    for file_path in new_or_changed:
+
+        if os.path.basename(os.path.dirname(file_path)) in {'settings', 'labels'}:
+            print(f"Skipping {file_path} as it contains a high risk metadata type. Review the contents individually.")
+            continue
+
+        changes.append(file_path)
+
+        # Determine the destination path of the metadata file to copy
+        dst_file_path = os.path.join('.qbrix/upgrade_src', file_path.replace('src/', ''))
+
+        # Create the destination directory if it does not exist
+        dst_directory = os.path.dirname(dst_file_path)
+        if not os.path.exists(dst_directory):
+            os.makedirs(dst_directory)
+
+        # Copy the metadata file to the destination directory
+        shutil.copy2(file_path, dst_file_path)
+
+    run_command("sfdx force:source:manifest:create --sourcepath .qbrix/upgrade_src --manifestname .qbrix/upgrade_src/package")
+
+    return changes
+
+def push_changes(target_org_alias):
+
+    # Push Changes
+    push_command = f"cci task run deploy --path .qbrix/upgrade_src --org {target_org_alias}"
+    push_output, push_error = run_command(push_command)
+
+    return push_output

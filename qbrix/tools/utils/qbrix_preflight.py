@@ -10,6 +10,7 @@ from cumulusci.core.config import ScratchOrgConfig
 from qbrix.tools.shared.qbrix_console_utils import init_logger
 from qbrix.salesforce.qbrix_salesforce_tasks import QbrixInstallCheck
 from qbrix.tools.shared.qbrix_cci_tasks import run_cci_task, run_cci_flow
+from qbrix.tools.shared.qbrix_project_tasks import run_command
 
 log = init_logger()
 
@@ -81,11 +82,7 @@ class RunPreflight(BaseTask, ABC):
         # Deploy Settings if Present
         if os.path.exists("force-app/main/default/settings") and not self.skip_settings_deployment:
             log.info("PREFLIGHT: Settings directory found. Starting Deployment...")
-            settings_deploy_result = run_cci_task("deploy_settings", self.org_config.name, path="force-app/main/default/settings")
-            if settings_deploy_result:
-                log.info("PREFLIGHT: Settings Deployment Complete!")
-            else:
-                log.error("PREFLIGHT: Settings Deployment Failed. Check errors and warnings (if any) mentioned above.")
+            run_command(f"cci task run deploy --path force-app/main/default/settings --org {self.org_config.name}")
         else:
             log.info("PREFLIGHT: Skipping Settings Deployment.")
 
