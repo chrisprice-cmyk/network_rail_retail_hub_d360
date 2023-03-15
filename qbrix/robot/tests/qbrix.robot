@@ -265,6 +265,9 @@ Enable Account Manager Targets
 Enable Partner Visit Management
     Enable Partner Visit Management
 
+Enable Partner Performance Management
+    Enable Partner Performance Management
+
 Enable Program Based Business
     Enable Program Based Business
 
