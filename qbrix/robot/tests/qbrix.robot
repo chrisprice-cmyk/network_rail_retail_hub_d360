@@ -258,6 +258,8 @@ Enable Automotive Cloud Setting
 Enable Automotive Cloud Service Console Setting
     Enable Automotive Cloud Service Console Setting
 
+Enable Group Membership
+    Enable Group Membership
 
 Enable Account Manager Targets
     Enable Account Manager Targets
