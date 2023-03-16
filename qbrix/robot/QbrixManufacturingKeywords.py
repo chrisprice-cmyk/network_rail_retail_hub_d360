@@ -124,6 +124,19 @@ class QbrixManufacturingKeywords(BaseLibrary):
             self.browser.click(enable_toggle)
             sleep(2)
 
+    def enable_partner_lead_management(self):
+        """
+        Enables Partner Lead Management Settings Salesforce Setup
+        """
+        enable_toggle = "span.slds-checkbox_off"
+        self.shared.go_to_setup_admin_page("MfgPartnerLeadMgmtSettings/home")
+        self.browser.wait_for_elements_state("h2:text-is('Partner Lead Management')", ElementState.visible, '30s')
+        visible = "visible" in self.browser.get_element_states(enable_toggle)
+        if visible:
+            self.browser.click(enable_toggle)
+            sleep(2)
+            
+
     def enable_program_based_business(self):
         """
         Enables Program Based Business for Manufacturing Setting in Salesforce Setup

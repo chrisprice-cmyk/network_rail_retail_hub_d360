@@ -270,6 +270,9 @@ Enable Partner Visit Management
 Enable Partner Performance Management
     Enable Partner Performance Management
 
+Enable Partner Lead Management
+    Enable Partner Lead Management
+
 Enable Program Based Business
     Enable Program Based Business
 
