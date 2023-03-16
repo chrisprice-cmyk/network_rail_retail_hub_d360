@@ -740,7 +740,7 @@ def create_external_id_field(file_path):
             if object_name:
                 object_dir = os.path.join("force-app", "main", "default", "objects", object_name)
                 fields_dir = os.path.join(object_dir, "fields")
-                field_file = os.path.join(fields_dir, "External_ID.field-meta.xml")
+                field_file = os.path.join(fields_dir, "External_ID__c.field-meta.xml")
                 if not os.path.exists(object_dir):
                     os.makedirs(object_dir)
                 if not os.path.exists(fields_dir):
@@ -749,7 +749,7 @@ def create_external_id_field(file_path):
                     with open(field_file, "w") as f:
                         f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
                         f.write('<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">\n')
-                        f.write('    <fullName>External_ID</fullName>\n')
+                        f.write('    <fullName>External_ID__c</fullName>\n')
                         f.write('    <externalId>true</externalId>\n')
                         f.write('    <label>External ID</label>\n')
                         f.write('    <length>50</length>\n')
