@@ -12,6 +12,7 @@ from typing import Optional
 from urllib.request import urlopen
 from zipfile import ZipFile
 import xml.etree.ElementTree as ET
+from xml.dom import minidom
 
 from qbrix.tools.shared.qbrix_json_tasks import update_json_file_value, get_json_file_value, remove_json_entry
 from qbrix.tools.shared.qbrix_console_utils import init_logger
@@ -512,7 +513,7 @@ def delete_standard_fields():
         log.info("No Standard/Core Fields Found in Project!")
     else:
         for of in object_fields:
-            if not os.path.basename(of).endswith("__c.field-meta.xml"):
+            if not os.path.basename(of).endswith(".field-meta.xml"):
                 os.remove(of)
                 log.info(f"Deleted File: {of}")
 
@@ -600,7 +601,7 @@ def update_references(old_value, new_value, prefix=''):
 
     for root, dirs, files in os.walk(project_path):
         for file_name in files:
-            if "external_id__c" in os.path.basename(file_name).lower() or os.path.basename(file_name).lower().startswith("sdo_") or os.path.basename(file_name).lower().startswith("xdo_") or os.path.basename(file_name).lower().startswith("db_"):
+            if "external_id" in os.path.basename(file_name).lower() or os.path.basename(file_name).lower().startswith("sdo_") or os.path.basename(file_name).lower().startswith("xdo_") or os.path.basename(file_name).lower().startswith("db_"):
                 #print(f"SKIPPED: {file_name}")
                 continue
 
@@ -633,8 +634,8 @@ def assign_prefix_to_files(prefix, parent_folder='force-app/main/default', inter
     open_prefix = str(prefix).upper() + " "
     
     # Set Matching Pattern for Cumstom API references
-    PATTERN = re.compile(r'^.+__c$')
-    FILE_PATTERN = re.compile(r'^.+__c.')
+    PATTERN = re.compile(r'^.+$')
+    FILE_PATTERN = re.compile(r'^.+.')
 
     paths_to_rename = []
    
@@ -703,7 +704,7 @@ def assign_prefix_to_files(prefix, parent_folder='force-app/main/default', inter
         if os.path.basename(directory_name) in {"settings", "standardValueSets", "roles", "corsWhitelistOrigins", "layouts", "quickActions"} or "objects" in directory_name:
             continue
 
-        if "external_id__c" in file_name.lower() or file_name.lower().startswith("sdo_") or file_name.lower().startswith("xdo_") or file_name.lower().startswith(f"{prefix}") or file_name.lower().startswith("db_") or file_name.lower().startswith("standard-"):
+        if "external_id" in file_name.lower() or file_name.lower().startswith("sdo_") or file_name.lower().startswith("xdo_") or file_name.lower().startswith(f"{prefix}") or file_name.lower().startswith("db_") or file_name.lower().startswith("standard-"):
             continue
 
         old_path = current_file
@@ -739,7 +740,7 @@ def create_external_id_field(file_path):
             if object_name:
                 object_dir = os.path.join("force-app", "main", "default", "objects", object_name)
                 fields_dir = os.path.join(object_dir, "fields")
-                field_file = os.path.join(fields_dir, "External_ID__c.field-meta.xml")
+                field_file = os.path.join(fields_dir, "External_ID.field-meta.xml")
                 if not os.path.exists(object_dir):
                     os.makedirs(object_dir)
                 if not os.path.exists(fields_dir):
@@ -748,7 +749,7 @@ def create_external_id_field(file_path):
                     with open(field_file, "w") as f:
                         f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
                         f.write('<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">\n')
-                        f.write('    <fullName>External_ID__c</fullName>\n')
+                        f.write('    <fullName>External_ID</fullName>\n')
                         f.write('    <externalId>true</externalId>\n')
                         f.write('    <label>External ID</label>\n')
                         f.write('    <length>50</length>\n')
@@ -842,3 +843,112 @@ def push_changes(target_org_alias):
 
     log.info("Upgrade Pushed!")
     return push_output
+
+def create_permission_set_file(name, label):
+
+    if os.path.exists(f"force-app/main/default/permissionsets/{name}.permissionset-meta.xml"):
+        os.remove(f"force-app/main/default/permissionsets/{name}.permissionset-meta.xml")
+
+    # Create the root element
+    root = ET.Element("PermissionSet", attrib={"xmlns":"http://soap.sforce.com/2006/04/metadata"})
+
+    # Set the label
+    label_element = ET.SubElement(root, "label")
+    label_element.text = label
+
+    # Traverse through the object folders
+    objects_path = "force-app/main/default/objects"
+    if os.path.exists(objects_path):
+        for object_folder in os.listdir(objects_path):
+            object_folder_path = os.path.join(objects_path, object_folder)
+            if os.path.isdir(object_folder_path):
+                # Add object permissions
+                object_permissions_element = ET.SubElement(root, "objectPermissions")
+                ET.SubElement(object_permissions_element, "allowCreate").text = "true"
+                ET.SubElement(object_permissions_element, "allowDelete").text = "true"
+                ET.SubElement(object_permissions_element, "allowEdit").text = "true"
+                ET.SubElement(object_permissions_element, "allowRead").text = "true"
+                ET.SubElement(object_permissions_element, "modifyAllRecords").text = "true"
+                ET.SubElement(object_permissions_element, "object").text = f"{object_folder}"
+                ET.SubElement(object_permissions_element, "viewAllRecords").text = "true"
+
+                # Traverse through the field folders
+                fields_folder_path = os.path.join(object_folder_path, "fields")
+                if os.path.isdir(fields_folder_path):
+                    for field_file in os.listdir(fields_folder_path):
+                        if field_file.endswith(".field-meta.xml"):
+                            field_name = field_file[:-14]
+                            field_permissions_element = ET.SubElement(root, "fieldPermissions")
+                            ET.SubElement(field_permissions_element, "editable").text = "true"
+                            ET.SubElement(field_permissions_element, "field").text = f"{object_folder}.{field_name}"
+                            ET.SubElement(field_permissions_element, "readable").text = "true"
+
+                        # # Add object permissions for lookup fields that reference objects not in the project
+                        field_path = os.path.join(fields_folder_path, field_file)
+                        with open(field_path, "r") as file:
+                            contents = file.read()
+                            reference_to_start = contents.find("<referenceTo>")
+                            reference_to_end = contents.find("</referenceTo>")
+                            if reference_to_start != -1 and reference_to_end != -1:
+                                reference_object = contents[reference_to_start + 13:reference_to_end]
+                                if reference_object not in os.listdir(objects_path):
+                                    object_permissions_element = ET.SubElement(root, "objectPermissions")
+                                    ET.SubElement(object_permissions_element, "allowCreate").text = "false"
+                                    ET.SubElement(object_permissions_element, "allowDelete").text = "false"
+                                    ET.SubElement(object_permissions_element, "allowEdit").text = "false"
+                                    ET.SubElement(object_permissions_element, "allowRead").text = "false"
+                                    ET.SubElement(object_permissions_element, "modifyAllRecords").text = "false"
+                                    ET.SubElement(object_permissions_element, "object").text = f"{reference_object}"
+                                    ET.SubElement(object_permissions_element, "viewAllRecords").text = "false"
+
+                # Traverse through the record type files
+                record_types_folder_path = os.path.join(object_folder_path, "recordTypes")
+                if os.path.isdir(record_types_folder_path):
+                    for record_type_file in os.listdir(record_types_folder_path):
+                        if record_type_file.endswith(".recordType-meta.xml"):
+                            record_type_name = record_type_file[:-20]
+                            record_type_permissions_element = ET.SubElement(root, "recordTypeVisibilities")
+                            ET.SubElement(record_type_permissions_element, "default").text = "false"
+                            ET.SubElement(record_type_permissions_element, "recordType").text = f"{object_folder}.{record_type_name}"
+                            ET.SubElement(record_type_permissions_element, "visible").text = "true"
+
+    # Traverse through the Apex class files
+    classes_path = "force-app/main/default/classes"
+    if os.path.exists(classes_path):
+        for class_file in os.listdir(classes_path):
+            if class_file.endswith(".cls"):
+                class_name = class_file[:-4]
+                class_permissions_element = ET.SubElement(root, "classAccesses")
+                ET.SubElement(class_permissions_element, "apexClass").text = f"{class_name}"
+                ET.SubElement(class_permissions_element, "enabled").text = "true"
+
+    # Traverse through the tab files
+    tabs_path = "force-app/main/default/tabs"
+    if os.path.exists(tabs_path):
+        for tab_file in os.listdir(tabs_path):
+            if tab_file.endswith(".tab-meta.xml"):
+                tab_name = tab_file[:-14]
+                tab_permissions_element = ET.SubElement(root, "tabSettings")
+                ET.SubElement(tab_permissions_element, "tab").text = f"{tab_name}"
+                ET.SubElement(tab_permissions_element, "visibility").text = "Visible"
+
+    # Traverse through the Application files
+    apps_path = "force-app/main/default/applications"
+    if os.path.exists(apps_path):
+        for apps_file in os.listdir(apps_path):
+            if apps_file.endswith(".app-meta.xml"):
+                app_name = apps_file[:-14]
+                app_permissions_element = ET.SubElement(root, "applicationVisibilities")
+                ET.SubElement(app_permissions_element, "application").text = f"{app_name}"
+                ET.SubElement(app_permissions_element, "visible").text = "true"
+
+    # Create the file
+    if not os.path.exists("force-app/main/default/permissionsets"):
+        os.makedirs("force-app/main/default/permissionsets")
+
+    file_path = f"force-app/main/default/permissionsets/{name}.permissionset-meta.xml"
+    with open(file_path, "w", encoding="utf-8") as file:
+        xml_string = ET.tostring(root, encoding="unicode")
+        xml_dom = minidom.parseString(xml_string)
+        formatted_xml = xml_dom.toprettyxml(indent="  ", encoding="utf-8")
+        file.write(formatted_xml.decode("utf-8"))

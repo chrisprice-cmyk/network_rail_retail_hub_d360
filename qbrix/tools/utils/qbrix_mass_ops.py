@@ -4,7 +4,7 @@ import shutil
 
 from cumulusci.core.tasks import BaseTask
 from qbrix.tools.shared.qbrix_console_utils import init_logger
-from qbrix.tools.shared.qbrix_project_tasks import update_file_api_versions, push_changes, compare_metadata, delete_standard_fields, assign_prefix_to_files, create_external_id_field
+from qbrix.tools.shared.qbrix_project_tasks import update_file_api_versions, create_permission_set_file, push_changes, compare_metadata, delete_standard_fields, assign_prefix_to_files, create_external_id_field
 
 log = init_logger()
 
@@ -29,6 +29,7 @@ class MassFileOps(BaseTask, ABC):
         [3]     Prefix Generator : Assign Prefix to all Custom Entities (Folders and References) in Project\n
         [4]     External ID Field Generator : Generate External ID Fields for a list of Object names\n
         [5]     Push Upgrade Tool (BETA) : Compare changes in metadata between the target org and your project, then push changes to the org.\n
+        [6]     Permission Set Generator (BETA) : Generate Permission Set for Objects, Fields, Tabs and Classes in your project.\n
         [e]     Exit   
     """)
         option = input("\n\nWhich task you like to run? (Enter the option number) : ")
@@ -92,6 +93,11 @@ class MassFileOps(BaseTask, ABC):
 
             if os.path.exists('upgrade_src'):
                 shutil.rmtree('upgrade_src')
+        elif option.lower() == "6":
+            perm_set_name = input("What name would you like to give to the permission set? ")
+            if perm_set_name:
+                create_permission_set_file(perm_set_name.replace(" ", "_"), perm_set_name)
+                log.info("Permmission Set Generated!")
         elif option.lower() == "e":
             log.info("Exiting Q Brix Mass Operations Utility")
             exit()
