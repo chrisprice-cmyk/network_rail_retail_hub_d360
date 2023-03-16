@@ -877,7 +877,7 @@ def create_permission_set_file(name, label):
                 if os.path.isdir(fields_folder_path):
                     for field_file in os.listdir(fields_folder_path):
                         if field_file.endswith(".field-meta.xml"):
-                            field_name = field_file[:-14]
+                            field_name = field_file[:-15]
                             field_permissions_element = ET.SubElement(root, "fieldPermissions")
                             ET.SubElement(field_permissions_element, "editable").text = "true"
                             ET.SubElement(field_permissions_element, "field").text = f"{object_folder}.{field_name}"
