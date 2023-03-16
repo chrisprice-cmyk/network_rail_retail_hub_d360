@@ -17,7 +17,7 @@ class Brandingo(BaseSalesforceApiTask, ABC):
   salesforce_task = True
 
   task_docs = """
-  Upserts a Favorite (aka Bookmark) in the target org.
+  Used to set the logo and branding for an org from the cli. Inspired by the work of Brian Ricter and Ellie Rinehart from salesforce.org
   """
 
   task_options = {
@@ -49,6 +49,7 @@ class Brandingo(BaseSalesforceApiTask, ABC):
     self.PrimaryColour = self.options["PrimaryColour"] if "PrimaryColour" in self.options else None
     self.SecondaryColor = self.options["SecondaryColor"] if "SecondaryColor" in self.options else None
     self.LogoPath = self.options["LogoPath"] if "LogoPath" in self.options else None
+    self.sitename = None
 
   def _run_task(self):
 
@@ -69,12 +70,27 @@ class Brandingo(BaseSalesforceApiTask, ABC):
     org_settings["InstanceName"] = self.sf.sf_instance[:-3]
     org_settings["UiSkin"] = self.theme
     org_settings["DefaultBrandingSet"] = {
-        "PrimaryColor": self.primary_color,
-        "SecondaryColor": self.secondary_color,
+        "PrimaryColor": self.PrimaryColour ,
+        "SecondaryColor": self.SecondaryColor,
         "SmallLogoId": logo_id,
         "MediumLogoId": logo_id,
         "LargeLogoId": logo_id
     }
     self.sf.Organization.update(self.sf.Organization.get()["Id"], org_settings)
 
-          
+    # Retrieve the Experience Site's configuration settings
+    site_config = self.sf.ExperienceSite.get_by_name(self.sitename)["SiteConfiguration"]
+
+    # Update the configuration settings with the new logo and color settings
+    site_config["brandingSet"] = {
+        "primaryColor": self.PrimaryColour,
+        "secondaryColor": self.SecondaryColor,
+        "logoSmallAssetId": logo_id,
+        "logoMediumAssetId": logo_id,
+        "logoLargeAssetId": logo_id
+    }
+
+    # Update the Experience Site's configuration settings
+    self.sf.ExperienceSite.update(self.sitename, {
+        "SiteConfiguration": site_config
+    })       
