@@ -927,7 +927,7 @@ def create_permission_set_file(name, label):
     if os.path.exists(tabs_path):
         for tab_file in os.listdir(tabs_path):
             if tab_file.endswith(".tab-meta.xml"):
-                tab_name = tab_file[:-14]
+                tab_name = tab_file[:-13]
                 tab_permissions_element = ET.SubElement(root, "tabSettings")
                 ET.SubElement(tab_permissions_element, "tab").text = f"{tab_name}"
                 ET.SubElement(tab_permissions_element, "visibility").text = "Visible"
@@ -937,7 +937,7 @@ def create_permission_set_file(name, label):
     if os.path.exists(apps_path):
         for apps_file in os.listdir(apps_path):
             if apps_file.endswith(".app-meta.xml"):
-                app_name = apps_file[:-14]
+                app_name = apps_file[:-13]
                 app_permissions_element = ET.SubElement(root, "applicationVisibilities")
                 ET.SubElement(app_permissions_element, "application").text = f"{app_name}"
                 ET.SubElement(app_permissions_element, "visible").text = "true"
