@@ -876,12 +876,6 @@ def create_permission_set_file(name, label):
                 fields_folder_path = os.path.join(object_folder_path, "fields")
                 if os.path.isdir(fields_folder_path):
                     for field_file in os.listdir(fields_folder_path):
-                        if field_file.endswith(".field-meta.xml"):
-                            field_name = field_file[:-15]
-                            field_permissions_element = ET.SubElement(root, "fieldPermissions")
-                            ET.SubElement(field_permissions_element, "editable").text = "true"
-                            ET.SubElement(field_permissions_element, "field").text = f"{object_folder}.{field_name}"
-                            ET.SubElement(field_permissions_element, "readable").text = "true"
 
                         # # Add object permissions for lookup fields that reference objects not in the project
                         field_path = os.path.join(fields_folder_path, field_file)
@@ -901,7 +895,27 @@ def create_permission_set_file(name, label):
                                     ET.SubElement(object_permissions_element, "object").text = f"{reference_object}"
                                     ET.SubElement(object_permissions_element, "viewAllRecords").text = "false"
 
-                # Traverse through the record type files
+    # Traverse Field Names
+    if os.path.exists(objects_path):
+        for object_folder in os.listdir(objects_path):
+            object_folder_path = os.path.join(objects_path, object_folder)
+            if os.path.isdir(object_folder_path):
+                # Traverse through the field folders
+                fields_folder_path = os.path.join(object_folder_path, "fields")
+                if os.path.isdir(fields_folder_path):
+                    for field_file in os.listdir(fields_folder_path):
+                        if field_file.endswith(".field-meta.xml"):
+                            field_name = field_file[:-15]
+                            field_permissions_element = ET.SubElement(root, "fieldPermissions")
+                            ET.SubElement(field_permissions_element, "editable").text = "true"
+                            ET.SubElement(field_permissions_element, "field").text = f"{object_folder}.{field_name}"
+                            ET.SubElement(field_permissions_element, "readable").text = "true"
+
+    # Traverse Record Types
+    if os.path.exists(objects_path):
+        for object_folder in os.listdir(objects_path):
+            object_folder_path = os.path.join(objects_path, object_folder)
+            if os.path.isdir(object_folder_path):
                 record_types_folder_path = os.path.join(object_folder_path, "recordTypes")
                 if os.path.isdir(record_types_folder_path):
                     for record_type_file in os.listdir(record_types_folder_path):
