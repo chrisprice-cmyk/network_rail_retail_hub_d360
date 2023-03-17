@@ -285,3 +285,10 @@ Enable Warranty Lifecycle Management
 
 Enable Interest Tagging
     Enable Interest Tagging
+
+# -----------------------------------------------------------------------------------------------------------------------------------------
+# NON PROFIT NGO Cloud Operations
+# -----------------------------------------------------------------------------------------------------------------------------------------
+
+Enable Program Benefits
+    Enable Program Benefits

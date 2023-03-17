@@ -46,6 +46,9 @@ Library     qbrix/robot/QbrixManufacturingKeywords.py
 # INDUSTRY - NET ZERO CLOUD
 Library     qbrix/robot/QbrixNetZeroKeywords.py
 
+# INDUSTRY - NON PROFIT CLOUD (NGO)
+Library     qbrix/robot/QbrixNGOKeywords.py
+
 
 
 
