@@ -5,7 +5,7 @@ from qbrix.robot.QbrixSharedKeywords import QbrixSharedKeywords
 from cumulusci.robotframework.SalesforceAPI import SalesforceAPI
 
 
-class QbrixFINSKeywords(BaseLibrary):
+class QbrixNGOKeywords(BaseLibrary):
 
     def __init__(self):
         super().__init__()
