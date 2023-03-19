@@ -130,6 +130,11 @@ class NGOrgConfig(SFDXBaseTask):
         if self.org_config.is_namespace_installed is None:
             self.org_config.is_namespace_installed = self._is_package_namespace_installed
 
+        if self.org_config.is_org_identifier is None:
+            self.org_config.is_org_identifier = self._check_id_or_guid_in_org
+
+
+
 
     def _is_qbrix_installed(self, qbrixname):
 
@@ -177,7 +182,7 @@ class NGOrgConfig(SFDXBaseTask):
         #e.g. 
         #SELECT  id,MasterLabel,DeveloperName from PermissionSetLicense where (Masterlabel='OmniStudioDesigner' or DeveloperName='OmniStudioDesigner')
 
-        url = f"{self.instanceurl}/services/data/v56.0/query/?q=select+Id+from+PermissionSetLicense+where(Masterlabel='{psl}' or DeveloperName='{psl}') LIMIT 1"
+        url = f"{self.instanceurl}/services/data/v56.0/query/?q=select+Id+from+PermissionSetLicense+where+(Masterlabel='{psl}'+or+DeveloperName='{psl}')+LIMIT+1"
         headers = {
             'Authorization': f'Bearer {self.accesstoken}',
             'Content-Type': 'application/json'
@@ -187,6 +192,65 @@ class NGOrgConfig(SFDXBaseTask):
         data = json.loads(response.text)
         self.logger.info(data["totalSize"])
         return data["totalSize"] == 1
+    
+    
+    
+    def _check_id_or_guid_in_org(self, identifier):
+    
+        #fail closed sine the object or access to the object is not present
+        try:
+            return (self._check_org_id_exists(identifier) or self._check_org_guid_exists(identifier))
+        except:
+          self.logger.error("Lookup of org identifier or guid failed. failing closed.")
+            
+        #fail closed sine the object or access to the object is not present
+        return False
+    
+    #custom metadata does not support OR 
+    def _check_org_id_exists(self, identifier):
+        
+        try:
+            #e.g. 
+            #SDO or GUID
+            url = f"{self.instanceurl}/services/data/v56.0/query/?q=select+Id+from+QLabs__mdt+where+(Org_Type__c='{identifier}')+LIMIT+1"
+            headers = {
+                'Authorization': f'Bearer {self.accesstoken}',
+                'Content-Type': 'application/json'
+            }
+            response = requests.request("GET", url, headers=headers)
+            # print(response.text)
+            data = json.loads(response.text)
+            self.logger.info(data["totalSize"])
+            return data["totalSize"] == 1
+        except:
+            self.logger.error("Lookup of org identifier failed. failing closed.")
+            
+        #fail closed sine the object or access to the object is not present
+        return False
+    
+     #custom metadata does not support OR 
+    def _check_org_guid_exists(self, identifier):
+        
+        try:
+            #e.g. 
+            #SDO or GUID
+            url = f"{self.instanceurl}/services/data/v56.0/query/?q=select+Id+from+QLabs__mdt+where+(Identifier__c='{identifier}')+LIMIT+1"
+            headers = {
+                'Authorization': f'Bearer {self.accesstoken}',
+                'Content-Type': 'application/json'
+            }
+            response = requests.request("GET", url, headers=headers)
+            # print(response.text)
+            data = json.loads(response.text)
+            self.logger.info(data["totalSize"])
+            return data["totalSize"] == 1
+        except:
+            self.logger.error("Lookup of org guid failed. failing closed.")
+            
+        #fail closed sine the object or access to the object is not present
+        return False
+        
+
 
     def _get_org_max_api_version(self):
 
