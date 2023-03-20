@@ -169,6 +169,14 @@ tasks:
     description: Aborts the install due to the when condition being met.
     class_path: qbrix.tools.utils.qbrix_orgconfig_hydrate.NGAbort
 
+  qbrix_shell_deploy_metadeploy:
+    description: Runs the specified task or flow of the qbrix in a subprocess.
+    class_path: qbrix.tools.utils.qbrix_deploy.Deploy
+    options:
+      message: Runs the specified task or flow of the qbrix in a subprocess.
+      entrypoint: deploy_qbrix
+      etnrypointtype: flow
+
   #------------------------------------#
   # DATA TOOL INTEGRATION              #
   #------------------------------------#
@@ -360,4 +368,4 @@ plans:
     is_listed: True
     steps:
       1:
-        flow: deploy_qbrix_tso
+        task: qbrix_shell_deploy_metadeploy
