@@ -49,7 +49,8 @@ Library     qbrix/robot/QbrixNetZeroKeywords.py
 # INDUSTRY - NON PROFIT CLOUD (NGO)
 Library     qbrix/robot/QbrixNGOKeywords.py
 
-
+# INDUSTRY - Healthcare Cloud
+Library     qbrix/robot/QbrixHLSKeywords.py
 
 
 
