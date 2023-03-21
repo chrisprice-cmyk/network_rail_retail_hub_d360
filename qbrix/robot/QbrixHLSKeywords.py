@@ -29,7 +29,6 @@ class QbrixHLSKeywords(BaseLibrary):
         """
         Enables Care Plans for HLS
         """
-        """
         self.shared.go_to_setup_admin_page("CarePlanSettings/home")
         self.browser.wait_for_elements_state("p:text-is('Care Plans')", ElementState.visible, '30s')
         checked = "checked" in self.browser.get_element_states(
