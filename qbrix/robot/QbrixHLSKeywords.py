@@ -52,8 +52,8 @@ class QbrixHLSKeywords(BaseLibrary):
             toggle_switch = self.browser.get_element(
                 ":nth-match(label:has-text('Disabled'), 1)")
             self.browser.click(toggle_switch)
-            sleep(1)
-            
+            sleep(5)
+
         checked2 = "checked" in self.browser.get_element_states(
             ":nth-match(label:has-text('Disabled'), 2)")
         if not checked2:
