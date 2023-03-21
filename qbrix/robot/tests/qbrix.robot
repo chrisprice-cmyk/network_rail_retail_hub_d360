@@ -299,3 +299,6 @@ Enable Program Benefits
 
 Enable Care Plans
     Enable Care Plans
+
+Enable Care Plans Grantmaking
+    Enable Care Plans Grantmaking
