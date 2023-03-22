@@ -249,6 +249,10 @@ flows:
           name: Deploying Q Brix Metadata
       4:
         flow: post_qbrix_deploy
+      5:
+        task: qbrix_installer_tracking
+        options:
+          explicitexit: True
 
   # Deploys the q brix into a TSO or Production Org
   deploy_qbrix_tso:
