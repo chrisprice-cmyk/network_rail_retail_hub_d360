@@ -162,6 +162,13 @@ tasks:
         log: None
         output: None
 
+  qbrix_apex_run_and_wait_example:
+    class_path: qbrix.tools.utils.qbrix_batch_apex.RunAnonymousApexAndWait
+    options:
+      filepath: path to anonymous block to run
+      exitonsoqlzero: "select count() soql to verify exit on 0 count"
+      maxwaithchecks: 10
+
   qbrix_installer_tracking:
     class_path: qbrix.tools.utils.qbrix_installtracking.InstallRecorder
 

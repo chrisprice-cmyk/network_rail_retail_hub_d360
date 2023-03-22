@@ -1,7 +1,9 @@
 from genericpath import isfile
 import json
 import os
+import time
 import subprocess
+import requests
 from abc import abstractmethod
 
 from cumulusci.core.config import ScratchOrgConfig
@@ -119,6 +121,162 @@ class BatchAnonymousApex(SFDXBaseTask):
                 else:
                     self.logger.error(f"File path {v} is not a valid file")
 
+    def _handle_returncode(self, returncode, stderr):
+        if returncode:
+            message = "Return code: {}".format(returncode)
+            if stderr:
+                message += "\nstderr: {}".format(stderr.read().decode("utf-8"))
+            self.logger.error(message)
+            raise CommandException(message)
+        
+        
+class RunAnonymousApexAndWait(SFDXBaseTask):
+    keychain_class = BaseProjectKeychain
+
+    task_docs = """
+    Takes one or more apex script files (defined in the filepaths option) which need to be deployed and runs them against the target org.
+    """
+
+    task_options = {
+
+        "filepath": {
+            "description": "relative file path to the apex anonymous apex to run",
+            "required": False
+        },
+        "exitonsoqlzero": { 
+            "description": "SOQL Count() to verify for exit. When the count result hits 0, it exits.",
+            "required": False
+        },
+        "maxwaithchecks": { 
+            "description": "Max number of times to check to and wait after no detection of the running jobs. Each wait check is 60 seconds. Default of 1 if not set.",
+            "required": False
+        },
+        "org": {
+            "description": "Value to replace every instance of the find value in the source file.",
+            "required": False
+        }
+    }
+
+    def _setprojectdefaults(self, instanceurl):
+        subprocess.run([f"sfdx config:set instanceUrl={instanceurl}"], shell=True, capture_output=True)
+
+    def _init_options(self, kwargs):
+        super(RunAnonymousApexAndWait, self)._init_options(kwargs)
+        self.env = self._get_env()
+
+    @property
+    def keychain_cls(self):
+        klass = self.get_keychain_class()
+        return klass or self.keychain_class
+
+    @abstractmethod
+    def get_keychain_class(self):
+        return None
+
+    @property
+    def keychain_key(self):
+        return self.get_keychain_key()
+
+    @abstractmethod
+    def get_keychain_key(self):
+        return None
+
+    def _load_keychain(self):
+        if self.keychain is not None:
+            return
+
+        keychain_key = self.keychain_key if self.keychain_cls.encrypted else None
+
+        if self.project_config is None:
+            self.keychain = self.keychain_cls(self.universal_config, keychain_key)
+        else:
+            self.keychain = self.keychain_cls(self.project_config, keychain_key)
+            self.project_config.keychain = self.keychain
+
+    def _prepruntime(self, a):
+
+        if ("org" in self.options and not self.options["org"] is None) and self.keychain is None:
+            self._load_keychain()
+            self.logger.info("Org passed in but no keychain found in runtime")
+
+        # if not passed in - fall back to the key ring data
+        if "targetusername" not in self.options or not self.options["targetusername"]:
+
+            if not isinstance(self.org_config, ScratchOrgConfig):
+                self.targetusername = self.org_config.access_token
+            else:
+                self.targetusername = self.org_config.username
+        else:
+            self.targetusername = self.options["targetusername"]
+
+        # if not passed in - fall back to the key ring data
+        if "accesstoken" not in self.options or not self.options["accesstoken"]:
+            self.accesstoken = self.org_config.access_token
+        else:
+            self.accesstoken = self.options["accesstoken"]
+
+        # if not passed in - fall back to the key ring data
+        if "instanceurl" not in self.options or not self.options["instanceurl"]:
+            self.instanceurl = self.org_config.instance_url
+        else:
+            self.instanceurl = self.options["instanceurl"]
+        
+        if "filepath" in self.options and not self.options["filepath"] is None:
+            self.filepath = self.options["filepath"]
+        else:
+            self.filepath = None
+            self.logger.info("No File Path provided")
+            
+        if "maxwaithchecks" in self.options and not self.options["maxwaithchecks"] is None:
+            self.maxwaithchecks = self.options["maxwaithchecks"]
+        else:
+            self.maxwaithchecks = 1
+            
+        if "exitonsoqlzero" in self.options and not self.options["exitonsoqlzero"] is None:
+            self.exitonsoqlzero = self.options["exitonsoqlzero"]
+        else:
+            self.exitonsoqlzero = None
+
+    def _run_task(self):
+
+        self._prepruntime(self)
+        self._setprojectdefaults(self.instanceurl)
+
+        if hasattr(self, "filepath") and self.filepath is not None:
+            
+            if os.path.isfile(self.filepath):
+                runthiscmd = f"{LOAD_COMMAND} -f {self.filepath} -u {self.accesstoken} --json"
+                self.logger.info(f'Running Apex Script in {self.filepath}')
+                resp = subprocess.run([runthiscmd], shell=True, capture_output=True, cwd=self.options.get("dir"))
+                time.sleep(15)
+                if hasattr(self, "exitonsoqlzero") and self.exitonsoqlzero is not None:    
+                    while(self.maxwaithchecks>0):
+    
+                        if(self._is_zero_count(self.exitonsoqlzero)):
+                            time.sleep(30)
+                            if(self._is_zero_count(self.exitonsoqlzero)):
+                                self.maxwaithchecks=0
+                                continue
+                            
+                        self.maxwaithchecks=self.maxwaithchecks-1
+                        time.sleep(60)
+                            
+            else:
+                self.logger.error(f"File path {self.filepath} is not a valid file")
+                
+                
+    def _is_zero_count(self,soql):
+        modsoql=soql.replace(" ","+")
+        url = f"{self.instanceurl}/services/data/v56.0/query/?q={modsoql}"
+        headers = {
+            'Authorization': f'Bearer {self.accesstoken}',
+            'Content-Type': 'application/json'
+        }
+        response = requests.request("GET", url, headers=headers)
+        data = json.loads(response.text)
+        self.logger.info(data)
+        return data["records"][0]["expr0"] == 0
+    
     def _handle_returncode(self, returncode, stderr):
         if returncode:
             message = "Return code: {}".format(returncode)
