@@ -279,6 +279,9 @@ Enable Program Based Business
 Enable Warranty Lifecycle Management
     Enable Warranty Lifecycle Management
 
+Set Guest API Access for MFG Channel Menu
+    Set Guest on MFG Channel  Menu    MFG_Service_Community_Channel
+
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # FINANCIAL SERVICES Cloud Operations
 # -----------------------------------------------------------------------------------------------------------------------------------------
