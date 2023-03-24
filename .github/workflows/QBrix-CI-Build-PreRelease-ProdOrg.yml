@@ -221,7 +221,7 @@ jobs:
         run: npm install --location=global sfdx-cli
 
       - name: Import the target username via SFDX
-        run: sfdx auth:jwt:grant -u ${{ needs.target_org_env_build.outputs.target-org }} -a dev_target_username -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
+        run: export SFDX_ACCESS_TOKEN='${{ needs.target_org_env_build.outputs.target-accesstoken }}' && sfdx force:auth:accesstoken:store --instanceurl ${{ needs.target_org_env_build.outputs.target-instanceurl }} -a ${{ needs.target_org_env_build.outputs.target-org }} --noprompt --json --loglevel DEBUG
 
       # We will use a common app with a common key -
       - name: Create SFDX Session for DEV HUB ACCESS
@@ -317,7 +317,7 @@ jobs:
           on_retry_command: cci error info
 
       - name: fail details
-        uses: mathiasvr/command-output@v1  
+        uses: mathiasvr/command-output@v1
         if: ${{ failure() && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
         id: cci_failure_details
         with:
@@ -351,7 +351,7 @@ jobs:
         run: npm install --location=global sfdx-cli
 
       - name: Import the target username via SFDX
-        run: sfdx auth:jwt:grant -u ${{ needs.target_org_env_build.outputs.target-org }} -a dev_target_username -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
+        run: export SFDX_ACCESS_TOKEN='${{ needs.target_org_env_build.outputs.target-accesstoken }}' && sfdx force:auth:accesstoken:store --instanceurl ${{ needs.target_org_env_build.outputs.target-instanceurl }} -a ${{ needs.target_org_env_build.outputs.target-org }} --noprompt --json --loglevel DEBUG
 
       # We will use a common app with a common key -
       - name: Create SFDX Session for DEV HUB ACCESS
@@ -486,7 +486,7 @@ jobs:
         run: cci org scratch_delete dev
 
       - name: fail details
-        uses: mathiasvr/command-output@v1  
+        uses: mathiasvr/command-output@v1
         if: ${{ failure() && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
         id: cci_failure_details
         with:

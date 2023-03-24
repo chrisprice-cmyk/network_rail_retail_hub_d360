@@ -59,6 +59,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       target-org: ${{ steps.extrattargetorg.outputs.value }}
+      target-accesstoken: ${{ steps.extrattargetaccesstoken.outputs.value }}
+      target-instanceurl: ${{ steps.extrattargetinstanceurl.outputs.value }}
     steps:
       - uses: actions/checkout@v3
 
@@ -193,13 +195,29 @@ jobs:
         with:
           cmd: jq '.username' targetorg.json -r
 
-      - name: Sleep for 2 Minutes to get give auth time to allow for jwt
-        run: sleep 120s
-        shell: bash
+      - name: extract the target accesstoken
+        uses: sergeysova/jq-action@v2
+        id: extrattargetaccesstoken
+        with:
+          cmd: jq '.access_token' targetorg.json -r
+
+      - name: extract the target accesstoken
+        uses: sergeysova/jq-action@v2
+        id: extrattargetinstanceurl
+        with:
+          cmd: jq '.instance_url' targetorg.json -r
 
       - name: set output target user
         id: loadtargetorg
         run: echo "target-org=${{ steps.extrattargetorg.outputs.value }}" >> $GITHUB_OUTPUT
+
+      - name: set output target access token
+        id: loadtargetaccesstoken
+        run: echo "target-accesstoken=${{ steps.extrattargetaccesstoken.outputs.value }}" >> $GITHUB_OUTPUT
+
+      - name: set output target instance url
+        id: loadtargetintanceurl
+        run: echo "target-instanceurl=${{ steps.extrattargetinstanceurl.outputs.value }}" >> $GITHUB_OUTPUT
 
   qbrix_deployments:
     needs: [collection_deployment_steps, target_org_env_build]
@@ -221,7 +239,7 @@ jobs:
         run: npm install --location=global sfdx-cli
 
       - name: Import the target username via SFDX
-        run: sfdx auth:jwt:grant -u ${{ needs.target_org_env_build.outputs.target-org }} -a dev_target_username -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
+        run: export SFDX_ACCESS_TOKEN='${{ needs.target_org_env_build.outputs.target-accesstoken }}' && sfdx force:auth:accesstoken:store --instanceurl ${{ needs.target_org_env_build.outputs.target-instanceurl }} -a ${{ needs.target_org_env_build.outputs.target-org }} --noprompt --json --loglevel DEBUG
 
       # We will use a common app with a common key -
       - name: Create SFDX Session for DEV HUB ACCESS
@@ -317,12 +335,12 @@ jobs:
           on_retry_command: cci error info
 
       - name: fail details
-        uses: mathiasvr/command-output@v1  
+        uses: mathiasvr/command-output@v1
         if: ${{ failure() && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
         id: cci_failure_details
         with:
           run: |
-            cci error info
+            cci error info | base64 -w 0
 
       - name: fail status
         if: ${{ failure() && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
@@ -351,7 +369,7 @@ jobs:
         run: npm install --location=global sfdx-cli
 
       - name: Import the target username via SFDX
-        run: sfdx auth:jwt:grant -u ${{ needs.target_org_env_build.outputs.target-org }} -a dev_target_username -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
+        run: export SFDX_ACCESS_TOKEN='${{ needs.target_org_env_build.outputs.target-accesstoken }}' && sfdx force:auth:accesstoken:store --instanceurl ${{ needs.target_org_env_build.outputs.target-instanceurl }} -a ${{ needs.target_org_env_build.outputs.target-org }} --noprompt --json --loglevel DEBUG
 
       # We will use a common app with a common key -
       - name: Create SFDX Session for DEV HUB ACCESS
@@ -486,12 +504,12 @@ jobs:
         run: cci org scratch_delete dev
 
       - name: fail details
-        uses: mathiasvr/command-output@v1  
+        uses: mathiasvr/command-output@v1
         if: ${{ failure() && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
         id: cci_failure_details
         with:
           run: |
-            cci error info
+            cci error info | base64 -w 0
 
       - name: fail status
         if: ${{ failure() && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
@@ -510,5 +528,5 @@ jobs:
           url: "https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixBuildService"
           method: "POST"
           customHeaders: '{"Content-Type": "application/json","Authorization": "Bearer ${{ steps.qlabs_accesstoken.outputs.value }}"}'
-          data: '{"qbrixname": "${{ github.repository }}-${{ env.BUILD_SUFFIX }}", "buildstatus": "Passed"}'
+          data: '{"qbrixname": "${{ github.repository }}-${{ env.BUILD_SUFFIX }}", "buildstatus": "Passed", "details": ""}'
           timeout: 30000
