@@ -59,6 +59,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       target-org: ${{ steps.extrattargetorg.outputs.value }}
+      target-accesstoken: ${{ steps.extrattargetaccesstoken.outputs.value }}
+      target-instanceurl: ${{ steps.extrattargetinstanceurl.outputs.value }}
     steps:
       - uses: actions/checkout@v3
 
@@ -193,13 +195,29 @@ jobs:
         with:
           cmd: jq '.username' targetorg.json -r
 
-      - name: Sleep for 2 Minutes to get give auth time to allow for jwt
-        run: sleep 120s
-        shell: bash
+      - name: extract the target accesstoken
+        uses: sergeysova/jq-action@v2
+        id: extrattargetaccesstoken
+        with:
+          cmd: jq '.access_token' targetorg.json -r
+
+      - name: extract the target accesstoken
+        uses: sergeysova/jq-action@v2
+        id: extrattargetinstanceurl
+        with:
+          cmd: jq '.instance_url' targetorg.json -r
 
       - name: set output target user
         id: loadtargetorg
         run: echo "target-org=${{ steps.extrattargetorg.outputs.value }}" >> $GITHUB_OUTPUT
+
+      - name: set output target access token
+        id: loadtargetaccesstoken
+        run: echo "target-accesstoken=${{ steps.extrattargetaccesstoken.outputs.value }}" >> $GITHUB_OUTPUT
+
+      - name: set output target instance url
+        id: loadtargetintanceurl
+        run: echo "target-instanceurl=${{ steps.extrattargetinstanceurl.outputs.value }}" >> $GITHUB_OUTPUT
 
   qbrix_deployments:
     needs: [collection_deployment_steps, target_org_env_build]
