@@ -556,6 +556,10 @@ class CreateUser(BaseSalesforceApiTask, ABC):
                 self._upload_user_profile_image(final_user_id, user_profile_image)
 
             # Handle Permissions
+            #Load PSL First to make sure namespace access is ok
+            if permission_set_license_api_names:
+                log.info("Assigning Permission Set Licenses...")
+                self._assign_permission("PERMISSIONSETLICENSE", final_user_id, permission_set_license_api_names)
             if permission_set_api_names:
                 log.info("Assigning Permission Sets...")
                 self._assign_permission("PERMISSIONSET", final_user_id, permission_set_api_names)
@@ -563,11 +567,7 @@ class CreateUser(BaseSalesforceApiTask, ABC):
             if permission_set_group_api_names:
                 log.info("Assigning Permission Set Groups...")
                 self._assign_permission("PERMISSIONSETGROUP", final_user_id, permission_set_group_api_names)
-                
-            if permission_set_license_api_names:
-                log.info("Assigning Permission Set Licenses...")
-                self._assign_permission("PERMISSIONSETLICENSE", final_user_id, permission_set_license_api_names)
-
+            
         else:
 
             log.error("User Failed to insert...skipping")
@@ -653,6 +653,11 @@ class CreateUser(BaseSalesforceApiTask, ABC):
                             self._upload_user_profile_image(final_user_id, self.user_profile_image)
 
                         # Handle Permissions
+                        #PSL First - to make sure namespace PSL get access first.
+                        if self.permission_set_license_api_names:
+                            log.info("Assigning Permission Set Licenses...")
+                            self._assign_permission("PERMISSIONSETLICENSE", final_user_id, self.permission_set_license_api_names)
+                        
                         if self.permission_set_api_names:
                             log.info("Assigning Permission Sets...")
                             self._assign_permission("PERMISSIONSET", final_user_id, self.permission_set_api_names)
@@ -661,9 +666,7 @@ class CreateUser(BaseSalesforceApiTask, ABC):
                             log.info("Assigning Permission Set Groups...")
                             self._assign_permission("PERMISSIONSETGROUP", final_user_id, self.permission_set_group_api_names)
                             
-                        if self.permission_set_license_api_names:
-                            log.info("Assigning Permission Set Licenses...")
-                            self._assign_permission("PERMISSIONSETLICENSE", final_user_id, self.permission_set_license_api_names)
+                        
                     else:
                         log.error("User Failed to insert. Skipping...")
 
