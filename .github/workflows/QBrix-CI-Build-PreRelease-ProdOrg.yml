@@ -340,7 +340,7 @@ jobs:
         id: cci_failure_details
         with:
           run: |
-            cci error info
+            cci error info | base64 -w 0
 
       - name: fail status
         if: ${{ failure() && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
@@ -509,7 +509,7 @@ jobs:
         id: cci_failure_details
         with:
           run: |
-            cci error info
+            cci error info | base64 -w 0
 
       - name: fail status
         if: ${{ failure() && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
