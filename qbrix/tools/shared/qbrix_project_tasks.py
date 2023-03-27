@@ -844,6 +844,7 @@ def push_changes(target_org_alias):
     log.info("Upgrade Pushed!")
     return push_output
 
+
 def create_permission_set_file(name, label):
 
     if os.path.exists(f"force-app/main/default/permissionsets/{name}.permissionset-meta.xml"):
@@ -857,6 +858,7 @@ def create_permission_set_file(name, label):
     label_element.text = label
 
     # Traverse through the object folders
+    object_lookup_list = []
     objects_path = "force-app/main/default/objects"
     if os.path.exists(objects_path):
         for object_folder in os.listdir(objects_path):
@@ -885,15 +887,16 @@ def create_permission_set_file(name, label):
                             reference_to_end = contents.find("</referenceTo>")
                             if reference_to_start != -1 and reference_to_end != -1:
                                 reference_object = contents[reference_to_start + 13:reference_to_end]
-                                if reference_object not in os.listdir(objects_path):
+                                if reference_object not in os.listdir(objects_path) and reference_object not in object_lookup_list:
                                     object_permissions_element = ET.SubElement(root, "objectPermissions")
-                                    ET.SubElement(object_permissions_element, "allowCreate").text = "false"
-                                    ET.SubElement(object_permissions_element, "allowDelete").text = "false"
-                                    ET.SubElement(object_permissions_element, "allowEdit").text = "false"
-                                    ET.SubElement(object_permissions_element, "allowRead").text = "false"
-                                    ET.SubElement(object_permissions_element, "modifyAllRecords").text = "false"
+                                    ET.SubElement(object_permissions_element, "allowCreate").text = "true"
+                                    ET.SubElement(object_permissions_element, "allowDelete").text = "true"
+                                    ET.SubElement(object_permissions_element, "allowEdit").text = "true"
+                                    ET.SubElement(object_permissions_element, "allowRead").text = "true"
+                                    ET.SubElement(object_permissions_element, "modifyAllRecords").text = "true"
                                     ET.SubElement(object_permissions_element, "object").text = f"{reference_object}"
-                                    ET.SubElement(object_permissions_element, "viewAllRecords").text = "false"
+                                    ET.SubElement(object_permissions_element, "viewAllRecords").text = "true"
+                                    object_lookup_list.append(reference_object)
 
     # Traverse Field Names
     if os.path.exists(objects_path):
