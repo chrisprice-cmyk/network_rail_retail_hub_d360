@@ -925,7 +925,6 @@ def create_permission_set_file(name, label):
                         if record_type_file.endswith(".recordType-meta.xml"):
                             record_type_name = record_type_file[:-20]
                             record_type_permissions_element = ET.SubElement(root, "recordTypeVisibilities")
-                            ET.SubElement(record_type_permissions_element, "default").text = "false"
                             ET.SubElement(record_type_permissions_element, "recordType").text = f"{object_folder}.{record_type_name}"
                             ET.SubElement(record_type_permissions_element, "visible").text = "true"
 
