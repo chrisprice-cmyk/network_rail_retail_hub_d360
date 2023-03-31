@@ -284,6 +284,9 @@ class CreateUser(BaseSalesforceApiTask, ABC):
 
         if "UserPermissionsOfflineUser" not in submitted_dict.keys():
             submitted_dict.update({"UserPermissionsOfflineUser": False})
+            
+        if "UserPermissionsKnowledgeUser" not in submitted_dict.keys():
+            submitted_dict.update({"UserPermissionsKnowledgeUser": False})
 
         api = self.sf
 
