@@ -127,6 +127,9 @@ class NGOrgConfig(SFDXBaseTask):
         if self.org_config.is_psl_in_org is None:
             self.org_config.is_psl_in_org = self._is_psl_present_in_org
             
+        if self.org_config.is_ps_in_org is None:
+            self.org_config.is_ps_in_org = self._is_ps_present_in_org
+            
         if self.org_config.is_namespace_installed is None:
             self.org_config.is_namespace_installed = self._is_package_namespace_installed
 
@@ -183,6 +186,23 @@ class NGOrgConfig(SFDXBaseTask):
         #SELECT  id,MasterLabel,DeveloperName from PermissionSetLicense where (Masterlabel='OmniStudioDesigner' or DeveloperName='OmniStudioDesigner')
 
         url = f"{self.instanceurl}/services/data/v56.0/query/?q=select+Id+from+PermissionSetLicense+where+(Masterlabel='{psl}'+or+DeveloperName='{psl}')+LIMIT+1"
+        headers = {
+            'Authorization': f'Bearer {self.accesstoken}',
+            'Content-Type': 'application/json'
+        }
+        response = requests.request("GET", url, headers=headers)
+        # print(response.text)
+        data = json.loads(response.text)
+        self.logger.info(data["totalSize"])
+        return data["totalSize"] == 1
+    
+    
+    def _is_ps_present_in_org(self, ps):
+        
+        #e.g. 
+        #SELECT  id,MasterLabel,DeveloperName from PermissionSet where (Name='OmniStudioDesigner' or Label='OmniStudioDesigner')
+
+        url = f"{self.instanceurl}/services/data/v56.0/query/?q=select+Id+from+PermissionSet+where+(Name='{ps}'+or+Label='{ps}')+LIMIT+1"
         headers = {
             'Authorization': f'Bearer {self.accesstoken}',
             'Content-Type': 'application/json'
