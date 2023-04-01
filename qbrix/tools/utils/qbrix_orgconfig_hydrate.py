@@ -33,8 +33,6 @@ class NGAbort(SFDXBaseTask):
         self._prepruntime()
         raise Exception(f'This QBrix was stopped due to :: {self.abortmessage}')
         
-        
-    
 
 class NGOrgConfig(SFDXBaseTask):
     keychain_class = BaseProjectKeychain
@@ -115,6 +113,9 @@ class NGOrgConfig(SFDXBaseTask):
 
     def _inject_max_runtime(self):
 
+        if self.org_config.qbrix_cache is None:
+            self.org_config.qbrix_cache = {}
+
         if self.org_config.max_org_api_version is None:
             self.org_config.max_org_api_version = self._get_org_max_api_version()
 
@@ -135,8 +136,38 @@ class NGOrgConfig(SFDXBaseTask):
 
         if self.org_config.is_org_identifier is None:
             self.org_config.is_org_identifier = self._check_id_or_guid_in_org
+        
+        if self.org_config.qbrix_cache_get is None:
+            self.org_config.qbrix_cache_get = self._cache_item_get
+            
+        if self.org_config.qbrix_cache_set is None:
+            self.org_config.qbrix_cache_set = self._cache_item_set
+            
+        
+        self._seed_initial_cache()
 
-
+    def _seed_initial_cache(self):
+        if(self.org_config.qbrix_cache is None):
+            self.org_config.qbrix_cache={}
+            
+        self._cache_item_set("instancedomain",self.instanceurl)
+        self._cache_item_set("subdomain",self.instanceurl.replace("https://","").split('.')[0])
+        
+    def _cache_item_get(self,key):
+        if(self.org_config.qbrix_cache is None):
+            self.org_config.qbrix_cache={}
+        
+        return self.org_config.qbrix_cache.get(key)
+            
+    def _cache_item_set(self,key,val):
+        if(self.org_config.qbrix_cache is None):
+            self.org_config.qbrix_cache={}
+        
+        self.logger.info(f'Cache::{key}::{val}')
+        self.org_config.qbrix_cache[key]=val
+        
+        
+        
 
 
     def _is_qbrix_installed(self, qbrixname):

@@ -156,6 +156,9 @@ class FART(Command):
     def run(self):
         if self.fartmode == "Text":
             self.runwithtext()
+            
+        if self.fartmode == "Cache":
+            self.runwithcache()
 
         if self.fartmode == "Between":
             self.runtextbetween()
@@ -166,6 +169,12 @@ class FART(Command):
         if self.fartmode == "SOQL-Between":
             self.runwithsoqlbetween()
 
+    def runwithcache(self):
+        cacheval = self.org_config.qbrix_cache_get(self.fartreplacewith)
+        
+        if(not cacheval is None):
+            self.fart(self.fartpath, self.fartfind, cacheval, self.formatval)
+        
     def runwithtext(self):
         self.fart(self.fartpath, self.fartfind, self.fartreplacewith, self.formatval)
 
