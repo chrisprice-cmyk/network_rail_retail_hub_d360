@@ -23,6 +23,8 @@ env:
   SFDX_DISABLE_DNS_CHECK: true
   ACTIONS_ALLOW_UNSECURE_COMMANDS: true
   BUILD_SUFFIX: R0
+  QBRIX_SYSTEM_ID: GIT_BUILD_AUTOMATION
+
 
 jobs:
   collection_deployment_steps:
