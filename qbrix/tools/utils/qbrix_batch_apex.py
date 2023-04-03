@@ -11,7 +11,7 @@ from cumulusci.tasks.sfdx import SFDXBaseTask
 from cumulusci.core.exceptions import CommandException
 from cumulusci.core.keychain import BaseProjectKeychain
 
-LOAD_COMMAND = "sfdx force:apex:execute "
+LOAD_COMMAND = "sfdx apex run "
 
 
 class BatchAnonymousApex(SFDXBaseTask):
@@ -142,6 +142,11 @@ class RunAnonymousApexAndWait(SFDXBaseTask):
         "filepath": {
             "description": "relative file path to the apex anonymous apex to run",
             "required": False
+        }
+        ,
+        "waitseconds": { 
+            "description": "Number of secondsd to wait per cycle. Default is 60",
+            "required": False
         },
         "exitonsoqlzero": { 
             "description": "SOQL Count() to verify for exit. When the count result hits 0, it exits.",
@@ -151,6 +156,15 @@ class RunAnonymousApexAndWait(SFDXBaseTask):
             "description": "Max number of times to check to and wait after no detection of the running jobs. Each wait check is 60 seconds. Default of 1 if not set.",
             "required": False
         },
+         "runscriptperwait": { 
+            "description": "True or False to run an script per wait cycle",
+            "required": False
+        },
+         "waitscript": { 
+            "description": "Script file to run per wait",
+            "required": False
+        }
+         ,
         "org": {
             "description": "Value to replace every instance of the find value in the source file.",
             "required": False
@@ -232,10 +246,25 @@ class RunAnonymousApexAndWait(SFDXBaseTask):
         else:
             self.maxwaithchecks = 1
             
+        if "waitseconds" in self.options and not self.options["waitseconds"] is None:
+            self.waitseconds = int(self.options["waitseconds"])
+        else:
+            self.waitseconds = 60
+            
         if "exitonsoqlzero" in self.options and not self.options["exitonsoqlzero"] is None:
             self.exitonsoqlzero = self.options["exitonsoqlzero"]
         else:
             self.exitonsoqlzero = None
+            
+        if "runscriptperwait" in self.options and not self.options["runscriptperwait"] is None:
+            self.runscriptperwait = bool(self.options["runscriptperwait"])
+        else:
+            self.runscriptperwait = False
+            
+        if "waitscript" in self.options and not self.options["waitscript"] is None:
+            self.waitscript = self.options["waitscript"]
+        else:
+            self.waitscript = None
 
     def _run_task(self):
 
@@ -248,7 +277,7 @@ class RunAnonymousApexAndWait(SFDXBaseTask):
                 runthiscmd = f"{LOAD_COMMAND} -f {self.filepath} -u {self.accesstoken} --json"
                 self.logger.info(f'Running Apex Script in {self.filepath}')
                 resp = subprocess.run([runthiscmd], shell=True, capture_output=True, cwd=self.options.get("dir"))
-                time.sleep(15)
+                time.sleep(self.waitseconds)
                 if hasattr(self, "exitonsoqlzero") and self.exitonsoqlzero is not None:    
                     while(self.maxwaithchecks>0):
     
@@ -258,8 +287,14 @@ class RunAnonymousApexAndWait(SFDXBaseTask):
                                 self.maxwaithchecks=0
                                 continue
                             
+                        #if we want to run a scropt per wait
+                        if(self.waitscript):
+                            runthiscmd = f"{LOAD_COMMAND} -f {self.waitscript} -u {self.accesstoken} --json"
+                            self.logger.info(f'Running Additional Wait Apex Script in {self.waitscript}')
+                            resp = subprocess.run([runthiscmd], shell=True, capture_output=True, cwd=self.options.get("dir"))
+                            
                         self.maxwaithchecks=self.maxwaithchecks-1
-                        time.sleep(60)
+                        time.sleep(self.waitseconds)
                             
             else:
                 self.logger.error(f"File path {self.filepath} is not a valid file")
