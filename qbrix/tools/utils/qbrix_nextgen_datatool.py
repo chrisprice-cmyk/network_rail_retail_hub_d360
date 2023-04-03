@@ -92,10 +92,10 @@ class RunDataTool(SFDXBaseTask):
     def _run_task(self):
 
         self._prepruntime()
-        log.info("NextGen Data Tool: Starting Data Load")
+        self.logger.info("NextGen Data Tool: Starting Data Load")
 
         if not self.data_keys:
-            log.error(
+            self.logger.error(
                 "NextGen Data Tool: Error, there were no data collection keys were passed! Please check your task definition and add the correct data keys.")
             raise Exception("No Data Keys Passed! Data Load Failed.")
 
@@ -117,11 +117,11 @@ class RunDataTool(SFDXBaseTask):
 
             # Set Start Time of Job
             st = time.time()
-            log.info(f"NextGen Data Tool: Processing Data Load {data_load_job_counter} of {total_keys}")
+            self.logger.info(f"NextGen Data Tool: Processing Data Load {data_load_job_counter} of {total_keys}")
 
             # Check for missing Data Collection Key
             if data_key is None or data_key == "":
-                log.error(
+                self.logger.error(
                     f"NextGen Data Tool: Invalid or missing Data Collection ID. Skipping Job {data_load_job_counter} of {total_keys}.")
                 continue
 
@@ -136,18 +136,18 @@ class RunDataTool(SFDXBaseTask):
                 "access_token": self.accesstoken
             }
             
-            #log.info(data)
+            #self.logger.info(data)
 
-            log.info(
+            self.logger.info(
                 f"NextGen Data Tool: Starting Job\n\nRequesting Data Job with the following configuration:\n\nData Collection ID: {data_key}\nUsername: {self.org_config.username}\nEmail: {email_address}\nScratch Org Mode: {IsScratchOrg}\n")
             result = requests.post(self.url, json=data, headers=headers)
             jsonResponse = result.json()
 
             if jsonResponse is not None:
                 job_id = jsonResponse["id"]
-                log.info(f"NextGen Data Tool: Data Load started with ID {job_id}")
+                self.logger.info(f"NextGen Data Tool: Data Load started with ID {job_id}")
             else:
-                log.error(
+                self.logger.error(
                     f"NextGen Data Tool: Error the job failed to start. This could be due to network issues or issues with the NextGen Data Load host.")
                 raise Exception("Data Load Job Failed to start.")
 
@@ -160,6 +160,7 @@ class RunDataTool(SFDXBaseTask):
             if self.total_timeout < 500 or self.total_timeout > 8600:
                 self.total_timeout = 8600
 
+            self.logger.info(f'JOB STATUS URL:: {job_status_check_url}')
             while True:
 
                 # Get Job Status
@@ -171,7 +172,7 @@ class RunDataTool(SFDXBaseTask):
                 # Handle issues with job status
                 if check_job.json() is None:
                     if total_retries > 3:
-                        log.error("NextGen Data Tool: Unable to lookup job status. Check your internet connection.")
+                        self.logger.error("NextGen Data Tool: Unable to lookup job status. Check your internet connection.")
                         raise Exception("NextGen Data Tool Job Failed")
                     else:
                         total_retries += 1
@@ -182,11 +183,14 @@ class RunDataTool(SFDXBaseTask):
 
                 # Handle Timeout
                 if timeout > self.total_timeout:
-                    log.error(
+                    self.logger.error(
                         f"NextGen Data Tool: Error Data Load Timeout Reached (Timeout set at {self.total_timeout} seconds)")
                     raise Exception("Data Load timed out. Data load failed.")
 
                 check_job_json = check_job.json()
+                
+                #self.logger.info(check_job_json)
+                
                 status = check_job_json["state"]
                 progress = check_job_json["progress"]
                 status_update = "Waiting to start."
@@ -197,22 +201,22 @@ class RunDataTool(SFDXBaseTask):
                 if status == "completed":
                     et = time.time()
                     elapsed_time = et - st
-                    log.info(f"Job Complete! Total Time: " + time.strftime("%H:%M:%S", time.gmtime(elapsed_time)))
+                    self.logger.info(f"Job Complete! Total Time: " + time.strftime("%H:%M:%S", time.gmtime(elapsed_time)))
                     break
 
                 if status == "active":
-                    log.info(f"NextGen Data Tool: Job ID {job_id}. {status_update}")
+                    self.logger.info(f"NextGen Data Tool: Job ID {job_id}. {status_update}")
 
                 if status == "failed":
-                    log.error(f"The data load job has failed. Job ID: {job_id}")
-                    log.error(check_job_json)
+                    self.logger.error(f"The data load job has failed. Job ID: {job_id}")
+                    self.logger.error(check_job_json)
                     raise Exception("Data Load Failed")
 
                 if status != "active" and status != "completed":
-                    log.error(f"NextGen Data Tool: Unsupported status ({status}) read. Stopping deployment")
+                    self.logger.error(f"NextGen Data Tool: Unsupported status ({status}) read. Stopping deployment")
                     raise Exception("Data Load Failed. An unsupported status was received from the NextGen Data Tool.")
 
-                sleep(1)
+                sleep(5)
                 timeout += 1
 
             data_load_job_counter += 1

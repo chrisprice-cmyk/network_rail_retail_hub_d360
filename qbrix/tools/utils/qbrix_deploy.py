@@ -118,28 +118,28 @@ class Deploy(SFDXBaseTask):
 
     def _deployqbrix(self):
         
-        self.logger.info(f'ENTRYPOINT::{self.entrypoint}')
-        self.logger.info(f'ENTRYPOINTTYPE::{self.entrypointtype}')
-        self.logger.info(f'TARGETORG::{self.cciorg}')
+        #self.logger.info(f'ENTRYPOINT::{self.entrypoint}')
+        #self.logger.info(f'ENTRYPOINTTYPE::{self.entrypointtype}')
+        #self.logger.info(f'TARGETORG::{self.cciorg}')
         
         orglist=subprocess.run([f"cci org list"], shell=True, capture_output=True)
-        self.logger.info(orglist)
+        #self.logger.info(orglist)
         srvclist=subprocess.run([f"cci service list"], shell=True, capture_output=True)
-        self.logger.info(srvclist)
+        #self.logger.info(srvclist)
         srvclist=subprocess.run([f"cci org info {self.cciorg}"], shell=True, capture_output=True)
-        self.logger.info(srvclist)
+        #self.logger.info(srvclist)
         
         hashedalias = "cciorg"+str(hash(self.accesstoken))
-        self.logger.info(hashedalias)
+        #self.logger.info(hashedalias)
         
         sfdximport=subprocess.run([f"export SFDX_ACCESS_TOKEN='{self.accesstoken}' && sfdx force:auth:accesstoken:store --instanceurl {self.instanceurl} -a {hashedalias} --noprompt --json --loglevel DEBUG "], shell=True, capture_output=True)
-        self.logger.info(sfdximport)
+        #self.logger.info(sfdximport)
         
         sfdximport=subprocess.run([f"cci org import {hashedalias} {hashedalias}"], shell=True, capture_output=True)
-        self.logger.info(sfdximport)
+        #self.logger.info(sfdximport)
         
         orglist=subprocess.run([f"cci org list"], shell=True, capture_output=True)
-        self.logger.info(orglist)
+        #self.logger.info(orglist)
         
     
         with subprocess.Popen(['cci', self.entrypointtype, 'run', self.entrypoint, '--org', hashedalias],
