@@ -83,7 +83,7 @@ class RunPreflight(BaseTask, ABC):
         # Deploy Settings if Present
         if os.path.exists(settings_path) and not self.skip_settings_deployment:
             self.logger.info("PREFLIGHT: Deploying Settings Directory from force-app/main/default/settings")
-            run_command(f"cci task run deploy --path {settings_path} --org {self.org_config.name}")
+            run_command(f"cci task run deploy --path force-app/main/default/settings --org {self.org_config.name}", os.getcwd())
         else:
             self.logger.info("PREFLIGHT: Skipping Settings Deployment.")
 
