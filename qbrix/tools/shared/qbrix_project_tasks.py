@@ -18,46 +18,57 @@ from qbrix.tools.shared.qbrix_json_tasks import update_json_file_value, get_json
 from qbrix.tools.shared.qbrix_console_utils import init_logger
 from qbrix.tools.utils.qbrix_fart import FART
 from qbrix.tools.shared.qbrix_cci_tasks import rebuild_cci_cache
+from qbrix.tools.shared.qbrix_shared_checks import is_github_url
 
 log = init_logger()
 
 DEFAULT_UPDATE_LOCATION = "https://qnextgen.s3.us-west-1.amazonaws.com/qbrix/q_update_package.zip"
 
 
-def replace_file_text(file_location, old_text, new_text):
+def replace_file_text(file_location, search_string, replacement_string, show_info=False, number_of_replacements=-1):
+    """ Replaces a string value within a given file
 
-    """ Replace specific text within a file
-    :param file_location: Relative path and file name of the file you want to replace text within
-    :param old_text: Text string to search for
-    :param new_text: New text to replace old text
+    Args:
+        file_location (str): Relative path and file name of the file you want to replace text within
+        search_string (str): The string value to find and replace within the given file content
+        replacement_string (str): The replacement String value
+        show_info (bool): When True, this will output information about the string value being modified.
+        number_of_replacements (int): The total number of replacements to process, for example 1 would only replace the first instance of the search string in the file. Default is -1 which means replace all.
     """
-           
-    if not exists(file_location):
+
+    if not os.path.isfile(file_location):
         raise Exception(f"Error: File Path does not exist or you do not have access to the given file path. Please check this file path and update as required: {file_location}")
 
     try:
-        log.info(f"Opening {file_location}...")
+        log.info(f"Checking {file_location}...")
         with open(f"{file_location}", "r") as tmpFile:
             file_contents = tmpFile.read()
     except Exception as e:
         raise Exception(f"There was an error opening the file with path: {file_location}. Please check the file still exists and that you have access to read it. Error detail: {e}")
 
-    # log.info(f"Searching for all references to '{old_text}' and replacing with '{new_text}'.")
+    if search_string not in file_contents:
+        return
 
-    updated_file_contents = file_contents.replace(f"{old_text}", f"{new_text}")
+    if show_info:
+        log.info(f"Searching for all references to '{search_string}' and replacing with '{replacement_string}'.")
+
+    updated_file_contents = file_contents.replace(f"{search_string}", f"{replacement_string}", number_of_replacements)
 
     try:
-        with open(f"{file_location}", "w") as tmpFile:
-            tmpFile.write(updated_file_contents)
+        with open(f"{file_location}", "w") as updated_file:
+            updated_file.seek(0)
+            updated_file.write(updated_file_contents)
     except Exception as e:
         raise Exception(f"There was an error updating the file with path: {file_location}. Please check the file still exists and that you have access to edit it. Error detail: {e}")
 
 
 def get_qbrix_repo_url():
+    """Get Repo URL for current Q Brix. If no .git has been linked to the given project, then user is prompted for url.
 
-    """ Get Repo URL for current Q Brix
-    :return: Returns the GitHub repo url for the Q Brix.
+    Returns
+        Returns the GitHub repo url for the current Q Brix.
     """
+
     result = None
     try:
         result = subprocess.run("git config --get remote.origin.url", shell=True, capture_output=True).stdout
@@ -66,9 +77,12 @@ def get_qbrix_repo_url():
 
     if not result:
         repo_url = input("Please Enter the complete URL for the Q brix Repo which should be linked to this project (e.g. https://www.github.com/sfdc-qbranch/Qbrix-1-repo): ")
+
         if repo_url == "" or repo_url is None:
-            log.error("A valid GitHub Repo address was not entered. Please ensure that you enter the full URL for the repo.")
-            raise Exception("No GitHub Repo URL found or connected to this project. Skipping task")
+            raise Exception("No GitHub Repo URL was found or entered into the prompt.")
+
+        if not is_github_url(repo_url):
+            raise Exception("URL Must be a valid Github.com URL to a Github repo.")
     else:
         repo_url = result.decode('utf-8').rstrip().replace(".git", "")
 
@@ -76,11 +90,16 @@ def get_qbrix_repo_url():
 
 
 def advanced_feature_match(check_value, list_value):
-    """ Checks for a feature containing a : within a list. If the feature already exists, this return True
+    """Checks for a given scratch org feature containing a : within a list of scratch org features. If the feature already exists, this return True
     otherwise False is returned.
-    :param check_value: Value to check
-    :param list_value: List to check
-    :return: Returns True if feature already exists in list or False if not """
+
+    Args:
+        check_value (str): The string value of a scratch org feature to check
+        list_value (list(str)): The list of scratch org features to check against
+
+    Returns:
+        bool: True if match found in list, False if not
+    """
 
     if ":" not in check_value:
         log.debug("Feature was passed to advanced feature match which does not match format expected.")
@@ -90,66 +109,92 @@ def advanced_feature_match(check_value, list_value):
     for substring in list_value:
         if substring.split(":")[0] == check_value.split(":")[0]:
             chk = True
+
     return chk
 
 
 def check_and_delete_dir(dir_path):
-    """ Deletes a folder (and all contents) if it exists. Returns True if folder has been deleted.
-    :param dir_path: Relative path to directory
-    :return: True when directory has been deleted. False if there was an issue.
+    """Deletes a directory (and all contents) if it exists. Returns True if folder has been deleted.
+
+    Args:
+        dir_path (str): Relative path to the directory within the project
+
+    Returns:
+        bool: True when directory is deleted or the directory does not exist. False if there has been an issue.
     """
 
-    if dir_path is None or dir_path == "":
-        log.error("No Directory Path was provided. Skipping task to delete directory.")
-        return
-    if exists(dir_path):
-        try:
-            shutil.rmtree(f"{dir_path}")
-            log.info(f"Deleted {dir_path} and its contents (if any)")
-            return True
-        except Exception as e:
-            log.error(f"Unable to delete directory with path: {dir_path}. {e}")
-            return False
-    else:
-        log.debug(f"Directory {dir_path} not found. Skipping.")
+    # Run initial Checks
+    if not os.path.exists(dir_path):
+        log.info("Directory already appears to have been removed or does not exist.")
         return True
+
+    if not os.path.isdir(dir_path):
+        log.error(f"The given path ({dir_path}) is not a directory, stopping additional processing.")
+        return False
+
+    # Remove Directory and subdirectories
+    try:
+        shutil.rmtree(f"{dir_path}")
+        log.info(f"Deleted {dir_path} and related sub-directories and files (if any)")
+        return True
+    except Exception as e:
+        log.error(f"Unable to delete directory with path: {dir_path}. {e}")
+        return False
 
 
 def check_and_delete_file(file_path):
-    """ Deletes a File if it exists. Returns True if File has been removed.
-     :param file_path: Relative File path and name of the file to delete.
-     :return: True if deleted and False if there was an issue.
-     """
+    """Deletes a File if it exists. Returns True if File has been removed.
 
-    if file_path == "":
-        return False
-    if exists(file_path):
-        try:
-            os.remove(f"{file_path}")
-            log.info(f"File Deleted: {file_path}")
-            return True
-        except Exception as e:
-            log.error(f"Unable to remove file: {file_path}. {e}")
-            return False
-    else:
-        log.debug(f"File {file_path} not found. Skipping.")
+    Args:
+        file_path (str): The relative path to the file you want to delete.
+
+    Returns:
+        bool: True if file has been deleted or did not exist, False if there was an issue.
+    """
+
+    if not os.path.exists(file_path):
+        log.info(f"File ({file_path}) already appears to have been removed or does not exist.")
         return True
+
+    if not os.path.isfile(file_path):
+        log.error(f"The File path provided ({file_path}) is not a valid path to a file. Stopping further processing")
+        return False
+
+    try:
+        os.remove(f"{file_path}")
+        log.info(f"File Deleted: {file_path}")
+        return True
+    except Exception as e:
+        log.error(f"Unable to delete file: {file_path}. {e}")
+        return False
 
 
 def update_org_file_features(file_location, missing_features, auto: Optional[bool] = False):
-    """ Update scratch org json file features with additional features.
-    :param file_location: Relative path to file and file name
-    :param missing_features: list of missing features
-    :param auto: When True auto updates the file without prompting
-    :return: True when complete, False if there was an issue. """
+    """Updates scratch org json file features with additional features.
 
-    if not exists(file_location) or missing_features is None:
-        raise Exception("[ERROR] File Location was not found or feature list was empty.")
+    Args:
+        file_location (str): Relative path to the scratch org json file.
+        missing_features (list(str)): List of scratch org features which are missing.
+        auto (bool): When True this does not ask the end user for confirmation to make changes.
+
+    Returns:
+        bool: True when the file has been updated or if there are no missing features to process.
+
+    """
+
+    if not os.path.exists(file_location):
+        log.error(f"The provided file path ({file_location}) does not exist.")
+        return False
+
+    if not os.path.isfile(file_location) or not str(file_location).endswith(".json"):
+        log.error(f"The provided file path ({file_location}) is not a valid json file.")
+        return False
+
+    if len(missing_features) == 0:
+        return True
 
     if not auto:
-        get_response = input(
-            f"Would you like to append these missing features to your {file_location} file? (y/n) Default y: ") \
-                       or 'y'
+        get_response = input(f"Would you like to append missing features to your {file_location} file? (y/n) Default y: ") or 'y'
     else:
         get_response = 'y'
 
@@ -169,13 +214,13 @@ def update_org_file_features(file_location, missing_features, auto: Optional[boo
             for current_feature in current_features:
                 if (":" not in current_feature and not current_feature.lower() in clean_feature_list) or (
                         ":" in current_feature and not advanced_feature_match(current_feature.lower(),
-                                                                              clean_feature_list)):
+                    clean_feature_list)):
                     clean_feature_list.append(current_feature.lower())
 
             for missing_feature in missing_features:
                 if (":" not in missing_feature and not missing_feature.lower() in clean_feature_list) or (
                         ":" in missing_feature and not advanced_feature_match(missing_feature.lower(),
-                                                                              clean_feature_list)):
+                    clean_feature_list)):
                     clean_feature_list.append(missing_feature.lower())
 
             clean_feature_list.sort()
@@ -194,14 +239,23 @@ def update_org_file_features(file_location, missing_features, auto: Optional[boo
 
 
 def find_missing_features(main_features_file, check_features_file):
-    """ Compares two json scratch org definition files and checks the main file has all the features which the
+    """Compares two json scratch org definition files and checks the main file has all the features which the
     check file has. You can then optionally update the current project file with missing features.
-    :param main_features_file: Relative path and file name for the file you want to update
-    :param check_features_file: Relative path and file name for the file you want check against
-    :return: List of features """
 
-    if not exists(main_features_file) or not exists(check_features_file):
-        raise Exception("[ERROR] One of the files cannot be found. Check it has not been deleted.")
+        Args:
+            main_features_file (str): Relative path to the scratch org json file which will be updated.
+            check_features_file (str): Relative path to the scratch org json file which be used to compare to.
+
+        Returns:
+            list(str): List of missing scratch org features
+
+    """
+
+    if not os.path.exists(main_features_file):
+        raise Exception(f"The provided file path for the Main File, located at ({main_features_file}), does not exist.")
+
+    if not os.path.exists(check_features_file):
+        raise Exception(f"The provided file path for the Comparison File, located at ({check_features_file}), does not exist.")
 
     log.info(f"Feature Check: Comparing {main_features_file} to {check_features_file}")
 
@@ -213,8 +267,9 @@ def find_missing_features(main_features_file, check_features_file):
         with open(main_features_file) as main_json_file:
             main_json_file_data = json.load(main_json_file)
 
-        if main_json_file_data['features'] is None:
+        if not main_json_file_data['features']:
             raise Exception(f"[ERROR] No features found in file: {main_json_file}. Check the file and try again.")
+
         main_comparison_list = main_json_file_data['features']
         main_comparison_list = [x.lower() for x in main_comparison_list]
 
@@ -224,13 +279,13 @@ def find_missing_features(main_features_file, check_features_file):
 
         if check_json_file_data['features'] is None:
             raise Exception(f"[ERROR] No features found in file: {check_json_file}. Check the file and try again.")
+
         check_comparison_list = check_json_file_data['features']
         check_comparison_list = [x.lower() for x in check_comparison_list]
 
         # Compare both lists and populate missing list
         missing_feature_count = 0
         for missing_feature in check_comparison_list:
-
             add_feature = False
 
             # Separate out features which contain a :
@@ -246,49 +301,49 @@ def find_missing_features(main_features_file, check_features_file):
                 missing_feature_count += 1
 
         if len(missing_features) == 0:
-            log.info(
-                f"[OK] There are no missing features found when comparing to file: {check_features_file}")
+            log.info(f"[OK] There are no missing features found when comparing to file: {check_features_file}")
         else:
-            log.info(
-                f"{missing_feature_count} missing feature(s) found, when comparing to file: {check_features_file}")
-
-        missing_features.sort()
+            log.info(f"{missing_feature_count} missing feature(s) found, when comparing to file: {check_features_file}")
+            missing_features.sort()
 
         return missing_features
+
     except Exception as e:
         raise Exception(f"[ERROR] Failed to compare files. {e}")
 
 
-def check_org_config_files(auto: Optional[bool] = False):
-    """ Checks the orgs/dev.json and orgs/dev_preview.json file for key values """
+def check_org_config_files(auto=False):
+    """Checks the orgs/dev.json and orgs/dev_preview.json file for key settings
+
+        Args:
+            auto (bool): Optional parameter to set the checker to automatically update errors when they are found.
+
+    """
 
     log.info("Scratch Org File Check: Checking your org config files for issues")
     error_found = False
 
-    # Check that dev.json is set to an Enterprise Edition. Partner Enterprise would also pass check.
-    if "enterprise" not in get_json_file_value("orgs/dev.json", "edition").lower():
-        log.info("Scratch Org File Check: [FAIL] Your org/dev.json file is not set to Enterprise edition.")
-        error_found = True
-        if not auto:
-            update_dev_input = input("\n\nWould you like to update the dev.json file edition? (y/n) Default y: ") or 'y'
-        else:
-            update_dev_input = 'y'
-        if update_dev_input == 'y':
-            update_json_file_value('orgs/dev.json', 'edition', 'Enterprise')
-            log.info("Scratch Org File Check: Updated orgs/dev.json to use Enterprise Edition")
+    if not os.path.exists("orgs/dev.json"):
+        raise Exception(f"The provided file path for the dev scratch org definition file, located at (orgs/dev.json), does not exist.")
 
-    if "enterprise" not in get_json_file_value("orgs/dev_preview.json", "edition").lower():
-        log.error(
-            "Scratch Org File Check: [FAIL] Your org/dev_preview.json file is not set to Enterprise edition.")
-        error_found = True
-        if not auto:
-            update_dev_input = input(
-                "Would you like to update the dev_preview.json file edition? (y/n) Default y: ") or 'y'
-        else:
-            update_dev_input = 'y'
-        if update_dev_input == 'y':
-            update_json_file_value('orgs/dev.json', 'edition', 'Enterprise')
-            log.info("Scratch Org File Check: Updated orgs/dev_preview.json to use Enterprise Edition")
+    if not os.path.exists("orgs/dev_preview.json"):
+        raise Exception(f"The provided file path for the dev scratch org definition file, located at (orgs/dev_preview.json), does not exist.")
+
+    for scratch_config_file in ('orgs/dev.json', 'orgs/dev_preview.json'):
+
+        # Check for "Enterprise" or "Partner Enterprise" edition in scratch org definition
+        current_edition = get_json_file_value(scratch_config_file, "edition")
+
+        if current_edition and "enterprise" not in current_edition.lower():
+            log.info(f"Scratch Org File Check: [FAIL] Your {scratch_config_file} file is not set to Enterprise edition.")
+            error_found = True
+            if not auto:
+                update_dev_input = input("\n\nWould you like to update the dev.json file edition? (y/n) Default y: ") or 'y'
+            else:
+                update_dev_input = 'y'
+            if update_dev_input == 'y':
+                update_json_file_value('orgs/dev.json', 'edition', 'Enterprise')
+                log.info(f"Scratch Org File Check: Updated {scratch_config_file} to use Enterprise Edition")
 
     instance = get_json_file_value("orgs/dev_preview.json", "instance") or ""
     if "na135" not in instance.lower():
@@ -309,7 +364,12 @@ def check_org_config_files(auto: Optional[bool] = False):
 
 
 def check_api_versions(project_api_version):
-    """ Checks API Versions within the project are all in sync with cumulusci.yml file api version """
+    """Checks API Versions within the project are all in sync with cumulusci.yml file api version
+
+            Args:
+                project_api_version (str): Current Project API version, defined in cumulusci.yml file.
+
+    """
 
     log.info(f"API Version Check: Checking File API Versions are set to v{project_api_version}")
 
@@ -320,13 +380,15 @@ def check_api_versions(project_api_version):
         log.info("API Version Check: Updated sfdx-project.json File")
 
 
-def source_org_feature_checker(skip_rebuild = False, auto=False):
-    """ Check all source project dev.json files for missing features from current project dev.json file
-    :param skip_rebuild: Set to True when you do no want CumulusCI Cache Rebuilt. Defaults to False
+def source_org_feature_checker(skip_rebuild=False, auto=False):
+    """Check all source project dev.json files for missing features from current project dev.json file
+
+        Args:
+            skip_rebuild (bool): Skips the rebuild step. Typically only used for testing purposes.
+            auto (bool): Optional parameter to set the checker to automatically update errors when they are found.
     """
 
-    log.info("Source Feature Check: Checking that all source dev.json file features are listed in the "
-             "current dev.json file")
+    log.info("Source Feature Check: Checking that all source dev.json file features are listed in the current orgs/dev.json file")
 
     # Prepare Project File
     if not skip_rebuild:
@@ -348,8 +410,7 @@ def source_org_feature_checker(skip_rebuild = False, auto=False):
         main_missing_feature_list.sort()
         update_org_file_features("orgs/dev.json", main_missing_feature_list, auto)
     else:
-        log.info("Source Feature Check: No missing features found when comparing all sources to "
-                 "orgs/dev.json")
+        log.info("Source Feature Check: No missing features found when comparing all sources to orgs/dev.json")
 
 
 def org_feature_checker(auto=False):
@@ -379,7 +440,7 @@ def check_for_missing_files():
 
 
 def download_and_unzip(url: Optional[str] = DEFAULT_UPDATE_LOCATION, archive_password: Optional[str] = "",
-                       ignore_optional_updates: Optional[bool] = False, q_update: Optional[bool] = False):
+        ignore_optional_updates: Optional[bool] = False, q_update: Optional[bool] = False):
     """ Downloads a .zip file and extracts all folders to the root project directory """
 
     log.info("Downloading Update Package")
@@ -446,41 +507,41 @@ def download_and_unzip(url: Optional[str] = DEFAULT_UPDATE_LOCATION, archive_pas
 def check_and_update_old_class_refs():
     # Health Check
     replace_file_text("cumulusci.yml", "tasks.custom.qbrix_utils.HealthChecker",
-                      "qbrix.tools.utils.qbrix_health_check.HealthChecker")
+        "qbrix.tools.utils.qbrix_health_check.HealthChecker")
 
     # Q Brix Update
     replace_file_text("cumulusci.yml", "tasks.custom.qbrix_utils.QBrixUpdater",
-                      "qbrix.tools.utils.qbrix_update.QBrixUpdater")
+        "qbrix.tools.utils.qbrix_update.QBrixUpdater")
 
     # FART
     replace_file_text("cumulusci.yml", "tasks.custom.fart.FART",
-                      "qbrix.tools.utils.qbrix_fart.FART")
+        "qbrix.tools.utils.qbrix_fart.FART")
 
     # Batch Apex
     replace_file_text("cumulusci.yml", "tasks.custom.batchanonymousapex.BatchAnonymousApex",
-                      "qbrix.tools.utils.qbrix_batch_apex.BatchAnonymousApex")
+        "qbrix.tools.utils.qbrix_batch_apex.BatchAnonymousApex")
 
     # Org Generator
     replace_file_text("cumulusci.yml", "tasks.custom.orggenerator.Spin",
-                      "qbrix.tools.utils.qbrix_org_generator.Spin")
+        "qbrix.tools.utils.qbrix_org_generator.Spin")
 
     # Init Project
     replace_file_text("cumulusci.yml", "tasks.custom.qbrix_utils.Initialise_Project",
-                      "qbrix.tools.utils.qbrix_project_setup.InitProject")
+        "qbrix.tools.utils.qbrix_project_setup.InitProject")
     replace_file_text("cumulusci.yml", "tasks.custom.qbrix_utils.InitProject",
-                      "qbrix.tools.utils.qbrix_project_setup.InitProject")
+        "qbrix.tools.utils.qbrix_project_setup.InitProject")
 
     # List Q Brix
     replace_file_text("cumulusci.yml", "tasks.custom.qbrix_sf.ListQBrix",
-                      "qbrix.salesforce.qbrix_salesforce_tasks.ListQBrix")
+        "qbrix.salesforce.qbrix_salesforce_tasks.ListQBrix")
 
     # Banner
     replace_file_text("cumulusci.yml", "tasks.custom.announce.CreateBanner",
-                      "qbrix.tools.shared.qbrix_console_utils.CreateBanner")
+        "qbrix.tools.shared.qbrix_console_utils.CreateBanner")
 
     # Mass File Ops
     replace_file_text("cumulusci.yml", "tasks.custom.qbrix_utils.MassFileOps",
-                      "qbrix.tools.utils.qbrix_mass_ops.MassFileOps")
+        "qbrix.tools.utils.qbrix_mass_ops.MassFileOps")
 
     # SFDMU
     replace_file_text("cumulusci.yml", "tasks.custom.sfdmuload.SFDMULoad", "qbrix.tools.data.qbrix_sfdmu.SFDMULoad")
@@ -577,7 +638,7 @@ def upsert_gitignore_entries(list_entries):
 
 def check_permset_group_files():
     psg_files = glob.glob("force-app/main/default/permissionsetgroups" + "/**/*.permissionsetgroup-meta.xml",
-                          recursive=True)
+        recursive=True)
 
     if len(psg_files) > 0:
         log.info("Checking Permission Set Group Files...")
@@ -587,12 +648,13 @@ def check_permset_group_files():
     else:
         log.info("No Permission Set Group Files in Project, skipping check.")
 
+
 def add_prefix(path, prefix):
     parts = os.path.split(path)
     return os.path.join(parts[0], prefix + parts[1])
 
-def update_references(old_value, new_value, prefix=''):
 
+def update_references(old_value, new_value, prefix=''):
     if old_value == 'All':
         return
 
@@ -602,7 +664,7 @@ def update_references(old_value, new_value, prefix=''):
     for root, dirs, files in os.walk(project_path):
         for file_name in files:
             if "external_id" in os.path.basename(file_name).lower() or os.path.basename(file_name).lower().startswith("sdo_") or os.path.basename(file_name).lower().startswith("xdo_") or os.path.basename(file_name).lower().startswith("db_"):
-                #print(f"SKIPPED: {file_name}")
+                # print(f"SKIPPED: {file_name}")
                 continue
 
             if os.path.basename(root) in {"standardValueSets", "roles", "corsWhitelistOrigins"}:
@@ -619,12 +681,12 @@ def update_references(old_value, new_value, prefix=''):
                     f.write(new_contents)
                     print(f'Updated references for {old_value} in {file_path}')
 
-def assign_prefix_to_files(prefix, parent_folder='force-app/main/default', interactive_mode=False):
 
+def assign_prefix_to_files(prefix, parent_folder='force-app/main/default', interactive_mode=False):
     # Validation
     if not prefix:
         raise Exception("Error: No prefix provided to the Mass Rename Tool. You must provide a prefix.")
-    
+
     if not os.path.exists(parent_folder):
         raise Exception("Parent folder doesn't exist. Please correct the folder path and try again.")
 
@@ -632,13 +694,13 @@ def assign_prefix_to_files(prefix, parent_folder='force-app/main/default', inter
     prefix = prefix.replace("_", "")
     under_prefix = str(prefix).upper() + "_"
     open_prefix = str(prefix).upper() + " "
-    
+
     # Set Matching Pattern for Cumstom API references
     PATTERN = re.compile(r'^.+$')
     FILE_PATTERN = re.compile(r'^.+.')
 
     paths_to_rename = []
-   
+
     # Find and Update Custom Object Folder Names
     for root, dirs, files in os.walk(os.path.join(parent_folder, 'objects')):
         for dir_name in dirs:
@@ -658,11 +720,9 @@ def assign_prefix_to_files(prefix, parent_folder='force-app/main/default', inter
                 if approve_change:
                     paths_to_rename.append((old_path, new_path))
                     update_references(os.path.basename(old_path), os.path.basename(new_path), prefix)
-                
 
         if root.endswith('compactLayouts') or root.endswith('recordTypes') or root.endswith('businessProcesses'):
             for file_name in files:
-
                 if root.endswith('listViews') and "All.listView" in file_name:
                     continue
 
@@ -672,7 +732,7 @@ def assign_prefix_to_files(prefix, parent_folder='force-app/main/default', inter
                         new_path = add_prefix(old_path, open_prefix)
                     else:
                         new_path = add_prefix(old_path, under_prefix)
-                    #os.rename(old_path, new_path)
+                    # os.rename(old_path, new_path)
                     print(f'CUSTOM OBJECT FILE FOUND:\n    Current Path: {old_path}\n    Updated Path: {new_path}')
 
                     old_value = os.path.splitext(os.path.basename(old_path))[0].split('.')[0]
@@ -691,13 +751,10 @@ def assign_prefix_to_files(prefix, parent_folder='force-app/main/default', inter
                         paths_to_rename.append((old_path, new_path))
                         update_references(old_value, new_value, prefix)
 
-                    
-
     # Update Custom File Names
     file_list = glob.glob(f'{parent_folder}/**/*.*-meta.xml', recursive=True)
 
     for current_file in file_list:
-
         file_name = os.path.basename(current_file)
         directory_name = os.path.dirname(current_file)
 
@@ -733,6 +790,7 @@ def assign_prefix_to_files(prefix, parent_folder='force-app/main/default', inter
         os.rename(path_to_update, new_updated_path)
         print(f"FILE OR FOLDER RENAMED:\n    Previous Path: {path_to_update}\n    New Path: {new_updated_path}")
 
+
 def create_external_id_field(file_path):
     with open(file_path) as file:
         for line in file:
@@ -759,6 +817,7 @@ def create_external_id_field(file_path):
                         f.write('    <unique>false</unique>\n')
                         f.write('</CustomField>\n')
 
+
 def run_command(command):
     process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True)
     output, error = process.communicate()
@@ -766,7 +825,8 @@ def run_command(command):
     if error:
         raise Exception(error)
     return output, error
-    
+
+
 def compare_directories(dcmp):
     new_or_changed = []
     for name in dcmp.right_only:
@@ -777,8 +837,8 @@ def compare_directories(dcmp):
         new_or_changed.extend(compare_directories(sub_dcmp))
     return new_or_changed
 
-def compare_metadata(target_org_alias):
 
+def compare_metadata(target_org_alias):
     # Default Org Command
     if os.path.exists('src'):
         shutil.rmtree('src')
@@ -813,7 +873,6 @@ def compare_metadata(target_org_alias):
         log.info("Generating new update package in directory: upgrade_src")
 
         for file_path in new_or_changed:
-
             if os.path.basename(os.path.dirname(file_path)) in {'settings', 'labels'}:
                 log.info(f"Skipping {file_path} as it contains a high risk metadata type. Review the contents individually.")
                 continue
@@ -835,8 +894,8 @@ def compare_metadata(target_org_alias):
 
     return changes
 
-def push_changes(target_org_alias):
 
+def push_changes(target_org_alias):
     # Push Changes
     push_command = f"cci task run deploy --path upgrade_src --org {target_org_alias}"
     push_output, push_error = run_command(push_command)
@@ -846,12 +905,11 @@ def push_changes(target_org_alias):
 
 
 def create_permission_set_file(name, label):
-
     if os.path.exists(f"force-app/main/default/permissionsets/{name}.permissionset-meta.xml"):
         os.remove(f"force-app/main/default/permissionsets/{name}.permissionset-meta.xml")
 
     # Create the root element
-    root = ET.Element("PermissionSet", attrib={"xmlns":"http://soap.sforce.com/2006/04/metadata"})
+    root = ET.Element("PermissionSet", attrib={"xmlns": "http://soap.sforce.com/2006/04/metadata"})
 
     # Set the label
     label_element = ET.SubElement(root, "label")
@@ -878,7 +936,6 @@ def create_permission_set_file(name, label):
                 fields_folder_path = os.path.join(object_folder_path, "fields")
                 if os.path.isdir(fields_folder_path):
                     for field_file in os.listdir(fields_folder_path):
-
                         # # Add object permissions for lookup fields that reference objects not in the project
                         field_path = os.path.join(fields_folder_path, field_file)
                         with open(field_path, "r") as file:
