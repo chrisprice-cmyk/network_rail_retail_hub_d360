@@ -70,10 +70,20 @@ class RunPreflight(BaseTask, ABC):
             print('Error on Preflight')
 
     def deploy_settings(self):
+        
+        settings_path = "force-app/main/default/settings"
+
+        cwd = os.getcwd()
+        pwd = os.getenv("PWD")
+
+        if pwd != cwd:
+            settings_path = os.path.join(cwd, settings_path)
+            self.logger.info(f"Updating settings path to {settings_path}")
+
         # Deploy Settings if Present
-        if os.path.exists("force-app/main/default/settings") and not self.skip_settings_deployment:
+        if os.path.exists(settings_path) and not self.skip_settings_deployment:
             self.logger.info("PREFLIGHT: Deploying Settings Directory from force-app/main/default/settings")
-            run_command(f"cci task run deploy --path force-app/main/default/settings --org {self.org_config.name}")
+            run_command(f"cci task run deploy --path {settings_path} --org {self.org_config.name}")
         else:
             self.logger.info("PREFLIGHT: Skipping Settings Deployment.")
 
