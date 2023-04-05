@@ -94,7 +94,7 @@ class QbrixSalesCloudKeywords(BaseLibrary):
             sleep(5)
             existing_list = self.browser.get_select_options("iframe >>> #duel_select_1")
 
-            results = self.salesforceapi.soql_query(f"SELECT FirstName, LastName FROM User WHERE ProfileId IN (SELECT ID FROM Profile WHERE Name = 'System Administrator') AND UserRoleId IN (SELECT ID FROM UserRole WHERE Name = 'CEO') AND FirstName != '' AND LastName != 'Bot'")
+            results = self.salesforceapi.soql_query(f"SELECT FirstName, LastName FROM User WHERE IsActive=true and ProfileId IN (SELECT ID FROM Profile WHERE Name = 'System Administrator') AND UserRoleId IN (SELECT ID FROM UserRole WHERE Name = 'CEO') AND FirstName != '' AND LastName != 'Bot'")
             if results and results["totalSize"] > 0:
                 for record in results["records"]:
                     name = record["FirstName"] + ' ' + record["LastName"]
@@ -118,24 +118,27 @@ class QbrixSalesCloudKeywords(BaseLibrary):
             
             sleep(8)
 
-        # Setup Elliot Executive for VP of Sales
-        visible = "visible" in self.browser.get_element_states(
-            "iframe >>> :nth-match(img.plus:left-of(span.label:text-is('CEO')),1)")
-        if visible:
-            self.browser.click("iframe >>> :nth-match(img.plus:left-of(span.label:text-is('CEO')),1)")
-            sleep(3)
-            self.browser.click("iframe >>> span:has-text('VP of Sales') >> a:text-is('Enable Users')")
-            sleep(5)
-            existing_list = self.browser.get_select_options("iframe >>> #duel_select_1")
-            if len(existing_list) > 0 and not any(d['label'] == 'Elliot Executive' for d in existing_list):
-                self.browser.select_options_by("iframe >>> td.selectCell:has-text('Available Users') >> select",
-                                               SelectAttribute.text, "Elliot Executive")
-                self.browser.click("iframe >>> img.rightArrowIcon")
-                sleep(1)
-                self.browser.click("iframe >>> .btn:text-is('Save')")
-            else:
-                self.browser.click("iframe >>> .btn:text-is('Cancel')")
-            sleep(2)
+        # Setup Elliot Executive for VP of Sales - User.007
+        results = self.salesforceapi.soql_query(f"SELECT id FROM User WHERE External_ID__c ='User.007'")
+        if results and results["totalSize"] > 0:
+            visible = "visible" in self.browser.get_element_states(
+                "iframe >>> :nth-match(img.plus:left-of(span.label:text-is('CEO')),1)")
+            if visible:
+                self.browser.click("iframe >>> :nth-match(img.plus:left-of(span.label:text-is('CEO')),1)")
+                sleep(3)
+                self.browser.click("iframe >>> span:has-text('VP of Sales') >> a:text-is('Enable Users')")
+                sleep(5)
+                existing_list = self.browser.get_select_options("iframe >>> #duel_select_1")
+                if len(existing_list) > 0 and not any(d['label'] == 'Elliot Executive' for d in existing_list):
+                    self.browser.select_options_by("iframe >>> td.selectCell:has-text('Available Users') >> select",
+                                                SelectAttribute.text, "Elliot Executive")
+                    self.browser.click("iframe >>> img.rightArrowIcon")
+                    sleep(1)
+                    self.browser.click("iframe >>> .btn:text-is('Save')")
+                else:
+                    self.browser.click("iframe >>> .btn:text-is('Cancel')")
+                sleep(2)
+                
 
         sleep(10)
 
