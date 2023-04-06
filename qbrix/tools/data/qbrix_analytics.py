@@ -1,23 +1,25 @@
+import base64
 import glob
+import gzip
 import json
+import math
 import os
 import subprocess
 from abc import ABC
 from pathlib import Path
 import shlex
-from cumulusci.core.tasks import BaseTask
+from time import sleep
+from cumulusci.tasks.salesforce.BaseSalesforceApiTask import BaseSalesforceApiTask
+
 from qbrix.tools.shared.qbrix_console_utils import init_logger
 
 log = init_logger()
 
 
 def cleanup_null_values(file_location):
-
     if not str(file_location).endswith(".json"):
         log.error(f"The file provided was not a json file. File Location: {file_location}")
         return
-
-    log.info(f"Cleaning {file_location}... ")
 
     with open(file_location, 'r') as f:
         data = json.load(f)
@@ -32,7 +34,6 @@ def cleanup_null_values(file_location):
 
 
 def get_app_name(file_location):
-
     if not file_location:
         log.error("File was not passed. Skipping file")
         return None
@@ -57,7 +58,7 @@ def get_app_name(file_location):
         return ""
 
 
-class AnalyticsManager(BaseTask, ABC):
+class AnalyticsManager(BaseSalesforceApiTask, ABC):
     task_docs = """
     Q Brix Analytics Manager handles data which is contained within Analytics CRM Dataset Files. It downloads the data to csv files within the datasets/analytics folder.
 
@@ -65,6 +66,7 @@ class AnalyticsManager(BaseTask, ABC):
     Download (or d): Which Downloads and Cleans Up The Datasets (Note: You still need to download json files when you have uploaded your initial csv, see docs for notes) \n
     Upload (or u): Which Uploads the datasets \n
     Clean (or c): Which cleans existing files \n
+    Share (or s): Which updates sharing for Analytics Apps in your force-app/main/default/wave directory \n
     """
 
     task_options = {
@@ -101,20 +103,18 @@ class AnalyticsManager(BaseTask, ABC):
         wave_files = glob.glob(self.dataset_folder + "/*.json", recursive=True)
         for wave in wave_files:
             cleanup_null_values(wave)
-        log.info("Cleaning Completed!")
 
     def download_datasets(self):
-
         if not os.path.exists("force-app/main/default/wave"):
             log.debug("No Analytics Folder Found. Skipping Dataset Download.")
             return
 
         wave_dataset_files = glob.glob("force-app/main/default/wave" + "/*.wds-meta.xml", recursive=True)
 
-        log.info("Starting Download of dataset files")
+        self.logger.info("Starting Download of dataset files")
 
         if not os.path.exists(self.dataset_folder):
-            log.info("Creating Dataset Directory")
+            self.logger.info("Creating Dataset Directory")
             os.mkdir(self.dataset_folder)
 
         subprocess.run(f"sf config set instanceUrl={self.org_config.instance_url}", shell=True, capture_output=True)
@@ -124,18 +124,17 @@ class AnalyticsManager(BaseTask, ABC):
 
             with subprocess.Popen(shlex.split(
                     f"sfdx shane:analytics:dataset:download -n {dataset_name} -t {self.dataset_folder} -u {self.org_config.access_token}"),
-                                  stdout=subprocess.PIPE) as result:
+                    stdout=subprocess.PIPE) as result:
                 pass
 
             if result.returncode != 0:
                 log.error(result.stderr)
             else:
-                log.info(f"Dataset {dataset_name} has been downloaded to {self.dataset_folder}")
+                self.logger.info(f"Dataset {dataset_name} has been downloaded to {self.dataset_folder}")
 
         subprocess.run("sf config unset instanceUrl", shell=True, capture_output=True)
 
     def upload_dataset_data(self):
-
         if not os.path.exists("force-app/main/default/wave"):
             log.debug("No Source Analytics Folder Found at the expected location (force-app/main/default/wave). Skipping Dataset Deployment.")
             return
@@ -149,86 +148,232 @@ class AnalyticsManager(BaseTask, ABC):
         wave_dataset_files = glob.glob("force-app/main/default/wave" + "/*.wds-meta.xml", recursive=True)
 
         if len(wave_dataset_files) > 0:
-            subprocess.run(f"sf config set instanceUrl={self.org_config.instance_url}", shell=True, capture_output=True)
+            for file in wave_dataset_files:
+                dataset_name = Path(file).stem.replace(".wds-meta", "")
+                data_file_location = f"{self.dataset_folder}/{dataset_name}.csv"
+                app_name = get_app_name(file)
 
-        app_names = []
+                if os.path.exists(data_file_location):
+                    self.logger.info(f"Uploading {data_file_location}...")
 
-        for file in wave_dataset_files:
-            dataset_name = Path(file).stem.replace(".wds-meta", "")
-            data_file_location = f"{self.dataset_folder}/{dataset_name}.csv"
-            app_name = get_app_name(file)
-            shane_query = f"sfdx shane:analytics:dataset:upload -f {data_file_location} -n {dataset_name} -u {self.org_config.access_token}"
+                    if app_name != "":
+                        self.logger.info(f"Dataset will be related to Analytics App: {app_name}")
 
-            if os.path.exists(data_file_location):
+                    related_json_file = f"{self.dataset_folder}/{dataset_name}.json"
 
-                log.info(f"Uploading {data_file_location}...")
+                    try:
+                        if os.path.exists(related_json_file):
+                            self.logger.info(f"Dataset will use local json file: {related_json_file}")
+                            self.upload_csv_to_external_data_part(data_file_location, dataset_name, related_json_file, app_name)
+                        else:
+                            self.upload_csv_to_external_data_part(data_file_location, dataset_name, {}, app_name)
+                    except Exception as e:
+                        self.logger.error(f"Upload Failed: {e}")
 
-                if app_name != "":
-                    log.info(f"Relating dataset to app: {app_name}")
-                    shane_query = f"{shane_query} -a {app_name}"
-                    app_names.append(app_name)
-
-                related_json_file = f"{self.dataset_folder}/{dataset_name}.json"
-                if os.path.exists(related_json_file):
-                    shane_query = f"{shane_query} -m {related_json_file}"
-
-                process = subprocess.Popen(shlex.split(shane_query), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-                output, error = process.communicate()
-
-                if process.returncode != 0:
-                    if error:
-                        log.error(error.strip())
                 else:
-                    log.info(f"Uploaded {data_file_location} successfully!")
+                    log.error(
+                        f"Expected to find dataset file at {data_file_location} and it was missing. Please check you have downloaded the dataset data files. Skipping this file.")
 
+    def create_insights_external_data(self, data_part_name, json_file=None, app_name=None):
+        # Create the InsightsExternalData object
+        insights_external_data = {
+            "EdgemartLabel": data_part_name,
+            "Format": "Csv",
+            "EdgemartAlias": data_part_name,
+            "Operation": "Overwrite",
+            "NotificationSent": "Never",
+            "FileName": "QBrixUploadFile"
+        }
+
+        if json_file:
+            with open(json_file, "r") as json_file:
+                json_data = json.load(json_file)
+
+            metadata_json = base64.b64encode(json.dumps(json_data).encode("utf-8")).decode("ascii")
+
+            insights_external_data.update({"MetadataJson": metadata_json})
+
+        if app_name:
+            insights_external_data.update({"EdgemartContainer": app_name})
+
+        insights_external_data_id = self.sf.InsightsExternalData.create(insights_external_data)["id"]
+        return insights_external_data_id
+
+    def update_insights_external_data_action(self, insights_external_data_id):
+        # Update the InsightsExternalData record
+        self.sf.InsightsExternalData.update(insights_external_data_id, {"Action": "Process"})
+
+    def upload_chunk_to_external_data_part(self, insights_external_data_id, chunk_data, part_number):
+        # Convert the chunk data to a Base64-encoded string
+        encoded_chunk_data = base64.b64encode(chunk_data).decode("ascii")
+
+        # Create the InsightsExternalDataPart object
+        insights_external_data_part = {
+            "CompressedDataLength": len(chunk_data),
+            "DataFile": encoded_chunk_data,
+            "DataLength": len(chunk_data),
+            "InsightsExternalDataId": insights_external_data_id,
+            "PartNumber": part_number
+        }
+        insights_external_data_part_id = self.sf.InsightsExternalDataPart.create(insights_external_data_part)["id"]
+        return insights_external_data_part_id
+
+    def upload_csv_to_external_data_part(self, csv_file_path, data_part_name, json_file=None, app_name=None):
+        chunk_size = 10000000  # 10MB
+
+        # Create the InsightsExternalData object
+        title_message = f"Creating Dataset Called: {data_part_name}"
+
+        self.logger.info("=" * len(title_message))
+        self.logger.info(f"Creating Dataset Upload Job for: {data_part_name}")
+        self.logger.info("=" * len(title_message))
+        insights_external_data_id = self.create_insights_external_data(data_part_name, json_file, app_name)
+        self.logger.info(f"Upload Job created with ID: {insights_external_data_id}")
+
+        # Compress the CSV file
+        self.logger.info(f"Checking csv file: {csv_file_path}")
+        with open(csv_file_path, "rb") as csv_file:
+            csv_data = csv_file.read()
+            compressed_csv_data = gzip.compress(csv_data)
+
+        # Upload the compressed CSV data in chunks if it's larger than 10MB
+        num_chunks = math.ceil(len(compressed_csv_data) / chunk_size)
+        if num_chunks > 1:
+            for i in range(num_chunks):
+                start_index = i * chunk_size
+                end_index = min((i + 1) * chunk_size, len(compressed_csv_data))
+                chunk_data = compressed_csv_data[start_index:end_index]
+                self.logger.info(f"Uploading Data (Chunk {i}/{num_chunks}) for: {data_part_name}")
+                self.upload_chunk_to_external_data_part(insights_external_data_id, chunk_data, i + 1)
+        else:
+            self.logger.info(f"Uploading Data for: {data_part_name}")
+            self.upload_chunk_to_external_data_part(insights_external_data_id, compressed_csv_data, 1)
+
+        self.logger.info(f"Data Upload Complete! Starting Analytics Upload Processing for: {data_part_name}")
+        self.update_insights_external_data_action(insights_external_data_id)
+
+        while True:
+            insights_external_data = self.sf.InsightsExternalData.get(insights_external_data_id)
+            status = insights_external_data["Status"]
+            status_message = insights_external_data["StatusMessage"]
+            if status == "Completed" or status == "CompletedWithWarnings":
+                break
+            elif status in ["Aborted", "Failed"]:
+                raise Exception(f"Job failed with status '{status}' and status message: {status_message}.")
             else:
+                self.logger.info(f"Job status is '{status}'. Sleeping for 5 seconds...")
+                sleep(5)
 
-                log.error(
-                    f"Expected to find dataset file at {data_file_location} and it was missing. Please check you have downloaded the dataset data files. Skipping this file.")
+        self.logger.info("Upload Complete!")
 
-        subprocess.run("sf config unset instanceUrl", shell=True, capture_output=True)
+    def remove_user_shares(self, folder_shares):
+        # Use a list comprehension to filter out any shares with a shareType of "User"
+        return [share for share in folder_shares if share.get("shareType") != "user"]
+    
+    def remove_unused_keys(self, folder_shares):
+        # Use a list comprehension with a dictionary comprehension to remove any unused keys
+        return [{key: share[key] for key in ("accessType", "shareType")} for share in folder_shares]
 
-        if self.share_to_all_portal_users or self.share_to_all_internal_users:
-            self.share_app(app_names)
+    def update_folder_sharing(self, folder_name):
 
-    def share_app(self, app_names):
+        if not self.share_to_all_internal_users or not self.share_to_all_portal_users:
+            self.logger.info("Running as Sharing Mode although no sharing specified. Check the options for the task.")
+            return
+        
+        self.logger.info(f"Checking sharing settings for Analytics App: {folder_name}")
 
-        if not app_names:
+        # Query for the folder's ID based on its name
+        folder_query = f"SELECT Id FROM Folder WHERE Name = '{folder_name}' and Type = 'Insights'"
+        folder_id = self.sf.query(folder_query)["records"][0]["Id"]
+
+        # Retrieve the metadata for the folder
+        headers = {
+            "Content-Type": "application/json; charset=UTF-8",
+            "Accept": "application/json"
+        }
+        endpoint = f"wave/folders/{folder_id}"
+        response = self.sf.restful(endpoint, headers=headers, method="GET")
+
+        folder_metadata = dict(response)
+        folder_shares = []
+
+        if response["shares"]:
+            folder_shares = self.remove_user_shares(response["shares"])
+            folder_shares = self.remove_unused_keys(folder_shares)
+            
+            if self.share_to_all_internal_users:
+                if len([share for share in folder_shares if share.get("shareType") == "organization"]) < 1:
+                    folder_shares.append({'accessType': 'manage', 'shareType': 'organization'})
+                else:
+                    self.logger.info("Application Already Shared with Organization")
+
+            if self.share_to_all_portal_users:
+                # Share to community users
+                if len([share for share in folder_shares if share.get("shareType") == "allcspusers"]) < 1:
+                    folder_shares.append({'accessType': 'view', 'shareType': 'allcspusers'})
+                else:
+                    self.logger.info("Application Already Shared with Community Users")
+
+                # Share to Partner Community Users
+                if len([share for share in folder_shares if share.get("shareType") == "allprmusers"]) < 1:
+                    folder_shares.append({'accessType': 'view', 'shareType': 'allprmusers'})
+                else:
+                    self.logger.info("Application Already Shared with Partner Community Users")
+
+        folder_metadata.update({"shares": folder_shares})
+
+        body = {
+            "shares": folder_shares,
+        }
+
+        self.sf.restful(
+            endpoint,
+            data=json.dumps({
+              "shares": folder_shares
+            }),
+            method="PATCH",
+        )
+
+        self.logger.info(f"Sharing Updated for {folder_name}")
+
+    def update_sharing_for_applications(self):
+        if not os.path.exists("force-app/main/default/wave"):
+            log.debug("No Source Analytics Folder Found at the expected location (force-app/main/default/wave). Skipping Dataset Deployment.")
             return
 
-        extra_cmd = f"sfdx shane:analytics:app:share -u {self.org_config.access_token}"
+        wave_app_files = glob.glob("force-app/main/default/wave" + "/*.wapp-meta.xml", recursive=True)
 
-        if self.share_to_all_portal_users or self.share_to_all_internal_users:
+        if len(wave_app_files) == 0:
+            self.logger.info("No Wave Application Files found. Skipping.")
+            return
 
-            # Clean Up Names of App Passed to method
-            clean_list = list(dict.fromkeys(app_names))
-
-            # Process Apps
-            for app in clean_list:
-
-                if self.share_to_all_portal_users:
-                    extra_cmd += " --allcsp"
-
-                if self.share_to_all_internal_users:
-                    extra_cmd += " --org"
-
-                log.info(f"Sharing Analytics App: {app}")
-                subprocess.run(f"sf config set instanceUrl={self.org_config.instance_url}", shell=True, capture_output=True)
-                subprocess.run(extra_cmd, shell=True, capture_output=True)
-
-        subprocess.run("sf config unset instanceUrl", shell=True, capture_output=True)
+        for app in wave_app_files:
+            filename = os.path.basename(app)
+            app_name = filename[:-len(".wapp-meta.xml")]
+            self.update_folder_sharing(app_name)
 
     def _run_task(self):
-
-        log.info("Starting QBrix Analytics Manager")
+        self.logger.info("================================")
+        self.logger.info("Starting QBrix Analytics Manager")
+        self.logger.info("================================")
 
         if not self.mode or self.mode.lower() == "upload" or self.mode.lower() == "u":
+            self.logger.info("Running in Upload Mode")
             self.upload_dataset_data()
 
         if self.mode.lower() == "download" or self.mode.lower() == "d":
+            self.logger.info("Running in Download Mode")
             self.download_datasets()
             self.run_cleaners()
 
         if self.mode.lower() == "clean" or self.mode.lower() == "c":
+            self.logger.info("Running in Clean Only Mode")
             self.run_cleaners()
+
+        if self.mode.lower() == "share" or self.mode.lower() == "s":
+            self.logger.info("Running in Sharing Mode")
+            self.update_sharing_for_applications()
+
+        self.logger.info("=======================================")
+        self.logger.info("Q Brix Manager has completed all tasks!")
+        self.logger.info("=======================================")
