@@ -5,6 +5,10 @@ import json
 import math
 import os
 import subprocess
+import json
+import csv
+import io
+import requests
 from abc import ABC
 from pathlib import Path
 import shlex
@@ -115,24 +119,19 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
 
         if not os.path.exists(self.dataset_folder):
             self.logger.info("Creating Dataset Directory")
-            os.mkdir(self.dataset_folder)
+            os.makedirs(self.dataset_folder)
 
-        subprocess.run(f"sf config set instanceUrl={self.org_config.instance_url}", shell=True, capture_output=True)
+        org_datasets = self.get_datasets_from_org()
 
         for file in wave_dataset_files:
             dataset_name = Path(file).stem.replace(".wds-meta", "")
 
-            with subprocess.Popen(shlex.split(
-                    f"sfdx shane:analytics:dataset:download -n {dataset_name} -t {self.dataset_folder} -u {self.org_config.access_token}"),
-                    stdout=subprocess.PIPE) as result:
-                pass
-
-            if result.returncode != 0:
-                log.error(result.stderr)
-            else:
+            if dataset_name in org_datasets:
+                dataset_details = org_datasets.get(dataset_name)
+                self.generate_csv_from_wave_dataset_version(dataset_details["id"], 'datasets/analytics', dataset_name, dataset_details["version"])
                 self.logger.info(f"Dataset {dataset_name} has been downloaded to {self.dataset_folder}")
-
-        subprocess.run("sf config unset instanceUrl", shell=True, capture_output=True)
+            else:
+                self.logger.info(f"{dataset_name} is not present in the target org. Skipping.")
 
     def upload_dataset_data(self):
         if not os.path.exists("force-app/main/default/wave"):
@@ -352,6 +351,93 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
             app_name = filename[:-len(".wapp-meta.xml")]
             self.update_folder_sharing(app_name)
 
+    def generate_csv_from_wave_dataset_version(self, dataset_id, target_folder, target_filename, version_id=''):
+        # get the requested datasetVersion
+        dataset_version_endpoint = f'wave/datasets/{dataset_id}/versions/{version_id}'
+        dataset_version = self.sf.restful(dataset_version_endpoint, method="GET")
+
+        # get fields from dates
+        fields_from_dates = [d["fields"] for d in dataset_version["xmdMain"]["dates"]]
+
+        # filter out fields that are not in fields from dates
+        field_names = []
+        for dim in dataset_version["xmdMain"]["dimensions"]:
+            if dim["field"]:        
+                if dim["field"] not in fields_from_dates:
+                    field_names.append(dim["field"])
+        for measure in dataset_version["xmdMain"]["measures"]:
+            if measure["field"]:
+                if measure["field"] not in fields_from_dates:
+                    field_names.append(measure["field"])
+
+        # generate query string to load dataset and select specific fields
+        select_clause = ", ".join(["'{}' as '{}'".format(f, f) for f in field_names])
+        base_query = 'q = load "{}"; q = foreach q generate {};'.format(dataset_id+"/"+version_id, select_clause)
+        base_query = base_query + ' q = limit q 1000000000;'
+
+        # create output file
+        if not os.path.exists(target_folder):
+            os.makedirs(target_folder)
+        out_file = os.path.join(target_folder, target_filename + ".csv")
+
+        # execute the query and stream the results to the input stream
+        query_url = "{}wave/query".format(self.sf.base_url)
+        headers = {"Content-Type": "application/json", "Authorization": "Bearer {}".format(self.sf.session_id)}
+        query_params = {"query": base_query}
+
+        query_response = requests.post(query_url, headers=headers, data=json.dumps(query_params))
+
+        if query_response.status_code == 200:
+            data = json.loads(query_response.content.decode('utf-8'))
+
+            if data and data['results']['records']:
+                with open(out_file, 'w', encoding='utf-8', newline='') as csvfile:
+                    writer = csv.DictWriter(csvfile, fieldnames=field_names)
+                    writer.writeheader()
+                    for record in data['results']['records']:
+                        writer.writerow(record)
+
+        else:
+            self.logger.error("Request Failed")
+            self.logger.info(json.loads(query_response.content.decode('utf-8')))
+
+        
+
+    def get_datasets_from_org(self):
+
+        # Retrieve the list of datasets
+        headers = {
+            "Content-Type": "application/json; charset=UTF-8",
+            "Accept": "application/json"
+        }
+        endpoint = f"wave/datasets/"
+        response = self.sf.restful(endpoint, method="GET")
+
+        org_dataset_dict = {}
+
+        if response:
+            for dataset_dict in list(response["datasets"]):
+
+
+                
+                dataset = dict(dataset_dict)
+                dataset_version = dataset.get("currentVersionId")
+
+                if not dataset_version:
+                    dataset_version = ''
+
+                org_dataset_dict.update({dataset["label"]: {"id": dataset["id"], "version": dataset_version}})
+
+
+                # if dataset_name == "ClientTransactionsRB_Investments":
+
+                #     self.generate_csv_from_wave_dataset_version(dataset_id, 'test_dir', dataset_name, dataset_version)
+                #     self.logger.info(f"Data for {dataset_name} Downloaded!")
+
+   
+        return org_dataset_dict      
+
+
     def _run_task(self):
         self.logger.info("================================")
         self.logger.info("Starting QBrix Analytics Manager")
@@ -373,6 +459,9 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
         if self.mode.lower() == "share" or self.mode.lower() == "s":
             self.logger.info("Running in Sharing Mode")
             self.update_sharing_for_applications()
+
+        if self.mode.lower() == "t":
+            self.get_datasets_from_org()
 
         self.logger.info("=======================================")
         self.logger.info("Q Brix Manager has completed all tasks!")
