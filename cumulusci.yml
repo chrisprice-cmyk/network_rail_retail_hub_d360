@@ -184,6 +184,11 @@ tasks:
       entrypoint: deploy_qbrix
       etnrypointtype: flow
 
+  qbrix_cache_add:
+    description: Run the datapack via apex in the new datamodel
+    class_path: qbrix.tools.utils.qbrix_orgconfig_hydrate.NGCacheAdd
+
+
   #------------------------------------#
   # DATA TOOL INTEGRATION              #
   #------------------------------------#
