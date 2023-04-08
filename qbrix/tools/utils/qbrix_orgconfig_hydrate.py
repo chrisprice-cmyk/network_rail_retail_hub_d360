@@ -1,6 +1,7 @@
 import json
 import requests
 
+
 from abc import abstractmethod
 from cumulusci.core.config import ScratchOrgConfig
 from cumulusci.tasks.sfdx import SFDXBaseTask
@@ -33,7 +34,6 @@ class NGAbort(SFDXBaseTask):
         self._prepruntime()
         raise Exception(f'This QBrix was stopped due to :: {self.abortmessage}')
         
-
 class NGOrgConfig(SFDXBaseTask):
     keychain_class = BaseProjectKeychain
     task_options = {
@@ -150,8 +150,8 @@ class NGOrgConfig(SFDXBaseTask):
         if(self.org_config.qbrix_cache is None):
             self.org_config.qbrix_cache={}
             
-        self._cache_item_set("instancedomain",self.instanceurl)
-        self._cache_item_set("subdomain",self.instanceurl.replace("https://","").split('.')[0])
+        #self._cache_item_set("instancedomain",self.instanceurl)
+        #self._cache_item_set("subdomain",self.instanceurl.replace("https://","").split('.')[0])
         
     def _cache_item_get(self,key):
         if(self.org_config.qbrix_cache is None):
@@ -327,3 +327,62 @@ class NGOrgConfig(SFDXBaseTask):
                 message += "\nstderr: {}".format(stderr.read().decode("utf-8"))
             self.logger.error(message)
             raise CommandException(message)
+
+class NGCacheAdd(SFDXBaseTask):
+    task_options = {
+
+        "key": {
+            "description": "Message to capture when condition is found",
+            "required": False
+        },
+        "value": {
+            "description": "Literal value or expression between ${{}} ",
+            "required": False
+        }
+    }
+    
+    def _init_options(self, kwargs):
+        super(NGCacheAdd, self)._init_options(kwargs)
+        self.env = self._get_env()
+        
+        
+    def _prepruntime(self):
+        
+        if "key" not in self.options or not self.options["key"]:
+            raise Exception(f'No key provided to add to cache')
+        else:
+            self.key =self.options["key"]
+            
+        if "value" not in self.options or not self.options["value"]:
+            raise Exception(f'No key provided to add to cache')
+        else:
+            self.value =self.options["value"]
+        
+    def _run_task(self):
+        self._prepruntime()
+        
+        if(self.value.startswith("${{") and self.value.endswith("}}")):
+            try:
+                sub1="${{"
+                sub2="}}"
+                idx1 = self.value.find(sub1)
+                idx2 = self.value.find(sub2)
+                exp = self.value[idx1 + len(sub1) + 1: idx2]
+                
+                #exit if inline import detected
+                if "__import__" in exp:
+                    return
+                
+                compliledcode = compile(exp, "<string>", "eval")
+                #no builtins = no __import__ # DO NOT allow globals
+                #restrict scope to expression - no builtins and only locals self
+                res = eval(compliledcode,{},{"self":self})
+                #self.logger.info(f"EXPRESSION::VAL::{res}")
+                self.org_config.qbrix_cache_set(self.key,res)
+            except Exception as inst:
+                self.logger.error(f"Unable to evaluate dynamic express::{inst}")
+        else:
+             ngorgconfig._cache_item_set(self.key,self.value)
+        
+        
+    
