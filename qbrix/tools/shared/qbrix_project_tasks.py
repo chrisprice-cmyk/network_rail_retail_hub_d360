@@ -1025,8 +1025,9 @@ def create_permission_set_file(name, label):
                             contents = file.read()
                             formula_reference_to_start = contents.find("<formula>")
                             md_reference_to_start = contents.find("<type>MasterDetail</type>")
+                            req_reference_to_start = contents.find("<required>true</required>")
                         # Add Field to the tree
-                        if field_file.endswith(".field-meta.xml") and formula_reference_to_start == -1 and md_reference_to_start == -1:
+                        if field_file.endswith(".field-meta.xml") and formula_reference_to_start == -1 and md_reference_to_start == -1 and req_reference_to_start == -1:
                             field_name = field_file[:-15]
                             field_permissions_element = ET.SubElement(root, "fieldPermissions")
                             ET.SubElement(field_permissions_element, "editable").text = "true"
