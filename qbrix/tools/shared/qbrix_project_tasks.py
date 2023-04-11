@@ -655,34 +655,62 @@ def add_prefix(path, prefix):
 
 
 def update_references(old_value, new_value, prefix=''):
+
+    """
+    Walks through project folders and updates all references to a new prefixed reference
+
+    Args:
+        old_value (str): The previous reference string to search for
+        new_value (str): The updated reference string to search for
+        prefix (str): The prefix to add
+    """
+
     if old_value == 'All':
         return
+    
+    if old_value == new_value:
+        return 
 
     project_path = 'force-app/main/default'
     reference_pattern = re.compile(rf'(?<!{prefix})\b{old_value}\b')
 
-    for root, dirs, files in os.walk(project_path):
-        for file_name in files:
-            if "external_id" in os.path.basename(file_name).lower() or os.path.basename(file_name).lower().startswith("sdo_") or os.path.basename(file_name).lower().startswith("xdo_") or os.path.basename(file_name).lower().startswith("db_"):
-                # print(f"SKIPPED: {file_name}")
-                continue
+    for project_path in ["force-app/main/default","unpackaged/pre","unpackaged/post"]:
+        for root, dirs, files in os.walk(project_path):
+            for file_name in files:
+                if "external_id" in os.path.basename(file_name).lower() or os.path.basename(file_name).lower().startswith("sdo_") or os.path.basename(file_name).lower().startswith("xdo_") or os.path.basename(file_name).lower().startswith("db_"):
+                    continue
 
-            if os.path.basename(root) in {"standardValueSets", "roles", "corsWhitelistOrigins"}:
-                continue
+                if os.path.basename(root) in {"standardValueSets", "roles", "corsWhitelistOrigins"}:
+                    continue
 
-            file_path = os.path.join(root, file_name)
-            with open(file_path, 'r') as f:
-                f.seek(0)
-                file_contents = f.read()
+                file_path = os.path.join(root, file_name)
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    f.seek(0)
+                    file_contents = f.read()
 
-            new_contents = reference_pattern.sub(new_value, file_contents)
-            if new_contents != file_contents:
-                with open(file_path, 'w') as f:
-                    f.write(new_contents)
-                    print(f'Updated references for {old_value} in {file_path}')
+                new_contents = reference_pattern.sub(new_value, file_contents)
+                if new_contents != file_contents:
+                    try:
+                        with open(file_path, 'w', encoding='utf-8') as f:
+                            f.write(new_contents)
+                            print(f'Updated references for {old_value} in {file_path}')
+                    except Exception as e:
+                        log.debug(e)
+                        pass 
 
 
 def assign_prefix_to_files(prefix, parent_folder='force-app/main/default', interactive_mode=False):
+
+    """
+    Assigns a given prefix like 'FINS_' to custom items within the project folder.
+
+    Args:
+        prefix (str): The prefix you want to assign to items
+        parent_folder (str): The relative path to the folder containing the project files. Defaults to force-app/main/default
+        interactive_mode (bool): If True, this will ask the end user if a file should be updated or not.
+
+    """
+
     # Validation
     if not prefix:
         raise Exception("Error: No prefix provided to the Mass Rename Tool. You must provide a prefix.")
@@ -704,6 +732,18 @@ def assign_prefix_to_files(prefix, parent_folder='force-app/main/default', inter
     # Find and Update Custom Object Folder Names
     for root, dirs, files in os.walk(os.path.join(parent_folder, 'objects')):
         for dir_name in dirs:
+
+            # no need to ask for standard object, or any sub folders (like fields, recordTypes folder) in each object folder
+            if not dir_name.lower().endswith('__c'):
+                log.debug(f"Ignoring {dir_name}")
+                continue
+
+            # no need to ask for anything comes from managed package
+            if re.match(r'^[a-zA-Z]+__',dir_name):
+                log.debug(f"Ignoring {dir_name}")
+                continue
+
+
             if PATTERN.match(dir_name) and not dir_name.lower().startswith(prefix.lower()):
                 old_path = os.path.join(root, dir_name)
                 new_path = add_prefix(old_path, under_prefix)
@@ -721,7 +761,7 @@ def assign_prefix_to_files(prefix, parent_folder='force-app/main/default', inter
                     paths_to_rename.append((old_path, new_path))
                     update_references(os.path.basename(old_path), os.path.basename(new_path), prefix)
 
-        if root.endswith('compactLayouts') or root.endswith('recordTypes') or root.endswith('businessProcesses'):
+        if root.endswith('compactLayouts') or root.endswith('recordTypes') or root.endswith('businessProcesses') or root.endswith('fields'):
             for file_name in files:
                 if root.endswith('listViews') and "All.listView" in file_name:
                     continue
