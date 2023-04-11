@@ -375,6 +375,10 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
         base_query = 'q = load "{}"; q = foreach q generate {};'.format(dataset_id+"/"+version_id, select_clause)
         base_query = base_query + ' q = limit q 1000000000;'
 
+        # Clean Up List Field Names
+        # field_names = [s.replace('.', '_').replace(' ', '_') for s in field_names]
+        # field_names = list(set(field_names))
+
         # create output file
         if not os.path.exists(target_folder):
             os.makedirs(target_folder)
