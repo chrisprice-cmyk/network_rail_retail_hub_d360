@@ -905,8 +905,22 @@ def push_changes(target_org_alias):
 
 
 def create_permission_set_file(name, label):
+
+    """
+    Creates a Permission Set from the current Project.
+
+    Args:
+        Name (str): The Name for the Permission Set File
+        label (str): The label for the Permission Set
+    """
+
     if os.path.exists(f"force-app/main/default/permissionsets/{name}.permissionset-meta.xml"):
         os.remove(f"force-app/main/default/permissionsets/{name}.permissionset-meta.xml")
+
+    # Adjust long labels to the max length
+    if len(label) > 80:
+        log.info("Adjusted label length as you have passed in a permission set label name which is more than 80 characters.")
+        label = label[:80]
 
     # Create the root element
     root = ET.Element("PermissionSet", attrib={"xmlns": "http://soap.sforce.com/2006/04/metadata"})
@@ -914,6 +928,8 @@ def create_permission_set_file(name, label):
     # Set the label
     label_element = ET.SubElement(root, "label")
     label_element.text = label
+
+    # NOTE FOR DEVS - The Traversal of objects and fields needs to ensure that the resulting tree has all types grouped together, i.e. all object references, all fields references then all record types. Hence the strange order of execution below.
 
     # Traverse through the object folders
     object_lookup_list = []
@@ -964,7 +980,13 @@ def create_permission_set_file(name, label):
                 fields_folder_path = os.path.join(object_folder_path, "fields")
                 if os.path.isdir(fields_folder_path):
                     for field_file in os.listdir(fields_folder_path):
-                        if field_file.endswith(".field-meta.xml"):
+                        # Read File and skip MasterDetail and Formula Fields
+                        with open(os.path.join(fields_folder_path,field_file), "r") as file:
+                            contents = file.read()
+                            formula_reference_to_start = contents.find("<formula>")
+                            md_reference_to_start = contents.find("<type>MasterDetail</type>")
+                        # Add Field to the tree
+                        if field_file.endswith(".field-meta.xml") and formula_reference_to_start == -1 and md_reference_to_start == -1:
                             field_name = field_file[:-15]
                             field_permissions_element = ET.SubElement(root, "fieldPermissions")
                             ET.SubElement(field_permissions_element, "editable").text = "true"
