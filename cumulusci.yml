@@ -188,7 +188,6 @@ tasks:
     description: Run the datapack via apex in the new datamodel
     class_path: qbrix.tools.utils.qbrix_orgconfig_hydrate.NGCacheAdd
 
-
   #------------------------------------#
   # DATA TOOL INTEGRATION              #
   #------------------------------------#
@@ -385,3 +384,5 @@ plans:
     steps:
       1:
         task: qbrix_shell_deploy_metadeploy
+        ui_options:
+          name: Deploy Q Brix
