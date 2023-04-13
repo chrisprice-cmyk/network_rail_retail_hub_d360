@@ -131,23 +131,37 @@ class OmniscriptAlign(Command):
         self._prepruntime()
         self.create_working_area(self.accesstoken)
         
-        
         self.retrieve_metadata(self.accesstoken)
         self.prune_content(self.accesstoken)
-        
-        self.push_omniuicard_metadata(self.accesstoken)
-        self.push_omniscript_metadata(self.accesstoken)
         
         targetnamespace = self.determinenamespace(self.accesstoken)
         oslist = self.getoslist(self.accesstoken, targetnamespace)
 
         if len(oslist) == 0 and targetnamespace != "omnistudio":
             oslist = self.getoslist(self.accesstoken, "omnistudio")
+        omniprocesslist={}
+        try:
+            omniprocesslist = self.getoslist(self.accesstoken, "omnistudio")
+        except:
+            self.logger.info('No OmniProcess Object available')
 
-        if len(oslist) > 0:
-            self.updatelwcsondisk(self.accesstoken, oslist)
+        mergeoslist = oslist | omniprocesslist
+        
+        self.logger.info(f"OS List Size:{len(mergeoslist)}")
+        if len(mergeoslist) > 0:
+            self.updatelwcsondisk(self.accesstoken, mergeoslist)
 
+        self._push_metadata()
+    def _push_metadata(self):
+        self.logger.info(f'Starting Push of OmniUICards...')
+        self.push_omniuicard_metadata(self.accesstoken)
+        self.logger.info(f'Completed Push of OmniUICards...')
+        self.logger.info(f'Starting Push of OmniScripts...')
+        self.push_omniscript_metadata(self.accesstoken)
+        self.logger.info(f'Completed Push of OmniScripts...')
+        self.logger.info(f'Starting Push of LWCs...')
         self.push_lwcs(self.accesstoken)
+        self.logger.info(f'Completed Push of LWCs...')
 
     def _handle_returncode(self, returncode, stderr):
         if returncode:
@@ -198,9 +212,11 @@ class OmniscriptAlign(Command):
             hashname = hashlib.md5(username.encode()).hexdigest()
             qbrixtempdir = self.getqbrixdir(hashname)
 
+            targetTypes =f"OmniScript,OmniUiCard,LightningComponentBundle"
+            #targetTypes =f"LightningComponentBundle:enrollPatientSvcProgramPatientServicesEnglish"
             # now we need to inject a sfdx session and into the cci runtimee for that temp dir
             subprocess.run([
-                               f"export SFDX_ACCESS_TOKEN='{self.accesstoken}' && sfdx force:auth:accesstoken:store --instanceurl {self.instanceurl} -a {hashname} --noprompt --json --loglevel DEBUG  && sfdx force:source:retrieve -u {hashname} -m OmniScript,OmniUiCard,LightningComponentBundle"],
+                               f"export SFDX_ACCESS_TOKEN='{self.accesstoken}' && sfdx force:auth:accesstoken:store --instanceurl {self.instanceurl} -a {hashname} --noprompt --json --loglevel DEBUG  && sfdx force:source:retrieve -u {hashname} -m {targetTypes}"],
                            shell=True, capture_output=True, cwd=qbrixtempdir)
                         
         except BaseException as err:
@@ -429,12 +445,17 @@ class OmniscriptAlign(Command):
 
             hashname = hashlib.md5(username.encode()).hexdigest()
             qbrixtempdir = self.getqbrixdir(hashname)
-
+            #self.logger.info(oslist.keys())
             for i in os.listdir(f"{qbrixtempdir}/force-app/main/default/lwc"):
+                #self.logger.info(f"Checking for : {i}")
+
                 if oslist.keys().__contains__(f"{i}".lower()):
 
                     oslist[f"{i}".lower()].disklocation = f"{qbrixtempdir}/force-app/main/default/lwc/{i}"
                     oslist[f"{i}".lower()].foldername = f"{i}"
+                    
+                    #self.logger.info(oslist[f"{i}".lower()].disklocation)
+                    #self.logger.info(oslist[f"{i}".lower()].foldername)
 
                     try:
                         self.updateoslwcid(oslist[f"{i}".lower()])
@@ -444,19 +465,35 @@ class OmniscriptAlign(Command):
         except Exception as e:
             self.logger.error(e)
 
+        
         return oslist
 
     def updateoslwcid(self, omniscript: OmniScript):
 
         if isinstance(omniscript, OmniScript) and os.path.exists(
                 f"{omniscript.disklocation}/{omniscript.foldername}_def.js"):
+            
+            self.logger.info(f"Starting On:{omniscript.disklocation}")
 
             with open(f"{omniscript.disklocation}/{omniscript.foldername}_def.js", "r") as tmpFile:
                 defcontents = tmpFile.read()
+                
                 tmpFile.close()
+                
+                #get the files and check for chunked
+                lwcfiles =os.listdir(f"{omniscript.disklocation}")
+                #self.logger.info(lwcfiles)
+                chunkpattern = '_chunk'
+                chunkfilesfound = False
+                for i in lwcfiles:
+                    if i.find(chunkpattern) != -1:
+                        self.logger.info("Chunk files Found")
+                        chunkfilesfound = True
+                        break
 
-                # ignore encoded chunk files.
-                if defcontents.find("decodeURIComponent(atob(def))") == -1:
+                # none chunked files
+                if defcontents.find("decodeURIComponent(atob(def))") == -1 and chunkfilesfound==False:
+                    self.logger.info('Non Chunked Found')
                     defcontentsmodified = defcontents.replace("export const OMNIDEF = ", "")
 
                     # trim off trailing \n if present to get a pure json def
@@ -468,6 +505,8 @@ class OmniscriptAlign(Command):
                         defcontentsmodified = defcontentsmodified.rstrip(";")
 
                     defjson = json.loads(defcontentsmodified)
+                    
+                    #self.logger.info(f'JSON:{defjson}')
 
                     try:
 
@@ -481,3 +520,55 @@ class OmniscriptAlign(Command):
 
                     except:
                         self.logger.error("fail on reading os def.js contents")
+                
+                #chunked files
+                if chunkfilesfound == True:
+                    defcontent = open(f"{omniscript.disklocation}/{omniscript.foldername}_def.js","r")                 
+                    defcontentlines = defcontent.readlines()
+                    
+                    #self.logger.info(defcontentlines)
+                    previousprocessedpattern = 'let tmpDef =  JSON.parse(def);'
+                    previousprocessed=False
+                    for i in defcontentlines:
+                        if i.find(previousprocessedpattern) != -1:
+                            previousprocessed = True
+                            break
+                    newfilelinecontent=[]
+                    if (previousprocessed):
+                        for i in defcontentlines:
+                            if(i.strip().startswith("tmpDef.sOmniScriptId ='")):
+                                newfilelinecontent.append(f"tmpDef.sOmniScriptId ='{omniscript.id}'")
+                                newfilelinecontent.append("\n")
+                            else:
+                                newfilelinecontent.append(i.strip())
+                                newfilelinecontent.append("\n")
+                    else:
+                        #iterate the file content lines and edit the lwc definition
+                        for i in defcontentlines:
+                            if(i.strip().startswith("export const OMNIDEF = JSON.parse(def);")):
+                                
+                                newfilelinecontent.append("//export const OMNIDEF = JSON.parse(def);")
+                                newfilelinecontent.append("\n")
+
+                                newfilelinecontent.append("let tmpDef =  JSON.parse(def);")
+                                newfilelinecontent.append("\n")
+
+                                newfilelinecontent.append(f"tmpDef.sOmniScriptId ='{omniscript.id}';")
+                                newfilelinecontent.append("\n")
+                                
+                                newfilelinecontent.append("export const OMNIDEF =tmpDef;")
+                                newfilelinecontent.append("\n")
+                            else:
+                                newfilelinecontent.append(i)
+                                newfilelinecontent.append("\n")
+                    
+                    if(len(newfilelinecontent)>0):
+                        with open(f"{omniscript.disklocation}/{omniscript.foldername}_def.js", "w") as tmpFile:
+                                tmpFile.writelines(newfilelinecontent)
+                                tmpFile.close()
+
+                                
+                        
+                    
+                        
+                        
