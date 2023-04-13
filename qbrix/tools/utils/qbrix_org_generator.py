@@ -319,9 +319,14 @@ class Spin(SFDXBaseTask):
                 required_qbrix = data.get('project', {}).get('custom', {}).get('required_qbrix', [])
 
                 if len(required_qbrix) > 0:
-                    self.deployqbrix.append(required_qbrix)
+                    self.deployqbrix.extend(required_qbrix)
+                else:
+                    self.deployqbrix = []
+                    
+                self.logger.info(self.deployqbrix )
             except:
-                print('No Default Required QBrix Defined YML')
+                self.deployqbrix = []
+                self.logger.error('No Default Required QBrix Defined YML')
 
     def _createworkingarea(self):
         if os.path.isdir('.qbrix') == False:
