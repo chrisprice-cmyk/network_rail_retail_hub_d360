@@ -1,14 +1,17 @@
 import base64
+import datetime
 import glob
 import gzip
 import json
 import math
 import os
+import re
 import subprocess
 import json
 import csv
 import io
 import requests
+from dateutil.parser import parse
 from abc import ABC
 from pathlib import Path
 import shlex
@@ -16,6 +19,7 @@ from time import sleep
 from cumulusci.tasks.salesforce.BaseSalesforceApiTask import BaseSalesforceApiTask
 
 from qbrix.tools.shared.qbrix_console_utils import init_logger
+from qbrix.tools.shared.qbrix_project_tasks import replace_file_text
 
 log = init_logger()
 
@@ -93,7 +97,11 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
         "share_to_all_portal_users": {
             "description": "(optional) If set to True, this will auto share the analytics apps to all portal/community users. Default False",
             "required": False
-        }
+        },
+        "generate_metadata_desc": {
+            "description": "(optional) If set to True, this will auto-generate the metadata description file for datasets. Default False",
+            "required": False
+        },
     }
 
     def _init_options(self, kwargs):
@@ -102,6 +110,7 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
         self.mode = self.options["mode"] if "mode" in self.options else "upload"
         self.share_to_all_internal_users = self.options["share_to_all_internal_users"] if "share_to_all_internal_users" in self.options else False
         self.share_to_all_portal_users = self.options["share_to_all_portal_users"] if "share_to_all_portal_users" in self.options else False
+        self.generate_metadata_desc = self.options["generate_metadata_desc"] if "generate_metadata_desc" in self.options else False
 
     def run_cleaners(self):
         wave_files = glob.glob(self.dataset_folder + "/*.json", recursive=True)
@@ -351,35 +360,196 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
             app_name = filename[:-len(".wapp-meta.xml")]
             self.update_folder_sharing(app_name)
 
+    def get_field_type(self, column):
+        """
+        Determines the field type for a given column.
+        Returns "Text", "Numeric", or "Date".
+        """
+
+        values = [value for value in column if value.strip() != '']
+    
+        # Check if all non-blank values in the column are numeric
+        is_numeric = all([value.replace('.', '', 1).isdigit() for value in values])
+        if is_numeric:
+            return "Numeric"
+        
+        # Check if all non-blank values in the column are dates
+        # is_date = all([isinstance(value, datetime.date) for value in values])
+        # if is_date:
+        #     return "Date"
+        
+        # Otherwise, assume the field is text
+        return "Text"
+    
+    def clean_field_name(self, field_name):
+        # Clean Up List Field Names
+        return field_name.replace('.', '_').replace(' ', '_')
+    
+    def remove_column_from_csv(self, column_to_remove, file_path):
+        # set the name of the output file
+        # get the file name from the file path
+        file_name = os.path.basename(file_path)
+
+        # add the prefix "output_" to the file name
+        new_file_name = "output_" + file_name
+
+        # create the new file path by joining the directory and the new file name
+        output_file = os.path.join(os.path.dirname(file_path), new_file_name)
+
+        # open the input and output files
+        with open(file_path, "r") as infile, open(output_file, "w", newline="") as outfile:
+            reader = csv.DictReader(infile)
+            fieldnames = [field for field in reader.fieldnames if field != column_to_remove]
+            writer = csv.DictWriter(outfile, fieldnames=fieldnames)
+            writer.writeheader()
+            for row in reader:
+                del row[column_to_remove]
+                writer.writerow(row)
+
+        os.replace(output_file, file_path)
+
+    def replace_partial_matches(self, file_path, search_string, replacement_string):
+        search_words = re.split('[_.]', search_string)
+        search_pattern = r"\b{}\b".format("[_.]".join(search_words))
+
+        with open(file_path, 'r') as f:
+            content = f.read()
+
+        replaced_content, num_replacements = re.subn(search_pattern, replacement_string, content)
+
+        if num_replacements > 0:
+            with open(file_path, 'w') as f:
+                f.write(replaced_content)
+
+        return num_replacements
+
+    def find_replace_column_name_indash(self, find_value, replace_value):
+        wave_dashboard_files = glob.glob("force-app/main/default/wave" + "/*.wdash", recursive=True)
+
+        for dash in wave_dashboard_files:
+
+            # Find and Replace Exact Matches
+            if not replace_file_text(file_location=dash, search_string=find_value, replacement_string=replace_value, show_info=False):
+
+                if "_" in replace_value:
+                    #self.logger.info(f"{find_value} was not found in Dashboard File {dash}. Running fuzzy match search to double check for other references.")
+                    # Find and Replace Fuzzy Matches
+                    self.replace_partial_matches(dash, replace_value, replace_value)
+            else:
+                #self.logger.info(f"{find_value} has been replaced with {replace_value} in Dashboard File {dash}")
+                pass
+
+
     def generate_csv_from_wave_dataset_version(self, dataset_id, target_folder, target_filename, version_id=''):
-        # get the requested datasetVersion
-        dataset_version_endpoint = f'wave/datasets/{dataset_id}/versions/{version_id}'
-        dataset_version = self.sf.restful(dataset_version_endpoint, method="GET")
+        
+        """
+        Generates a local csv file from a dataset version
+        """
+        
+        # Get the Dataset Version Information
+        self.logger.info(f"Getting information for Dataset ID [{dataset_id}] version [{version_id}] (Note Version can be blank)")
+        dataset_version = self.sf.restful(f'wave/datasets/{dataset_id}/versions/{version_id}', method="GET")
 
-        # get fields from dates
+        if not dataset_version:
+            raise Exception(f"No data was returned for dataset id {dataset_id}")
+
+        # Get Fields for Query
+        self.logger.info("Processing fields:")
+
+        # Date Fields
+        fields = []
         fields_from_dates = [d["fields"] for d in dataset_version["xmdMain"]["dates"]]
+        date_fields = []
+        # for d_key in dataset_version["xmdMain"]["dates"]:
+        #     date_field_text = ""
 
-        # filter out fields that are not in fields from dates
+        #     self.logger.info(f"Date: {d_key['alias']}")
+
+        #     if d_key["alias"] and " " not in d_key["alias"]:
+        #         date_fields.append(d_key["alias"])
+        #         date_field_text = d_key["alias"]
+        #     else:
+        #         date_fields.append(d_key["description"])
+        #         date_field_text = d_key["description"]
+
+        #     full_name = d_key["fullyQualifiedName"] if d_key["fullyQualifiedName"] else d_key["alias"]
+
+        #     fields.append({
+        #         "fullyQualifiedName": full_name,
+        #         "label": d_key["label"],
+        #         "name": self.clean_field_name(date_field_text),
+        #         "isUniqueId": False,
+        #         "isMultiValue": False,
+        #         "type": "Date",
+        #         "format": d_key["format"],
+        #         "fiscalMonthOffset": d_key["fiscalMonthOffset"]
+        #     })
+        fields_from_dates_list = []
+        for field in fields_from_dates:
+            for value in field.values():
+                fields_from_dates_list.append(value)
+
+        # Get Measures and Dimensions
         field_names = []
+        field_names_from_measures = []
         for dim in dataset_version["xmdMain"]["dimensions"]:
             if dim["field"]:        
-                if dim["field"] not in fields_from_dates:
+                if dim["field"] not in fields_from_dates_list:
                     field_names.append(dim["field"])
+
+                    self.logger.info(f"Dimension: {dim['field']}")
+                    multi_value = False
+                    multi_value = dim["isMultiValue"] if dim["isMultiValue"] else False
+                    full_name = dim["fullyQualifiedName"] if dim.get("fullyQualifiedName") else dim["field"]
+
+                    fields.append({
+                        "fullyQualifiedName": full_name,
+                        "label": dim["label"],
+                        "name": self.clean_field_name(dim["field"]),
+                        "isSystemField": False,
+                        "isUniqueId": False,
+                        "isMultiValue": False,
+                        "type": "Text"
+                    })
+
+
         for measure in dataset_version["xmdMain"]["measures"]:
             if measure["field"]:
-                if measure["field"] not in fields_from_dates:
-                    field_names.append(measure["field"])
+                if measure["field"] not in fields_from_dates_list:
 
-        # generate query string to load dataset and select specific fields
+                    self.logger.info(f"Measure: {measure['field']}")
+
+                    multi_value = False
+
+                    multi_value = dim["isMultiValue"] if dim.get("isMultiValue")else False
+                    decimal_places = measure["format"].get("decimalDigits", 0)
+                    full_name = measure["fullyQualifiedName"] if measure.get("fullyQualifiedName") else measure["field"]
+
+                    fields.append({
+                        "fullyQualifiedName": full_name,
+                        "label": measure["label"],
+                        "name": self.clean_field_name(measure["field"]),
+                        "isSystemField": False,
+                        "isUniqueId": False,
+                        "isMultiValue": False,
+                        "type": "Numeric",
+                        "precision": 10,
+                        "scale": decimal_places,
+                        "defaultValue": "0"
+                    })
+
+                    field_names_from_measures.append(measure["field"])
+
+        field_names = field_names + field_names_from_measures
+
+        self.logger.info(f"Found {len(field_names)} fields related to the dataset.")
+
+        # Build Query
         select_clause = ", ".join(["'{}' as '{}'".format(f, f) for f in field_names])
         base_query = 'q = load "{}"; q = foreach q generate {};'.format(dataset_id+"/"+version_id, select_clause)
         base_query = base_query + ' q = limit q 1000000000;'
 
-        # Clean Up List Field Names
-        # field_names = [s.replace('.', '_').replace(' ', '_') for s in field_names]
-        # field_names = list(set(field_names))
-
-        # create output file
+        # Ensure CSV Output File Directory Exists
         if not os.path.exists(target_folder):
             os.makedirs(target_folder)
         out_file = os.path.join(target_folder, target_filename + ".csv")
@@ -389,22 +559,76 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
         headers = {"Content-Type": "application/json", "Authorization": "Bearer {}".format(self.sf.session_id)}
         query_params = {"query": base_query}
 
+        self.logger.info("Running Query against CRM Analytics for data")
         query_response = requests.post(query_url, headers=headers, data=json.dumps(query_params))
 
-        if query_response.status_code == 200:
-            data = json.loads(query_response.content.decode('utf-8'))
-
-            if data and data['results']['records']:
-                with open(out_file, 'w', encoding='utf-8', newline='') as csvfile:
-                    writer = csv.DictWriter(csvfile, fieldnames=field_names)
-                    writer.writeheader()
-                    for record in data['results']['records']:
-                        writer.writerow(record)
-
-        else:
-            self.logger.error("Request Failed")
+        if query_response.status_code != 200:
             self.logger.info(json.loads(query_response.content.decode('utf-8')))
+            raise Exception("CRM Analytics Query Failed!")
 
+        # Process Data Response
+        self.logger.info("Processing Data")
+        data = json.loads(query_response.content.decode('utf-8'))
+
+        if not data and not data['results']['records']:
+            raise Exception("Results were retrieved but not in the expected format.")
+
+        self.logger.info(f"{len(data['results']['records'])} records retrieved")
+
+        # Generate the Data File
+        self.logger.info(f"Generating local CSV file at: {out_file}")
+        with open(out_file, 'w', encoding='utf-8', newline='') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=field_names)
+            writer.writeheader()
+            for record in data['results']['records']:
+                writer.writerow(record)
+
+        # Generate Metadata File and Fix References
+        self.logger.info(f"Reading {out_file} to generate metadata json file")
+        field_types = {}
+        with open(out_file,'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                for key, value in row.items():
+                    if key not in field_types:
+                        field_types[key] = []
+                        field_types[key].append(value)
+
+        # Check Dashboard References
+        self.logger.info("Checking that all references to fields in the dataset have been updated in the dashboard files")
+        seen = set()
+        for item in fields:
+            self.find_replace_column_name_indash(item["label"], item['name'])
+            if item['name'] in seen:
+                fields.remove(item)
+                self.remove_column_from_csv(item["label"], out_file)
+            else:
+                seen.add(item['name'])
+
+        # Write Metadata File
+        metadata = {
+        "fileFormat": {
+            "charsetName": "UTF-8",
+            "fieldsDelimitedBy": ",",
+            "fieldsEnclosedBy": "\"",
+            "linesTerminatedBy": "\r\n",
+            "numberOfLinesToIgnore": 1
+        },
+        "objects": [
+            {
+                "connector": "CSV",
+                "description": "Auto Generated Dataset Metadata File",
+                "fullyQualifiedName": target_filename + "_csv",
+                "label": target_filename + ".csv",
+                "name": self.clean_field_name(target_filename + ".csv"),
+                "fields": fields
+            }]
+        }
+
+        if self.generate_metadata_desc:
+            self.logger.info(f"Writing metadata file to {os.path.join(target_folder, target_filename + '.json')}")
+            with open(os.path.join(target_folder, target_filename + ".json"), 'w', encoding='utf-8') as file:
+                json.dump(metadata, file, indent=4)
         
 
     def get_datasets_from_org(self):
@@ -421,8 +645,6 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
 
         if response:
             for dataset_dict in list(response["datasets"]):
-
-
                 
                 dataset = dict(dataset_dict)
                 dataset_version = dataset.get("currentVersionId")
@@ -431,13 +653,6 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
                     dataset_version = ''
 
                 org_dataset_dict.update({dataset["label"]: {"id": dataset["id"], "version": dataset_version}})
-
-
-                # if dataset_name == "ClientTransactionsRB_Investments":
-
-                #     self.generate_csv_from_wave_dataset_version(dataset_id, 'test_dir', dataset_name, dataset_version)
-                #     self.logger.info(f"Data for {dataset_name} Downloaded!")
-
    
         return org_dataset_dict      
 
@@ -468,5 +683,5 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
             self.get_datasets_from_org()
 
         self.logger.info("=======================================")
-        self.logger.info("Q Brix Manager has completed all tasks!")
+        self.logger.info("Q Brix Analytics Manager has completed all tasks!")
         self.logger.info("=======================================")
