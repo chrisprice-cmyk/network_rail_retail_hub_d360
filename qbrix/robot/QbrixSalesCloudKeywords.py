@@ -65,6 +65,17 @@ class QbrixSalesCloudKeywords(BaseLibrary):
             self.browser.click(button_selector)
             sleep(20)
 
+
+    def enable_sales_aggreements(self):
+        """ Enables Sales Agreements """
+
+        self.shared.go_to_setup_admin_page("SalesAgreementSettings/home", 5)
+
+        button_selector = f"{self.shared.iframe_handler()} button.slds-button:has-text('Enable Sales Agreements')"
+
+        if "visible" in self.browser.get_element_states(button_selector):
+            self.browser.click(button_selector)
+            sleep(20)
         
 
     def set_guest_on_channel_menu(self, channel_menu_api_name):

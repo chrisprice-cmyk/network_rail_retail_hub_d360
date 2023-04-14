@@ -116,6 +116,9 @@ Check and Create Pardot Email Template
 Run Automation to Enable Sales Engagement
     Enable Sales Engagement
 
+Run Automation to Enable Sales Agreements
+    Enable Sales Agreements
+
 Run Automation to Check and Enable Forecasts
     Enable Forecasts
 
