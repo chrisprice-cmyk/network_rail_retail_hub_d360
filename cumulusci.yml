@@ -206,6 +206,10 @@ tasks:
   qbrix_task_Testim:
     class_path: qbrix.tools.testing.qbrix_testim.RunTestim
 
+  orgconfig_hydrate:
+    description: injects additional context into the orgconfig that can be referenced downstream
+    class_path: qbrix.tools.utils.qbrix_orgconfig_hydrate.NGOrgConfig
+
   #------------------------------------#
   # CUSTOM TASKS                       #
   #------------------------------------#
@@ -215,6 +219,14 @@ flows:
   #------------------------------------#
   # STAGE 1 of 3: PRE-QBRIX DEPLOYMENT #
   #------------------------------------#
+
+  sample_custom_flow:
+    steps:
+      1:
+        task: orgconfig_hydrate
+      2:
+        task: qbrix_installer_tracking
+        when: org_config.is_psl_minimal_qty_available_in_org('InsightsInboxAdminAnalyticsPsl', 1000)
 
   # Prepares the Org with any required settings/testim scripts
   prepare_org:

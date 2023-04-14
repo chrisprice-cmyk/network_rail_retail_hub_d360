@@ -136,7 +136,10 @@ class NGOrgConfig(SFDXBaseTask):
 
         if self.org_config.is_org_identifier is None:
             self.org_config.is_org_identifier = self._check_id_or_guid_in_org
-        
+            
+        if self.org_config.is_psl_minimal_qty_available_in_org is None:
+            self.org_config.is_psl_minimal_qty_available_in_org = self._is_psl_minimal_qty_available_in_org
+            
         if self.org_config.qbrix_cache_get is None:
             self.org_config.qbrix_cache_get = self._cache_item_get
             
@@ -227,6 +230,33 @@ class NGOrgConfig(SFDXBaseTask):
         self.logger.info(data["totalSize"])
         return data["totalSize"] == 1
     
+    
+    def _is_psl_minimal_qty_available_in_org(self, psl, qty):
+        
+        #e.g. 
+        #SELECT  id,MasterLabel,DeveloperName from PermissionSetLicense where (Masterlabel='OmniStudioDesigner' or DeveloperName='OmniStudioDesigner')
+        #self.logger.info(psl)
+        #self.logger.info(qty)
+        #self.logger.info(type(qty))
+        
+        url = f"{self.instanceurl}/services/data/v56.0/query/?q=select+Id,TotalLicenses,UsedLicenses+from+PermissionSetLicense+where+(Masterlabel='{psl}'+or+DeveloperName='{psl}')+LIMIT+1"
+        headers = {
+            'Authorization': f'Bearer {self.accesstoken}',
+            'Content-Type': 'application/json'
+        }
+        response = requests.request("GET", url, headers=headers)
+        #self.logger.info(response.text)
+        data = json.loads(response.text)
+        #self.logger.info(data["totalSize"])
+        if data["totalSize"] == 0:
+            return False
+        
+        totalqty= data["records"][0]["TotalLicenses"]
+        usedqty= data["records"][0]["UsedLicenses"]
+        
+        #self.logger.info((totalqty-usedqty)>= qty)
+        return (totalqty-usedqty) >= qty
+        
     
     def _is_ps_present_in_org(self, ps):
         
