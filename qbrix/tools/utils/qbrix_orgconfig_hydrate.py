@@ -1,3 +1,4 @@
+import os
 import json
 import requests
 
@@ -140,6 +141,9 @@ class NGOrgConfig(SFDXBaseTask):
         if self.org_config.is_psl_minimal_qty_available_in_org is None:
             self.org_config.is_psl_minimal_qty_available_in_org = self._is_psl_minimal_qty_available_in_org
             
+        if self.org_config.is_bulk_check_psl_minimal_qty_available_in_org is None:
+            self.org_config.is_bulk_check_psl_minimal_qty_available_in_org = self._is_bulk_check_psl_minimal_qty_available_in_org
+        
         if self.org_config.qbrix_cache_get is None:
             self.org_config.qbrix_cache_get = self._cache_item_get
             
@@ -256,6 +260,46 @@ class NGOrgConfig(SFDXBaseTask):
         
         #self.logger.info((totalqty-usedqty)>= qty)
         return (totalqty-usedqty) >= qty
+    
+    def _is_bulk_check_psl_minimal_qty_available_in_org(self, srcfile):
+        
+        #self.logger.info(f'Source File::{srcfile}')
+        try:
+            
+            #fail closed
+            if(os.path.exists(srcfile)==False):
+                self.logger.error(f'PSL Bulk Check Source File not found::{srcfile}')
+                return False
+            
+            
+            filehandle = open(srcfile,"r")
+            filecontents = filehandle.read()
+            
+            #self.logger.info(f'Source File Contents::{filecontents}')
+            
+            #fail closed
+            if(len(filecontents)==0):
+                return False
+            
+            psldict = json.loads(filecontents)
+            
+            for p in psldict.keys():
+                qty = psldict[p]
+                res = self._is_psl_minimal_qty_available_in_org(p,qty)
+                if(res==False):
+                    self.logger.error(f'Minimal Qty for: {p} not met. Required:{qty}')
+                    return False
+            #hurray-you survived the hunger games. may the odds be in your favor
+            return True
+        except Exception as e:
+            self.logger.error(f'Failure in bulk check. Failing closed. {e}')
+            #fail closed
+            return False
+               
+               
+        #fail closed
+        self.logger.error(f'Failing closed.')
+        return False
         
     
     def _is_ps_present_in_org(self, ps):
