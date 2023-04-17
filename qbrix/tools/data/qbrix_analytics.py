@@ -498,8 +498,8 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
                     field_names.append(dim["field"])
 
                     self.logger.info(f"Dimension: {dim['field']}")
-                    multi_value = False
-                    multi_value = dim["isMultiValue"] if dim["isMultiValue"] else False
+                    # multi_value = False
+                    # multi_value = dim["isMultiValue"] if dim["isMultiValue"] else False
                     full_name = dim["fullyQualifiedName"] if dim.get("fullyQualifiedName") else dim["field"]
 
                     fields.append({
@@ -519,9 +519,9 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
 
                     self.logger.info(f"Measure: {measure['field']}")
 
-                    multi_value = False
+                    # multi_value = False
 
-                    multi_value = dim["isMultiValue"] if dim.get("isMultiValue")else False
+                    # multi_value = dim["isMultiValue"] if dim.get("isMultiValue")else False
                     decimal_places = measure["format"].get("decimalDigits", 0)
                     full_name = measure["fullyQualifiedName"] if measure.get("fullyQualifiedName") else measure["field"]
 
@@ -658,9 +658,9 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
 
 
     def _run_task(self):
-        self.logger.info("================================")
+        self.logger.info("=================================")
         self.logger.info("Starting QBrix Analytics Manager")
-        self.logger.info("================================")
+        self.logger.info("=================================")
 
         if not self.mode or self.mode.lower() == "upload" or self.mode.lower() == "u":
             self.logger.info("Running in Upload Mode")
@@ -682,6 +682,6 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
         if self.mode.lower() == "t":
             self.get_datasets_from_org()
 
-        self.logger.info("=======================================")
+        self.logger.info("=================================================")
         self.logger.info("Q Brix Analytics Manager has completed all tasks!")
-        self.logger.info("=======================================")
+        self.logger.info("=================================================")
