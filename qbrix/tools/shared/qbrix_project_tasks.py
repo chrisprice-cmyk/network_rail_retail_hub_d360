@@ -5,6 +5,7 @@ import os
 import re
 import shutil
 import subprocess
+import yaml
 from io import BytesIO
 from os.path import exists
 import tempfile
@@ -1105,16 +1106,47 @@ def generate_stack_view(parent_directory_path='.cci/projects'):
     files_list = []
     overwritten_files_list = []
 
-    print("\nSOURCE QBRIX FILES")
+    print("\n***SOURCE QBRIX FILES***")
 
     for i, qbrix in enumerate(sub_directory_names_sorted):
 
         if qbrix != "LOCAL":
 
             print(f"\n{qbrix}")
+            print("-" * len(qbrix))
 
+            cci_yml = glob.glob(f"{os.path.join('.cci','projects', qbrix)}/**/cumulusci.yml", recursive=True)
+
+            if cci_yml:
+                with open(cci_yml[0], 'r') as f:
+                    config = yaml.safe_load(f)
+
+                api_version = config['project']['package']['api_version']
+                if api_version:
+                    print(f"\nAPI Version: {api_version}")
+                else:
+                    print("\nAPI Version: ERROR MISSING!!!")
+
+                repo_url = config['project']['git']['repo_url']
+                if repo_url:
+                    print(f"\nREPO URL: {repo_url}")
+                else:
+                    print("\nREPO URL: ERROR MISSING!!!")
+
+                dependencies = config['project'].get("dependencies")
+                if dependencies and len(dependencies) > 0:
+                    print("\nPACKAGES:")
+                    for d in dependencies:
+                        if d.get("namespace"):
+                            print(f" - Managed Package: {d.get('namespace')}")
+                        if d.get("version_id"):
+                            print(f" - Unmanaged Package Version ID: {d.get('version_id')}")
+                        if d.get("github"):
+                            print(f" - Github Repo: {d.get('github')}")
+
+            print("\nFILES:")        
             for root, dirs, files in os.walk(os.path.join(".cci","projects", qbrix)):
-
+                
                 if "force-app/main/default" in root:
                     for file_name in files:
                         file_path = os.path.join(root, file_name)
@@ -1122,7 +1154,6 @@ def generate_stack_view(parent_directory_path='.cci/projects'):
                         if force_app_index != -1:
                             file_path = os.path.join(file_path[force_app_index + len("force-app/main/default/"):])
                             print(f" - {file_path}")
-
                             if i == 0:
                                  files_list.append((file_path, qbrix))
                             else:
@@ -1149,7 +1180,7 @@ def generate_stack_view(parent_directory_path='.cci/projects'):
 
 
 
-    print("\nSTACK FILES WHICH ARE UPDATED")
+    print("\n***STACK FILES WHICH ARE REDEPLOYED***")
 
     for f, q in files_list:
 
@@ -1163,5 +1194,6 @@ def generate_stack_view(parent_directory_path='.cci/projects'):
                 if o[1] != q:
                     print(f" > Updated in: {o[1]}")
 
+    print("\n***STACK STATS***")
     print(f"\nTotal Files in Stack: {len(files_list)}")
     print(f"Total Files updated within stack: {len(overwritten_files_list)}")
