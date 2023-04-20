@@ -442,7 +442,7 @@
       {
         "label": "Q BRIX [RETRIEVE]: Download Data for Analytics Datasets",
         "type": "shell",
-        "command": "cci task run analytics_manager --mode d --org ${input:OrgAlias}",
+        "command": "cci task run analytics_manager --mode d --org ${input:OrgAlias} --generate_metadata_desc True",
         "group": "build",
         "problemMatcher": [],
         "presentation": {
