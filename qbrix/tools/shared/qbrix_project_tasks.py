@@ -1088,3 +1088,80 @@ def create_permission_set_file(name, label):
         xml_dom = minidom.parseString(xml_string)
         formatted_xml = xml_dom.toprettyxml(indent="  ", encoding="utf-8")
         file.write(formatted_xml.decode("utf-8"))
+
+def generate_stack_view(parent_directory_path='.cci/projects'):
+
+    # Regenerate cci cache
+    rebuild_cci_cache()
+
+    if not os.path.exists('.cci/projects'):
+        print("No Sources to traverse. Skipping")
+        return
+
+    # Get Stack folder locations and order
+    sub_directory_names_sorted = sorted(os.listdir(parent_directory_path))
+    sub_directory_names_sorted.append("LOCAL")
+
+    files_list = []
+    overwritten_files_list = []
+
+    print("\nSOURCE QBRIX FILES")
+
+    for i, qbrix in enumerate(sub_directory_names_sorted):
+
+        if qbrix != "LOCAL":
+
+            print(f"\n{qbrix}")
+
+            for root, dirs, files in os.walk(os.path.join(".cci","projects", qbrix)):
+
+                if "force-app/main/default" in root:
+                    for file_name in files:
+                        file_path = os.path.join(root, file_name)
+                        force_app_index = file_path.find("force-app/main/default/")
+                        if force_app_index != -1:
+                            file_path = os.path.join(file_path[force_app_index + len("force-app/main/default/"):])
+                            print(f" - {file_path}")
+
+                            if i == 0:
+                                 files_list.append((file_path, qbrix))
+                            else:
+                                if len([t for t in files_list if t[0] == file_path]) <= 1:
+                                    overwritten_files_list.append((file_path, qbrix))
+                                else:
+                                    files_list.append((file_path, qbrix))
+
+        else:
+
+            for root, dirs, files in os.walk("force-app/main/default"):
+                for file_name in files:
+                        file_path = os.path.join(root, file_name)
+                        force_app_index = file_path.find("force-app/main/default/")
+                        if force_app_index != -1:
+                            file_path = os.path.join(file_path[force_app_index + len("force-app/main/default/"):])
+                            if i == 0:
+                                 files_list.append((file_path, qbrix))
+                            else:
+                                if len([t for t in files_list if t[0] == file_path]) <= 1:
+                                    overwritten_files_list.append((file_path, qbrix))
+                                else:
+                                    files_list.append((file_path, qbrix))
+
+
+
+    print("\nSTACK FILES WHICH ARE UPDATED")
+
+    for f, q in files_list:
+
+        overwrite_matches = [t for t in overwritten_files_list if t[0] == f]
+
+        if len(overwrite_matches) > 0:
+
+            print(f"\n{f} (Deployed By {q})")
+
+            for o in list(set(overwrite_matches)):
+                if o[1] != q:
+                    print(f" > Updated in: {o[1]}")
+
+    print(f"\nTotal Files in Stack: {len(files_list)}")
+    print(f"Total Files updated within stack: {len(overwritten_files_list)}")
