@@ -1,3 +1,4 @@
+import datetime
 import filecmp
 import glob
 import json
@@ -1090,7 +1091,8 @@ def create_permission_set_file(name, label):
         formatted_xml = xml_dom.toprettyxml(indent="  ", encoding="utf-8")
         file.write(formatted_xml.decode("utf-8"))
 
-def generate_stack_view(parent_directory_path='.cci/projects'):
+
+def generate_stack_view(parent_directory_path='.cci/projects', output="terminal"):
 
     # Regenerate cci cache
     rebuild_cci_cache()
@@ -1106,14 +1108,26 @@ def generate_stack_view(parent_directory_path='.cci/projects'):
     files_list = []
     overwritten_files_list = []
 
-    print("\n***SOURCE QBRIX FILES***")
+    if output == "terminal":
+        print("Sending outputs to the Terminal")
+        print("\n***SOURCE QBRIX FILES***") 
+    else:
+        now = datetime.datetime.now()
+        log_file_name = "stack_log_" + now.strftime("%Y%m%d%H%M%S") + ".txt"
+        log_file = open(log_file_name, "w")
+        print(f"Sending output to log file, located at {log_file_name}")
+        log_file.write("\n***SOURCE QBRIX FILES***")
 
     for i, qbrix in enumerate(sub_directory_names_sorted):
 
         if qbrix != "LOCAL":
-
-            print(f"\n{qbrix}")
-            print("-" * len(qbrix))
+            
+            if output == "terminal":
+                print(f"\n{qbrix}")
+                print("-" * len(qbrix))
+            else:
+                log_file.write(f"\n\n{qbrix}\n")
+                log_file.write("-" * len(qbrix))
 
             cci_yml = glob.glob(f"{os.path.join('.cci','projects', qbrix)}/**/cumulusci.yml", recursive=True)
 
@@ -1123,26 +1137,48 @@ def generate_stack_view(parent_directory_path='.cci/projects'):
 
                 api_version = config['project']['package']['api_version']
                 if api_version:
-                    print(f"\nAPI Version: {api_version}")
+                    if output == "terminal":
+                        print(f"\nAPI Version: {api_version}")
+                    else: 
+                        log_file.write(f"\nAPI Version: {api_version}")
                 else:
-                    print("\nAPI Version: ERROR MISSING!!!")
+                    if output == "terminal":
+                        print("\nAPI Version: ERROR MISSING!!!")
+                    else: 
+                        log_file.write("\nAPI Version: ERROR MISSING!!!")
 
                 repo_url = config['project']['git']['repo_url']
                 if repo_url:
-                    print(f"\nREPO URL: {repo_url}")
+                    if output == "terminal":
+                        print(f"\nREPO URL: {repo_url}")
+                    else:
+                        log_file.write(f"\nREPO URL: {repo_url}")
                 else:
                     print("\nREPO URL: ERROR MISSING!!!")
 
                 dependencies = config['project'].get("dependencies")
                 if dependencies and len(dependencies) > 0:
-                    print("\nPACKAGES:")
+                    if output == "terminal":
+                        print("\nPACKAGES:")
+                    else:
+                        log_file.write("\nPACKAGES:")
+
                     for d in dependencies:
                         if d.get("namespace"):
-                            print(f" - Managed Package: {d.get('namespace')}")
+                            if output == "terminal":
+                                print(f" - Managed Package: {d.get('namespace')}")
+                            else:
+                                log_file.write(f"\n - Managed Package: {d.get('namespace')}")
                         if d.get("version_id"):
-                            print(f" - Unmanaged Package Version ID: {d.get('version_id')}")
+                            if output == "terminal":
+                                print(f" - Unmanaged Package Version ID: {d.get('version_id')}")
+                            else:
+                                log_file.write(f"\n - Unmanaged Package Version ID: {d.get('version_id')}")
                         if d.get("github"):
-                            print(f" - Github Repo: {d.get('github')}")
+                            if output == "terminal":
+                                print(f" - Github Repo: {d.get('github')}")
+                            else:
+                                log_file.write(f"\n - Github Repo: {d.get('github')}")
 
             print("\nFILES:")        
             for root, dirs, files in os.walk(os.path.join(".cci","projects", qbrix)):
@@ -1153,7 +1189,10 @@ def generate_stack_view(parent_directory_path='.cci/projects'):
                         force_app_index = file_path.find("force-app/main/default/")
                         if force_app_index != -1:
                             file_path = os.path.join(file_path[force_app_index + len("force-app/main/default/"):])
-                            print(f" - {file_path}")
+                            if output == "terminal":
+                                print(f" - {file_path}")
+                            else:
+                                log_file.write(f"\n - {file_path}")
                             if i == 0:
                                  files_list.append((file_path, qbrix))
                             else:
@@ -1164,12 +1203,23 @@ def generate_stack_view(parent_directory_path='.cci/projects'):
 
         else:
 
+            if output == "terminal":
+                print(f"\nLOCAL QBRIX")
+                print("-" * len("LOCAL QBRIX"))
+            else:
+                log_file.write(f"\n\nLOCAL QBRIX\n")
+                log_file.write("-" * len("LOCAL QBRIX"))
+
             for root, dirs, files in os.walk("force-app/main/default"):
                 for file_name in files:
                         file_path = os.path.join(root, file_name)
                         force_app_index = file_path.find("force-app/main/default/")
                         if force_app_index != -1:
                             file_path = os.path.join(file_path[force_app_index + len("force-app/main/default/"):])
+                            if output == "terminal":
+                                print(f" - {file_path}")
+                            else:
+                                log_file.write(f"\n - {file_path}")
                             if i == 0:
                                  files_list.append((file_path, qbrix))
                             else:
@@ -1179,21 +1229,33 @@ def generate_stack_view(parent_directory_path='.cci/projects'):
                                     files_list.append((file_path, qbrix))
 
 
-
-    print("\n***STACK FILES WHICH ARE REDEPLOYED***")
+    if output == "terminal":
+        print("\n***STACK FILES WHICH ARE REDEPLOYED***")
+    else:
+        log_file.write("\n\n***STACK FILES WHICH ARE REDEPLOYED***")
 
     for f, q in files_list:
 
         overwrite_matches = [t for t in overwritten_files_list if t[0] == f]
 
         if len(overwrite_matches) > 0:
-
-            print(f"\n{f} (Deployed By {q})")
+            if output == "terminal":
+                print(f"\n{f} (Deployed By {q})")
+            else:
+                log_file.write(f"\n\n{f} (Deployed By {q})")
 
             for o in list(set(overwrite_matches)):
                 if o[1] != q:
-                    print(f" > Updated in: {o[1]}")
+                    if output == "terminal":
+                        print(f" > Updated in: {o[1]}")
+                    else:
+                        log_file.write(f"\n > Updated in: {o[1]}")
+    if output == "terminal":
+        print("\n***STACK STATS***")
+        print(f"\nTotal Files in Stack: {len(files_list)}")
+        print(f"Total Files updated within stack: {len(overwritten_files_list)}")
+    else:
+        log_file.write(f"\n***STACK STATS***\n\nTotal Files in Stack: {len(files_list)}\nTotal Files updated within stack: {len(overwritten_files_list)}")
 
-    print("\n***STACK STATS***")
-    print(f"\nTotal Files in Stack: {len(files_list)}")
-    print(f"Total Files updated within stack: {len(overwritten_files_list)}")
+    if output != "terminal":
+        log_file.close()
