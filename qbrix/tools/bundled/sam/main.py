@@ -1,4 +1,4 @@
-import script
+from qbrix.tools.bundled.sam import script
 import time
 import os
 
