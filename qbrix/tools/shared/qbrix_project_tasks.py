@@ -1157,7 +1157,7 @@ def generate_stack_view(parent_directory_path='.cci/projects'):
                             if i == 0:
                                  files_list.append((file_path, qbrix))
                             else:
-                                if len([t for t in files_list if t[0] == file_path]) <= 1:
+                                if len([t for t in files_list if t[0] == file_path]) >= 1:
                                     overwritten_files_list.append((file_path, qbrix))
                                 else:
                                     files_list.append((file_path, qbrix))
@@ -1173,7 +1173,7 @@ def generate_stack_view(parent_directory_path='.cci/projects'):
                             if i == 0:
                                  files_list.append((file_path, qbrix))
                             else:
-                                if len([t for t in files_list if t[0] == file_path]) <= 1:
+                                if len([t for t in files_list if t[0] == file_path]) >= 1:
                                     overwritten_files_list.append((file_path, qbrix))
                                 else:
                                     files_list.append((file_path, qbrix))
