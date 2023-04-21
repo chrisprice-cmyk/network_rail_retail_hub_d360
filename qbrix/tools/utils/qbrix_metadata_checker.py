@@ -164,7 +164,7 @@ class MetadataChecker(BaseTask, ABC):
                 self.show_found_only = True if self.options["show_found_only"].lower() == "true" else False
 
         except:
-            print("Error initing options")
+            print("Unable to initiate initial options and settings.")
 
     
     def _init_metadata_type_detail(self, metadata_type):
@@ -195,23 +195,25 @@ class MetadataChecker(BaseTask, ABC):
 
 
     def _refresh_base(self):
-        for sub in os.listdir(self.cci_cache_path):
-            shutil.rmtree(os.path.join(self.cci_cache_path, sub), ignore_errors=True)
+        if os.path.exists(self.cci_cache_path):
+            for sub in os.listdir(self.cci_cache_path):
+                shutil.rmtree(os.path.join(self.cci_cache_path, sub), ignore_errors=True)
         flow_coordinator = CliRuntime().get_flow(self.dependency_flow)
 
 
 
     def _find_base_folders(self):
-        for base_folder in os.listdir(self.cci_cache_path):
-            if not base_folder.startswith("QBrix"):
-                continue
+        if os.path.exists(self.cci_cache_path):
+            for base_folder in os.listdir(self.cci_cache_path):
+                if not base_folder.startswith("QBrix"):
+                    continue
 
-            base_folder_path = os.path.join(self.cci_cache_path,base_folder)
-            all_base_subdirs = [os.path.join(base_folder_path, d) for d in os.listdir(base_folder_path) if len(d) == 40]
-            # find the latest version of the base
-            latest_base_folder = max(all_base_subdirs, key=os.path.getmtime)
+                base_folder_path = os.path.join(self.cci_cache_path,base_folder)
+                all_base_subdirs = [os.path.join(base_folder_path, d) for d in os.listdir(base_folder_path) if len(d) == 40]
+                # find the latest version of the base
+                latest_base_folder = max(all_base_subdirs, key=os.path.getmtime)
 
-            self.base_folders.add(latest_base_folder)
+                self.base_folders.add(latest_base_folder)
 
         if self.check_myself:
             self.base_folders.add("./")
