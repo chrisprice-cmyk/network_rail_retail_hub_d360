@@ -1179,8 +1179,10 @@ def generate_stack_view(parent_directory_path='.cci/projects', output="terminal"
                                 print(f" - Github Repo: {d.get('github')}")
                             else:
                                 log_file.write(f"\n - Github Repo: {d.get('github')}")
-
-            print("\nFILES:")        
+            if output == "terminal":
+                print("\nFILES:")
+            else:
+                log_file.write(f"\nFILES:")
             for root, dirs, files in os.walk(os.path.join(".cci","projects", qbrix)):
                 
                 if "force-app/main/default" in root:
