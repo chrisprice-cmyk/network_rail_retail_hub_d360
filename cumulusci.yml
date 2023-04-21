@@ -188,6 +188,10 @@ tasks:
     description: Run the datapack via apex in the new datamodel
     class_path: qbrix.tools.utils.qbrix_orgconfig_hydrate.NGCacheAdd
 
+  qbrix_metadata_checker:
+    description: Q Brix Metadata Scan for missing metadata tool
+    class_path: qbrix.tools.utils.qbrix_metadata_checker.MetadataChecker
+
   #------------------------------------#
   # DATA TOOL INTEGRATION              #
   #------------------------------------#

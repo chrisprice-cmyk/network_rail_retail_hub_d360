@@ -3,6 +3,7 @@ import os
 import shutil
 
 from cumulusci.core.tasks import BaseTask
+from qbrix.tools.bundled.sam.main import migrate
 from qbrix.tools.shared.qbrix_console_utils import init_logger
 from qbrix.tools.shared.qbrix_project_tasks import generate_stack_view, update_file_api_versions, create_permission_set_file, push_changes, compare_metadata, delete_standard_fields, assign_prefix_to_files, create_external_id_field
 
@@ -31,6 +32,7 @@ class MassFileOps(BaseTask, ABC):
         [5]     Push Upgrade Tool (BETA) : Compare changes in metadata between the target org and your project, then push changes to the org.\n
         [6]     Permission Set Generator : Generate Permission Set for Objects, Fields, Tabs and Classes in your project.\n
         [7]     Q Brix Stack Viewer (BETA): Generates a view of the metadata deployed by the whole stack of Q Brix.\n
+        [8]     SAM CRM Analytics Migration Tool (v0.4.1 - BETA): Can be used to migrate CRMA Assets from one Salesforce Org to Another\n
         [e]     Exit   
     """)
         option = input("\n\nWhich task you like to run? (Enter the option number) : ")
@@ -112,6 +114,8 @@ class MassFileOps(BaseTask, ABC):
 
             else:
                 print("Invalid Output Method")
+        elif option.lower() == "8":
+            migrate()
         elif option.lower() == "e":
             log.info("Exiting Q Brix Mass Operations Utility")
             exit()

@@ -105,6 +105,8 @@ class QBrixUpdater(BaseTask, ABC):
             tasks_to_update.update({'analytics_manager': 'qbrix.tools.data.qbrix_analytics.AnalyticsManager'})
             tasks_to_update.update({'user_manager': 'qbrix.salesforce.qbrix_salesforce_tasks.CreateUser'})
             tasks_to_update.update({'qbrix_installer_tracking': 'qbrix.tools.utils.qbrix_installtracking.InstallRecorder'})
+            tasks_to_update.update({'qbrix_metadata_checker': 'qbrix.tools.utils.qbrix_metadata_checker.MetadataChecker'})
+            
             self._check_and_deploy_class(tasks_to_update)
 
             if self.UpdateLocation:
