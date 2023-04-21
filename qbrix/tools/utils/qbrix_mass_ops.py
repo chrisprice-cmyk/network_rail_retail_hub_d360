@@ -30,7 +30,7 @@ class MassFileOps(BaseTask, ABC):
         [4]     External ID Field Generator : Generate External ID Fields for a list of Object names\n
         [5]     Push Upgrade Tool (BETA) : Compare changes in metadata between the target org and your project, then push changes to the org.\n
         [6]     Permission Set Generator : Generate Permission Set for Objects, Fields, Tabs and Classes in your project.\n
-        [7]     Q Brix Stack Viewer (BETA): Generates a view of the metadata deployed by the whole stack of Q Brix.
+        [7]     Q Brix Stack Viewer (BETA): Generates a view of the metadata deployed by the whole stack of Q Brix.\n
         [e]     Exit   
     """)
         option = input("\n\nWhich task you like to run? (Enter the option number) : ")
@@ -100,9 +100,18 @@ class MassFileOps(BaseTask, ABC):
                 create_permission_set_file(perm_set_name.replace(" ", "_"), perm_set_name)
                 log.info("Permmission Set Generated!")
         elif option.lower() == "7":
-            if os.path.exists('.cci/projects'):
-                shutil.rmtree('.cci/projects')
-            generate_stack_view()
+
+            print("LOADING STACK VIEWER")
+            output_method = input("\n Would you like to ouput to terminal or to a text file? (terminal/file) : ") or "terminal"
+
+            if output_method and (output_method.lower() == "terminal" or output_method.lower() == "file"):
+
+                if os.path.exists('.cci/projects'):
+                    shutil.rmtree('.cci/projects')
+                generate_stack_view(output=output_method.lower())
+
+            else:
+                print("Invalid Output Method")
         elif option.lower() == "e":
             log.info("Exiting Q Brix Mass Operations Utility")
             exit()
