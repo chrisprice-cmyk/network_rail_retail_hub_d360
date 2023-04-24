@@ -152,3 +152,115 @@ class QbrixEinsteinKeywords(BaseLibrary):
         if not checked:
             self.browser.click("label.slds-checkbox_toggle:has-text('Einstein Classification Apps')")
             sleep(5)
+
+        # Assign Permission Set to Admin User
+        self.cumulusci.run_task(task_name="assign_permission_sets", api_names='EinsteinAgent')
+        sleep(3)
+
+    def einstein_case_classification_post_setup(self):
+
+        self.enable_einstein_classification()
+
+        iframe_handle = self.shared.iframe_handler()
+
+        models = self.browser.get_elements(f"{iframe_handle} #modelTable >> tbody >> tr")
+
+        for model in models:
+
+            model_status = self.browser.get_property(f"{model} >> td.modelStatus", "innerText")
+
+            # Handle Ready to Build Models
+            if model_status == "Ready to Build":
+                self.browser.click(f"{model} >> td.modelName >> button")
+                sleep(2)
+                self.browser.click(":nth-match(button.slds-button:has-text('Build'):visible, 1)")
+                sleep(2)
+
+            # Handle Ready to Activate
+            if model_status == "Ready to Activate":
+                # TODO
+                pass
+            
+            # Return to main setup page
+            self.shared.go_to_setup_admin_page("EinsteinCaseClassification/home")
+            sleep(1)
+
+
+
+    def eac_enabled_enhanced_email_pane(self):
+
+        """
+        Creates a new default Application Pane for Outlook Integration with EAC. Note that this assumes that EAC and Salesforce Inbox features have been enabled.
+        """
+
+        # Enable Enhanced Application Pane
+        self.shared.go_to_setup_admin_page("LightningForOutlookAndSyncSettings/home")
+        sleep(1)
+
+        iframe_handler = self.shared.iframe_handler()
+
+        if "visible" not in self.browser.get_element_states(f"{iframe_handler} h2:text-is('Give Users the Integration in Outlook')"):
+            self.browser.click(f"{iframe_handler} button.slds-button:text-is('Let users access Salesforce records from Outlook')")
+            sleep(1)
+
+        self.browser.click(f"{iframe_handler} button.slds-button:has-text('Create New Pane')")
+        self.browser.click(f"{iframe_handler} span.slds-truncate:has-text('With Inbox Features (License Required)')")
+        sleep(5)
+        self.browser.switch_page("NEW")
+        self.browser.click("button.slds-button:has-text('Save')")
+        sleep(1)
+        self.browser.click("button.slds-button:has-text('Activate')")
+        sleep(3)
+        self.browser.click("button.slds-button:has-text('Next')")
+        sleep(1)
+        self.browser.click("button.slds-button:has-text('Activate')")
+        sleep(2)
+
+    def eac_outlook_integration_setup(self):
+
+        """
+        Runs the initial setup for the Einstein Activity Capture Outlook Integration
+        """
+
+        # Check that initial settings have been activated
+        self.shared.go_to_setup_admin_page("LightningForOutlookAndSyncSettings/home")
+        sleep(1)
+
+        iframe_handler = self.shared.iframe_handler()
+
+        if "checked" not in self.browser.get_element_states(f"{iframe_handler} div.slds-card__header:has-text('Outlook Integration') >> input"):
+            self.browser.click(f"{iframe_handler} div.slds-card__header:has-text('Outlook Integration') >> input")
+            sleep(1)
+
+        if "visible" not in self.browser.get_element_states(f"{iframe_handler} h2:text-is('Give Users the Integration in Outlook')"):
+            self.browser.click(f"{iframe_handler} button.slds-button:text-is('Let users access Salesforce records from Outlook')")
+            sleep(1)
+
+        if "checked" not in self.browser.get_element_states(f"{iframe_handler} div.slds-card__header:has-text('Use Enhanced Email with Outlook') >> input"):
+            self.browser.click(f"{iframe_handler} div.slds-card__header:has-text('Use Enhanced Email with Outlook') >> input")
+            sleep(1)
+
+        if "checked" not in self.browser.get_element_states(f"{iframe_handler} div.slds-card__header:has-text('Customize Content with App Builder') >> input"):
+            self.browser.click(f"{iframe_handler} div.slds-card__header:has-text('Customize Content with App Builder') >> input")
+            sleep(1)
+
+        # Check and enable Salesforce Inbox Settings
+        self.shared.go_to_setup_admin_page("EmailIqSetupPage/home")
+        sleep(1)
+        
+        if "checked" not in self.browser.get_element_states(f"{iframe_handler} div.slds-card__header:has-text('Make Inbox Available to Users') >> input"):
+            self.browser.click(f"{iframe_handler} div.slds-card__header:has-text('Make Inbox Available to Users') >> input")
+            sleep(1)
+
+        if "checked" not in self.browser.get_element_states(f"{iframe_handler} div.slds-media:has-text('Email Tracking') >> input"):
+            self.browser.click(f"{iframe_handler} div.slds-card__header:has-text('Email Tracking') >> input")
+            sleep(1)
+
+        # Assign Required Permissions to running user
+        self.cumulusci.run_task(task_name="assign_permission_sets", api_names='InboxWithEinsteinActivityCapture')
+        sleep(3)
+
+    
+
+        
+
