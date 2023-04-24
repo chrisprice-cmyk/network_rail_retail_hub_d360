@@ -145,41 +145,70 @@ class QbrixEinsteinKeywords(BaseLibrary):
 
     def enable_einstein_classification(self):
         self.shared.go_to_setup_admin_page("EinsteinCaseClassification/home")
-        self.browser.wait_for_elements_state("h1:has-text('Einstein Classification')", ElementState.visible, '10s')
-        sleep(2)
-        checked = "checked" in self.browser.get_element_states(
-            "div.case-classification-pref >> label.slds-checkbox_toggle:text-is('Einstein Classification Apps')")
-        if not checked:
-            self.browser.click("label.slds-checkbox_toggle:has-text('Einstein Classification Apps')")
-            sleep(5)
+        self.browser.wait_for_elements_state("h1:has-text('Einstein Classification')", ElementState.visible, '15s')
+        sleep(5)
 
+        get_enabled_count = self.browser.get_element_count("div.case-classification-pref >> span.slds-checkbox_on:visible")
+
+        if get_enabled_count and get_enabled_count > 0:
+            sleep(3)
+            return
+
+        self.browser.click("div.case-classification-pref >> label.slds-checkbox_toggle:has-text('Einstein Classification Apps')")
         # Assign Permission Set to Admin User
         self.cumulusci.run_task(task_name="assign_permission_sets", api_names='EinsteinAgent')
         sleep(3)
-
+        
     def einstein_case_classification_post_setup(self):
 
+        # Check that Classification is Enabled
         self.enable_einstein_classification()
-
         iframe_handle = self.shared.iframe_handler()
-
+        
+        # Get All Listed Models (Which should now be at Ready to Activate Status)
+        self.browser.wait_for_elements_state(f"{iframe_handle} :nth-match(#modelTable, 1)", ElementState.visible, '15s')
         models = self.browser.get_elements(f"{iframe_handle} #modelTable >> tbody >> tr")
 
+        # Check Models - If any of the models are not Ready to Active status, rebuild is needed
+        rebuild_needed = False
         for model in models:
-
             model_status = self.browser.get_property(f"{model} >> td.modelStatus", "innerText")
 
-            # Handle Ready to Build Models
-            if model_status == "Ready to Build":
-                self.browser.click(f"{model} >> td.modelName >> button")
-                sleep(2)
-                self.browser.click(":nth-match(button.slds-button:has-text('Build'):visible, 1)")
-                sleep(2)
+            print(model_status)
+
+            if model_status:
+                if model_status not in ("Ready to Activate", "Active"):
+                    rebuild_needed = True 
+                    break
+
+        if rebuild_needed:
+            # Disable Classification - Yes I know, this is the way...
+            self.browser.click("label.slds-checkbox_toggle:has-text('Einstein Classification Apps')")
+            sleep(2)
+            self.browser.click("button.slds-button:has-text('Turn Off')")
+            sleep(2)
+
+            # Refresh Page
+            self.shared.go_to_setup_admin_page("EinsteinCaseClassification/home")
+            sleep(2)
+
+            # Enable Classification... AGAIN (This is by design...)
+            self.browser.click("label.slds-checkbox_toggle:has-text('Einstein Classification Apps')")
+            sleep(5)
+
+            self.browser.wait_for_elements_state(f"{iframe_handle} :nth-match(#modelTable, 1)", ElementState.visible, '15s')
+
+        for model in models:
+            model_status = self.browser.get_property(f"{model} >> td.modelStatus", "innerText")
 
             # Handle Ready to Activate
             if model_status == "Ready to Activate":
-                # TODO
-                pass
+                self.browser.click(f"{model} >> td.modelName >> button")
+                sleep(2)
+                self.browser.click("div.ccProgressStepButtons >> button.slds-button:has-text('Activate')")
+                sleep(2)
+                self.browser.click("div.modal-footer >> button.slds-button:has-text('Activate')")
+                sleep(1)
             
             # Return to main setup page
             self.shared.go_to_setup_admin_page("EinsteinCaseClassification/home")
