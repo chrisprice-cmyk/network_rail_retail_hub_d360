@@ -1,31 +1,44 @@
+import os
+import shutil
 import subprocess
 from abc import ABC
 
-from qbrix.tools.shared.qbrix_console_utils import init_logger
 from cumulusci.core.utils import import_global
 from cumulusci.core.exceptions import TaskOptionsError
 from cumulusci.core.tasks import CURRENT_TASK, BaseTask
 from cumulusci.cli.runtime import CliRuntime
 
-log = init_logger()
 
+def rebuild_cci_cache(cci_project_cache_directory: str = ".cci/projects") -> bool:
+    """
+    Rebuilds the CCI projects Cache folder using the dev_org flow from CCI
 
-def rebuild_cci_cache():
-    """"
-    Rebuilds the CCI projects Cache folder using the dev_org flow from CCI 
+    Args:
+        cci_project_cache_directory (str): Relative File Path to the CCI Projects Directory
+
+    Returns:
+        bool: True when complete
     """
 
-    log.info("Rebuilding CumulusCI Project Cache")
+    # Cleanup Current Directory
+    if os.path.exists(cci_project_cache_directory):
+        shutil.rmtree(cci_project_cache_directory)
 
+    # Run dev_org flow to capture all requirements
     try:
         subprocess.run(["cci", "flow", "info", "dev_org"])
     except Exception as e:
-        log.error(f"Failed to rebuild CCI cache. Error Message: {e}")
+        raise Exception(f"Failed to rebuild CCI cache. Error Message: {e}")
 
-    log.info("CumulusCI Project Cache Rebuild Complete!")
+    # Return True to confirm completion
+    return True
 
 
 def _parse_task_options(options, task_class, task_config):
+    """
+    Task Option Parser
+    """
+
     if "options" not in task_config.config:
         task_config.config["options"] = {}
     # Parse options and add to task config
@@ -50,9 +63,14 @@ def _run_task(task):
     return task.return_values
 
 
-def run_cci_task(task_name, org_name=None, **options):
+def run_cci_task(task_name: str, org_name: str = None, **options) -> bool:
     """
-    Runs a given task using the given class_path and optional org name along with optional options.
+    Runs a given task using the name of the task.
+
+    Args:
+        task_name (str): The name of the task to run
+        org_name (str): The optional alias for the org, this defaults to "dev"
+        options: Additional options for the task that you want to provide, for example the 'deploy' task has an option for path, so you can define path='my/path/here'
 
     Example Usage:
 
@@ -85,16 +103,21 @@ def run_cci_task(task_name, org_name=None, **options):
         _run_task(task)
         return True
     except Exception as e:
-        log.error(f"{e}")
-        return False
+        raise Exception(f"Task Runner Failed. {e}")
 
 
-def run_cci_flow(flow_name, org_name=None, **options):
+def run_cci_flow(flow_name: str, org_name: str = None, **options) -> bool:
     """
     Runs a given flow using the flow name and optional org name along with optional options.
 
-    Example Usage:
+    Args:
+        flow_name (str): The name of the flow to run, for example deploy_qbrix
+        org_name (str): Optional alias for the org. This defaults to "dev"
 
+    Returns:
+        bool: True if the flow has executed without error
+
+    Example Usage:
     run_cci_flow('deploy_qbrix', 'dev')
     """
 
@@ -108,8 +131,7 @@ def run_cci_flow(flow_name, org_name=None, **options):
         flow_coordinator.run(org_config)
         return True
     except Exception as e:
-        log.error(f"{e}")
-        return False
+        raise Exception(f"Flow Runner Failed. {e}")
 
 
 class TestRun(BaseTask, ABC):

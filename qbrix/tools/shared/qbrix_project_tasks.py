@@ -64,11 +64,12 @@ def replace_file_text(file_location, search_string, replacement_string, show_inf
         raise Exception(f"There was an error updating the file with path: {file_location}. Please check the file still exists and that you have access to edit it. Error detail: {e}")
 
 
-def get_qbrix_repo_url():
-    """Get Repo URL for current Q Brix. If no .git has been linked to the given project, then user is prompted for url.
+def get_qbrix_repo_url() -> str:
+    """
+    Get Repo URL for current Q Brix. If no .git has been linked to the given project, then user is prompted for url.
 
-    Returns
-        Returns the GitHub repo url for the current Q Brix.
+    Returns:
+        str: GitHub repo url for the current Q Brix.
     """
 
     result = None
@@ -155,7 +156,6 @@ def check_and_delete_file(file_path):
     """
 
     if not os.path.exists(file_path):
-        log.info(f"File ({file_path}) already appears to have been removed or does not exist.")
         return True
 
     if not os.path.isfile(file_path):
@@ -214,15 +214,11 @@ def update_org_file_features(file_location, missing_features, auto: Optional[boo
             # De-Duplicate Feature Lists and Append to Clean List
             clean_feature_list = []
             for current_feature in current_features:
-                if (":" not in current_feature and not current_feature.lower() in clean_feature_list) or (
-                        ":" in current_feature and not advanced_feature_match(current_feature.lower(),
-                    clean_feature_list)):
+                if (":" not in current_feature and not current_feature.lower() in clean_feature_list) or (":" in current_feature and not advanced_feature_match(current_feature.lower(), clean_feature_list)):
                     clean_feature_list.append(current_feature.lower())
 
             for missing_feature in missing_features:
-                if (":" not in missing_feature and not missing_feature.lower() in clean_feature_list) or (
-                        ":" in missing_feature and not advanced_feature_match(missing_feature.lower(),
-                    clean_feature_list)):
+                if (":" not in missing_feature and not missing_feature.lower() in clean_feature_list) or (":" in missing_feature and not advanced_feature_match(missing_feature.lower(), clean_feature_list)):
                     clean_feature_list.append(missing_feature.lower())
 
             clean_feature_list.sort()
@@ -332,7 +328,6 @@ def check_org_config_files(auto=False):
         raise Exception(f"The provided file path for the dev scratch org definition file, located at (orgs/dev_preview.json), does not exist.")
 
     for scratch_config_file in ('orgs/dev.json', 'orgs/dev_preview.json'):
-
         # Check for "Enterprise" or "Partner Enterprise" edition in scratch org definition
         current_edition = get_json_file_value(scratch_config_file, "edition")
 
@@ -441,49 +436,51 @@ def check_for_missing_files():
         log.error("[ERROR] Missing File: orgs/dev_preview.json")
 
 
-def download_and_unzip(url: Optional[str] = DEFAULT_UPDATE_LOCATION, archive_password: Optional[str] = "",
-        ignore_optional_updates: Optional[bool] = False, q_update: Optional[bool] = False):
-    """ Downloads a .zip file and extracts all folders to the root project directory """
+def download_and_unzip(url: Optional[str] = DEFAULT_UPDATE_LOCATION, archive_password: Optional[str] = None, ignore_optional_updates: Optional[bool] = False, q_update: Optional[bool] = False) -> bool:
+    """
+    Downloads a .zip file and extracts all contents to the root project directory in the same structure they are within the zip file.
 
-    log.info("Downloading Update Package")
-    http_response = urlopen(url)
-    log.info("Download Complete!")
-    log.info("Extracting Update Package to project folder...")
+    Args:
+        url (str): The URL where the .zip file is located. Note that this must be publicly accessible. If none is specified it will default to the QBrix Update Location
+        archive_password (str): Optional password for the .zip file
+        ignore_optional_updates (bool): Set to True to ignore anything flagged as optional. Applies only to the Q Brix Updates. Defaults to False
+        q_update (bool): This is set to True to generate additional folders in the project directory when a Q Brix update is running. Defaults to False
+
+    Returns:
+        bool: Returns True when the process has completed and False if there has been an issue.
+
+    """
+
     try:
-        zipfile = ZipFile(BytesIO(http_response.read()))
+        zipfile = ZipFile(BytesIO(urlopen(url).read()))
 
-        # Extraction Path
-        extract_path = ""
+        # Set Password if given
+        if archive_password:
+            zipfile.setpassword(pwd=bytes(archive_password, 'utf-8'))
 
-        # HANDLE Q UPDATE
+        # Set Extraction Path
+        extract_path = "."
+
+        # When Q Brix Update, Ensure all paths are created and clear old download
         if q_update:
             if not exists(".qbrix"):
-                log.info("Creating Update Folder")
                 os.mkdir(".qbrix")
 
             if not exists(".qbrix/Update"):
-                log.info("Creating Update Folder")
                 os.mkdir(".qbrix/Update")
 
             extract_path = ".qbrix/Update/"
 
             if exists(".qbrix/Update/xDO-Template-main"):
-                log.info("Removing Old Source")
                 shutil.rmtree(".qbrix/Update/xDO-Template-main")
 
-        # CHECK FOR MISSING DIRS AND CREATE THEM
+        # Ensure Extract Paths
         dir_check_list = [x for x in zipfile.namelist() if x.endswith('/')]
         for d in dir_check_list:
             if not exists(extract_path + d):
                 os.mkdir(extract_path + d)
-                log.info(f"Created New Directory: {extract_path + d}")
 
-        # HANDLE ZIP PASSWORDS
-        if archive_password is not None and archive_password != "":
-            zipfile.setpassword(pwd=bytes(archive_password, 'utf-8'))
-
-        # EXTRACT FILES
-        log.info("Updating Q Brix files...")
+        # Extract Files
         zipfile.extractall(path=extract_path)
 
         # Clean Up
@@ -507,43 +504,37 @@ def download_and_unzip(url: Optional[str] = DEFAULT_UPDATE_LOCATION, archive_pas
 
 
 def check_and_update_old_class_refs():
+    """
+    Scans the cumulusci.yml file and ensures that any old class references have been updated to the new locations.
+    """
+
     # Health Check
-    replace_file_text("cumulusci.yml", "tasks.custom.qbrix_utils.HealthChecker",
-        "qbrix.tools.utils.qbrix_health_check.HealthChecker")
+    replace_file_text("cumulusci.yml", "tasks.custom.qbrix_utils.HealthChecker", "qbrix.tools.utils.qbrix_health_check.HealthChecker")
 
     # Q Brix Update
-    replace_file_text("cumulusci.yml", "tasks.custom.qbrix_utils.QBrixUpdater",
-        "qbrix.tools.utils.qbrix_update.QBrixUpdater")
+    replace_file_text("cumulusci.yml", "tasks.custom.qbrix_utils.QBrixUpdater", "qbrix.tools.utils.qbrix_update.QBrixUpdater")
 
     # FART
-    replace_file_text("cumulusci.yml", "tasks.custom.fart.FART",
-        "qbrix.tools.utils.qbrix_fart.FART")
+    replace_file_text("cumulusci.yml", "tasks.custom.fart.FART", "qbrix.tools.utils.qbrix_fart.FART")
 
     # Batch Apex
-    replace_file_text("cumulusci.yml", "tasks.custom.batchanonymousapex.BatchAnonymousApex",
-        "qbrix.tools.utils.qbrix_batch_apex.BatchAnonymousApex")
+    replace_file_text("cumulusci.yml", "tasks.custom.batchanonymousapex.BatchAnonymousApex", "qbrix.tools.utils.qbrix_batch_apex.BatchAnonymousApex")
 
     # Org Generator
-    replace_file_text("cumulusci.yml", "tasks.custom.orggenerator.Spin",
-        "qbrix.tools.utils.qbrix_org_generator.Spin")
+    replace_file_text("cumulusci.yml", "tasks.custom.orggenerator.Spin", "qbrix.tools.utils.qbrix_org_generator.Spin")
 
     # Init Project
-    replace_file_text("cumulusci.yml", "tasks.custom.qbrix_utils.Initialise_Project",
-        "qbrix.tools.utils.qbrix_project_setup.InitProject")
-    replace_file_text("cumulusci.yml", "tasks.custom.qbrix_utils.InitProject",
-        "qbrix.tools.utils.qbrix_project_setup.InitProject")
+    replace_file_text("cumulusci.yml", "tasks.custom.qbrix_utils.Initialise_Project", "qbrix.tools.utils.qbrix_project_setup.InitProject")
+    replace_file_text("cumulusci.yml", "tasks.custom.qbrix_utils.InitProject", "qbrix.tools.utils.qbrix_project_setup.InitProject")
 
     # List Q Brix
-    replace_file_text("cumulusci.yml", "tasks.custom.qbrix_sf.ListQBrix",
-        "qbrix.salesforce.qbrix_salesforce_tasks.ListQBrix")
+    replace_file_text("cumulusci.yml", "tasks.custom.qbrix_sf.ListQBrix", "qbrix.salesforce.qbrix_salesforce_tasks.ListQBrix")
 
     # Banner
-    replace_file_text("cumulusci.yml", "tasks.custom.announce.CreateBanner",
-        "qbrix.tools.shared.qbrix_console_utils.CreateBanner")
+    replace_file_text("cumulusci.yml", "tasks.custom.announce.CreateBanner", "qbrix.tools.shared.qbrix_console_utils.CreateBanner")
 
     # Mass File Ops
-    replace_file_text("cumulusci.yml", "tasks.custom.qbrix_utils.MassFileOps",
-        "qbrix.tools.utils.qbrix_mass_ops.MassFileOps")
+    replace_file_text("cumulusci.yml", "tasks.custom.qbrix_utils.MassFileOps", "qbrix.tools.utils.qbrix_mass_ops.MassFileOps")
 
     # SFDMU
     replace_file_text("cumulusci.yml", "tasks.custom.sfdmuload.SFDMULoad", "qbrix.tools.data.qbrix_sfdmu.SFDMULoad")
@@ -553,74 +544,115 @@ def check_and_update_old_class_refs():
 
 
 def clean_project_files():
-    """ Removes Cached files and folders from q brix project """
+    """
+    Removes known directories and files from a Q Brix Project folder which can be safely removed.
+    """
 
-    try:
-        check_and_delete_dir(".cci/projects")
-        check_and_delete_dir("src")
-        check_and_delete_dir("browser")
-        check_and_delete_file("log.html")
-        check_and_delete_file("playwright-log.txt")
-        check_and_delete_file("output.xml")
-        check_and_delete_file("report.html")
-        check_and_delete_file("validationresult.json")
+    # Add Directory Paths to this list to have them removed by cleaner
+    dirs_to_remove = [
+        ".cci/projects",
+        "src",
+        "browser"
+    ]
 
-    except Exception() as e:
-        log.info(f"Failed to Clean Up Project Files. Error Message: {e}")
+    # Add File Paths to this list to have them removed by cleaner
+    files_to_remove = [
+        "log.html",
+        "playwright-log.txt",
+        "output.xml",
+        "report.html",
+        "validationresult.json"
+    ]
+
+    if dirs_to_remove:
+        for d in dirs_to_remove:
+            check_and_delete_dir(d)
+
+    if files_to_remove:
+        for f in files_to_remove:
+            check_and_delete_file(f)
 
 
 def delete_standard_fields():
-    """ Removes Standard Salesforce Fields from Project """
-    object_fields = glob.glob("force-app/main/default/objects" + "/**/*.field-meta.xml", recursive=True)
-    if len(object_fields) == 0:
-        log.info("No Standard/Core Fields Found in Project!")
-    else:
-        for of in object_fields:
-            if not os.path.basename(of).endswith(".field-meta.xml"):
-                os.remove(of)
-                log.info(f"Deleted File: {of}")
-
-
-def update_file_api_versions(project_api_version):
-    """ Update file API version in project
-    :param project_api_version: Target API Version you want to update the files to. e.g. 56
     """
-    # Handle Bulk Files
-    # To add: Visualforce and Apex Triggers
-    class_files = glob.glob("force-app/main/default/classes" + "/**/*.cls-meta.xml", recursive=True)
-    aura_files = glob.glob("force-app/main/default/aura" + "/**/*.cmp-meta.xml", recursive=True)
-    lwc_files = glob.glob("force-app/main/default/lwc" + "/**/*.js-meta.xml", recursive=True)
-    results = []
-    results.extend(class_files)
-    results.extend(aura_files)
-    results.extend(lwc_files)
-    for f in results:
-        try:
-            FART.fartbetween(FART, f, "<apiVersion>", "</apiVersion>", project_api_version, None)
-            log.info(f"[OK] File Updated: {f}")
-        except Exception as e:
-            log.error(f"[FAILED] File Update Failed: {f} - {e}")
-    # Handle Single Files
-    if exists("files/package.xml"):
-        try:
-            FART.fartbetween(FART, "files/package.xml", "<version>", "</version>", project_api_version, None)
-            log.info(f"[OK] File Updated: files/package.xml")
-        except Exception as e:
-            log.error(f"[FAILED] File Update files/package.xml - Error: {e}")
-    if exists("sfdx-project.json"):
-        try:
-            update_json_file_value("sfdx-project.json", "sourceApiVersion", project_api_version)
-            log.info(f"[OK] File Updated: sfdx-project.json")
-        except Exception as e:
-            log.error(f"[FAILED] File Update sfdx-project.json - Error: {e}")
+    Removes Core/Standard Fields from Project Source. These are fields which are often pulled down when a standard Object is changed, like Account. Only custom fields need to be stored in the project, so this cleans up the other fields.
+    """
+    object_fields = glob.glob("force-app/main/default/objects/**/*.field-meta.xml", recursive=True)
+    if object_fields and len(object_fields) > 0:
+        for of in object_fields:
+            if not os.path.basename(of).endswith("__c.field-meta.xml"):
+                os.remove(of)
 
 
-def upsert_gitignore_entries(list_entries):
+def update_file_api_versions(project_api_version) -> bool:
+    """
+    Scans specific files in the project which specify their own API version and updates them to be the same as the provided version
+
+    Args:
+        project_api_version: Target API Version you want to update the files to. e.g. 56
+
+    Returns:
+        bool: Returns True when complete. False if there was an issue.
+    """
+
+    if not project_api_version:
+        return False
+
+    # Init FART
+    second_wind = FART()
+
+    # File Locations To Check
+    file_pattern_locations = [
+        "force-app/main/default/classes/**/*.cls-meta.xml",
+        "force-app/main/default/aura/**/*.cmp-meta.xml",
+        "force-app/main/default/lwc/**/*.js-meta.xml",
+        "files/package.xml",
+        "sfdx-project.json"
+    ]
+
+    file_list = []
+    if file_pattern_locations and len(file_pattern_locations) > 0:
+        for pattern in file_pattern_locations:
+            file_list += glob.glob(pattern, recursive=True)
+
+        if len(file_list) > 0:
+            for f in file_list:
+                if not os.path.exists(f):
+                    continue
+
+                left_side = "<apiVersion>"
+                right_side = "</apiVersion>"
+
+                if f == "files/package.xml":
+                    left_side = "<version>"
+                    right_side = "</version>"
+                elif f == "sfdx-project.json":
+                    left_side = "<sourceApiVersion>"
+                    right_side = "</sourceApiVersion>"
+
+                second_wind.fartbetween(srcfile=f, left=left_side, right=right_side, replacewith=project_api_version, formatval=None)
+
+    return True
+
+
+def upsert_gitignore_entries(list_entries) -> bool:
+    """
+    Upserts a list of given gitignore patterns in the .gitignore file within the project. Each pattern is checked and if it is missing, it is added. If it exists but has been commented out, it will uncomment it.
+
+    Args:
+        list_entries (list(str)): List of strings which represent the gitignore patterns to check and upsert.
+
+    Returns:
+        bool: Returns True when completed, else False if there was an issue.
+    """
+
     if len(list_entries) == 0:
-        log.debug("Updated .gitignore file skipped. No entries passed to check.")
-        return
+        return False
 
-    entries_to_append = []
+    if not os.path.exists(".gitignore"):
+        return False
+
+    log.info("Checking .gitignore File")
 
     with open(".gitignore", 'a+') as git_file:
         git_file.seek(0)
@@ -628,27 +660,21 @@ def upsert_gitignore_entries(list_entries):
 
         for entry in list_entries:
             if entry not in content or f"#{entry}" in content:
-                if entry.lower() not in entries_to_append:
-                    entries_to_append.append(entry.lower())
-            else:
-                continue
+                git_file.write(f"{entry}\n")
 
-        if len(entries_to_append) > 0:
-            for e in entries_to_append:
-                git_file.write(f"{e}\n")
+    return True
 
 
 def check_permset_group_files():
-    psg_files = glob.glob("force-app/main/default/permissionsetgroups" + "/**/*.permissionsetgroup-meta.xml",
-        recursive=True)
-
+    """
+    Checks Permission Set Group Metadata Files and ensures they are set as 'Outdated'. This ensures they are recalculated upon deployment to an org.
+    """
+    psg_files = glob.glob("force-app/main/default/permissionsetgroups/**/*.permissionsetgroup-meta.xml", recursive=True)
     if len(psg_files) > 0:
-        log.info("Checking Permission Set Group Files...")
+        log.info("Checking Permission Set Group File(s)")
         for psg in psg_files:
             log.info(f"Checking {psg} file configuration.")
             FART.fartbetween(FART, psg, "<status>", "</status>", "Outdated", None)
-    else:
-        log.info("No Permission Set Group Files in Project, skipping check.")
 
 
 def add_prefix(path, prefix):
@@ -657,7 +683,6 @@ def add_prefix(path, prefix):
 
 
 def update_references(old_value, new_value, prefix=''):
-
     """
     Walks through project folders and updates all references to a new prefixed reference
 
@@ -669,14 +694,14 @@ def update_references(old_value, new_value, prefix=''):
 
     if old_value == 'All':
         return
-    
+
     if old_value == new_value:
-        return 
+        return
 
     project_path = 'force-app/main/default'
     reference_pattern = re.compile(rf'(?<!{prefix})\b{old_value}\b')
 
-    for project_path in ["force-app/main/default","unpackaged/pre","unpackaged/post"]:
+    for project_path in ["force-app/main/default", "unpackaged/pre", "unpackaged/post"]:
         for root, dirs, files in os.walk(project_path):
             for file_name in files:
                 if "external_id" in os.path.basename(file_name).lower() or os.path.basename(file_name).lower().startswith("sdo_") or os.path.basename(file_name).lower().startswith("xdo_") or os.path.basename(file_name).lower().startswith("db_"):
@@ -698,11 +723,10 @@ def update_references(old_value, new_value, prefix=''):
                             print(f'Updated references for {old_value} in {file_path}')
                     except Exception as e:
                         log.debug(e)
-                        pass 
+                        pass
 
 
 def assign_prefix_to_files(prefix, parent_folder='force-app/main/default', interactive_mode=False):
-
     """
     Assigns a given prefix like 'FINS_' to custom items within the project folder.
 
@@ -734,17 +758,15 @@ def assign_prefix_to_files(prefix, parent_folder='force-app/main/default', inter
     # Find and Update Custom Object Folder Names
     for root, dirs, files in os.walk(os.path.join(parent_folder, 'objects')):
         for dir_name in dirs:
-
             # no need to ask for standard object, or any sub folders (like fields, recordTypes folder) in each object folder
             if not dir_name.lower().endswith('__c'):
                 log.debug(f"Ignoring {dir_name}")
                 continue
 
             # no need to ask for anything comes from managed package
-            if re.match(r'^[a-zA-Z]+__',dir_name):
+            if re.match(r'^[a-zA-Z]+__', dir_name):
                 log.debug(f"Ignoring {dir_name}")
                 continue
-
 
             if PATTERN.match(dir_name) and not dir_name.lower().startswith(prefix.lower()):
                 old_path = os.path.join(root, dir_name)
@@ -833,12 +855,29 @@ def assign_prefix_to_files(prefix, parent_folder='force-app/main/default', inter
         print(f"FILE OR FOLDER RENAMED:\n    Previous Path: {path_to_update}\n    New Path: {new_updated_path}")
 
 
-def create_external_id_field(file_path):
-    with open(file_path) as file:
-        for line in file:
-            object_name = line.strip()
-            if object_name:
-                object_dir = os.path.join("force-app", "main", "default", "objects", object_name)
+def create_external_id_field(file_path: str = None):
+    """
+    Creates External ID Fields for a given list of Object Names. If no file is provided, this will generate External ID fields on all objects within the current project directory.
+
+    Args:
+        file_path (str): Relative Path within Project to a .txt file containing a list of objects to process. If not provided, will generate a list of objects from the current project.
+    """
+
+    object_list = []
+
+    if file_path:
+        with open(file_path) as file:
+            for line in file:
+                if line and len(line) > 1:
+                    object_list.append(line.strip())
+    else:
+        for obj in os.listdir("force-app/main/default/objects"):
+            object_list.append(obj)
+
+    if len(object_list) > 0:
+        for project_object in object_list:
+            if project_object:
+                object_dir = os.path.join("force-app", "main", "default", "objects", project_object)
                 fields_dir = os.path.join(object_dir, "fields")
                 field_file = os.path.join(fields_dir, "External_ID__c.field-meta.xml")
                 if not os.path.exists(object_dir):
@@ -947,12 +986,11 @@ def push_changes(target_org_alias):
 
 
 def create_permission_set_file(name, label):
-
     """
     Creates a Permission Set from the current Project.
 
     Args:
-        Name (str): The Name for the Permission Set File
+        name (str): The Name for the Permission Set File
         label (str): The label for the Permission Set
     """
 
@@ -1023,7 +1061,7 @@ def create_permission_set_file(name, label):
                 if os.path.isdir(fields_folder_path):
                     for field_file in os.listdir(fields_folder_path):
                         # Read File and skip MasterDetail and Formula Fields
-                        with open(os.path.join(fields_folder_path,field_file), "r") as file:
+                        with open(os.path.join(fields_folder_path, field_file), "r") as file:
                             contents = file.read()
                             formula_reference_to_start = contents.find("<formula>")
                             md_reference_to_start = contents.find("<type>MasterDetail</type>")
@@ -1093,7 +1131,6 @@ def create_permission_set_file(name, label):
 
 
 def generate_stack_view(parent_directory_path='.cci/projects', output="terminal"):
-
     # Regenerate cci cache
     rebuild_cci_cache()
 
@@ -1110,7 +1147,7 @@ def generate_stack_view(parent_directory_path='.cci/projects', output="terminal"
 
     if output == "terminal":
         print("Sending outputs to the Terminal")
-        print("\n***SOURCE QBRIX FILES***") 
+        print("\n***SOURCE QBRIX FILES***")
     else:
         now = datetime.datetime.now()
         log_file_name = "stack_log_" + now.strftime("%Y%m%d%H%M%S") + ".txt"
@@ -1119,9 +1156,7 @@ def generate_stack_view(parent_directory_path='.cci/projects', output="terminal"
         log_file.write("\n***SOURCE QBRIX FILES***")
 
     for i, qbrix in enumerate(sub_directory_names_sorted):
-
         if qbrix != "LOCAL":
-            
             if output == "terminal":
                 print(f"\n{qbrix}")
                 print("-" * len(qbrix))
@@ -1129,7 +1164,7 @@ def generate_stack_view(parent_directory_path='.cci/projects', output="terminal"
                 log_file.write(f"\n\n{qbrix}\n")
                 log_file.write("-" * len(qbrix))
 
-            cci_yml = glob.glob(f"{os.path.join('.cci','projects', qbrix)}/**/cumulusci.yml", recursive=True)
+            cci_yml = glob.glob(f"{os.path.join('.cci', 'projects', qbrix)}/**/cumulusci.yml", recursive=True)
 
             if cci_yml:
                 with open(cci_yml[0], 'r') as f:
@@ -1139,12 +1174,12 @@ def generate_stack_view(parent_directory_path='.cci/projects', output="terminal"
                 if api_version:
                     if output == "terminal":
                         print(f"\nAPI Version: {api_version}")
-                    else: 
+                    else:
                         log_file.write(f"\nAPI Version: {api_version}")
                 else:
                     if output == "terminal":
                         print("\nAPI Version: ERROR MISSING!!!")
-                    else: 
+                    else:
                         log_file.write("\nAPI Version: ERROR MISSING!!!")
 
                 repo_url = config['project']['git']['repo_url']
@@ -1183,8 +1218,7 @@ def generate_stack_view(parent_directory_path='.cci/projects', output="terminal"
                 print("\nFILES:")
             else:
                 log_file.write(f"\nFILES:")
-            for root, dirs, files in os.walk(os.path.join(".cci","projects", qbrix)):
-                
+            for root, dirs, files in os.walk(os.path.join(".cci", "projects", qbrix)):
                 if "force-app/main/default" in root:
                     for file_name in files:
                         file_path = os.path.join(root, file_name)
@@ -1196,7 +1230,7 @@ def generate_stack_view(parent_directory_path='.cci/projects', output="terminal"
                             else:
                                 log_file.write(f"\n - {file_path}")
                             if i == 0:
-                                 files_list.append((file_path, qbrix))
+                                files_list.append((file_path, qbrix))
                             else:
                                 if len([t for t in files_list if t[0] == file_path]) >= 1:
                                     overwritten_files_list.append((file_path, qbrix))
@@ -1204,7 +1238,6 @@ def generate_stack_view(parent_directory_path='.cci/projects', output="terminal"
                                     files_list.append((file_path, qbrix))
 
         else:
-
             if output == "terminal":
                 print(f"\nLOCAL QBRIX")
                 print("-" * len("LOCAL QBRIX"))
@@ -1214,22 +1247,21 @@ def generate_stack_view(parent_directory_path='.cci/projects', output="terminal"
 
             for root, dirs, files in os.walk("force-app/main/default"):
                 for file_name in files:
-                        file_path = os.path.join(root, file_name)
-                        force_app_index = file_path.find("force-app/main/default/")
-                        if force_app_index != -1:
-                            file_path = os.path.join(file_path[force_app_index + len("force-app/main/default/"):])
-                            if output == "terminal":
-                                print(f" - {file_path}")
+                    file_path = os.path.join(root, file_name)
+                    force_app_index = file_path.find("force-app/main/default/")
+                    if force_app_index != -1:
+                        file_path = os.path.join(file_path[force_app_index + len("force-app/main/default/"):])
+                        if output == "terminal":
+                            print(f" - {file_path}")
+                        else:
+                            log_file.write(f"\n - {file_path}")
+                        if i == 0:
+                            files_list.append((file_path, qbrix))
+                        else:
+                            if len([t for t in files_list if t[0] == file_path]) >= 1:
+                                overwritten_files_list.append((file_path, qbrix))
                             else:
-                                log_file.write(f"\n - {file_path}")
-                            if i == 0:
-                                 files_list.append((file_path, qbrix))
-                            else:
-                                if len([t for t in files_list if t[0] == file_path]) >= 1:
-                                    overwritten_files_list.append((file_path, qbrix))
-                                else:
-                                    files_list.append((file_path, qbrix))
-
+                                files_list.append((file_path, qbrix))
 
     if output == "terminal":
         print("\n***STACK FILES WHICH ARE REDEPLOYED***")
@@ -1237,7 +1269,6 @@ def generate_stack_view(parent_directory_path='.cci/projects', output="terminal"
         log_file.write("\n\n***STACK FILES WHICH ARE REDEPLOYED***")
 
     for f, q in files_list:
-
         overwrite_matches = [t for t in overwritten_files_list if t[0] == f]
 
         if len(overwrite_matches) > 0:
