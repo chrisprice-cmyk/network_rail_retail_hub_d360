@@ -149,22 +149,12 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
                 return ""
         return None
 
-    def download_datasets(self, wave_folder: str = "force-app/main/default/wave"):
-        """
-        Downloads the related dataset data based on the datasets in the wave folder
-
-        Args:
-            wave_folder (str): The location of the wave dataset metadata files. Defaults to 'force-app/main/default/wave'
-        """
-        if not os.path.exists(wave_folder):
+    def download_datasets(self):
+        if not os.path.exists("force-app/main/default/wave"):
             log.debug("No Analytics Folder Found. Skipping Dataset Download.")
             return
 
-        wave_dataset_files = glob.glob("force-app/main/default/wave/*.wds-meta.xml", recursive=False)
-
-        if not wave_dataset_files or len(wave_dataset_files) == 0:
-            self.logger.info("No Dataset Files Found. Skipping Dataset Download.")
-            return
+        wave_dataset_files = glob.glob("force-app/main/default/wave" + "/*.wds-meta.xml", recursive=False)
 
         self.logger.info("Starting Download of dataset files")
 
@@ -175,8 +165,9 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
         org_datasets = self.get_datasets_from_org()
 
         for file in wave_dataset_files:
-            dataset_name = self.get_dataset_name(file)
+            dataset_name = Path(file).stem.replace(".wds-meta", "")
 
+            # if dataset_name == 'Activity':
             if dataset_name in org_datasets:
                 dataset_details = org_datasets.get(dataset_name)
                 self.generate_csv_from_wave_dataset_version(dataset_details["id"], 'datasets/analytics', dataset_name, dataset_details["version"])
