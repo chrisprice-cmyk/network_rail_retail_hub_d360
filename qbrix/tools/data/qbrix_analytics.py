@@ -25,15 +25,22 @@ from qbrix.tools.shared.qbrix_project_tasks import replace_file_text
 log = init_logger()
 
 
-def cleanup_null_values(file_location):
-    if not str(file_location).endswith(".json"):
-        log.error(f"The file provided was not a json file. File Location: {file_location}")
-        return
+def cleanup_null_values(file_location: str = None):
+
+    """
+    Reviews json metadata description files and applies known fixes
+
+    Args:
+        file_location (str): The relative path to the .json file in the project.
+    """
+
+    if not file_location or not str(file_location).endswith(".json") or not os.path.exists(file_location):
+        raise Exception(f"Error: Unable to read the provided file at {file_location}. Ensure it is a valid json file.")
 
     with open(file_location, 'r') as f:
         data = json.load(f)
 
-    if data is not None:
+    if data:
         for o in data["objects"][0]["fields"]:
             if "defaultValue" in o and "type" in o and o["type"] == "Numeric":
                 o["defaultValue"] = "0" if o["defaultValue"].lower() == "null" else o["defaultValue"]
@@ -42,7 +49,16 @@ def cleanup_null_values(file_location):
             json.dump(data, f)
 
 
-def get_app_name(file_location):
+def get_app_name(file_location: str = None):
+    """
+    Reads the Related Analytics Application Name from the project Dataset files
+
+    Args:
+        file_location (str): Relative Path to the dataset file within the project
+
+    Returns:
+        str: Application Name if found, otherwise None
+    """
     if not file_location:
         log.error("File was not passed. Skipping file")
         return None
@@ -53,6 +69,7 @@ def get_app_name(file_location):
 
     if not str(file_location).endswith(".wds-meta.xml"):
         log.debug(f"A file has been passed to an Analytics method, which is not in the expected file format (i.e. File Extension should be .wds-meta.xml). This method will continue to review the file although there may be unexpected results. Please check the file {file_location}")
+        return None
 
     with open(file_location, 'r') as file:
         file.seek(0)
@@ -118,12 +135,36 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
         for wave in wave_files:
             cleanup_null_values(wave)
 
-    def download_datasets(self):
-        if not os.path.exists("force-app/main/default/wave"):
+    def get_dataset_name(self, dataset_file_path: str = None):
+        if not dataset_file_path:
+            return
+        with open(dataset_file_path, 'r') as dataset_file:
+            xml_string = dataset_file.read()
+
+        if xml_string:
+            match = re.search(r'<masterLabel>(.*?)</masterLabel>', xml_string, re.DOTALL)
+            if match:
+                return match.group(1)
+            else:
+                return ""
+        return None
+
+    def download_datasets(self, wave_folder: str = "force-app/main/default/wave"):
+        """
+        Downloads the related dataset data based on the datasets in the wave folder
+
+        Args:
+            wave_folder (str): The location of the wave dataset metadata files. Defaults to 'force-app/main/default/wave'
+        """
+        if not os.path.exists(wave_folder):
             log.debug("No Analytics Folder Found. Skipping Dataset Download.")
             return
 
-        wave_dataset_files = glob.glob("force-app/main/default/wave" + "/*.wds-meta.xml", recursive=False)
+        wave_dataset_files = glob.glob("force-app/main/default/wave/*.wds-meta.xml", recursive=False)
+
+        if not wave_dataset_files or len(wave_dataset_files) == 0:
+            self.logger.info("No Dataset Files Found. Skipping Dataset Download.")
+            return
 
         self.logger.info("Starting Download of dataset files")
 
@@ -134,7 +175,7 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
         org_datasets = self.get_datasets_from_org()
 
         for file in wave_dataset_files:
-            dataset_name = Path(file).stem.replace(".wds-meta", "")
+            dataset_name = self.get_dataset_name(file)
 
             if dataset_name in org_datasets:
                 dataset_details = org_datasets.get(dataset_name)
@@ -144,6 +185,7 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
                 self.logger.info(f"{dataset_name} is not present in the target org. Skipping.")
 
     def upload_dataset_data(self):
+
         if not os.path.exists("force-app/main/default/wave"):
             log.debug("No Source Analytics Folder Found at the expected location (force-app/main/default/wave). Skipping Dataset Deployment.")
             return
@@ -158,7 +200,7 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
 
         if len(wave_dataset_files) > 0:
             for file in wave_dataset_files:
-                dataset_name = Path(file).stem.replace(".wds-meta", "")
+                dataset_name = self.get_dataset_name(file)
                 data_file_location = f"{self.dataset_folder}/{dataset_name}.csv"
                 app_name = get_app_name(file)
 
@@ -278,11 +320,12 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
         self.logger.info("Upload Complete!")
 
     def remove_user_shares(self, folder_shares):
-        # Use a list comprehension to filter out any shares with a shareType of "User"
+        """
+        Remove any User specific shares
+        """
         return [share for share in folder_shares if share.get("shareType") != "user"]
     
     def remove_unused_keys(self, folder_shares):
-        # Use a list comprehension with a dictionary comprehension to remove any unused keys
         return [{key: share[key] for key in ("accessType", "shareType")} for share in folder_shares]
 
     def update_folder_sharing(self, folder_name):
