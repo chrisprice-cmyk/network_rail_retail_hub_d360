@@ -123,7 +123,7 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
             log.debug("No Analytics Folder Found. Skipping Dataset Download.")
             return
 
-        wave_dataset_files = glob.glob("force-app/main/default/wave" + "/*.wds-meta.xml", recursive=True)
+        wave_dataset_files = glob.glob("force-app/main/default/wave" + "/*.wds-meta.xml", recursive=False)
 
         self.logger.info("Starting Download of dataset files")
 
@@ -432,7 +432,7 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
         for dash in wave_dashboard_files:
 
             # Find and Replace Exact Matches
-            if not replace_file_text(file_location=dash, search_string=find_value, replacement_string=replace_value, show_info=False):
+            if not replace_file_text(file_location=dash, search_string=find_value, replacement_string=replace_value, show_info=True):
 
                 if "_" in replace_value:
                     #self.logger.info(f"{find_value} was not found in Dashboard File {dash}. Running fuzzy match search to double check for other references.")
@@ -682,7 +682,7 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
         self.logger.info("Checking that all references to fields in the dataset have been updated in the dashboard files")
         seen = set()
         for item in fields:
-            self.find_replace_column_name_indash(item["label"], item['name'])
+            self.find_replace_column_name_indash(f"\"name\":\"{item['label']}\"", f"\"name\":\"{item['name']}\"")
             if item['name'] in seen:
                 fields.remove(item)
                 self.remove_column_from_csv(item["label"], out_file)
@@ -714,14 +714,14 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
                 json.dump(metadata, file, indent=4)
         
 
-    def get_datasets_from_org(self):
+    def get_datasets_from_org(self, endpoint = f"wave/datasets?pageSize=25", org_dataset_dict = {}):
 
         # Retrieve the list of datasets
         headers = {
             "Content-Type": "application/json; charset=UTF-8",
             "Accept": "application/json"
         }
-        endpoint = f"wave/datasets?pageSize=200"
+
         response = self.sf.restful(endpoint, method="GET")
 
         org_dataset_dict = {}
@@ -735,7 +735,10 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
                 if not dataset_version:
                     dataset_version = ''
 
-                org_dataset_dict.update({dataset["label"]: {"id": dataset["id"], "version": dataset_version}})
+                org_dataset_dict.update({dataset["name"]: {"id": dataset["id"], "version": dataset_version}})
+
+            if response["nextPageUrl"]:
+                org_dataset_dict = self.get_datasets_from_org(response['nextPageUrl'].replace('/services/data/v56.0/', ''), org_dataset_dict)
    
         return org_dataset_dict      
 
