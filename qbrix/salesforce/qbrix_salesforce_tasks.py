@@ -802,8 +802,18 @@ class PopulateRecentlyViewed(BaseSalesforceApiTask, ABC):
     def _run_task(self):
 
         for obj in self.objects:
+
             if obj not in self.unsupported_objects:
-                self.sf.query(f"Select Id From {obj} Limit {self.limit} For View")
-                self.logger.info(f"Updated Recently Viewed List for {obj}")
-            else:
-                self.logger.info(f"{obj} is unsupported. Skipping")
+
+                if str(obj).endswith("__c"):
+                    custom_tab_result = self.sf.query_all(f"SELECT SObjectName FROM TabDefinition WHERE IsCustom = true AND SObjectName = '{obj}'")
+                    if custom_tab_result.get("totalSize") == 0:
+                        self.logger.info(f"{obj} does not have a Tab, so Recently Viewed cannot be automatically set. Skipping.")
+                        continue 
+
+                query = f"SELECT Id FROM {obj} ORDER BY CreatedDate DESC LIMIT {self.limit} FOR VIEW"
+                try:
+                    self.sf.query_all(query)
+                    self.logger.info(f"Updated Recently Viewed List for {obj}")
+                except Exception as e:
+                    self.logger.error(f"Error updating Recently Viewed List for {obj}: {e}")
