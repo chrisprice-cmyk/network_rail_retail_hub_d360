@@ -768,3 +768,42 @@ class QUpdateDependencies(UpdateDependencies, ABC):
             self._install_dependency(d)
 
         self.org_config.reset_installed_packages()
+
+class PopulateRecentlyViewed(BaseSalesforceApiTask, ABC):
+
+    task_docs = """
+    Overview: Populates the Recently Viewed Listview with the most recent records for the given object(s)
+    """
+
+    task_options = {
+        "org": {
+            "description": "Org Alias for the target org",
+            "required": False
+        },
+        "objects": {
+            "description": "List of Objects which you want to update the recently viewed listview for",
+            "required": True
+        },
+        "limit": {
+            "description": "Limit for the objects, defaults to 500",
+            "required": False
+        },
+    }
+
+    def _init_options(self, kwargs):
+        super(PopulateRecentlyViewed, self)._init_options(kwargs)
+        self.objects = list(self.options["objects"]) if "objects" in self.options else None
+        self.limit = self.options["limit"] if "limit" in self.options else 500
+        self.unsupported_objects = [
+            "User",
+            "KnowledgeArticle"
+        ]
+
+    def _run_task(self):
+
+        for obj in self.objects:
+            if obj not in self.unsupported_objects:
+                self.sf.query(f"Select Id From {obj} Limit {self.limit} For View")
+                self.logger.info(f"Updated Recently Viewed List for {obj}")
+            else:
+                self.logger.info(f"{obj} is unsupported. Skipping")
