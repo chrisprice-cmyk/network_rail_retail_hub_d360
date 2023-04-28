@@ -26,7 +26,6 @@ log = init_logger()
 
 
 def cleanup_null_values(file_location: str = None):
-
     """
     Reviews json metadata description files and applies known fixes
 
@@ -130,6 +129,56 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
         self.share_to_all_portal_users = self.options["share_to_all_portal_users"] if "share_to_all_portal_users" in self.options else False
         self.generate_metadata_desc = self.options["generate_metadata_desc"] if "generate_metadata_desc" in self.options else False
 
+        self.approved_formats = [
+            'yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'',
+            'yy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'',
+            'yyyy-MM-dd\'T\'HH:mm:ss\'Z\'',
+            'yy-MM-dd\'T\'HH:mm:ss\'Z\'',
+            'yyyy-MM-dd HH:mm:ss',
+            'yy-MM-dd HH:mm:ss',
+            'dd.MM.yyyy HH:mm:ss',
+            'dd.MM.yy HH:mm:ss',
+            'dd/MM/yyyy HH:mm:ss',
+            'dd/MM/yy HH:mm:ss',
+            'dd/MM/yyyy hh:mm:ss a',
+            'dd/MM/yy hh:mm:ss a',
+            'dd-MM-yyyy HH:mm:ss',
+            'dd-MM-yy HH:mm:ss',
+            'dd-MM-yyyy hh:mm:ss a',
+            'dd-MM-yy hh:mm:ss a',
+            'MM/dd/yyyy hh:mm:ss a',
+            'MM/dd/yy hh:mm:ss a',
+            'MM-dd-yyyy hh:mm:ss a',
+            'MM-dd-yy hh:mm:ss a',
+            'HH:mm:ss dd/MM/yyyy',
+            'HH:mm:ss dd/MM/yy',
+            'yyyy-MM-dd',
+            'yyyy-M-d',
+            'yy-MM-dd',
+            'yy-M-d',
+            'dd.MM.yyyy',
+            'dd.MM.yy',
+            'dd/MM/yyyy',
+            'dd/MM/yy',
+            'dd-MM-yyyy',
+            'dd-MM-yy',
+            'MM/dd/yyyy',
+            'MM/dd/yy',
+            'MM-dd-yyyy',
+            'MM-dd-yy'
+            'M-d-yy',
+            'M-d-yyyy',
+            'M/d/yyyy',
+            'd-M-yy',
+            'd-M-yyyy',
+            'd/M/yy',
+            'd/M/yyyy',
+            'd.M.yy',
+            'd.M.yyyy'
+        ]
+
+        self.derived_date_field_extensions = ["", "_day_epoch", "_sec_epoch", "_Second", "_Minute", "_Hour", "_Day", "_Week", "_Month", "_Quarter", "_Year"]
+
     def run_cleaners(self):
         wave_files = glob.glob(self.dataset_folder + "/*.json", recursive=True)
         for wave in wave_files:
@@ -138,19 +187,7 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
     def get_dataset_name(self, dataset_file_path: str = None):
         if not dataset_file_path:
             return
-        
         return Path(dataset_file_path).stem.replace(".wds-meta", "")
-
-        with open(dataset_file_path, 'r') as dataset_file:
-            xml_string = dataset_file.read()
-
-        if xml_string:
-            match = re.search(r'<masterLabel>(.*?)</masterLabel>', xml_string, re.DOTALL)
-            if match:
-                return match.group(1)
-            else:
-                return ""
-        return None
 
     def download_datasets(self):
         if not os.path.exists("force-app/main/default/wave"):
@@ -179,7 +216,6 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
                 self.logger.info(f"{dataset_name} is not present in the target org. Skipping.")
 
     def upload_dataset_data(self):
-
         if not os.path.exists("force-app/main/default/wave"):
             log.debug("No Source Analytics Folder Found at the expected location (force-app/main/default/wave). Skipping Dataset Deployment.")
             return
@@ -318,16 +354,15 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
         Remove any User specific shares
         """
         return [share for share in folder_shares if share.get("shareType") != "user"]
-    
+
     def remove_unused_keys(self, folder_shares):
         return [{key: share[key] for key in ("accessType", "shareType")} for share in folder_shares]
 
     def update_folder_sharing(self, folder_name):
-
         if not self.share_to_all_internal_users or not self.share_to_all_portal_users:
             self.logger.info("Running as Sharing Mode although no sharing specified. Check the options for the task.")
             return
-        
+
         self.logger.info(f"Checking sharing settings for Analytics App: {folder_name}")
 
         # Query for the folder's ID based on its name
@@ -348,7 +383,7 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
         if response["shares"]:
             folder_shares = self.remove_user_shares(response["shares"])
             folder_shares = self.remove_unused_keys(folder_shares)
-            
+
             if self.share_to_all_internal_users:
                 if len([share for share in folder_shares if share.get("shareType") == "organization"]) < 1:
                     folder_shares.append({'accessType': 'manage', 'shareType': 'organization'})
@@ -377,7 +412,7 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
         self.sf.restful(
             endpoint,
             data=json.dumps({
-              "shares": folder_shares
+                "shares": folder_shares
             }),
             method="PATCH",
         )
@@ -400,31 +435,10 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
             app_name = filename[:-len(".wapp-meta.xml")]
             self.update_folder_sharing(app_name)
 
-    def get_field_type(self, column):
-        """
-        Determines the field type for a given column.
-        Returns "Text", "Numeric", or "Date".
-        """
-
-        values = [value for value in column if value.strip() != '']
-    
-        # Check if all non-blank values in the column are numeric
-        is_numeric = all([value.replace('.', '', 1).isdigit() for value in values])
-        if is_numeric:
-            return "Numeric"
-        
-        # Check if all non-blank values in the column are dates
-        # is_date = all([isinstance(value, datetime.date) for value in values])
-        # if is_date:
-        #     return "Date"
-        
-        # Otherwise, assume the field is text
-        return "Text"
-    
     def clean_field_name(self, field_name):
         # Clean Up List Field Names
         return field_name.replace('.', '_').replace(' ', '_')
-    
+
     def remove_column_from_csv(self, column_to_remove, file_path):
         # set the name of the output file
         # get the file name from the file path
@@ -464,182 +478,136 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
         return num_replacements
 
     def find_replace_column_name_indash(self, find_value, replace_value):
-        wave_dashboard_files = glob.glob("force-app/main/default/wave" + "/*.wdash", recursive=True)
+        wave_dashboard_files = glob.glob("force-app/main/default/wave/*.wdash", recursive=True)
 
         for dash in wave_dashboard_files:
-
             # Find and Replace Exact Matches
-            if not replace_file_text(file_location=dash, search_string=find_value, replacement_string=replace_value, show_info=True):
-
+            if not replace_file_text(file_location=dash, search_string=find_value, replacement_string=replace_value, show_info=False):
                 if "_" in replace_value:
-                    #self.logger.info(f"{find_value} was not found in Dashboard File {dash}. Running fuzzy match search to double check for other references.")
                     # Find and Replace Fuzzy Matches
                     self.replace_partial_matches(file_path=dash, search_string=replace_value, replacement_string=replace_value)
-            else:
-                #self.logger.info(f"{find_value} has been replaced with {replace_value} in Dashboard File {dash}")
-                pass
-
-    def get_date_format_string(self, input_string):
-        if 'd' in input_string.lower():
-            return "d"
-        elif 'm' in input_string.lower():
-            return "m"
-        elif 'yyyy' in input_string.lower():
-            return "Y"
-        elif 'y' in input_string.lower():
-            return "y"
-        else:
-            return None
-
-    def get_correct_format_string(self, input_format):
-
-        if '-' in input_format or '/' in input_format:
-            date_format_sections = re.split('/|-', input_format)
-
-            if '/' in input_format:
-                separator = '/'
-            elif '-' in input_format:
-                separator = '-'
-
-            if len(date_format_sections) == 3:
-                return f"%{self.get_date_format_string(date_format_sections[0])}{separator}%{self.get_date_format_string(date_format_sections[1])}{separator}%{self.get_date_format_string(date_format_sections[2])}"
-            else:
-                self.logger.error(f"Unrecognised Input Format Passed to method: {input_format}")
-
 
     def generate_csv_from_wave_dataset_version(self, dataset_id, target_folder, target_filename, version_id=''):
-        
         """
         Generates a local csv file from a dataset version
         """
 
-        # Date Formats Accepted in Analytics
-        default_format = 'yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\''
-        formats = [
-            'yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'',
-            'yy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'',
-            'yyyy-MM-dd\'T\'HH:mm:ss\'Z\'',
-            'yy-MM-dd\'T\'HH:mm:ss\'Z\'',
-            'yyyy-MM-dd HH:mm:ss',
-            'yy-MM-dd HH:mm:ss',
-            'dd.MM.yyyy HH:mm:ss',
-            'dd.MM.yy HH:mm:ss',
-            'dd/MM/yyyy HH:mm:ss',
-            'dd/MM/yy HH:mm:ss',
-            'dd/MM/yyyy hh:mm:ss a',
-            'dd/MM/yy hh:mm:ss a',
-            'dd-MM-yyyy HH:mm:ss',
-            'dd-MM-yy HH:mm:ss',
-            'dd-MM-yyyy hh:mm:ss a',
-            'dd-MM-yy hh:mm:ss a',
-            'MM/dd/yyyy hh:mm:ss a',
-            'MM/dd/yy hh:mm:ss a',
-            'MM-dd-yyyy hh:mm:ss a',
-            'MM-dd-yy hh:mm:ss a',
-            'HH:mm:ss dd/MM/yyyy',
-            'HH:mm:ss dd/MM/yy'
-        ]
-        
-        # Get the Dataset Version Information
+        # Get the Current Dataset Version Data
         self.logger.info(f"Getting information for {target_filename} Dataset ID [{dataset_id}] version [{version_id}] (Note Version can be blank)")
         dataset_version = self.sf.restful(f'wave/datasets/{dataset_id}/versions/{version_id}', method="GET")
 
         if not dataset_version:
             raise Exception(f"No data was returned for dataset id {dataset_id}")
 
-        # Get Fields for Query
-        self.logger.info("Processing fields:")
+        # Get Fields from Org
+        self.logger.info("\nGATHERING FIELD DATA")
+        fields = []
 
         # Date Fields
-        fields = []
-        fields_from_dates = [d["fields"] for d in dataset_version["xmdMain"]["dates"]]
-
+        self.logger.info("\nGathering Date Fields:")
         date_fields = []
         fields_from_dates_list = []
-        for field in fields_from_dates:
-            for value in field.values():
-                fields_from_dates_list.append(value)
-                fields_from_dates_list.append(self.clean_field_name(value))
-
-        # Process Date Fields
-        date_fields_to_post_process = []
-        for dfields in dataset_version["xmdMain"]["dates"]:
-
-            date_field = dfields["fields"].get("fullField")
-            date_field_label = dfields.get('label')
+        for date_fields_dict in dataset_version["xmdMain"]["dates"]:
+            date_field = date_fields_dict["fields"].get("fullField")
+            date_field_label = date_fields_dict.get('label')
+            date_field_formatting = date_fields_dict.get("format")
 
             if date_field:
-
-                date_field_name = self.clean_field_name(date_field)
-
-                self.logger.info(f"Date Field ({date_field}): Renamed to {date_field_name} with label {date_field_label}")
+                # Add Field to Query Fields in Original Format
                 date_fields.append(date_field)
 
-                # Check Date Formatting
-                date_field_formatting = dfields.get("format")
-                if not date_field_formatting or date_field_formatting.replace("&#39;", "'") not in formats:
-                    date_field_formatting = None
-                else:
-                    date_field_formatting = date_field_formatting.replace("&#39;", "'")
+                # Clean Up Field Name for new CSV Dataset
+                date_field_name = self.clean_field_name(date_field)
 
-                # Generate Metadata for Field
+                # Add Field and Derived Variations to Exclusion List
+                for d in self.derived_date_field_extensions:
+                    fields_from_dates_list.append(f"{date_field}{d}")
+
+                # Generate Metadata Description for Field
                 date_field_metadata = {
                     "fullyQualifiedName": date_field_name,
-                    "name": date_field_name, 
-                    "type": "Date", 
-                    "label": date_field_label, 
-                    "format": date_field_formatting
-                    }
+                    "name": date_field_name,
+                    "type": "Date",
+                    "label": date_field_label
+                }
+
+                field_converted_to_text = False
                 if not date_field_formatting:
-                    date_field_metadata.pop("format")
                     date_field_metadata.update({"type": "Text"})
+                    field_converted_to_text = True
+                else:
+                    clean_date_format = date_field_formatting.replace("&#39;", "'")
+                    if clean_date_format not in self.approved_formats:
+                        self.logger.info(f" -> Date Format for {date_field} Not Supported! Format provided: {clean_date_format}")
+                        date_field_metadata.update({"type": "Text"})
+                        field_converted_to_text = True
+                    else:
+                        date_field_metadata.update({"format": clean_date_format})
 
-                fields.append(date_field_metadata)             
-                
- 
-        # Get Dimensions
-        field_names = []
-        dim_field_names = []
-        field_names_from_measures = []
-        for dim in dataset_version["xmdMain"]["dimensions"]:
-            if dim.get("field"):        
-                if dim["field"] not in fields_from_dates_list:
+                fields.append(date_field_metadata)
 
-                    # Get Field Info and Update
-                    clean_dim_field = self.clean_field_name(dim["field"])
-                    dim_field = dim["field"]
-                    dim_label = dim["label"]
+                message_text = " and converted to text" if field_converted_to_text else ""
+                self.logger.info(f" -> Processed Date Field ({date_field}): Renamed to {date_field_name} with label {date_field_label}{message_text}")
 
-                    dim_field_names.append(dim_field)
+        # Get Dimensions Fields
+        self.logger.info("\nGathering Dimension Fields:")
+        dimension_field_names = []
+        for dimension_dict in dataset_version["xmdMain"]["dimensions"]:
+            if dimension_dict.get("field"):
+                # Get Dimension Field Information
+                dimension_field_name = dimension_dict["field"]
+                dimension_field_label = dimension_dict["label"]
 
-                    self.logger.info(f"Dimension: {dim_field} - Renamed to {clean_dim_field} with label {dim_label}")
+                # Check that Dimension is not in excluded date field list
+                if dimension_field_name in fields_from_dates_list:
+                    self.logger.debug(f" -> SKIPPED: {dimension_field_name} - Found Field in Date Exclusion List")
+                    continue
+                else:
+                    # Add to Query Fields in original Format
+                    dimension_field_names.append(dimension_field_name)
 
-                    fields.append({"fullyQualifiedName": clean_dim_field, "name": clean_dim_field, "type": "Text", "label": dim_label})
+                    # Generate Metadata Field Description
+                    clean_dimension_field_name = self.clean_field_name(dimension_field_name)
+                    fields.append({
+                        "fullyQualifiedName": clean_dimension_field_name,
+                        "name": clean_dimension_field_name,
+                        "type": "Text",
+                        "label": dimension_field_label
+                    })
+
+                    self.logger.info(f" -> Processed Dimension Field ({dimension_field_name}): Renamed to {clean_dimension_field_name} with label {dimension_field_label}")
 
         # Get Measures
-        for measure in dataset_version["xmdMain"]["measures"]:
-            if measure.get("field"):
-                if measure["field"] not in fields_from_dates_list and measure["field"] not in fields_from_dates:
+        self.logger.info("\nGathering Measure Fields:")
+        measure_field_names = []
+        for measure_dict in dataset_version["xmdMain"]["measures"]:
+            if measure_dict.get("field"):
+                # Get Measure Field Information
+                measure_field_name = measure_dict["field"]
+                measure_field_label = measure_dict["label"]
+                decimal_places = measure_dict["format"].get("decimalDigits", 0)
 
-                    # Get Measure Info and Update
-                    clean_measure_field = self.clean_field_name(measure["field"])
-                    measure_field = measure["field"]
-                    measure_label = measure["label"]
-                    decimal_places = measure["format"].get("decimalDigits", 0)
+                # Check to Ensure Measure is not in date field exclusion list
+                if measure_field_name in fields_from_dates_list:
+                    self.logger.debug(f" -> SKIPPED: {measure_field_name} - Found Field in Date Exclusion List")
+                    continue
+                else:
+                    # Add field to Query fields in original format
+                    measure_field_names.append(measure_field_name)
 
-                    self.logger.info(f"Measure: {measure_field} - Renamed to {clean_measure_field} with label {measure_label}")
-
+                    # Generate Metadata for Field
+                    clean_measure_field_name = self.clean_field_name(measure_field_name)
                     measure_field_metadata = {
-                        "fullyQualifiedName": clean_measure_field,
-                        "name": clean_measure_field,
+                        "fullyQualifiedName": clean_measure_field_name,
+                        "name": clean_measure_field_name,
                         "type": "Numeric",
-                        "label": measure_label,
+                        "label": measure_field_label,
                         "precision": 18,
                         "defaultValue": "null",
                         "scale": decimal_places
                     }
 
-                    if decimal_places and decimal_places > 0:
+                    if decimal_places > 0:
                         measure_field_metadata.update({"decimalSeparator": "."})
 
                     if decimal_places == 0:
@@ -647,129 +615,100 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
 
                     fields.append(measure_field_metadata)
 
-                    field_names_from_measures.append(measure_field)
+                    self.logger.info(f" -> Measure: {measure_field_name} - Renamed to {clean_measure_field_name} with label {measure_field_label}")
 
-        field_names = date_fields + dim_field_names + field_names_from_measures
+        # Combine Field Names into single list for Query
+        field_names = date_fields + dimension_field_names + measure_field_names
 
-        self.logger.info(f"Querying {len(field_names)} fields related to the dataset.")
+        self.logger.info("\nGenerating CRM Analytics Query")
 
         # Build Query
         select_clause = ", ".join(["'{}' as '{}'".format(f, f) for f in field_names])
-        base_query = 'q = load "{}"; q = foreach q generate {};'.format(dataset_id+"/"+version_id, select_clause)
+        base_query = 'q = load "{}"; q = foreach q generate {};'.format(dataset_id + "/" + version_id, select_clause)
         base_query = base_query + ' q = limit q 1000000000;'
+
+        #self.logger.info(f"Generated Query:\n{base_query}")
 
         # Ensure CSV Output File Directory Exists
         if not os.path.exists(target_folder):
             os.makedirs(target_folder)
-        out_file = os.path.join(target_folder, target_filename + ".csv")
+        dataset_csv_output_file = os.path.join(target_folder, target_filename + ".csv")
 
         # Run Query and download results
         query_url = "{}wave/query".format(self.sf.base_url)
         headers = {"Content-Type": "application/json", "Authorization": "Bearer {}".format(self.sf.session_id)}
         query_params = {"query": base_query}
 
-        self.logger.info("Running Query against CRM Analytics for data")
+        self.logger.info("\nRunning Query against CRM Analytics for data")
         query_response = requests.post(query_url, headers=headers, data=json.dumps(query_params))
 
         if query_response.status_code != 200:
-            self.logger.info(json.loads(query_response.content.decode('utf-8')))
+            self.logger.error(json.loads(query_response.content.decode('utf-8')))
             raise Exception("CRM Analytics Query Failed!")
 
         # Process Data Response
-        self.logger.info("Processing Data")
-        data = json.loads(query_response.content.decode('utf-8'))
+        analytics_query_response_data = json.loads(query_response.content.decode('utf-8'))
+        if not analytics_query_response_data and not analytics_query_response_data['results']['records']:
+            raise Exception("ERROR: Results were retrieved but not in the expected format or no data was returned.")
+        self.logger.info(f"{len(analytics_query_response_data['results']['records'])} records retrieved")
 
-        if not data and not data['results']['records']:
-            raise Exception("Results were retrieved but not in the expected format.")
-
-        self.logger.info(f"{len(data['results']['records'])} records retrieved")
-
-        # Generate the Data File
-        self.logger.info(f"Generating local CSV file at: {out_file}")
-        with open(out_file, 'w', encoding='UTF-8') as csvfile:
+        # Generate the Dataset Data File
+        self.logger.info(f"\nGenerating local CSV file at: {dataset_csv_output_file}")
+        with open(dataset_csv_output_file, 'w', encoding='UTF-8') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=field_names, quoting=csv.QUOTE_ALL)
             writer.writeheader()
-            for record in data['results']['records']:
+            for record in analytics_query_response_data['results']['records']:
                 writer.writerow(record)
 
-        # Generate Metadata File and Fix References
-        self.logger.info(f"Reading {out_file} to generate metadata json file")
-        field_types = {}
-        with open(out_file,'r', encoding='UTF-8') as f:
-            reader = csv.DictReader(f)
-            data = list(reader)
-
-            if len(date_fields_to_post_process) > 0:
-                for row in data:
-                    for column_name, old_format in date_fields_to_post_process:
-                        if column_name in row.keys():
-                            old_value = row[column_name]
-                            format_string = self.get_correct_format_string(old_format)
-                            if len(old_value) > 0 and format_string:
-                                new_value = datetime.strptime(old_value, format_string).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
-                                row[column_name] = new_value
-
-            for row in reader:
-                for key, value in row.items():
-                    if key not in field_types:
-                        field_types[key] = []
-                        field_types[key].append(value)
-
-        if len(date_fields_to_post_process) > 0:
-            with open(out_file, mode='w', encoding='UTF-8') as csv_file:
-                writer = csv.DictWriter(csv_file, fieldnames=field_names, quoting=csv.QUOTE_ALL)
-                writer.writeheader()
-                writer.writerows(data)
-
         # Check Dashboard References
-        self.logger.info("Checking that all references to fields in the dataset have been updated in the dashboard files")
+        self.logger.info("\nRunning Check to update old field references in Wave metadata:")
         seen = set()
         for item in fields:
             self.find_replace_column_name_indash(f"\"name\":\"{item['label']}\"", f"\"name\":\"{item['name']}\"")
             if item['name'] in seen:
                 fields.remove(item)
-                self.remove_column_from_csv(item["label"], out_file)
+                self.remove_column_from_csv(item["label"], dataset_csv_output_file)
             else:
                 seen.add(item['name'])
             item["label"] = item["name"]
+        self.logger.info("\nCheck Complete!")
 
         # Write Metadata File
         metadata = {
-        "fileFormat": {
-            "charsetName": "UTF-8",
-            "fieldsDelimitedBy": ",",
-            "fieldsEnclosedBy": f"\"",
-            "linesTerminatedBy": f"\r\n"
-        },
-        "objects": [
-            {
-                "connector": "CSV",
-                "fullyQualifiedName": self.clean_field_name(target_filename + ".csv"),
-                "label": target_filename + ".csv",
-                "name": self.clean_field_name(target_filename + ".csv"),
-                "fields": fields
-            }]
+            "fileFormat": {
+                "charsetName": "UTF-8",
+                "fieldsDelimitedBy": ",",
+                "fieldsEnclosedBy": f"\"",
+                "linesTerminatedBy": f"\r\n"
+            },
+            "objects": [
+                {
+                    "connector": "CSV",
+                    "fullyQualifiedName": self.clean_field_name(target_filename + ".csv"),
+                    "label": target_filename + ".csv",
+                    "name": self.clean_field_name(target_filename + ".csv"),
+                    "fields": fields
+                }]
         }
 
         if self.generate_metadata_desc:
-            self.logger.info(f"Writing metadata file to {os.path.join(target_folder, target_filename + '.json')}")
+            self.logger.info(f"\nWriting metadata file to {os.path.join(target_folder, target_filename + '.json')}")
             with open(os.path.join(target_folder, target_filename + ".json"), 'w', encoding='utf-8') as file:
                 json.dump(metadata, file, indent=4)
-        
 
-    def get_datasets_from_org(self, endpoint = f"wave/datasets?pageSize=25", org_dataset_dict = {}):
+    def get_datasets_from_org(self, endpoint=f"wave/datasets?pageSize=25", org_dataset_dict=None):
+        """
+        Get List of all Datasets in target org
+        """
 
         # Retrieve the list of datasets
-        headers = {
-            "Content-Type": "application/json; charset=UTF-8",
-            "Accept": "application/json"
-        }
+        if org_dataset_dict is None:
+            org_dataset_dict = {}
 
         response = self.sf.restful(endpoint, method="GET")
 
         if response and response.get("datasets"):
             for dataset_dict in list(response["datasets"]):
-                
                 dataset = dict(dataset_dict)
                 dataset_version = dataset.get("currentVersionId")
 
@@ -779,10 +718,9 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
                 org_dataset_dict.update({dataset["name"]: {"id": dataset["id"], "version": dataset_version}})
 
             if response["nextPageUrl"]:
-                org_dataset_dict = self.get_datasets_from_org(response['nextPageUrl'].replace(f'/services/data/v56.0/', ''), org_dataset_dict)
-   
-        return org_dataset_dict      
+                org_dataset_dict = self.get_datasets_from_org(response['nextPageUrl'].replace(f'/services/data/v{self.project_config.project__package__api_version}/', ''), org_dataset_dict)
 
+        return org_dataset_dict
 
     def _run_task(self):
         self.logger.info("=================================")

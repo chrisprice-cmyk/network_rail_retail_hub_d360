@@ -42,7 +42,8 @@ def replace_file_text(file_location, search_string, replacement_string, show_inf
         raise Exception(f"Error: File Path does not exist or you do not have access to the given file path. Please check this file path and update as required: {file_location}")
 
     try:
-        log.info(f"Checking {file_location}...")
+        if show_info:
+            log.info(f"Checking {file_location}...")
         with open(f"{file_location}", "r") as tmpFile:
             file_contents = tmpFile.read()
     except Exception as e:
