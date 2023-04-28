@@ -138,6 +138,9 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
     def get_dataset_name(self, dataset_file_path: str = None):
         if not dataset_file_path:
             return
+        
+        return Path(dataset_file_path).stem.replace(".wds-meta", "")
+
         with open(dataset_file_path, 'r') as dataset_file:
             xml_string = dataset_file.read()
 
@@ -556,6 +559,7 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
         for field in fields_from_dates:
             for value in field.values():
                 fields_from_dates_list.append(value)
+                fields_from_dates_list.append(self.clean_field_name(value))
 
         # Process Date Fields
         date_fields_to_post_process = []
@@ -563,9 +567,10 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
 
             date_field = dfields["fields"].get("fullField")
             date_field_label = dfields.get('label')
-            date_field_name = self.clean_field_name(date_field)
 
             if date_field:
+
+                date_field_name = self.clean_field_name(date_field)
 
                 self.logger.info(f"Date Field ({date_field}): Renamed to {date_field_name} with label {date_field_label}")
                 date_fields.append(date_field)
@@ -579,9 +584,10 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
 
                 # Generate Metadata for Field
                 date_field_metadata = {
+                    "fullyQualifiedName": date_field_name,
                     "name": date_field_name, 
                     "type": "Date", 
-                    "label": dfields.get("label"), 
+                    "label": date_field_label, 
                     "format": date_field_formatting
                     }
                 if not date_field_formatting:
@@ -773,7 +779,7 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
                 org_dataset_dict.update({dataset["name"]: {"id": dataset["id"], "version": dataset_version}})
 
             if response["nextPageUrl"]:
-                org_dataset_dict = self.get_datasets_from_org(response['nextPageUrl'].replace('/services/data/v55.0/', ''), org_dataset_dict)
+                org_dataset_dict = self.get_datasets_from_org(response['nextPageUrl'].replace(f'/services/data/v56.0/', ''), org_dataset_dict)
    
         return org_dataset_dict      
 
