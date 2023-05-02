@@ -10,7 +10,7 @@ log = init_logger()
 class HealthChecker(BaseTask, ABC):
     task_options = {
         "auto": {
-            "description": "Auto Accepts all proposed changes.",
+            "description": "Auto Accepts all proposed changes. Defaults to True",
             "required": False
         },
         "api_checker_include_code_files": {
@@ -41,7 +41,7 @@ class HealthChecker(BaseTask, ABC):
 
     def _init_options(self, kwargs):
         super(HealthChecker, self)._init_options(kwargs)
-        self.auto = self.options["auto"] if "auto" in self.options else False
+        self.auto = self.options["auto"] if "auto" in self.options else True
         self.api_checker_include_code_files = self.options["api_checker_include_code_files"] if "api_checker_include_code_files" in self.options else False
         self.remove_standard_fields = self.options["remove_standard_fields"] if "remove_standard_fields" in self.options else False
         self.remove_empty_translations = self.options["remove_empty_translations"] if "remove_empty_translations" in self.options else False
