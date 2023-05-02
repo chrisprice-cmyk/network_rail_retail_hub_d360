@@ -1,6 +1,6 @@
 from abc import ABC
 from qbrix.tools.shared.qbrix_console_utils import init_logger
-from qbrix.tools.shared.qbrix_project_tasks import clean_project_files, check_api_versions, check_permset_group_files, check_and_update_old_class_refs, source_org_feature_checker, org_feature_checker, check_org_config_files, upsert_gitignore_entries, replace_file_text, get_qbrix_repo_url
+from qbrix.tools.shared.qbrix_project_tasks import clean_project_files, check_api_versions, check_permset_group_files, check_and_update_old_class_refs, create_external_id_field, create_permission_set_file, delete_standard_fields, remove_empty_translations, source_org_feature_checker, org_feature_checker, check_org_config_files, update_file_api_versions, upsert_gitignore_entries, replace_file_text, get_qbrix_repo_url
 from cumulusci.core.tasks import BaseTask
 from qbrix.tools.shared.qbrix_json_tasks import update_json_file_value, get_json_file_value
 
@@ -13,6 +13,26 @@ class HealthChecker(BaseTask, ABC):
             "description": "Auto Accepts all proposed changes.",
             "required": False
         },
+        "api_checker_include_code_files": {
+            "description": "When True, updates code files within project to the project API version",
+            "required": False
+        },
+        "remove_standard_fields": {
+            "description": "When True, this removes all standard fields which have been pulled to source. Defaults to False",
+            "required": False
+        },
+        "remove_empty_translations": {
+            "description": "When True, removes empty translations from the project. Defaults to False",
+            "required": False
+        },
+        "auto_generate_external_id_fields": {
+            "description": "When True, reviews all objects within the project and generates an External_ID__c custom field, where there is not currently one. Defaults to False",
+            "required": False
+        },
+        "regenerate_permission_set": {
+            "description": "When True, this generates a permission set file for the project qbrix with the project name. Defaults to False",
+            "required": False
+        },
     }
 
     task_docs = """
@@ -21,35 +41,68 @@ class HealthChecker(BaseTask, ABC):
 
     def _init_options(self, kwargs):
         super(HealthChecker, self)._init_options(kwargs)
-        self.auto = True if "auto" in self.options else False
+        self.auto = self.options["auto"] if "auto" in self.options else False
+        self.api_checker_include_code_files = self.options["api_checker_include_code_files"] if "api_checker_include_code_files" in self.options else False
+        self.remove_standard_fields = self.options["remove_standard_fields"] if "remove_standard_fields" in self.options else False
+        self.remove_empty_translations = self.options["remove_empty_translations"] if "remove_empty_translations" in self.options else False
+        self.auto_generate_external_id_fields = self.options["auto_generate_external_id_fields"] if "auto_generate_external_id_fields" in self.options else False
 
     def _run_task(self):
-        log.info("Health Check: Starting Health Checker Tool")
+        self.logger.info("\nHealth Check: Starting Health Checker Tool")
 
-        log.info("Health Check: Removing cached/unneeded files and folders from project.")
+        self.logger.info("\nHealth Check: Removing cached/unneeded files and folders from project.")
         clean_project_files()
-        log.info("Health Check: Removed cached/unneeded files and folders from project.")
+        self.logger.info(" -> Check Complete!")
 
-        log.info("Health Check: Checking for old class references and updating them...")
+        self.logger.info("\nHealth Check: Checking for old class references and updating them...")
         check_and_update_old_class_refs()
-        log.info("Health Check: Old References checks complete.")
+        self.logger.info(" -> Check Complete!")
 
-        log.info("Health Check: Checking placeholder names have been replaced and other naming is correct.")
+        self.logger.info("\nHealth Check: Checking placeholder names have been replaced and other naming is correct.")
         self.check_project_file_naming()
+        self.logger.info(" -> Check Complete!")
 
-        log.info("Health Check: Checking that all references to the API version, match the project version.")
+        self.logger.info("\nHealth Check: Checking that all references to the API version, match the project version.")
         check_api_versions(self.project_config.project__package__api_version)
+        if self.api_checker_include_code_files:
+            update_file_api_versions(self.project_config.project__package__api_version)
+        self.logger.info(" -> Check Complete!")
 
-        log.info("Health Check: Checking that orgs/dev.json has all features from all sources related to this Q Brix.")
+        self.logger.info("\nHealth Check: Checking that orgs/dev.json has all features from all sources related to this Q Brix.")
         source_org_feature_checker(False, self.auto)
+        self.logger.info(" -> Check Complete!")
 
-        log.info("Health Check: Checking that dev_preview has all features from dev.")
+        self.logger.info("\nHealth Check: Checking that dev_preview has all features from dev.")
         org_feature_checker(self.auto)
+        self.logger.info(" -> Check Complete!")
 
-        log.info("Health Check: Checking that scratch org files are configured with required settings")
+        self.logger.info("\nHealth Check: Checking that scratch org files are configured with required settings")
         check_org_config_files(True)
+        self.logger.info(" -> Check Complete!")
 
-        log.info("Checking .gitignore file")
+        if self.remove_standard_fields:
+            self.logger.info("\nHealth Check: Checking for standard object fields and removing them from the project")
+            delete_standard_fields()
+            self.logger.info(" -> Check Complete!")
+
+        if self.remove_empty_translations:
+            self.logger.info("\nHealth Check: Checking for and removing empty translations")
+            remove_empty_translations()
+            self.logger.info(" -> Check Complete!")
+
+        if self.auto_generate_external_id_fields:
+            self.logger.info("\nHealth Check: Checking for and adding External ID Fields to objects")
+            create_external_id_field()
+            self.logger.info(" -> Check Complete!")
+
+        if self.regenerate_permission_set:
+            project_name = self.project_config.project__name
+            if project_name:
+                self.logger.info("\nHealth Check: Checking and generating Permission Set for the Q Brix")
+                create_permission_set_file(project_name.replace(" ", "_"), f"{project_name} Permission Set")
+                self.logger.info(" -> Check Complete!")
+
+        self.logger.info("\nHealth Check: Checking .gitignore file")
         test_list = []
 
         # ADD ENTRIES FOR THE .GITIGNORE FILE BELOW. LEFT THIS AS IS TO MAKE IT EASIER TO READ
@@ -83,7 +136,9 @@ class HealthChecker(BaseTask, ABC):
         # Check Permission Set Group Files are set to Outdated
         check_permset_group_files()
 
-        log.info("Health Check: All Checks completed.")
+        self.logger.info(" -> Check Complete!")
+
+        self.logger.info("\n\nHealth Check: All Checks completed!")
 
     def check_project_file_naming(self):
 
@@ -99,14 +154,14 @@ class HealthChecker(BaseTask, ABC):
         package_name = self.project_config.project__package__name
         repo_url = self.project_config.project__git__repo_url
 
-        log.info("Naming Check: Checking File and Project Naming aligns with correct Q Brix Name")
+        self.logger.info("Naming Check: Checking File and Project Naming aligns with correct Q Brix Name")
         file_name_error = False
 
         if project_name is None or package_name is None or repo_url is None:
             file_name_error = True
             log.error(
                 "Naming Check: [FAIL] One or more of the required parameters are missing from the cumulusci.yml file. Check that the Project name, Project Package Name and Repo URL have all been added and populated.")
-            log.info(
+            self.logger.info(
                 f"Names Found:\nProject Name: {project_name}\nPackage Name: {package_name}\nRepo URL: {repo_url}\nQBrix Name (From Repo URL): {repo_qbrix_name}")
 
         else:
@@ -116,7 +171,7 @@ class HealthChecker(BaseTask, ABC):
                 file_name_error = True
                 log.error(
                     "Naming Check: [FAIL] Check you have a valid URL for the project > Repo Url in the cumulusci.yml file")
-                log.info(
+                self.logger.info(
                     f"Names Found:\nProject Name: {project_name}\nPackage Name: {package_name}\nRepo URL: {repo_url}\nQBrix Name (From Repo URL): {repo_qbrix_name}")
 
             # Check for the Template name in the config file.
@@ -124,7 +179,7 @@ class HealthChecker(BaseTask, ABC):
                 file_name_error = True
                 log.error(
                     "Naming Check: [FAIL] You must update your project names in the cumulusci.yml file to be the same as your Q Brix repo url. xDO-Template was found and this should have been updated, see Readme.")
-                log.info(
+                self.logger.info(
                     f"Names Found:\nProject Name: {project_name}\nPackage Name: {package_name}\nRepo URL: {repo_url}\nQBrix Name (From Repo URL): {repo_qbrix_name}")
 
             # Check that the repo name and project names all match
@@ -132,14 +187,14 @@ class HealthChecker(BaseTask, ABC):
                 file_name_error = True
                 log.error(
                     "Naming Check: [FAIL] You must update your project names in the cumulusci.yml file to be the same as your Q Brix repo url")
-                log.info(
+                self.logger.info(
                     f"Names Found:\nProject Name: {project_name}\nPackage Name: {package_name}\nRepo URL: {repo_url}\nQBrix Name (From Repo URL): {repo_qbrix_name}")
 
             # Check that the dev.json file has the correct qbrix name
             if repo_qbrix_name not in get_json_file_value("orgs/dev.json", "orgName"):
                 log.debug("Naming Check: Updating OrgName in orgs/dev.json has not been updated. Updating now...")
                 update_json_file_value("orgs/dev.json", "orgName", f"{repo_qbrix_name} - Dev org")
-                log.info("Naming Check: Updated orgs/dev.json")
+                self.logger.info("Naming Check: Updated orgs/dev.json")
 
             # Check that the dev_preview.json file has the correct qbrix name
             if repo_qbrix_name not in get_json_file_value("orgs/dev_preview.json", "orgName"):
@@ -150,9 +205,9 @@ class HealthChecker(BaseTask, ABC):
                     "Naming Check: Updated orgs/dev_preview.json")
 
         if not file_name_error:
-            log.info("Health Check: [OK] All naming Checks Passed!")
+            self.logger.info("Health Check: [OK] All naming Checks Passed!")
         else:
-            log.info(
+            self.logger.info(
                 "Health Check: [ACTION NEEDED] Some tests did not pass. Check the error messages above for more information.")
 
-        log.info("Health Check: Naming Checks completed")
+        self.logger.info("Health Check: Naming Checks completed")

@@ -1293,3 +1293,48 @@ def generate_stack_view(parent_directory_path='.cci/projects', output="terminal"
 
     if output != "terminal":
         log_file.close()
+
+def remove_empty_translations():
+    
+    """
+    Removes empty translations from the project directory. Defaults to the force-app/main/default/objectTranslations directory.
+    """
+
+    # Define the path to the objectTranslations directory
+    obj_trans_dir = os.path.join('force-app', 'main', 'default', 'objectTranslations')
+    
+    # Loop through all subdirectories in the objectTranslations directory
+    for obj_dir in os.listdir(obj_trans_dir):
+        obj_dir_path = os.path.join(obj_trans_dir, obj_dir)
+        if not os.path.isdir(obj_dir_path):
+            continue
+        
+        # Check if all label tags have no value
+        
+        for trans_file in os.listdir(obj_dir_path):
+            if not trans_file.endswith('.xml'):
+                continue
+            
+            trans_file_path = os.path.join(obj_dir_path, trans_file)
+            tree = ET.parse(trans_file_path)
+            root = tree.getroot()
+            has_translation = False
+            for child in root:
+                if child.find('label') is not None and child.find('label').text != '':
+                    has_translation = True
+                    break
+            
+            if not has_translation:
+                print(f"No translation found in {trans_file_path}")
+                os.remove(trans_file_path)
+                remove_obj_dir = True
+            else:
+                remove_obj_dir = False
+        
+        # Remove object directory if all files within have no translations
+        if remove_obj_dir:
+            os.rmdir(obj_dir_path)
+
+    # Remove objectTranslations directory if empty
+    if not os.listdir(obj_trans_dir):
+        os.rmdir(obj_trans_dir)
