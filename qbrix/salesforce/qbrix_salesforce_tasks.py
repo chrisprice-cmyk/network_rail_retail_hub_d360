@@ -843,7 +843,7 @@ class UploadFiles(BaseSalesforceApiTask, ABC):
         },
         "library": {
             "description": "Name of library if uploading to a library",
-            "required": True
+            "required": False
         },
     }
 
@@ -855,6 +855,11 @@ class UploadFiles(BaseSalesforceApiTask, ABC):
         self.library = self.options["library"] if "library" in self.options else None
 
     def create_document_link(self, content_doc_id, entity_id):
+        
+        """
+        Creates a document link between a ContentDocument and a given Entity
+        """
+
         record_lookup = self.sf.query(f"SELECT Id FROM ContentDocumentLink WHERE LinkedEntityId = '{entity_id}' AND ContentDocumentId = '{content_doc_id}'")
         if record_lookup['totalSize'] == 0:
             content_document_link_data = {
@@ -864,9 +869,24 @@ class UploadFiles(BaseSalesforceApiTask, ABC):
             }
             self.sf.ContentDocumentLink.create(content_document_link_data)
 
+    def create_public_file_link(self, content_version_id, file_name):
+
+        """
+        Generates a public link for a given content version and file name
+        """
+
+        record_lookup = self.sf.query(f"SELECT Id FROM ContentDistribution WHERE ContentVersionId = '{content_version_id}'")
+        if record_lookup['totalSize'] == 0:
+            content_version_data = {
+                'Name': file_name,
+                'ContentVersionId': content_version_id,
+                'PreferencesAllowViewInBrowser': True
+            }
+            self.sf.ContentDistribution.create(content_version_data)
+
     def upload_files_to_salesforce(self):
         """
-        Uploads all files from the specified directory to the Salesforce record that matches the specified where clause.
+        Uploads all files from the specified directory to the Salesforce and associates them as required.
         """
         self.logger.info("\nStarting File Upload:")
 
@@ -945,5 +965,14 @@ class UploadFiles(BaseSalesforceApiTask, ABC):
             self.logger.info(f" -> Upload Complete!")
 
     def _run_task(self):
+
+        if not self.library and not self.object and not self.where:
+            self.logger.error("No options specified. Cannot run task.")
+            return 
+        
+        if (self.object and not self.where) or (not self.object and self.where):
+            self.logger.error("You must specify both the Object and Where options if you want to associate to records. Cannot run task.")
+            return
+
         self.upload_files_to_salesforce()
     
