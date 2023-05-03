@@ -91,7 +91,7 @@ Create Tracker Chat Button
     Create A Chat Button And Automated Invitations    SFS - Tracker Bot    SDO_SFS_Tracker_Bot
 
 Create Felix Chat Button
-    Create A Chat Button And Automated Invitations    HLS - Felix Bot HLS_Felix_Bot
+    Create A Chat Button And Automated Invitations    HLS - Felix Bot      HLS_Felix_Bot
     
 Add Case Wrap Up Model
     Enable Einstein Classification
