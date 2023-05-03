@@ -966,10 +966,6 @@ class UploadFiles(BaseSalesforceApiTask, ABC):
 
     def _run_task(self):
 
-        if not self.library and not self.object and not self.where:
-            self.logger.error("No options specified. Cannot run task.")
-            return 
-        
         if (self.object and not self.where) or (not self.object and self.where):
             self.logger.error("You must specify both the Object and Where options if you want to associate to records. Cannot run task.")
             return
