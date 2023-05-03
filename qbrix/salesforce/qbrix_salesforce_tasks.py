@@ -817,3 +817,133 @@ class PopulateRecentlyViewed(BaseSalesforceApiTask, ABC):
                     self.logger.info(f"Updated Recently Viewed List for {obj}")
                 except Exception as e:
                     self.logger.error(f"Error updating Recently Viewed List for {obj}: {e}")
+
+class UploadFiles(BaseSalesforceApiTask, ABC):
+
+    task_docs = """
+    Uploads files from a given directory to Salesforce using a where clause to find a specific record.
+    """
+
+    task_options = {
+        "org": {
+            "description": "Org Alias for the target org",
+            "required": False
+        },
+        "object": {
+            "description": "The object to search against, for example Contact",
+            "required": False
+        },
+        "where": {
+            "description": "The Where Clause for the soql statement which locates the record you want to relate files to, for example External_ID__c = 'SDO_CONTACT_001' ",
+            "required": False
+        },
+        "path": {
+            "description": "Relative Path to the files you want to upload for the record found using the where clause ",
+            "required": True
+        },
+        "library": {
+            "description": "Name of library if uploading to a library",
+            "required": True
+        },
+    }
+
+    def _init_options(self, kwargs):
+        super(UploadFiles, self)._init_options(kwargs)
+        self.object = self.options["object"] if "object" in self.options else None
+        self.where = self.options["where"] if "where" in self.options else None
+        self.path = self.options["path"] if "path" in self.options else None
+        self.library = self.options["library"] if "library" in self.options else None
+
+    def create_document_link(self, content_doc_id, entity_id):
+        record_lookup = self.sf.query(f"SELECT Id FROM ContentDocumentLink WHERE LinkedEntityId = '{entity_id}' AND ContentDocumentId = '{content_doc_id}'")
+        if record_lookup['totalSize'] == 0:
+            content_document_link_data = {
+                'ContentDocumentId': content_doc_id,
+                'LinkedEntityId': entity_id,
+                'Visibility': 'AllUsers'
+            }
+            self.sf.ContentDocumentLink.create(content_document_link_data)
+
+    def upload_files_to_salesforce(self):
+        """
+        Uploads all files from the specified directory to the Salesforce record that matches the specified where clause.
+        """
+        self.logger.info("\nStarting File Upload:")
+
+        # Query Salesforce to find the record ID that matches the where clause
+        multi_record = False
+        record_id = None 
+        if self.where:
+            record = self.sf.query(f"SELECT Id FROM {self.object} WHERE {self.where}")
+            if record['totalSize'] == 0:
+                self.logger.error(f"No record(s) found for {self.object} with the specified where clause '{self.where}'. Skipping File.")
+            elif record['totalSize'] == 1:
+                record_id = record['records'][0]['Id']
+                self.logger.info(f" -> Single Record Located with ID: {record_id}")
+            elif record['totalSize'] > 1:
+                self.logger.info(" -> Multiple Record Association Enabled")
+                multi_record = True
+
+        # Loop through each file in the directory
+        for filename in os.listdir(self.path):
+
+            # Check File Was not Already Uploaded
+            self.logger.info(f"\nChecking for existing file called {filename}:")
+            content_document_id = None
+            existing_file = self.sf.query(f"SELECT Id, ContentDocumentId FROM ContentVersion WHERE PathOnClient = '{filename}' OR Title = '{filename}' LIMIT 1")
+            if existing_file['totalSize'] > 0:
+                content_document_id = existing_file['records'][0]['ContentDocumentId']
+                self.logger.info(f" -> File already uploaded. Document Id: {content_document_id}")
+            else:
+                self.logger.info(" -> File was not found in target org")
+                
+                # Upload File and create new ContentVersion
+                self.logger.info(f"\nUploading {filename}:")
+                file_path = os.path.join(self.path, filename)
+                with open(file_path, 'rb') as f:
+                    file_contents = f.read()
+
+                # Convert the file contents to base64 encoding
+                base64_file_contents = base64.b64encode(file_contents).decode('utf-8')
+
+                content_version_data = {
+                    'Title': filename,
+                    'VersionData': base64_file_contents,
+                    'PathOnClient': filename
+                }
+
+                content_version = self.sf.ContentVersion.create(content_version_data)
+                content_document_id = self.sf.query(f"SELECT ContentDocumentId FROM ContentVersion WHERE Id = '{content_version['id']}'")['records'][0]['ContentDocumentId']
+
+            # Create Required Relationships
+            self.logger.info(f"\nChecking for creating Document Links")
+            if self.where and record_id and multi_record == False:
+                self.logger.info(f" -> Linking to Record: {record_id}")
+                self.create_document_link(content_document_id, record_id)
+
+            if self.where and multi_record == True and record['records']:
+                for r in record['records']:
+                    if r["Id"]:
+                        self.logger.info(f" -> Linking to Record: {r['Id']}")
+                        self.create_document_link(content_document_id, r["Id"])
+
+            if self.library:
+                workspace_record = self.sf.query(f"SELECT Id, RootContentFolderId FROM ContentWorkspace WHERE Name = '{self.library}' LIMIT 1")
+                if workspace_record['totalSize'] == 0:
+                    self.logger.info(f" -> {self.library} was not found. Creating new Library")
+                    workspace_record = self.sf.ContentWorkspace.create({
+                        'name': self.library
+                    })
+                    if workspace_record and workspace_record['id']:
+                        self.logger.info(f" -> Saving to Library called: {self.library}")
+                        self.create_document_link(content_document_id, workspace_record['id'])
+                else:
+                    self.logger.info(f" -> Saving to Library called: {self.library}")
+                    self.create_document_link(content_document_id, workspace_record['records'][0]['Id'])
+                
+
+            self.logger.info(f" -> Upload Complete!")
+
+    def _run_task(self):
+        self.upload_files_to_salesforce()
+    
