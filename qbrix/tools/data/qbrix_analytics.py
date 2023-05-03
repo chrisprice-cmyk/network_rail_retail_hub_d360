@@ -502,6 +502,11 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
 
         if not dataset_version:
             raise Exception(f"No data was returned for dataset id {dataset_id}")
+        
+        # Capture Created Date for Time Shift
+        if dataset_version["createdDate"]:
+            with open(os.path.join(target_folder, target_filename + ".txt"), 'w', encoding='utf-8') as qbrix_data_file:
+                qbrix_data_file.write(dataset_version["createdDate"])
 
         # Get Fields from Org
         self.logger.info("\nGATHERING FIELD DATA")
@@ -533,6 +538,10 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
                     "label": date_field_label
                 }
 
+                # Add Field and Derived Variations to Exclusion List
+                for d in self.derived_date_field_extensions:
+                    fields_from_dates_list.append(f"{date_field}{d}")
+
                 field_converted_to_text = False
                 if not date_field_formatting:
                     date_field_metadata.update({"type": "Text"})
@@ -545,9 +554,7 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
                         field_converted_to_text = True
                     else:
                         date_field_metadata.update({"format": clean_date_format})
-                        # Add Field and Derived Variations to Exclusion List
-                        for d in self.derived_date_field_extensions:
-                            fields_from_dates_list.append(f"{date_field}{d}")
+                        
 
                 fields.append(date_field_metadata)
 
@@ -734,6 +741,92 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
                 org_dataset_dict = self.get_datasets_from_org(response['nextPageUrl'].replace(f'/services/data/v{self.project_config.project__package__api_version}/', ''), org_dataset_dict)
 
         return org_dataset_dict
+    
+    def format_from_string(self, input_format):
+        # Replace literal characters with format codes
+        format_codes = {
+            'y': '%Y',  # Year with century
+            'm': '%m',  # Month as a zero-padded decimal number
+            'd': '%d',  # Day of the month as a zero-padded decimal number
+            'H': '%H',  # Hour (24-hour clock) as a zero-padded decimal number
+            'M': '%M',  # Minute as a zero-padded decimal number
+            'S': '%S',  # Second as a zero-padded decimal number
+            'f': '%f',  # Microsecond as a six-digit decimal number
+            'Z': '%z',  # Time zone offset in the form +HHMM or -HHMM
+        }
+        output_format = ''
+        escape_next = False
+        for char in input_format:
+            if escape_next:
+                output_format += char
+                escape_next = False
+            elif char == '%':
+                escape_next = True
+            elif char in format_codes:
+                output_format += format_codes[char]
+            else:
+                output_format += char
+
+        # Escape any literal percentage signs
+        output_format = output_format.replace('%', '%%')
+
+        return output_format
+    
+    def time_shift(self, dataset_name):
+        
+        txt_file_path = os.path.join("datasets", "analytics", dataset_name + ".txt")
+        json_file_path = os.path.join("datasets", "analytics", dataset_name + ".json")
+        csv_file_path = os.path.join("datasets", "analytics", dataset_name + ".csv")
+
+        if os.path.exists(txt_file_path) and os.path.exists(json_file_path):
+
+            # Load the anchor date from the txt file
+            with open(txt_file_path, 'r') as f:
+                anchor_date_str = f.read().strip()
+            anchor_date = datetime.fromisoformat(anchor_date_str)
+
+            # Load the date format information from the json file
+            with open(json_file_path, 'r') as f:
+                json_dict = json.load(f)
+            fields_list = json_dict['objects'][0]['fields']
+            date_formats = {}
+            for field in fields_list:
+                if 'format' in field and field['format'] and field['name'] in csv.reader(open(csv_file_path)).__next__():
+                    date_formats[self.clean_field_name(field['name'])] = self.format_from_string(field['format'])
+
+            print(date_formats)
+
+            # Adjust the dates in the csv file
+            with open(csv_file_path, 'r', encoding='utf-8') as f:
+                csv_reader = csv.DictReader(f)
+                fieldnames = csv_reader.fieldnames
+                rows = []
+                for row in csv_reader:
+                    new_row = {}
+                    for fieldname in fieldnames:
+                        if fieldname in date_formats:
+                            date_format = date_formats[fieldname]
+                            old_date_str = row[fieldname]
+                            if old_date_str:
+                                old_date = datetime.strptime(old_date_str, date_format)
+                                delta = anchor_date - old_date
+                                new_date = datetime.now() - delta
+                                new_row[fieldname] = new_date.strftime(date_format)
+                            else:
+                                new_row[fieldname] = ''
+                        else:
+                            new_row[fieldname] = row[fieldname]
+                    rows.append(new_row)
+
+            # Write the adjusted data back to the csv file
+            with open(csv_file_path, 'w', newline='', encoding='utf-8') as f:
+                csv_writer = csv.DictWriter(f, fieldnames=fieldnames)
+                csv_writer.writeheader()
+                for row in rows:
+                    csv_writer.writerow(row)
+
+        else:
+            self.logger.info(f"Skipping {dataset_name} as the required json and txt files are not present.")
 
     def _run_task(self):
         self.logger.info("=================================")
@@ -758,7 +851,7 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
             self.update_sharing_for_applications()
 
         if self.mode.lower() == "t":
-            self.get_datasets_from_org()
+            self.time_shift("Participant_Site_Analysis_ESP2")
 
         self.logger.info("=================================================")
         self.logger.info("Q Brix Analytics Manager has completed all tasks!")
