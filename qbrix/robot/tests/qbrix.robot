@@ -25,6 +25,9 @@ Set Org Wide Email Address
 
 Disable MFA in Org
     Disable MFA
+
+Enable Custom Help
+    enable_custom_help_in_user_engagement
 #
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # EINSTEIN TESTS
