@@ -489,8 +489,6 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
                     self.replace_partial_matches(file_path=dash, search_string=replace_value, replacement_string=replace_value)
 
         for xmd in wave_xmd_files:
-            print(find_value)
-            print(replace_value)
             replace_file_text(file_location=xmd, search_string=find_value, replacement_string=replace_value, show_info=False)
 
     def generate_csv_from_wave_dataset_version(self, dataset_id, target_folder, target_filename, version_id=''):
