@@ -477,15 +477,21 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
 
         return num_replacements
 
-    def find_replace_column_name_indash(self, find_value, replace_value):
+    def update_references_in_wave_files(self, find_value, replace_value, include_fuzzy=True):
         wave_dashboard_files = glob.glob("force-app/main/default/wave/*.wdash", recursive=True)
+        wave_xmd_files = glob.glob("force-app/main/default/wave/*.xmd-meta.xml", recursive=True)
 
         for dash in wave_dashboard_files:
             # Find and Replace Exact Matches
             if not replace_file_text(file_location=dash, search_string=find_value, replacement_string=replace_value, show_info=False):
-                if "_" in replace_value:
+                if "_" in replace_value and include_fuzzy:
                     # Find and Replace Fuzzy Matches
                     self.replace_partial_matches(file_path=dash, search_string=replace_value, replacement_string=replace_value)
+
+        for xmd in wave_xmd_files:
+            print(find_value)
+            print(replace_value)
+            replace_file_text(file_location=xmd, search_string=find_value, replacement_string=replace_value, show_info=False)
 
     def generate_csv_from_wave_dataset_version(self, dataset_id, target_folder, target_filename, version_id=''):
         """
@@ -502,6 +508,7 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
         # Get Fields from Org
         self.logger.info("\nGATHERING FIELD DATA")
         fields = []
+        before_after_field_list = []
 
         # Date Fields
         self.logger.info("\nGathering Date Fields:")
@@ -518,10 +525,7 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
 
                 # Clean Up Field Name for new CSV Dataset
                 date_field_name = self.clean_field_name(date_field)
-
-                # Add Field and Derived Variations to Exclusion List
-                for d in self.derived_date_field_extensions:
-                    fields_from_dates_list.append(f"{date_field}{d}")
+                before_after_field_list.append((date_field, date_field_name))
 
                 # Generate Metadata Description for Field
                 date_field_metadata = {
@@ -543,6 +547,9 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
                         field_converted_to_text = True
                     else:
                         date_field_metadata.update({"format": clean_date_format})
+                        # Add Field and Derived Variations to Exclusion List
+                        for d in self.derived_date_field_extensions:
+                            fields_from_dates_list.append(f"{date_field}{d}")
 
                 fields.append(date_field_metadata)
 
@@ -568,6 +575,8 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
 
                     # Generate Metadata Field Description
                     clean_dimension_field_name = self.clean_field_name(dimension_field_name)
+                    before_after_field_list.append((dimension_field_name, clean_dimension_field_name))
+
                     fields.append({
                         "fullyQualifiedName": clean_dimension_field_name,
                         "name": clean_dimension_field_name,
@@ -597,6 +606,8 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
 
                     # Generate Metadata for Field
                     clean_measure_field_name = self.clean_field_name(measure_field_name)
+                    before_after_field_list.append((measure_field_name, clean_measure_field_name))
+
                     measure_field_metadata = {
                         "fullyQualifiedName": clean_measure_field_name,
                         "name": clean_measure_field_name,
@@ -662,9 +673,13 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
 
         # Check Dashboard References
         self.logger.info("\nRunning Check to update old field references in Wave metadata:")
+        for original_field, updated_field in before_after_field_list:
+            self.update_references_in_wave_files(original_field, updated_field, False)
+
         seen = set()
         for item in fields:
-            self.find_replace_column_name_indash(f"\"name\":\"{item['label']}\"", f"\"name\":\"{item['name']}\"")
+            #self.update_references_in_wave_files(f"\"name\":\"{item['label']}\"", f"\"name\":\"{item['name']}\"")
+            #self.update_references_in_wave_files(f"{item['label']}</field>", f"{item['name']}</field>", False)
             if item['name'] in seen:
                 fields.remove(item)
                 self.remove_column_from_csv(item["label"], dataset_csv_output_file)
