@@ -520,4 +520,15 @@ class QbrixSharedKeywords(BaseLibrary):
                 break
             
             itcnt+=1
-            sleep(30)  
+            sleep(30)
+
+    def enable_custom_help_in_user_engagement(self):
+        """
+        Enables the Customize Help Option under User Engagement Help Menu
+        """  
+        self.go_to_setup_admin_page("HelpMenu/home")
+        sleep(2)
+        toggle_span_count = self.browser.get_element_count(f"{self.iframe_handler()} span.slds-checkbox_off:visible")
+        if toggle_span_count and toggle_span_count > 0:
+            print("Clicking Toggle")
+            self.browser.click(f"{self.iframe_handler()} ol.slds-setup-assistant:has-text('Customize the Help Menu') >> .slds-checkbox_faux")
