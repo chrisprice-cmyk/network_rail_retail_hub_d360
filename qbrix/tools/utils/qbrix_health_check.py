@@ -46,6 +46,7 @@ class HealthChecker(BaseTask, ABC):
         self.remove_standard_fields = self.options["remove_standard_fields"] if "remove_standard_fields" in self.options else False
         self.remove_empty_translations = self.options["remove_empty_translations"] if "remove_empty_translations" in self.options else False
         self.auto_generate_external_id_fields = self.options["auto_generate_external_id_fields"] if "auto_generate_external_id_fields" in self.options else False
+        self.regenerate_permission_set = self.options["regenerate_permission_set"] if "regenerate_permission_set" in self.options else False
 
     def _run_task(self):
         self.logger.info("\nHealth Check: Starting Health Checker Tool")
