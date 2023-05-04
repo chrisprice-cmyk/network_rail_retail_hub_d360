@@ -229,20 +229,26 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
                 data_file_location = f"{self.dataset_folder}/{dataset_name}.csv"
                 app_name = get_app_name(file)
 
-                if os.path.exists(data_file_location):
-                    self.logger.info(f"Uploading {data_file_location}...")
+                if os.path.exists(data_file_location) or os.path.exists(f"{data_file_location}__PART__1"):
+
+                    self.logger.info(f"\nUploading Dataset: {dataset_name}")
+
+                    large_file_mode = False
+                    if os.path.exists(f"{data_file_location}__PART__1"):
+                        self.logger.info(" -> Large File Mode Enabled")
+                        large_file_mode = True
 
                     if app_name != "":
-                        self.logger.info(f"Dataset will be related to Analytics App: {app_name}")
+                        self.logger.info(f" -> Dataset will be related to Analytics App: {app_name}")
 
                     related_json_file = f"{self.dataset_folder}/{dataset_name}.json"
 
                     try:
                         if os.path.exists(related_json_file):
-                            self.logger.info(f"Dataset will use local json file: {related_json_file}")
-                            self.upload_csv_to_external_data_part(data_file_location, dataset_name, related_json_file, app_name)
+                            self.logger.info(f" -> Upload will use local json file: {related_json_file}")
+                            self.upload_csv_to_external_data_part(data_file_location, dataset_name, related_json_file, app_name, large_file_mode)
                         else:
-                            self.upload_csv_to_external_data_part(data_file_location, dataset_name, {}, app_name)
+                            self.upload_csv_to_external_data_part(data_file_location, dataset_name, {}, app_name, large_file_mode)
                     except Exception as e:
                         self.logger.error(f"Upload Failed: {e}")
 
@@ -295,24 +301,88 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
         }
         insights_external_data_part_id = self.sf.InsightsExternalDataPart.create(insights_external_data_part)["id"]
         return insights_external_data_part_id
+    
+    def read_large_csv_parts(self, directory, base_filename, file_mode='rb'):
+        """
+        Read in all the parts of a large CSV file that has been split into parts.
 
-    def upload_csv_to_external_data_part(self, csv_file_path, data_part_name, json_file=None, app_name=None):
+        The filename should include "__PART__" and an incrementing number.
+        """
+
+        # Initialize a buffer to store the combined data
+        combined_data_buffer = io.StringIO()
+
+        # Initialize a writer to write the combined data to the buffer
+        writer = csv.writer(combined_data_buffer, quoting=csv.QUOTE_NONNUMERIC)
+
+        # Loop over the files in the directory
+        for filename in os.listdir(directory):
+            if filename.startswith(base_filename) and filename.endswith('__PART__1'):
+                # Open the first part file for reading
+                with open(os.path.join(directory, filename), 'rb') as f:
+                    # Read the contents of the file as bytes and decode to a string
+                    file_data = f.read().decode('utf-8')
+                    
+                    # Create a reader for the decoded string
+                    reader = csv.reader(file_data.splitlines())
+                    
+                    # Read the header row
+                    header = next(reader)
+                    writer.writerow(header)
+                    
+                    # Write the data from the first part file to the combined data buffer
+                    for row in reader:
+                        writer.writerow(row)
+
+                    # Loop over the remaining part files and write their data to the combined data buffer
+                    for part_num in range(2, 1000):
+                        part_filename = f'{base_filename}__PART__{part_num}'
+                        if part_filename in os.listdir(directory):
+                            with open(os.path.join(directory, part_filename), 'rb') as f:
+                                # Read the contents of the file as bytes and decode to a string
+                                file_data = f.read().decode('utf-8')
+                                
+                                # Create a reader for the decoded string
+                                reader = csv.reader(file_data.splitlines())
+                                next(reader)  # Skip the header row
+                                for row in reader:
+                                    writer.writerow(row)
+                        else:
+                            break
+
+        # Get the contents of the combined data buffer
+        combined_data_str = combined_data_buffer.getvalue()
+
+        # Convert the string to bytes if the file mode is 'rb'
+        if file_mode == 'rb':
+            combined_data_bytes = combined_data_str.encode('utf-8')
+            return combined_data_bytes
+        else:
+            return combined_data_str
+
+    def upload_csv_to_external_data_part(self, csv_file_path, data_part_name, json_file=None, app_name=None, large_file=False):
         chunk_size = 10000000  # 10MB
 
         # Create the InsightsExternalData object
-        title_message = f"Creating Dataset Called: {data_part_name}"
-
-        self.logger.info("=" * len(title_message))
-        self.logger.info(f"Creating Dataset Upload Job for: {data_part_name}")
-        self.logger.info("=" * len(title_message))
         insights_external_data_id = self.create_insights_external_data(data_part_name, json_file, app_name)
-        self.logger.info(f"Upload Job created with ID: {insights_external_data_id}")
+        self.logger.info(f" -> Upload Job created with ID: {insights_external_data_id}")
 
         # Compress the CSV file
-        self.logger.info(f"Checking csv file: {csv_file_path}")
-        with open(csv_file_path, "rb") as csv_file:
-            csv_data = csv_file.read()
-            compressed_csv_data = gzip.compress(csv_data)
+        self.logger.info(f" -> Checking csv file: {csv_file_path}")
+        csv_data = None
+
+        if large_file:
+            self.logger.info(" -> Combining File Chunks")
+            csv_data = self.read_large_csv_parts(os.path.join("datasets", "analytics"), os.path.basename(csv_file_path))
+        else:
+            with open(csv_file_path, "rb") as csv_file:
+                csv_data = csv_file.read()
+        
+        if not csv_data:
+            print(csv_data)
+            raise Exception(f"Unable to read CSV File. {csv_file_path}")
+
+        compressed_csv_data = gzip.compress(csv_data)
 
         # Upload the compressed CSV data in chunks if it's larger than 10MB
         num_chunks = math.ceil(len(compressed_csv_data) / chunk_size)
@@ -577,6 +647,9 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
                 date_field_name = self.clean_field_name(date_field)
                 before_after_field_list.append((date_field, date_field_name))
 
+                # Add catch for weird spacing only on date fields
+                updated_date_field = re.sub(r'(?<=[a-z])([A-Z])', r'_\1', date_field)
+
                 # Generate Metadata Description for Field
                 date_field_metadata = {
                     "fullyQualifiedName": date_field_name,
@@ -588,6 +661,7 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
                 # Add Field and Derived Variations to Exclusion List
                 for d in self.derived_date_field_extensions:
                     fields_from_dates_list.append(f"{date_field}{d}")
+                    before_after_field_list.append((f"{updated_date_field}{d}", f"{date_field}{d}"))
 
                 if not date_field_formatting:
                     date_field_metadata.update({"format": "yyyy-MM-dd HH:mm:ss"})
@@ -679,7 +753,7 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
         # Build Query
         select_clause = ", ".join(["'{}' as '{}'".format(f, f) for f in field_names])
         base_query = 'q = load "{}"; q = foreach q generate {};'.format(dataset_id + "/" + version_id, select_clause)
-        # base_query = base_query + 'q = offset q 0; q = limit q 100000;'
+        #base_query = base_query + 'q = offset q 0; q = limit q 100000;'
 
         # self.logger.info(f"Generated Query:\n{base_query}")
 
@@ -691,10 +765,11 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
         # Run Query and download results
         query_url = "{}wave/query".format(self.sf.base_url)
         headers = {"Content-Type": "application/json", "Authorization": "Bearer {}".format(self.sf.session_id)}
+        
 
-        # self.logger.info("\nRunning Query against CRM Analytics for data")
+        #self.logger.info("\nRunning Query against CRM Analytics for data")
 
-        # query_response = requests.post(query_url, headers=headers, data=json.dumps(query_params))
+        #query_response = requests.post(query_url, headers=headers, data=json.dumps(query_params))
 
         # Generate the Dataset Data File
         self.logger.info(f"\nGenerating local CSV file at: {dataset_csv_output_file}")
@@ -706,6 +781,7 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
             # Download the data in batches of 100,000 records
             batch_count = 1
             for offset in range(0, 5000000, 100000):
+
                 self.logger.info(f" -> Downloading Batch {batch_count} containing rows {offset} to {(batch_count) * 100000}")
 
                 # Add the limit and offset parameters to the SOQL query
@@ -768,6 +844,8 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
             with open(os.path.join(target_folder, target_filename + ".json"), 'w', encoding='utf-8') as file:
                 json.dump(metadata, file, indent=4)
 
+        self.process_large_csv_files("datasets/analytics")
+
     def get_datasets_from_org(self, endpoint=f"wave/datasets?pageSize=25", org_dataset_dict=None):
         """
         Get List of all Datasets in target org
@@ -793,6 +871,73 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
                 org_dataset_dict = self.get_datasets_from_org(response['nextPageUrl'].replace(f'/services/data/v{self.project_config.project__package__api_version}/', ''), org_dataset_dict)
 
         return org_dataset_dict
+    
+    def process_large_csv_files(self, directory):
+        """
+        Check a directory for CSV files over 99MB and split them into parts.
+
+        Each part should have the same file name with "__PART__" and an incrementing number as the file name.
+        """
+        self.logger.info("\n Checking File Sizes")
+        # Set the maximum file size (in bytes) for each split file
+        max_file_size = 99000000
+
+        # Loop over the files in the directory
+        for filename in os.listdir(directory):
+            if filename.endswith('.csv'):
+                filepath = os.path.join(directory, filename)
+
+                # Get the size of the file in bytes
+                file_size = os.path.getsize(filepath)
+
+                # If the file is over the maximum size, split it into parts
+                if file_size > max_file_size:
+                    print(f' -> Splitting {filename} into parts...')
+
+                    # Open the original CSV file for reading
+                    with open(filepath, 'r', newline='', encoding='utf-8') as f:
+                        reader = csv.reader(f)
+
+                        # Read the header row
+                        header = next(reader)
+
+                        # Initialize variables for tracking the current file size and split file number
+                        current_file_size = 0
+                        file_num = 1
+
+                        # Open the first split file for writing
+                        out_file = open(f'{filepath}__PART__{file_num}', 'w', newline='', encoding='utf-8')
+                        writer = csv.writer(out_file)
+
+                        # Write the header row to the first split file
+                        writer.writerow(header)
+
+                        # Loop over the rows in the original CSV file
+                        for row in reader:
+                            # Calculate the size of the current row in bytes
+                            row_size = len(','.join(row).encode('utf-8'))
+
+                            # If adding the current row would exceed the maximum file size, close the current file and open a new one
+                            if current_file_size + row_size > max_file_size:
+                                out_file.close()
+                                file_num += 1
+                                out_file = open(f'{filepath}__PART__{file_num}', 'w', newline='', encoding='utf-8')
+                                writer = csv.writer(out_file)
+                                writer.writerow(header)
+                                current_file_size = 0
+
+                            # Write the current row to the current split file
+                            writer.writerow(row)
+                            current_file_size += row_size
+
+                        # Close the last split file
+                        out_file.close()
+
+                        print(f' -> Split {filename} into {file_num} parts.')
+
+                        os.remove(filepath)
+                else:
+                    print(f' -> Skipping {filename}. File size is {file_size / 1000000:.2f} MB.')
 
     def _run_task(self):
         self.logger.info("=================================")
@@ -815,6 +960,9 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
         if self.mode.lower() == "share" or self.mode.lower() == "s":
             self.logger.info("Running in Sharing Mode")
             self.update_sharing_for_applications()
+
+        if self.mode.lower() == "t":
+            self.process_large_csv_files("datasets/analytics")
 
         self.logger.info("=================================================")
         self.logger.info("Q Brix Analytics Manager has completed all tasks!")
