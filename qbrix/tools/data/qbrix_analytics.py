@@ -2,6 +2,7 @@ import base64
 import csv
 import glob
 import gzip
+import io
 import json
 import math
 import os
@@ -693,25 +694,26 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
         query_params = {"query": base_query}
 
         self.logger.info("\nRunning Query against CRM Analytics for data")
-        query_response = requests.post(query_url, headers=headers, data=json.dumps(query_params))
-
-        if query_response.status_code != 200:
-            self.logger.error(json.loads(query_response.content.decode('utf-8')))
-            raise Exception("CRM Analytics Query Failed!")
-
-        # Process Data Response
-        analytics_query_response_data = json.loads(query_response.content.decode('utf-8'))
-        if not analytics_query_response_data and not analytics_query_response_data['results']['records']:
-            raise Exception("ERROR: Results were retrieved but not in the expected format or no data was returned.")
-        self.logger.info(f"{len(analytics_query_response_data['results']['records'])} records retrieved")
+        query_response = requests.post(query_url, headers=headers, data=json.dumps(query_params), stream=True)
 
         # Generate the Dataset Data File
         self.logger.info(f"\nGenerating local CSV file at: {dataset_csv_output_file}")
-        with open(dataset_csv_output_file, 'w', encoding='UTF-8') as csvfile:
+        with open(dataset_csv_output_file, 'w', newline='', encoding='utf-8') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=field_names, quoting=csv.QUOTE_ALL)
             writer.writeheader()
-            for record in analytics_query_response_data['results']['records']:
-                writer.writerow(record)
+
+            content = b''
+            for chunk in query_response.iter_content(chunk_size=1024):
+                content += chunk
+            try:
+                data = json.loads(content.decode('utf-8'))
+                if 'results' in data and 'records' in data['results']:
+                    for row in data['results'].get('records'):
+                        writer.writerow(row)
+            except json.JSONDecodeError:
+                print('Error parsing JSON string:')
+                print(content.decode('utf-8'))
+                raise
 
         # Check Dashboard References
         self.logger.info("\nRunning Check to update old field references in Wave metadata:")
