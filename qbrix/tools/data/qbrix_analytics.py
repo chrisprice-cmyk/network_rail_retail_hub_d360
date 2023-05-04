@@ -230,7 +230,6 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
                 app_name = get_app_name(file)
 
                 if os.path.exists(data_file_location) or os.path.exists(f"{data_file_location}__PART__1"):
-
                     self.logger.info(f"\nUploading Dataset: {dataset_name}")
 
                     large_file_mode = False
@@ -301,7 +300,7 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
         }
         insights_external_data_part_id = self.sf.InsightsExternalDataPart.create(insights_external_data_part)["id"]
         return insights_external_data_part_id
-    
+
     def read_large_csv_parts(self, directory, base_filename, file_mode='rb'):
         """
         Read in all the parts of a large CSV file that has been split into parts.
@@ -322,14 +321,14 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
                 with open(os.path.join(directory, filename), 'rb') as f:
                     # Read the contents of the file as bytes and decode to a string
                     file_data = f.read().decode('utf-8')
-                    
+
                     # Create a reader for the decoded string
                     reader = csv.reader(file_data.splitlines())
-                    
+
                     # Read the header row
                     header = next(reader)
                     writer.writerow(header)
-                    
+
                     # Write the data from the first part file to the combined data buffer
                     for row in reader:
                         writer.writerow(row)
@@ -341,7 +340,7 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
                             with open(os.path.join(directory, part_filename), 'rb') as f:
                                 # Read the contents of the file as bytes and decode to a string
                                 file_data = f.read().decode('utf-8')
-                                
+
                                 # Create a reader for the decoded string
                                 reader = csv.reader(file_data.splitlines())
                                 next(reader)  # Skip the header row
@@ -377,7 +376,7 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
         else:
             with open(csv_file_path, "rb") as csv_file:
                 csv_data = csv_file.read()
-        
+
         if not csv_data:
             print(csv_data)
             raise Exception(f"Unable to read CSV File. {csv_file_path}")
@@ -753,7 +752,7 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
         # Build Query
         select_clause = ", ".join(["'{}' as '{}'".format(f, f) for f in field_names])
         base_query = 'q = load "{}"; q = foreach q generate {};'.format(dataset_id + "/" + version_id, select_clause)
-        #base_query = base_query + 'q = offset q 0; q = limit q 100000;'
+        # base_query = base_query + 'q = offset q 0; q = limit q 100000;'
 
         # self.logger.info(f"Generated Query:\n{base_query}")
 
@@ -765,11 +764,10 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
         # Run Query and download results
         query_url = "{}wave/query".format(self.sf.base_url)
         headers = {"Content-Type": "application/json", "Authorization": "Bearer {}".format(self.sf.session_id)}
-        
 
-        #self.logger.info("\nRunning Query against CRM Analytics for data")
+        # self.logger.info("\nRunning Query against CRM Analytics for data")
 
-        #query_response = requests.post(query_url, headers=headers, data=json.dumps(query_params))
+        # query_response = requests.post(query_url, headers=headers, data=json.dumps(query_params))
 
         # Generate the Dataset Data File
         self.logger.info(f"\nGenerating local CSV file at: {dataset_csv_output_file}")
@@ -781,7 +779,6 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
             # Download the data in batches of 100,000 records
             batch_count = 1
             for offset in range(0, 5000000, 100000):
-
                 self.logger.info(f" -> Downloading Batch {batch_count} containing rows {offset} to {(batch_count) * 100000}")
 
                 # Add the limit and offset parameters to the SOQL query
@@ -871,7 +868,7 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
                 org_dataset_dict = self.get_datasets_from_org(response['nextPageUrl'].replace(f'/services/data/v{self.project_config.project__package__api_version}/', ''), org_dataset_dict)
 
         return org_dataset_dict
-    
+
     def process_large_csv_files(self, directory):
         """
         Check a directory for CSV files over 99MB and split them into parts.
