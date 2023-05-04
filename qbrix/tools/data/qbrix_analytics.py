@@ -1,23 +1,17 @@
 import base64
-import datetime
+import csv
 import glob
 import gzip
 import json
 import math
 import os
 import re
-import subprocess
-import json
-import csv
-import io
-import requests
-from dateutil.parser import parse
 from abc import ABC
 from pathlib import Path
-import shlex
 from time import sleep
+
+import requests
 from cumulusci.tasks.salesforce.BaseSalesforceApiTask import BaseSalesforceApiTask
-from datetime import datetime
 
 from qbrix.tools.shared.qbrix_console_utils import init_logger
 from qbrix.tools.shared.qbrix_project_tasks import replace_file_text
@@ -194,7 +188,7 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
             log.debug("No Analytics Folder Found. Skipping Dataset Download.")
             return
 
-        wave_dataset_files = glob.glob("force-app/main/default/wave" + "/*.wds-meta.xml", recursive=False)
+        wave_dataset_files = glob.glob("force-app/main/default/wave/*.wds-meta.xml", recursive=False)
 
         self.logger.info("Starting Download of dataset files")
 
@@ -226,7 +220,7 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
 
         self.run_cleaners()
 
-        wave_dataset_files = glob.glob("force-app/main/default/wave" + "/*.wds-meta.xml", recursive=True)
+        wave_dataset_files = glob.glob("force-app/main/default/wave/*.wds-meta.xml", recursive=False)
 
         if len(wave_dataset_files) > 0:
             for file in wave_dataset_files:
@@ -405,10 +399,6 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
 
         folder_metadata.update({"shares": folder_shares})
 
-        body = {
-            "shares": folder_shares,
-        }
-
         self.sf.restful(
             endpoint,
             data=json.dumps({
@@ -424,7 +414,7 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
             log.debug("No Source Analytics Folder Found at the expected location (force-app/main/default/wave). Skipping Dataset Deployment.")
             return
 
-        wave_app_files = glob.glob("force-app/main/default/wave" + "/*.wapp-meta.xml", recursive=True)
+        wave_app_files = glob.glob("force-app/main/default/wave/*.wapp-meta.xml", recursive=False)
 
         if len(wave_app_files) == 0:
             self.logger.info("No Wave Application Files found. Skipping.")
@@ -478,18 +468,74 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
         return num_replacements
 
     def update_references_in_wave_files(self, find_value, replace_value, include_fuzzy=True):
-        wave_dashboard_files = glob.glob("force-app/main/default/wave/*.wdash", recursive=True)
-        wave_xmd_files = glob.glob("force-app/main/default/wave/*.xmd-meta.xml", recursive=True)
+        if find_value == replace_value:
+            return
 
+        wave_dashboard_files = glob.glob("force-app/main/default/wave/*.wdash", recursive=False)
         for dash in wave_dashboard_files:
-            # Find and Replace Exact Matches
-            if not replace_file_text(file_location=dash, search_string=find_value, replacement_string=replace_value, show_info=False):
-                if "_" in replace_value and include_fuzzy:
-                    # Find and Replace Fuzzy Matches
-                    self.replace_partial_matches(file_path=dash, search_string=replace_value, replacement_string=replace_value)
+            # print(f"\nChecking {dash}")
 
+            # Load Dashboard JSON
+            with open(dash, 'r') as json_file:
+                data = json.load(json_file)
+
+            update_made = False
+
+            if data:
+                # Check and Update FieldNames
+                # print(f"\nChecking Data sources")
+                data_sources = data["dataSourceLinks"]
+                for data_source in data_sources:
+                    fields = data_source.get("fields")
+                    if fields:
+                        for f in fields:
+                            if f["fieldName"] == find_value:
+                                # print(f" -> Found Reference to {find_value}, replacing with {replace_value}")
+                                f["fieldName"] = replace_value
+                                update_made = True
+
+                # Check Filters
+                # print(f"\nChecking Filters")
+                filters = data.get("filters")
+                if filters:
+                    for dashboard_filter in filters:
+                        if dashboard_filter.get("fields") and find_value in dashboard_filter.get("fields"):
+                            # print(f" -> Found Reference to {find_value}, replacing with {replace_value}")
+                            dashboard_filter["fields"] = [s.replace(find_value, replace_value) for s in list(dashboard_filter.get("fields"))]
+                            update_made = True
+
+                # Check and Update Query Step References
+                # print(f"\nChecking Step Queries")
+                steps = data.get("steps")
+                if steps:
+                    for s in dict(steps).values():
+                        if s.get("query") and isinstance(s.get("query"), str):
+                            # print(f" -> Found Reference to {find_value}, replacing with {replace_value}")
+                            s["query"] = s["query"].replace(find_value, replace_value)
+                            update_made = True
+                        if s.get("query") and isinstance(s.get("query"), dict) and s["query"].get("query"):
+                            # print(s.get("query"))
+                            # print(f" -> Found Reference to {find_value}, replacing with {replace_value}")
+                            s["query"]["query"] = s["query"].get("query").replace(find_value, replace_value)
+                            update_made = True
+
+                # Check and Update Widgets References
+                # print(f"\nChecking Widgets")
+                widgets = data.get("widgets")
+                if widgets:
+                    for w in dict(widgets).values():
+                        if w.get("parameters") and w["parameters"].get("measureField") and w["parameters"].get("measureField") == find_value:
+                            # print(f" -> Found Reference to {find_value}, replacing with {replace_value}")
+                            w["parameters"]["measureField"] = replace_value
+                            update_made = True
+
+                if update_made:
+                    with open(dash, 'w') as json_file:
+                        json.dump(data, json_file)
+
+        wave_xmd_files = glob.glob("force-app/main/default/wave/*.xmd-meta.xml", recursive=False)
         for xmd in wave_xmd_files:
-            replace_file_text(file_location=xmd, search_string=find_value, replacement_string=replace_value, show_info=False)
+            replace_file_text(file_location=xmd, search_string=f"{find_value}</field>", replacement_string=f"{replace_value}</field>", show_info=False)
 
     def generate_csv_from_wave_dataset_version(self, dataset_id, target_folder, target_filename, version_id=''):
         """
@@ -502,9 +548,9 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
 
         if not dataset_version:
             raise Exception(f"No data was returned for dataset id {dataset_id}")
-        
+
         # Capture Created Date for Time Shift
-        if dataset_version["createdDate"]:
+        if dataset_version.get("createdDate"):
             with open(os.path.join(target_folder, target_filename + ".txt"), 'w', encoding='utf-8') as qbrix_data_file:
                 qbrix_data_file.write(dataset_version["createdDate"])
 
@@ -542,24 +588,15 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
                 for d in self.derived_date_field_extensions:
                     fields_from_dates_list.append(f"{date_field}{d}")
 
-                field_converted_to_text = False
                 if not date_field_formatting:
-                    date_field_metadata.update({"type": "Text"})
-                    field_converted_to_text = True
+                    date_field_metadata.update({"format": "yyyy-MM-dd HH:mm:ss"})
                 else:
                     clean_date_format = date_field_formatting.replace("&#39;", "'")
-                    if clean_date_format not in self.approved_formats:
-                        self.logger.info(f" -> Date Format for {date_field} Not Supported! Format provided: {clean_date_format}")
-                        date_field_metadata.update({"type": "Text"})
-                        field_converted_to_text = True
-                    else:
-                        date_field_metadata.update({"format": clean_date_format})
-                        
+                    date_field_metadata.update({"format": clean_date_format})
 
                 fields.append(date_field_metadata)
 
-                message_text = " and converted to text" if field_converted_to_text else ""
-                self.logger.info(f" -> Processed Date Field ({date_field}): Renamed to {date_field_name} with label {date_field_label}{message_text}")
+                self.logger.info(f" -> Processed Date Field ({date_field}): Renamed to {date_field_name} with label {date_field_label}")
 
         # Get Dimensions Fields
         self.logger.info("\nGathering Dimension Fields:")
@@ -643,7 +680,7 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
         base_query = 'q = load "{}"; q = foreach q generate {};'.format(dataset_id + "/" + version_id, select_clause)
         base_query = base_query + ' q = limit q 1000000000;'
 
-        #self.logger.info(f"Generated Query:\n{base_query}")
+        # self.logger.info(f"Generated Query:\n{base_query}")
 
         # Ensure CSV Output File Directory Exists
         if not os.path.exists(target_folder):
@@ -683,8 +720,6 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
 
         seen = set()
         for item in fields:
-            #self.update_references_in_wave_files(f"\"name\":\"{item['label']}\"", f"\"name\":\"{item['name']}\"")
-            #self.update_references_in_wave_files(f"{item['label']}</field>", f"{item['name']}</field>", False)
             if item['name'] in seen:
                 fields.remove(item)
                 self.remove_column_from_csv(item["label"], dataset_csv_output_file)
@@ -741,92 +776,6 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
                 org_dataset_dict = self.get_datasets_from_org(response['nextPageUrl'].replace(f'/services/data/v{self.project_config.project__package__api_version}/', ''), org_dataset_dict)
 
         return org_dataset_dict
-    
-    def format_from_string(self, input_format):
-        # Replace literal characters with format codes
-        format_codes = {
-            'y': '%Y',  # Year with century
-            'm': '%m',  # Month as a zero-padded decimal number
-            'd': '%d',  # Day of the month as a zero-padded decimal number
-            'H': '%H',  # Hour (24-hour clock) as a zero-padded decimal number
-            'M': '%M',  # Minute as a zero-padded decimal number
-            'S': '%S',  # Second as a zero-padded decimal number
-            'f': '%f',  # Microsecond as a six-digit decimal number
-            'Z': '%z',  # Time zone offset in the form +HHMM or -HHMM
-        }
-        output_format = ''
-        escape_next = False
-        for char in input_format:
-            if escape_next:
-                output_format += char
-                escape_next = False
-            elif char == '%':
-                escape_next = True
-            elif char in format_codes:
-                output_format += format_codes[char]
-            else:
-                output_format += char
-
-        # Escape any literal percentage signs
-        output_format = output_format.replace('%', '%%')
-
-        return output_format
-    
-    def time_shift(self, dataset_name):
-        
-        txt_file_path = os.path.join("datasets", "analytics", dataset_name + ".txt")
-        json_file_path = os.path.join("datasets", "analytics", dataset_name + ".json")
-        csv_file_path = os.path.join("datasets", "analytics", dataset_name + ".csv")
-
-        if os.path.exists(txt_file_path) and os.path.exists(json_file_path):
-
-            # Load the anchor date from the txt file
-            with open(txt_file_path, 'r') as f:
-                anchor_date_str = f.read().strip()
-            anchor_date = datetime.fromisoformat(anchor_date_str)
-
-            # Load the date format information from the json file
-            with open(json_file_path, 'r') as f:
-                json_dict = json.load(f)
-            fields_list = json_dict['objects'][0]['fields']
-            date_formats = {}
-            for field in fields_list:
-                if 'format' in field and field['format'] and field['name'] in csv.reader(open(csv_file_path)).__next__():
-                    date_formats[self.clean_field_name(field['name'])] = self.format_from_string(field['format'])
-
-            print(date_formats)
-
-            # Adjust the dates in the csv file
-            with open(csv_file_path, 'r', encoding='utf-8') as f:
-                csv_reader = csv.DictReader(f)
-                fieldnames = csv_reader.fieldnames
-                rows = []
-                for row in csv_reader:
-                    new_row = {}
-                    for fieldname in fieldnames:
-                        if fieldname in date_formats:
-                            date_format = date_formats[fieldname]
-                            old_date_str = row[fieldname]
-                            if old_date_str:
-                                old_date = datetime.strptime(old_date_str, date_format)
-                                delta = anchor_date - old_date
-                                new_date = datetime.now() - delta
-                                new_row[fieldname] = new_date.strftime(date_format)
-                            else:
-                                new_row[fieldname] = ''
-                        else:
-                            new_row[fieldname] = row[fieldname]
-                    rows.append(new_row)
-
-            # Write the adjusted data back to the csv file
-            with open(csv_file_path, 'w', newline='', encoding='utf-8') as f:
-                csv_writer = csv.DictWriter(f, fieldnames=fieldnames)
-                csv_writer.writeheader()
-                for row in rows:
-                    csv_writer.writerow(row)
-
-        else:
-            self.logger.info(f"Skipping {dataset_name} as the required json and txt files are not present.")
 
     def _run_task(self):
         self.logger.info("=================================")
@@ -849,9 +798,6 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
         if self.mode.lower() == "share" or self.mode.lower() == "s":
             self.logger.info("Running in Sharing Mode")
             self.update_sharing_for_applications()
-
-        if self.mode.lower() == "t":
-            self.time_shift("Participant_Site_Analysis_ESP2")
 
         self.logger.info("=================================================")
         self.logger.info("Q Brix Analytics Manager has completed all tasks!")
