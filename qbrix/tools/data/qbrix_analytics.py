@@ -679,7 +679,7 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
         # Build Query
         select_clause = ", ".join(["'{}' as '{}'".format(f, f) for f in field_names])
         base_query = 'q = load "{}"; q = foreach q generate {};'.format(dataset_id + "/" + version_id, select_clause)
-        base_query = base_query + ' q = limit q 1000000000;'
+        # base_query = base_query + 'q = offset q 0; q = limit q 100000;'
 
         # self.logger.info(f"Generated Query:\n{base_query}")
 
@@ -691,29 +691,44 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
         # Run Query and download results
         query_url = "{}wave/query".format(self.sf.base_url)
         headers = {"Content-Type": "application/json", "Authorization": "Bearer {}".format(self.sf.session_id)}
-        query_params = {"query": base_query}
 
-        self.logger.info("\nRunning Query against CRM Analytics for data")
-        query_response = requests.post(query_url, headers=headers, data=json.dumps(query_params), stream=True)
+        # self.logger.info("\nRunning Query against CRM Analytics for data")
+
+        # query_response = requests.post(query_url, headers=headers, data=json.dumps(query_params))
 
         # Generate the Dataset Data File
         self.logger.info(f"\nGenerating local CSV file at: {dataset_csv_output_file}")
+        row_count = 0
         with open(dataset_csv_output_file, 'w', newline='', encoding='utf-8') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=field_names, quoting=csv.QUOTE_ALL)
             writer.writeheader()
 
-            content = b''
-            for chunk in query_response.iter_content(chunk_size=1024):
-                content += chunk
-            try:
-                data = json.loads(content.decode('utf-8'))
-                if 'results' in data and 'records' in data['results']:
-                    for row in data['results'].get('records'):
+            # Download the data in batches of 100,000 records
+            batch_count = 1
+            for offset in range(0, 5000000, 100000):
+                self.logger.info(f" -> Downloading Batch {batch_count} containing rows {offset} to {(batch_count) * 100000}")
+
+                # Add the limit and offset parameters to the SOQL query
+                paged_query = f'{base_query} q = offset q {offset}; q = limit q 100000;'
+                query_params = {"query": paged_query}
+
+                # Make a POST request to the Wave query endpoint with the modified query
+                response = requests.post(query_url, headers=headers, data=json.dumps(query_params))
+                data = json.loads(response.content.decode('utf-8'))
+
+                if 'results' in data:
+                    for row in data['results']['records']:
                         writer.writerow(row)
-            except json.JSONDecodeError:
-                print('Error parsing JSON string:')
-                print(content.decode('utf-8'))
-                raise
+                        row_count += 1
+                    if len(data['results']['records']) < 100000:
+                        break
+                else:
+                    self.logger.info(" -> No More Results to Process")
+                    break
+
+                batch_count += 1
+
+        self.logger.info(f" -> Loaded {row_count} rows into csv")
 
         # Check Dashboard References
         self.logger.info("\nRunning Check to update old field references in Wave metadata:")
