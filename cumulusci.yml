@@ -213,6 +213,11 @@ tasks:
   orgconfig_hydrate:
     description: injects additional context into the orgconfig that can be referenced downstream
     class_path: qbrix.tools.utils.qbrix_orgconfig_hydrate.NGOrgConfig
+    
+  deploy_dx:
+    class_path: cumulusci.tasks.sfdx.SFDXOrgTask
+    options:
+      command: project deploy start --source-dir force-app/main/default --ignore-conflicts
 
   #------------------------------------#
   # CUSTOM TASKS                       #
@@ -224,13 +229,13 @@ flows:
   # STAGE 1 of 3: PRE-QBRIX DEPLOYMENT #
   #------------------------------------#
 
-  sample_custom_flow:
-    steps:
-      1:
-        task: orgconfig_hydrate
-      2:
-        task: qbrix_installer_tracking
-        when: org_config.is_psl_minimal_qty_available_in_org('InsightsInboxAdminAnalyticsPsl', 1000)
+  #sample_custom_flow:
+  #  steps:
+  #    1:
+  #      task: orgconfig_hydrate
+  #    2:
+  #      task: qbrix_installer_tracking
+  #      when: org_config.is_psl_minimal_qty_available_in_org('InsightsInboxAdminAnalyticsPsl', 1000)
 
   # Prepares the Org with any required settings/testim scripts
   prepare_org:

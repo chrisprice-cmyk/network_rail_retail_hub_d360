@@ -150,16 +150,21 @@ class NGOrgConfig(SFDXBaseTask):
         if self.org_config.qbrix_cache_set is None:
             self.org_config.qbrix_cache_set = self._cache_item_set
             
+        if self.org_config.is_data_present is None:
+            self.org_config.is_data_present = self._is_data_present_in_org
+            
+        if self.org_config.is_file is None:
+            self.org_config.is_file = os.path.isfile
         
+        if self.org_config.is_dir is None:
+            self.org_config.is_dir = os.path.isdir
+            
         self._seed_initial_cache()
 
     def _seed_initial_cache(self):
         if(self.org_config.qbrix_cache is None):
             self.org_config.qbrix_cache={}
             
-        #self._cache_item_set("instancedomain",self.instanceurl)
-        #self._cache_item_set("subdomain",self.instanceurl.replace("https://","").split('.')[0])
-        
     def _cache_item_get(self,key):
         if(self.org_config.qbrix_cache is None):
             self.org_config.qbrix_cache={}
@@ -205,6 +210,10 @@ class NGOrgConfig(SFDXBaseTask):
     
     def _is_object_present_in_org(self, targetobject):
         
+        self.logger.info(f"_is_object_present_in_org::{targetobject}")
+        if(targetobject is None):
+            return False
+        
         #SELECT  QualifiedApiName FROM EntityDefinition Where QualifiedApiName=
 
         url = f"{self.instanceurl}/services/data/v56.0/query/?q=select+QualifiedApiName+from+EntityDefinition+where+QualifiedApiName='{targetobject}' LIMIT 1"
@@ -217,6 +226,40 @@ class NGOrgConfig(SFDXBaseTask):
         data = json.loads(response.text)
         self.logger.info(data["totalSize"])
         return data["totalSize"] == 1
+    
+    
+    def _is_data_present_in_org(self, targetobject, filter,tooling=False):
+        
+        self.logger.info(f"_is_data_present_in_org::ttargetobject::{targetobject}::filter::{filter}")
+        
+        url=""
+        querytarget="query"
+        if(tooling):
+            querytarget="tooling/query"
+        
+        
+        if(not filter is None):
+            url = f"{self.instanceurl}/services/data/v56.0/{querytarget}/?q=select+Id+from+{targetobject}+where+({filter})"
+        else:
+            url = f"{self.instanceurl}/services/data/v56.0/{querytarget}/?q=select+Id+from+{targetobject}"
+            
+        self.logger.info(f"url::{url}")
+        
+        headers = {
+            'Authorization': f'Bearer {self.accesstoken}',
+            'Content-Type': 'application/json'
+        }
+        response = requests.request("GET", url, headers=headers)
+        
+        data = json.loads(response.text)
+        self.logger.info(data)
+        self.logger.info(data["totalSize"])
+        return data["totalSize"] > 0
+        
+        
+        #fail closed
+        return False
+    
     
     def _is_psl_present_in_org(self, psl):
         
@@ -235,6 +278,7 @@ class NGOrgConfig(SFDXBaseTask):
         return data["totalSize"] == 1
     
     
+        
     def _is_psl_minimal_qty_available_in_org(self, psl, qty):
         
         #e.g. 
@@ -386,8 +430,7 @@ class NGOrgConfig(SFDXBaseTask):
         }
         response = requests.request("GET", url, headers=headers)
         data = json.loads(response.text)
-        self.logger.info(response.text)
-
+        
         return float(data[-1]['version'])
 
     def _run_task(self):
