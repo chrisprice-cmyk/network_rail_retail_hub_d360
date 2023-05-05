@@ -92,6 +92,12 @@ Create Tracker Chat Button
 
 Create Felix Chat Button
     Create A Chat Button And Automated Invitations    HLS - Felix Bot      HLS_Felix_Bot
+
+Create Mackie Chat Button
+    Create A Chat Button And Automated Invitations    HLS - Mackie Bot      HLS_Mackie_Bot
+
+Create Heka Chat Button
+    Create A Chat Button And Automated Invitations    HLS - Heka Bot      HLS_Heka_Bot
     
 Add Case Wrap Up Model
     Enable Einstein Classification
