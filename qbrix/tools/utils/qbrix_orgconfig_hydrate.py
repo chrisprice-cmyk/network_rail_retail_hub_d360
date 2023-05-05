@@ -1,7 +1,7 @@
 import os
 import json
 import requests
-
+import glob
 
 from abc import abstractmethod
 from cumulusci.core.config import ScratchOrgConfig
@@ -10,6 +10,44 @@ from cumulusci.core.exceptions import CommandException
 from cumulusci.core.keychain import BaseProjectKeychain
 
 
+class NGBroom(SFDXBaseTask):
+    task_options = {
+
+        "sweep": {
+            "description": "Filepath or glob pattern to sweep away.",
+            "required": True
+        },
+        "recursive": {
+            "description": "Run recursively",
+            "required": False
+        }
+    }
+    
+    def _init_options(self, kwargs):
+        super(NGBroom, self)._init_options(kwargs)
+        
+        
+    def _prepruntime(self):
+
+        
+        if "sweep" not in self.options or not self.options["sweep"]:
+            self.sweep =None
+        else:
+            self.sweep =self.options["sweep"]
+        
+        if "recursive" not in self.options or not self.options["recursive"]:
+            self.recursive =True
+        else:
+            self.recursive =bool(self.options["recursive"])
+        
+    def _run_task(self):
+        self._prepruntime()
+        files = glob.glob(self.sweep,recursive=self.recursive)
+        for filetosweep in files :
+            if(os.path.isfile(filetosweep)):
+                os.remove(filetosweep)
+        
+    
 class NGAbort(SFDXBaseTask):
     task_options = {
 
@@ -154,10 +192,13 @@ class NGOrgConfig(SFDXBaseTask):
             self.org_config.is_data_present = self._is_data_present_in_org
             
         if self.org_config.is_file is None:
-            self.org_config.is_file = os.path.isfile
+            self.org_config.is_file = self._is_file
         
         if self.org_config.is_dir is None:
             self.org_config.is_dir = os.path.isdir
+            
+        if self.org_config.is_file_glob is None:
+            self.org_config.is_file_glob = self._is_glob_file_search
             
         self._seed_initial_cache()
 
@@ -178,8 +219,16 @@ class NGOrgConfig(SFDXBaseTask):
         self.logger.info(f'Cache::{key}::{val}')
         self.org_config.qbrix_cache[key]=val
         
+    def _is_file(self,filetofind):
+        return os.path.isfile(filetofind)
+    
+    def _is_glob_file_search(self,filetofind,runrecursive=True):
+        foundfiles =glob.glob(filetofind, recursive=runrecursive)
+        for file in foundfiles:
+            print(file)
+        return len(foundfiles) >0
         
-        
+
 
 
     def _is_qbrix_installed(self, qbrixname):
@@ -229,6 +278,9 @@ class NGOrgConfig(SFDXBaseTask):
     
     
     def _is_data_present_in_org(self, targetobject, filter,tooling=False):
+        default = lambda o: f"<<non-serializable: {type(o).__qualname__}>>"
+        org_config_json= json.dumps(self.org_config, default=default)
+        self.logger.info(f"{os.listdir('.') }")
         
         self.logger.info(f"_is_data_present_in_org::ttargetobject::{targetobject}::filter::{filter}")
         

@@ -218,6 +218,10 @@ tasks:
     class_path: cumulusci.tasks.sfdx.SFDXOrgTask
     options:
       command: project deploy start --source-dir force-app/main/default --ignore-conflicts
+  
+  dustpan:
+    description: injects additional context into the orgconfig that can be referenced downstream
+    class_path: qbrix.tools.utils.qbrix_orgconfig_hydrate.NGBroom
 
   #------------------------------------#
   # CUSTOM TASKS                       #
