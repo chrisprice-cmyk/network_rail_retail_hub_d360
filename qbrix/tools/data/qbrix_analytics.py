@@ -607,6 +607,33 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
         for xmd in wave_xmd_files:
             replace_file_text(file_location=xmd, search_string=f"{find_value}</field>", replacement_string=f"{replace_value}</field>", show_info=False)
 
+    def get_date_format_string(self, input_string):
+        if 'd' in input_string.lower():
+            return "d"
+        elif 'm' in input_string.lower():
+            return "m"
+        elif 'yyyy' in input_string.lower():
+            return "Y"
+        elif 'y' in input_string.lower():
+            return "y"
+        else:
+            return None
+
+    def get_correct_format_string(self, input_format):
+
+        if '-' in input_format or '/' in input_format:
+            date_format_sections = re.split('/|-', input_format)
+
+            if '/' in input_format:
+                separator = '/'
+            elif '-' in input_format:
+                separator = '-'
+
+            if len(date_format_sections) == 3:
+                return f"%{self.get_date_format_string(date_format_sections[0])}{separator}%{self.get_date_format_string(date_format_sections[1])}{separator}%{self.get_date_format_string(date_format_sections[2])}"
+            else:
+                self.logger.error(f"Unrecognised Input Format Passed to method: {input_format}")
+
     def generate_csv_from_wave_dataset_version(self, dataset_id, target_folder, target_filename, version_id=''):
         """
         Generates a local csv file from a dataset version
@@ -654,7 +681,10 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
                     "fullyQualifiedName": date_field_name,
                     "name": date_field_name,
                     "type": "Date",
-                    "label": date_field_label
+                    "label": date_field_label,
+                    "isSystemField": False,
+                    "isUniqueId": False,
+                    "isMultiValue": False,
                 }
 
                 # Add Field and Derived Variations to Exclusion List
@@ -667,6 +697,10 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
                 else:
                     clean_date_format = date_field_formatting.replace("&#39;", "'")
                     date_field_metadata.update({"format": clean_date_format})
+
+                # Adjust Offset
+                if date_fields_dict.get("fiscalMonthOffset"):
+                    date_field_metadata.update({"fiscalMonthOffset": date_fields_dict.get("fiscalMonthOffset")})
 
                 fields.append(date_field_metadata)
 
@@ -697,7 +731,9 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
                         "fullyQualifiedName": clean_dimension_field_name,
                         "name": clean_dimension_field_name,
                         "type": "Text",
-                        "label": dimension_field_label
+                        "label": dimension_field_label,
+                        "isMultiValue": False,
+                        "isSystemField": False
                     })
 
                     self.logger.info(f" -> Processed Dimension Field ({dimension_field_name}): Renamed to {clean_dimension_field_name} with label {dimension_field_label}")
@@ -731,7 +767,9 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
                         "label": measure_field_label,
                         "precision": 18,
                         "defaultValue": "null",
-                        "scale": decimal_places
+                        "scale": decimal_places,
+                        "isMultiValue": False,
+                        "isSystemField": False
                     }
 
                     if decimal_places > 0:
