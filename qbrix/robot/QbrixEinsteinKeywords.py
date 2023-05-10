@@ -289,6 +289,89 @@ class QbrixEinsteinKeywords(BaseLibrary):
         self.cumulusci.run_task(task_name="assign_permission_sets", api_names='InboxWithEinsteinActivityCapture')
         sleep(3)
 
+    def einstein_article_recommendations_setup(self):
+        """
+        Runs the Einstein Article Recommendations Setup
+        """
+        iframe_handler = self.shared.iframe_handler()
+
+        # Make sure we are on Einstein Article Recommendations page
+        self.shared.go_to_setup_admin_page("EinsteinArticleRecommendations/home")
+        self.browser.wait_for_elements_state("h1:has-text('Einstein Article Recommendations')", ElementState.visible, '30s')
+        sleep(2)
+
+        # Make sure Einstein Article Recommendations is turned on
+        checked = "checked" in self.browser.get_element_states("label:has-text('Einstein Article Recommendations')")
+
+        if not checked:
+            self.browser.click("label:has-text('Off')")
+            sleep(3)
+        
+        # Finish if Einstein Article Recommendations model is already active
+        if not "visible" in self.browser.get_element_states("button:has-text('Let\\'s go')"):
+            print('already done setup')
+            return
+
+        # If not, let's active the model
+        self.shared.click_button_with_text("Let\\'s go")
+        self.shared.click_button_with_text("Next")
+        self.shared.click_button_with_text("Next")
+
+        # Select primary field for Case
+        self.browser.click("lightning-combobox:has-text('Choose a primary field')")
+        self.browser.click("lightning-combobox:has-text('Choose a primary field') lightning-base-combobox-item >> span.slds-truncate:text-is('Subject')")
+        sleep(1)
+
+        # Choose supporting fields
+        if 1 == self.browser.get_element_count("div.slds-dueling-list__column_responsive:has-text('Available Fields') li span:text-is('Description')"):
+            self.browser.click("div.slds-dueling-list__column_responsive:has-text('Available Fields') li span:text-is('Description')")
+            self.browser.click("button[title='Move selection to Selected Fields']")
+            sleep(1)
+        else:
+            return
+
+        self.shared.click_button_with_text("Next")
+
+        # Select knowledge title field
+        self.browser.click("lightning-combobox:has-text('Knowledge Title Field')")
+        self.browser.click("lightning-combobox:has-text('Knowledge Title Field') lightning-base-combobox-item >> span.slds-truncate:text-is('Title')")
+        sleep(1)
+
+        # Select knowledge summary field
+        self.browser.click("lightning-combobox:has-text('Knowledge Summary Field')")
+        self.browser.click("lightning-combobox:has-text('Knowledge Summary Field') lightning-base-combobox-item >> span.slds-truncate:text-is('Summary')")
+        sleep(1)
+
+        # Choose additional fields
+        if 1 == self.browser.get_element_count("div.slds-dueling-list__column_responsive:has-text('Available Fields') li span:text-is('Details')"):
+            self.browser.click("div.slds-dueling-list__column_responsive:has-text('Available Fields') li span:text-is('Details')")
+            # somehow, the button[title='Move selection to Selected Fields'] came back with two results, the 2nd is the true button to click
+            self.browser.click(":nth-match(button[title='Move selection to Selected Fields'],2)")
+            sleep(1)
+        if 1 == self.browser.get_element_count("div.slds-dueling-list__column_responsive:has-text('Available Fields') li span:text-is('Question')"):
+            self.browser.click("div.slds-dueling-list__column_responsive:has-text('Available Fields') li span:text-is('Question')")
+            # somehow, the button[title='Move selection to Selected Fields'] came back with two results, the 2nd is the true button to click
+            self.browser.click(":nth-match(button[title='Move selection to Selected Fields'],2)")
+            sleep(1)
+
+        self.shared.click_button_with_text("Save")
+
+
+        # wait extra 3 seconds since the "save" could take a bit time
+        sleep(3)
+        self.browser.click(f"{iframe_handler} Button:text-is('Build')")
+        sleep(2)
+        self.browser.click(f":nth-match({iframe_handler} Button:text-is('Build Model'),2)")
+
+
+        # it will take sometime to do the model building, and it seems doesn't show us the "activate" button automatically after it's done, so let's refresh the page after 30 seconds and click the activate button.
+        sleep(30)
+        self.shared.go_to_setup_admin_page("EinsteinArticleRecommendations/home")
+        sleep(2)
+        self.browser.click(f"{iframe_handler} Button:text-is('Activate')")
+        sleep(2)
+        self.browser.click(f":nth-match({iframe_handler} Button:text-is('Activate'),2)")
+        sleep(4)
     
 
         
