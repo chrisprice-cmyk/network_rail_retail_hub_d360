@@ -223,6 +223,10 @@ tasks:
     description: injects additional context into the orgconfig that can be referenced downstream
     class_path: qbrix.tools.utils.qbrix_orgconfig_hydrate.NGBroom
 
+  flow_wrapper:
+    description: Runs the specified task or flow of the qbrix in a subprocess in a single task. This allows us to use When against a flow.
+    class_path: qbrix.tools.utils.qbrix_deploy.Deploy
+
   #------------------------------------#
   # CUSTOM TASKS                       #
   #------------------------------------#
