@@ -2,6 +2,7 @@ import os
 import json
 import requests
 import glob
+import subprocess
 
 from abc import abstractmethod
 from cumulusci.core.config import ScratchOrgConfig
@@ -9,6 +10,86 @@ from cumulusci.tasks.sfdx import SFDXBaseTask
 from cumulusci.core.exceptions import CommandException
 from cumulusci.core.keychain import BaseProjectKeychain
 
+
+class NGSFDXWrapper(SFDXBaseTask):
+    task_options = {
+
+        "org": {
+            "description": "Value to replace every instance of the find value in the source file.",
+            "required": False
+        },
+        "command": {
+            "description": "SFDX Command to run",
+            "required": False
+        }
+    }
+    
+    def _init_options(self, kwargs):
+        super(NGSFDXWrapper, self)._init_options(kwargs)
+        self.env = self._get_env()
+
+    @property
+    def keychain_cls(self):
+        klass = self.get_keychain_class()
+        return klass or self.keychain_class
+
+    @abstractmethod
+    def get_keychain_class(self):
+        return None
+
+    @property
+    def keychain_key(self):
+        return self.get_keychain_key()
+
+    @abstractmethod
+    def get_keychain_key(self):
+        return None
+
+    def _load_keychain(self):
+        if self.keychain is not None:
+            return
+
+        keychain_key = self.keychain_key if self.keychain_cls.encrypted else None
+
+        if self.project_config is None:
+            self.keychain = self.keychain_cls(self.universal_config, keychain_key)
+        else:
+            self.keychain = self.keychain_cls(self.project_config, keychain_key)
+            self.project_config.keychain = self.keychain
+            
+    
+    
+    def _prepruntime(self):
+        
+        if "command" not in self.options or not self.options["command"]:
+            self.command =None
+        else:
+            self.command =self.options["command"]
+            
+        if "targetusername" not in self.options or not self.options["targetusername"]:
+
+            if not isinstance(self.org_config, ScratchOrgConfig):
+                self.targetusername = self.org_config.access_token
+            else:
+                self.targetusername = self.org_config.username
+        else:
+            self.targetusername = self.options["targetusername"]
+        
+        
+        
+    def _run_task(self):
+        self._prepruntime()
+        cmd = f"sfdx {self.command} --target-org {self.targetusername}"
+        p= subprocess.Popen(cmd,stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1,universal_newlines=True,shell=True)
+        (out, err)=p.communicate()
+        self.logger.info(out)
+        self.logger.error(err)
+        
+        if p.returncode != 0:
+            raise subprocess.CalledProcessError(p.returncode, f"SFDX Command Failed:: {cmd} ")
+        
+        
+        
 
 class NGBroom(SFDXBaseTask):
     task_options = {
