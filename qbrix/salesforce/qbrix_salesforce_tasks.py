@@ -997,7 +997,7 @@ class ComparePackages(BaseSalesforceApiTask, ABC):
 
     def _init_options(self, kwargs):
         super(ComparePackages, self)._init_options(kwargs)
-        self.local_project = self.options["local_project"] if "local_project" in self.options else True
+        self.local_project = self.options["local_project"] if "local_project" in self.options else False
         self.show_all_matches = self.options["show_all_matches"] if "show_all_matches" in self.options else False
         
 
@@ -1009,7 +1009,7 @@ class ComparePackages(BaseSalesforceApiTask, ABC):
         package_list = []
 
         if self.local_project:
-            package_list = get_packages_in_stack(True, True)
+            package_list = get_packages_in_stack(True, False)
         else:
             package_list = get_packages_in_stack(False, self.local_project)
 
