@@ -1130,6 +1130,41 @@ def create_permission_set_file(name, label):
         formatted_xml = xml_dom.toprettyxml(indent="  ", encoding="utf-8")
         file.write(formatted_xml.decode("utf-8"))
 
+def get_packages_in_stack(skip_cache_rebuild=False, whole_stack=True):
+
+    """
+    Finds all package references within the current stack or locally within the current project.
+    """
+
+    package_list = []
+
+    # Regenerate cci cache
+    if not skip_cache_rebuild:
+        rebuild_cci_cache()
+
+    if whole_stack:
+        qbrix_dirs = sorted(os.listdir(".cci/projects"))
+        for qbrix in qbrix_dirs:
+            cci_yml = glob.glob(f"{os.path.join('.cci', 'projects', qbrix)}/**/cumulusci.yml", recursive=True)
+            if cci_yml:
+                with open(cci_yml[0], 'r') as f:
+                    config = yaml.safe_load(f)
+                
+                dependencies = config['project'].get("dependencies")
+                for d in dependencies:
+                    if d.get("version_id"):
+                        package_list.append(d.get("version_id"))
+
+    with open('cumulusci.yml', 'r') as f:
+        local_config = yaml.safe_load(f)
+            
+        local_dependencies = local_config['project'].get("dependencies")
+        for d in local_dependencies:
+            if d.get("version_id"):
+                package_list.append(d.get("version_id"))
+
+    return package_list
+
 
 def generate_stack_view(parent_directory_path='.cci/projects', output="terminal"):
     # Regenerate cci cache

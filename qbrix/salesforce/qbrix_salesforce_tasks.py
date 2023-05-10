@@ -19,6 +19,8 @@ from qbrix.tools.shared.qbrix_console_utils import init_logger
 from cumulusci.tasks.salesforce import BaseSalesforceApiTask
 from cumulusci.core.utils import process_list_of_pairs_dict_arg
 
+from qbrix.tools.shared.qbrix_project_tasks import get_packages_in_stack
+
 log = init_logger()
 now = datetime.now()
 
@@ -971,4 +973,51 @@ class UploadFiles(BaseSalesforceApiTask, ABC):
             return
 
         self.upload_files_to_salesforce()
-    
+
+class ComparePackages(BaseSalesforceApiTask, ABC):
+
+    task_docs = """
+    Compares Packages referenced in the local project or local stack with packages currently listed within a target org
+    """
+
+    task_options = {
+        "org": {
+            "description": "Org Alias for the target org",
+            "required": False
+        },
+        "local_project": {
+            "description": "When True, only compares packages declared within the current project and not the stack of Q Brix",
+            "required": False
+        },
+    }
+
+    def _init_options(self, kwargs):
+        super(ComparePackages, self)._init_options(kwargs)
+        self.local_project = self.options["local_project"] if "local_project" in self.options else False
+
+    def _run_task(self):
+
+        # Get Package List
+        package_list = get_packages_in_stack(False, self.local_project)
+
+        if len(package_list) > 0:
+            self.logger.info(f"{len(package_list)} packages found")
+        else:
+            self.logger.info("No Package References Found")
+            return
+
+        # Get Package List from Org
+        package_lookup = self.sf.tooling.query_all("SELECT SubscriberPackage.Name, SubscriberPackageVersionId FROM InstalledSubscriberPackage ORDER BY SubscriberPackage.Name")
+        if package_lookup['totalSize'] > 0:
+
+            missing_packages = []
+            for result in package_lookup["records"]:
+                if result["SubscriberPackageVersionId"] in package_list:
+                    self.logger.info(f"Matched Package {result['SubscriberPackageVersionId']} to {result['Name']}")
+                else:
+                    missing_packages.append(result['SubscriberPackageVersionId'])
+
+            if len(missing_packages) > 0:
+                self.logger.info("\nThe following package version IDs are either not installed in the target org or have been updated.")
+                for missing_package in missing_packages:
+                    self.logger.info(f" -> {missing_package}")
