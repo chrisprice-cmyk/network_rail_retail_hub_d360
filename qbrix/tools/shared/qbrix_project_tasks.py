@@ -1146,22 +1146,24 @@ def get_packages_in_stack(skip_cache_rebuild=False, whole_stack=True):
         qbrix_dirs = sorted(os.listdir(".cci/projects"))
         for qbrix in qbrix_dirs:
             cci_yml = glob.glob(f"{os.path.join('.cci', 'projects', qbrix)}/**/cumulusci.yml", recursive=True)
-            if cci_yml:
+            if len(cci_yml) > 0:
                 with open(cci_yml[0], 'r') as f:
                     config = yaml.safe_load(f)
                 
                 dependencies = config['project'].get("dependencies")
-                for d in dependencies:
-                    if d.get("version_id"):
-                        package_list.append(d.get("version_id"))
+                if dependencies:
+                    for d in dependencies:
+                        if d.get("version_id"):
+                            package_list.append((d.get("version_id"), qbrix))
 
     with open('cumulusci.yml', 'r') as f:
         local_config = yaml.safe_load(f)
             
         local_dependencies = local_config['project'].get("dependencies")
-        for d in local_dependencies:
-            if d.get("version_id"):
-                package_list.append(d.get("version_id"))
+        if local_dependencies:
+            for d in local_dependencies:
+                if d.get("version_id"):
+                    package_list.append((d.get("version_id"), 'LOCAL'))
 
     return package_list
 

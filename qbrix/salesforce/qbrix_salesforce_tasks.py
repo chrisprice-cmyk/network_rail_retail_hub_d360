@@ -989,16 +989,29 @@ class ComparePackages(BaseSalesforceApiTask, ABC):
             "description": "When True, only compares packages declared within the current project and not the stack of Q Brix",
             "required": False
         },
+        "show_all_matches": {
+            "description": "When True, output will show all matches not just those which require action. Defaults to False which only shows matches which require action",
+            "required": False
+        },
     }
 
     def _init_options(self, kwargs):
         super(ComparePackages, self)._init_options(kwargs)
-        self.local_project = self.options["local_project"] if "local_project" in self.options else False
+        self.local_project = self.options["local_project"] if "local_project" in self.options else True
+        self.show_all_matches = self.options["show_all_matches"] if "show_all_matches" in self.options else False
+        
 
     def _run_task(self):
 
         # Get Package List
-        package_list = get_packages_in_stack(False, self.local_project)
+        self.logger.info("\nSearching for Package Version IDs")
+
+        package_list = []
+
+        if self.local_project:
+            package_list = get_packages_in_stack(True, True)
+        else:
+            package_list = get_packages_in_stack(False, self.local_project)
 
         if len(package_list) > 0:
             self.logger.info(f"{len(package_list)} packages found")
@@ -1007,17 +1020,35 @@ class ComparePackages(BaseSalesforceApiTask, ABC):
             return
 
         # Get Package List from Org
-        package_lookup = self.sf.tooling.query_all("SELECT SubscriberPackage.Name, SubscriberPackageVersionId FROM InstalledSubscriberPackage ORDER BY SubscriberPackage.Name")
-        if package_lookup['totalSize'] > 0:
+        self.logger.info("\nGetting Installed Packages from Org and comparing")
+        soql = "SELECT SubscriberPackage.Name, SubscriberPackageVersionId FROM InstalledSubscriberPackage ORDER BY SubscriberPackage.Name"
+        toolingendpoint = 'query?q='
+        results = self.sf.toolingexecute(f"{toolingendpoint}{soql.replace(' ', '+')}")
+        org_packages = []
+        if results['totalSize'] > 0:
+            self.logger.info(f"{results['totalSize']} Packages Found in Target Org")
+            for result in results["records"]:
+                if result["SubscriberPackageVersionId"]:
+                    org_packages.append((result["SubscriberPackageVersionId"], result['SubscriberPackage']['Name']))
+        else:
+            self.logger.info("No Packages found in org.")
+            return
 
-            missing_packages = []
-            for result in package_lookup["records"]:
-                if result["SubscriberPackageVersionId"] in package_list:
-                    self.logger.info(f"Matched Package {result['SubscriberPackageVersionId']} to {result['Name']}")
-                else:
-                    missing_packages.append(result['SubscriberPackageVersionId'])
+        # Compare Lists
+        for package, qbrix_name in package_list:
 
-            if len(missing_packages) > 0:
-                self.logger.info("\nThe following package version IDs are either not installed in the target org or have been updated.")
-                for missing_package in missing_packages:
-                    self.logger.info(f" -> {missing_package}")
+            if self.show_all_matches:
+                self.logger.info(f"\nChecking Package ID: {package} from {qbrix_name}:")
+            
+            package_found = False
+            for package_id, package_name in org_packages:
+                if package == package_id:
+                    package_found = True
+                    if self.show_all_matches:
+                        self.logger.info(f" -> Found Package in Org, with name: {package_name}")
+                    break
+
+            if not package_found:
+                if not self.show_all_matches:
+                    self.logger.info(f"\nChecking Package ID: {package} from {qbrix_name}:")
+                self.logger.info(" -> ACTION - Check this package ID within the related Q Brix and update if required.")
