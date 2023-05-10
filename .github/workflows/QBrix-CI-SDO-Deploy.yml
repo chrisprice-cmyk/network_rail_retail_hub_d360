@@ -24,6 +24,7 @@ env:
   ACTIONS_ALLOW_UNSECURE_COMMANDS: true
   BUILD_SUFFIX: SDO
   QBRIX_SYSTEM_ID: GIT_BUILD_AUTOMATION
+  SFDX_USE_PROGRESS_BAR: false
 
 jobs:
   collection_deployment_steps:
