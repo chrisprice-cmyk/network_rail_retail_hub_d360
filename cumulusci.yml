@@ -293,6 +293,7 @@ flows:
       1:
         flow: deploy_qbrix
 
+  # Deploys the Q Brix without source dependencies (Used for stacking)
   deploy_qbrix_without_dependencies:
     steps:
       1:
