@@ -532,3 +532,14 @@ class QbrixSharedKeywords(BaseLibrary):
         if toggle_span_count and toggle_span_count > 0:
             print("Clicking Toggle")
             self.browser.click(f"{self.iframe_handler()} ol.slds-setup-assistant:has-text('Customize the Help Menu') >> .slds-checkbox_faux")
+
+    def enable_data_pipelines(self):
+        """
+        Enables the Data Pipeline Toggle
+        """  
+        self.go_to_setup_admin_page("SonicGettingStarted/home")
+        self.browser.wait_for_elements_state("h2:text-is('Data Pipelines')", ElementState.visible, '30s')
+        checked = "checked" in self.browser.get_element_states("label:has-text('Disabled')")
+        if not checked:
+            self.browser.click("label:has-text('Disabled')")
+            sleep(3)
