@@ -293,6 +293,23 @@ flows:
       1:
         flow: deploy_qbrix
 
+  deploy_qbrix_without_dependencies:
+    steps:
+      1:
+        task: qbrix_installer_tracking
+      2:
+        flow: prepare_org
+      3:
+        task: deploy
+        ui_options:
+          name: Deploying Q Brix Metadata
+      4:
+        flow: post_qbrix_deploy
+      5:
+        task: qbrix_installer_tracking
+        options:
+          explicitexit: True
+
   #-------------------------------------------------#
   # STAGE 3 of 3 (OPTIONAL) POST-QBRIX DEPLOYMENT   #
   #-------------------------------------------------#
