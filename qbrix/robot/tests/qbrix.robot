@@ -28,6 +28,9 @@ Disable MFA in Org
 
 Enable Custom Help
     enable_custom_help_in_user_engagement
+
+Enable Data Pipelines
+    enable_data_pipelines
 #
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # EINSTEIN TESTS
