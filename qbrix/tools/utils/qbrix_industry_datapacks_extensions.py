@@ -157,12 +157,16 @@ class SFIDirectDatapackDeployer(SFDXBaseTask):
             self.logger.error(f"Datapack Deploy Error::{err}")
         
 
+    def _setprojectdefaults(self, instanceurl):
+        subprocess.run([f"sfdx config:set instanceUrl={instanceurl}"], shell=True, capture_output=True)
+        
     def determinenamespace(self, username: str):
 
         result = subprocess.run([
             f"sfdx force:data:soql:query -u {username} -q \"SELECT NamespacePrefix FROM PackageLicense where NamespacePrefix in ('omnistudio','vlocity_cmt','vlocity_ps','vlocity_ins') LIMIT 1\" --json"],
             shell=True, capture_output=True)
 
+        self.logger.info(result.stdout)
         if result is None: return "omnistudio"
 
         jsonresult = json.loads(result.stdout)
@@ -175,7 +179,6 @@ class SFIDirectDatapackDeployer(SFDXBaseTask):
         
     def _run_task(self):
         self._prepruntime()
+        self._setprojectdefaults(self.instanceurl)
         self.deploy_datapacks()
         
-    
-
