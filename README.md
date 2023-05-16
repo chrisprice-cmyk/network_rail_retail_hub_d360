@@ -61,43 +61,6 @@ Create Trialforce Template
 12. Run `cci flow run tso_deploy --org OrgNameHere` to deploy your latest updates into the TSO.
 13. Create a new Trialforce template in the TSO. Tip: You can quickly login to your TSO using `cci org browser OrgNameHere`
 
-## Quick Examples <a name = "usage"></a>
-
-Here are some common code examples which are not always included in the project source.
-
-### Example Testim Script reference
-
-    qbrix_task_Testim:
-        description: "Run Testim Script"
-        class_path: qbrix.tools.testing.qbrix_testim.RunTestim
-        options:
-            testimname: "REPLACE WITH NAME OF SCRIPT"
-
-### Example Loading CSVs (if needed)
-
-    qbrix_load_data:
-      steps:
-          1:
-              task: dx
-              options:
-                  command: force:data:bulk:upsert --sobjecttype Contact --csvfile data/prod/Contact.csv --externalid External_ID__c --wait 60
-              ui_options:
-                  name: Upsert Contact Records
-                  is_required: false
-                  group: "Data load"
-
-### Example Loading TCRM Datasets
-
-    qbrix_load_analytics_datasets:
-      steps:
-          1:
-             task: dx
-              options:
-                  command: shane:analytics:dataset:upload -n New_guest_data -f data/analytics/New_guest_data.csv -m data/analytics/New_guest_data.json -a TTH_Hospitality_Front_Desk
-              ui_options:
-                  name: Load Guest Data Analytics Dataset
-                  is_required: false
-
 ## Metadata Type Support <a name = "support"></a>
 
 You will see these exclusions in the cumulusci.yml file, within the tasks > list_changes and tasks > retrieve_changes sections.
