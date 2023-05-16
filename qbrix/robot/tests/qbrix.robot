@@ -70,6 +70,9 @@ Check and Enable Automated Data Capture
 
 Check and Enable Call Coaching ECI
     Enable Call Coaching ECI
+
+Check and Setup Einstein Article Recommendations
+    Einstein Article Recommendations Setup
 #
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # FIELD SERVICE TESTS
@@ -148,6 +151,9 @@ Check and Enable Opportunity Splits
 
 Enable Sales Agreements
     Enable Sales Agreements
+
+Messaging Components Setup
+    Messaging Components Setup
 #
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # SERVICE CLOUD TESTS

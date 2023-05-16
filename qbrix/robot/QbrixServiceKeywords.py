@@ -112,3 +112,59 @@ class QbrixServiceKeywords(BaseLibrary):
         self.browser.click("div.modal-footer >> button.slds-button:text-is('Next')")
         self.browser.click("div.modal-footer >> button.slds-button:text-is('Finish')")
         sleep(10)
+
+
+    def messaging_components_setup(self):
+        """
+        Runs the Messaging Components Setup
+        """
+        iframe_handler = self.shared.iframe_handler()
+
+        # define the attributes of 3 message components
+        list_of_msgs = [
+            {
+                "name": "ConversationAcknowledgement",
+                "developer_name": "SDO_Messaging_ConversationAcknowledgement",
+                "msg": "Hello, thanks for reaching out. We will be with you shortly.",
+                "description": "Opening conversation acknowledgment"
+            },
+            {
+                "name": "StartConversation",
+                "developer_name": "SDO_Messaging_StartConversation",
+                "msg": "You are now connected to an agent, thank you for waiting.",
+                "description": "Start conversation text, and picks up when someone accepts the work."
+            },
+            {
+                "name": "EndConversation",
+                "developer_name": "SDO_Messaging_EndConversation",
+                "msg": "Thanks for contacting us today. Have a great day.",
+                "description": "This displays when the conversation has ended"
+            }
+        ]
+
+
+        for one_msg in list_of_msgs:
+            # Make sure we are on Messaging Components page
+            self.shared.go_to_setup_admin_page("ConversationMessageDefinitions/home")
+            self.browser.wait_for_elements_state("h1:has-text('Messaging Components')", ElementState.visible, '30s')
+            sleep(2)
+
+
+            self.shared.click_button_with_text("New Component")
+            self.shared.click_button_with_text("Next")
+            sleep(1)
+            self.browser.click("div.slds-visual-picker__figure:has-text('Auto-Response')")
+            sleep(1)
+            self.shared.click_button_with_text("Next")
+            self.browser.fill_text(f"{iframe_handler} textarea[name='Title']",one_msg["msg"])
+            sleep(1)
+            self.shared.click_button_with_text("Next")
+            self.browser.fill_text(f"{iframe_handler} input[name='label']",one_msg["name"])
+            self.browser.fill_text(f"{iframe_handler} input[name='fullName']",one_msg["developer_name"])
+            self.browser.fill_text(f"{iframe_handler} textarea[name='description']",one_msg["description"])
+            self.shared.click_button_with_text("Done")
+
+            sleep(4)
+
+        return
+
