@@ -39,17 +39,6 @@ class QbrixHLSKeywords(BaseLibrary):
             self.browser.click(toggle_switch)
             sleep(1)
 
-        checked2 = "checked" in self.browser.get_element_states(
-            ":nth-match(label:has-text('Disabled'), 2)")
-        if not checked2:
-            toggle_switch = self.browser.get_element(
-                ":nth-match(label:has-text('Disabled'), 2)")
-            self.browser.click(toggle_switch)
-            sleep(2)
-            if "visible" in self.browser.get_element_states("button:has-text('Enable')"):
-                QbrixSharedKeywords().click_button_with_text("Enable")
-                sleep(5)
-
     def enable_care_plans_grantmaking(self):
         """
         Enables Care Plans Grantmaking for HLS
