@@ -817,7 +817,7 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
             # Download the data in batches of 100,000 records
             batch_count = 1
             for offset in range(0, 5000000, 100000):
-                self.logger.info(f" -> Downloading Batch {batch_count} containing rows {offset} to {(batch_count) * 100000}")
+                self.logger.info(f" -> Downloading Batch {batch_count} containing rows {offset} to {batch_count * 100000}")
 
                 # Add the limit and offset parameters to the SOQL query
                 paged_query = f'{base_query} q = offset q {offset}; q = limit q 100000;'

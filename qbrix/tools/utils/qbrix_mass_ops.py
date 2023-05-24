@@ -6,7 +6,7 @@ from cumulusci.core.tasks import BaseTask
 from cumulusci.core.config import ScratchOrgConfig, TaskConfig
 from qbrix.salesforce.qbrix_salesforce_tasks import ComparePackages
 from qbrix.tools.bundled.sam.main import migrate
-from qbrix.tools.shared.qbrix_project_tasks import generate_stack_view, update_file_api_versions, create_permission_set_file, push_changes, compare_metadata, delete_standard_fields, assign_prefix_to_files, create_external_id_field
+from qbrix.tools.shared.qbrix_project_tasks import check_and_update_setting, generate_stack_view, update_file_api_versions, create_permission_set_file, push_changes, compare_metadata, delete_standard_fields, assign_prefix_to_files, create_external_id_field
 
 
 class MassFileOps(BaseTask, ABC):
@@ -132,12 +132,18 @@ class MassFileOps(BaseTask, ABC):
             self.logger.info("Exiting Q Brix Mass Operations Utility")
             exit()
         elif option == "t":
-            package_check = ComparePackages(
-                org_config=self.org_config,
-                project_config=self.project_config,
-                task_config=TaskConfig({"class_path": "qbrix.tools.salesforce.qbrix_salesforce_tasks.ComparePackages"})
+            # package_check = ComparePackages(
+            #     org_config=self.org_config,
+            #     project_config=self.project_config,
+            #     task_config=TaskConfig({"class_path": "qbrix.tools.salesforce.qbrix_salesforce_tasks.ComparePackages"})
+            # )
+            # package_check._run_task()
+            check_and_update_setting(
+                "force-app/main/default/settings/Chatter.settings-meta.xml",
+                "ChatterSettings",
+                "enableChatter",
+                "true"
             )
-            package_check._run_task()
         else:
             self.logger.info("Invalid Menu Option Entered. Please choose a valid option from the list above.")
             self._run_task()

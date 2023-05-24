@@ -8,18 +8,21 @@ from abc import ABC
 from datetime import datetime, timedelta
 
 import click
-from cumulusci.core.config import ScratchOrgConfig
+from cumulusci.core.config import ScratchOrgConfig, TaskConfig
 from cumulusci.core.dependencies.dependencies import PackageVersionIdDependency, PackageNamespaceVersionDependency, UnmanagedGitHubRefDependency
 from cumulusci.core.dependencies.resolvers import dependency_filter_ignore_deps, get_static_dependencies
 from cumulusci.core.exceptions import CumulusCIException
 from cumulusci.tasks.salesforce.update_dependencies import UpdateDependencies
 from cumulusci.tasks.sfdx import SFDXOrgTask
 from cumulusci.core.tasks import BaseTask
+from qbrix.tools.data.qbrix_analytics import AnalyticsManager
+from qbrix.tools.shared.qbrix_cci_tasks import run_cci_task
 from qbrix.tools.shared.qbrix_console_utils import init_logger
 from cumulusci.tasks.salesforce import BaseSalesforceApiTask
 from cumulusci.core.utils import process_list_of_pairs_dict_arg
+from cumulusci.tasks.salesforce.sourcetracking import RetrieveChanges
 
-from qbrix.tools.shared.qbrix_project_tasks import get_packages_in_stack
+from qbrix.tools.shared.qbrix_project_tasks import check_and_update_setting, get_packages_in_stack
 
 log = init_logger()
 now = datetime.now()
@@ -27,7 +30,6 @@ now = datetime.now()
 
 def salesforce_query(soql, org_config, raw_return=False):
     if soql != "" and org_config is not None:
-
         dx_command = f"sfdx force:data:soql:query -q \"{soql}\" --json "
 
         subprocess.run(f"sfdx config:set instanceUrl={org_config.instance_url}", shell=True, capture_output=True)
@@ -41,7 +43,6 @@ def salesforce_query(soql, org_config, raw_return=False):
         subprocess.run("sfdx config:unset instanceUrl", shell=True, capture_output=True)
 
         if result.returncode > 0:
-
             if result.stderr:
                 error_detail = result.stderr.decode("UTF-8")
                 log.error(f"Salesforce Query Error - Details: {error_detail}")
@@ -97,6 +98,12 @@ def QbrixInstallCheck(qbrix_name, org_config):
 def _time_since_modified(path):
     """
     Returns the time since the target file was last modified
+
+    Args:
+        path (str): Relative Path to the file
+
+    Returns:
+        timedelta: Time since the target file was last modified
     """
 
     timestamp = os.path.getmtime(str(path))
@@ -107,6 +114,13 @@ def _time_since_modified(path):
 def _remove_missing_field_schema(submitted_dict, field_names):
     """
     Removes keys and related values from a submitted dict containing User fields and values, which are not present in the target org.
+
+    Args:
+        submitted_dict (dict): The submitted dict containing User fields and values
+        field_names (list): The names of the User fields in the target org
+
+    Returns:
+        dict: The submitted dict containing User fields and values, with missing keys and values removed
     """
 
     submitted_fields = list(submitted_dict.keys())
@@ -207,17 +221,20 @@ class CreateUser(BaseSalesforceApiTask, ABC):
         self.contact_external_id = self.options["contact_external_id"] if "contact_external_id" in self.options else False
 
     def _get_user_desc(self, tmp_file_location=None):
-
         """
         Gets the Object Describe information for the User Object in the target org. This is also cached via a file in .qbrix directory.
+
+        Args:
+            tmp_file_location (str): (optional) Location of the file to cache the object describe information. Defaults to .qbrix/user_object_desc.json
+
+        Returns:
+            dict: The Object Describe information for the User Object in the target org
         """
 
         if not tmp_file_location:
             tmp_file_location = ".qbrix/user_object_desc.json"
 
-        TTL = timedelta(minutes=10)
-
-        if os.path.exists(tmp_file_location) and _time_since_modified(tmp_file_location) <= TTL:
+        if os.path.exists(tmp_file_location) and _time_since_modified(tmp_file_location) <= timedelta(minutes=10):
             log.info("Loading cached File...")
             with open(tmp_file_location, "r") as user_detail_file:
                 return json.load(user_detail_file)
@@ -231,9 +248,21 @@ class CreateUser(BaseSalesforceApiTask, ABC):
                 json.dump(user_details, user_detail_file)
             return user_details
 
-    def _ensure_required_fields(self, submitted_dict, field_names, role, profile, manager=None,contact=None):
+    def _ensure_required_fields(self, submitted_dict, field_names, role, profile, manager=None, contact=None):
         """
         Checks that all required fields have a value, even if none were passed in, except for FirstName and LastName which are required.
+
+        Args:
+            submitted_dict (dict): The dictionary of submitted values
+            field_names (list): The list of field names to check
+            role (str): The role of the user
+            profile (str): The profile of the user
+            manager (str): The manager of the user
+            contact (str): The contact of the user
+
+        Raises:
+            Exception: If a required field is missing in the submitted_dict or if a required field is missing in the field_names list.
+
         """
 
         if "FirstName" not in submitted_dict.keys() or "LastName" not in submitted_dict.keys():
@@ -286,7 +315,7 @@ class CreateUser(BaseSalesforceApiTask, ABC):
 
         if "UserPermissionsOfflineUser" not in submitted_dict.keys():
             submitted_dict.update({"UserPermissionsOfflineUser": False})
-            
+
         if "UserPermissionsKnowledgeUser" not in submitted_dict.keys():
             submitted_dict.update({"UserPermissionsKnowledgeUser": False})
 
@@ -314,7 +343,7 @@ class CreateUser(BaseSalesforceApiTask, ABC):
                 log.debug(f"No User Record found for the manger external id provided. {manager}")
             else:
                 submitted_dict.update({"ManagerId": manager_id["records"][0]["Id"]})
-                
+
         # Lookup Contact
         if contact:
             contact_id = api.query(f"SELECT Id FROM Contact Where External_ID__c = '{contact}' LIMIT 1")
@@ -322,11 +351,10 @@ class CreateUser(BaseSalesforceApiTask, ABC):
                 log.debug(f"No Contact Record found for the contact external id provided. {contact}")
             else:
                 submitted_dict.update({"ContactId": contact_id["records"][0]["Id"]})
-                        
+
         return submitted_dict
 
     def _load_data(self, submitted_dict):
-
         """
         Loads User Record from submitted dict with User field and value data. Returns a UserId if successful.
         """
@@ -426,7 +454,6 @@ class CreateUser(BaseSalesforceApiTask, ABC):
             log.info("Image Uploaded and assigned!")
 
     def _assign_permission(self, mode, user_id, api_names):
-
         """
         Assigns Permission Sets or Permission Set Groups or Permission Set Licenses based on the mode. 
 
@@ -442,22 +469,21 @@ class CreateUser(BaseSalesforceApiTask, ABC):
                 message_name = "Permission Set"
                 lookup_field = "Name"
                 assignment_field = "PermissionSetId"
-                assignment_object="PermissionSetAssignment"
+                assignment_object = "PermissionSetAssignment"
 
             if str(mode).upper() == "PERMISSIONSETGROUP":
                 object_name = "PermissionSetGroup"
                 message_name = "Permission Set Group"
                 lookup_field = "DeveloperName"
                 assignment_field = "PermissionSetGroupId"
-                assignment_object="PermissionSetAssignment"
-                
+                assignment_object = "PermissionSetAssignment"
+
             if str(mode).upper() == "PERMISSIONSETLICENSE":
                 object_name = "PermissionSetLicense"
                 message_name = "Permission Set License"
                 lookup_field = "DeveloperName"
                 assignment_field = "PermissionSetLicenseId"
-                assignment_object="PermissionSetLicenseAssign"
-
+                assignment_object = "PermissionSetLicenseAssign"
 
             if str(mode).upper() != "PERMISSIONSETGROUP" and str(mode).upper() != "PERMISSIONSET" and str(mode).upper() != "PERMISSIONSETLICENSE":
                 log.error(f"Error: Invalid mode passed. Only Permission Sets (PERMISSIONSET) or Permission Set Groups (PERMISSIONSETGROUP) or Permission Set Licenses (PERMISSIONSETLICENSE) are supported. Mode passed: {mode}")
@@ -465,7 +491,6 @@ class CreateUser(BaseSalesforceApiTask, ABC):
 
             # Loop Through Permission Set Names
             for perm in list(api_names):
-
                 api = self.sf
 
                 # Check for labels and non api names
@@ -480,18 +505,15 @@ class CreateUser(BaseSalesforceApiTask, ABC):
                     continue
                 else:
                     permission_set_id = permission_set_query["records"][0]["Id"]
-                    
-                    
+
                 # Check for existing Permission Set, Group or License has been already assigned
                 permission_set_assignment_query = api.query(f"SELECT Id FROM {assignment_object} WHERE AssigneeId = '{user_id}' AND {assignment_field} = '{permission_set_id}' LIMIT 1")
                 if permission_set_assignment_query["totalSize"] == 1:
                     log.info(f"{message_name} with api name {perm} has already been assigned to the user. Skipping...")
                     continue
-                    
 
                 permset_creation_result = None
-                if str(mode).upper() != "PERMISSIONSETLICENSE" :
-                 
+                if str(mode).upper() != "PERMISSIONSETLICENSE":
                     # Create Permission Set Assignment
                     permset_creation_result = api.PermissionSetAssignment.create(
                         {
@@ -500,14 +522,14 @@ class CreateUser(BaseSalesforceApiTask, ABC):
                         }
                     )
                 else:
-                     # Create Permission Set License Assignment
+                    # Create Permission Set License Assignment
                     permset_creation_result = api.PermissionSetLicenseAssign.create(
                         {
                             "AssigneeId": user_id,
                             str(assignment_field): permission_set_id
                         }
                     )
-                    
+
                 if not permset_creation_result is None and permset_creation_result["id"]:
                     log.info(f"{message_name} (With API Name: {perm}) has been assigned (ID: {permset_creation_result['id']})!")
                 else:
@@ -521,7 +543,6 @@ class CreateUser(BaseSalesforceApiTask, ABC):
         return True
 
     def _process_user_record(self, user_record_data, field_names):
-
         data = user_record_data["data"]
         role = user_record_data["role"] if "role" in dict(user_record_data).keys() else None
         profile = user_record_data["profile"]
@@ -532,7 +553,7 @@ class CreateUser(BaseSalesforceApiTask, ABC):
         link_contact_record = user_record_data["link_contact_record"] if "link_contact_record" in dict(user_record_data).keys() else None
         manager = user_record_data["manager_external_id"] if "manager_external_id" in dict(user_record_data).keys() else None
         contact = user_record_data["contact_external_id"] if "contact_external_id" in dict(user_record_data).keys() else None
-        
+
         log.info(f"Creating User with the following details: \n{json.dumps(data, indent=1, sort_keys=True)}")
         log.info("Preparing Data for User Record")
 
@@ -540,7 +561,7 @@ class CreateUser(BaseSalesforceApiTask, ABC):
         data = _remove_missing_field_schema(data, field_names)
 
         # Check and Update Required Fields
-        data = self._ensure_required_fields(data, field_names, role, profile, manager,contact)
+        data = self._ensure_required_fields(data, field_names, role, profile, manager, contact)
 
         # Link Contact Record
         if link_contact_record:
@@ -552,7 +573,6 @@ class CreateUser(BaseSalesforceApiTask, ABC):
         final_user_id = self._load_data(data)
 
         if final_user_id:
-
             log.info("Final User Record ID: " + final_user_id)
 
             # Handle Profile Image Upload
@@ -561,7 +581,7 @@ class CreateUser(BaseSalesforceApiTask, ABC):
                 self._upload_user_profile_image(final_user_id, user_profile_image)
 
             # Handle Permissions
-            #Load PSL First to make sure namespace access is ok
+            # Load PSL First to make sure namespace access is ok
             if permission_set_license_api_names:
                 log.info("Assigning Permission Set Licenses...")
                 self._assign_permission("PERMISSIONSETLICENSE", final_user_id, permission_set_license_api_names)
@@ -572,13 +592,11 @@ class CreateUser(BaseSalesforceApiTask, ABC):
             if permission_set_group_api_names:
                 log.info("Assigning Permission Set Groups...")
                 self._assign_permission("PERMISSIONSETGROUP", final_user_id, permission_set_group_api_names)
-            
-        else:
 
+        else:
             log.error("User Failed to insert...skipping")
 
     def _link_contact_record(self, submitted_dict):
-
         """
         Links the related Contact Record using Firstname and Lastname.
         """
@@ -597,11 +615,9 @@ class CreateUser(BaseSalesforceApiTask, ABC):
         return submitted_dict
 
     def _run_task(self):
-
         api = self.sf
 
         if api is not None:
-
             # Check for invalid configuration
             if self.path and self.data:
                 log.debug("A Path has been specified, which enabled Bulk Mode and ignores other settings which have been defined. Check help pages and update as required. Will continue running in Bulk Mode")
@@ -624,7 +640,6 @@ class CreateUser(BaseSalesforceApiTask, ABC):
                     if user_record_data:
                         self._process_user_record(user_record_data, field_names)
             else:
-
                 log.info("SINGLE RECORD MODE ENABLED")
 
                 if not self.data or not self.profile or not self.role:
@@ -637,7 +652,7 @@ class CreateUser(BaseSalesforceApiTask, ABC):
                     self.data = _remove_missing_field_schema(self.data, field_names)
 
                     # Check and Update Required Fields
-                    self.data = self._ensure_required_fields(self.data, field_names, self.role, self.profile, self.manager_external_id,self.contact_external_id)
+                    self.data = self._ensure_required_fields(self.data, field_names, self.role, self.profile, self.manager_external_id, self.contact_external_id)
 
                     # Link Contact Record
                     if self.link_contact_record:
@@ -649,7 +664,6 @@ class CreateUser(BaseSalesforceApiTask, ABC):
                     final_user_id = self._load_data(self.data)
 
                     if final_user_id:
-
                         log.info("Final User Record ID: " + final_user_id)
 
                         # Handle Profile Image Upload
@@ -658,11 +672,11 @@ class CreateUser(BaseSalesforceApiTask, ABC):
                             self._upload_user_profile_image(final_user_id, self.user_profile_image)
 
                         # Handle Permissions
-                        #PSL First - to make sure namespace PSL get access first.
+                        # PSL First - to make sure namespace PSL get access first.
                         if self.permission_set_license_api_names:
                             log.info("Assigning Permission Set Licenses...")
                             self._assign_permission("PERMISSIONSETLICENSE", final_user_id, self.permission_set_license_api_names)
-                        
+
                         if self.permission_set_api_names:
                             log.info("Assigning Permission Sets...")
                             self._assign_permission("PERMISSIONSET", final_user_id, self.permission_set_api_names)
@@ -670,8 +684,7 @@ class CreateUser(BaseSalesforceApiTask, ABC):
                         if self.permission_set_group_api_names:
                             log.info("Assigning Permission Set Groups...")
                             self._assign_permission("PERMISSIONSETGROUP", final_user_id, self.permission_set_group_api_names)
-                            
-                        
+
                     else:
                         log.error("User Failed to insert. Skipping...")
 
@@ -771,8 +784,8 @@ class QUpdateDependencies(UpdateDependencies, ABC):
 
         self.org_config.reset_installed_packages()
 
-class PopulateRecentlyViewed(BaseSalesforceApiTask, ABC):
 
+class PopulateRecentlyViewed(BaseSalesforceApiTask, ABC):
     task_docs = """
     Overview: Populates the Recently Viewed Listview with the most recent records for the given object(s)
     """
@@ -802,16 +815,13 @@ class PopulateRecentlyViewed(BaseSalesforceApiTask, ABC):
         ]
 
     def _run_task(self):
-
         for obj in self.objects:
-
             if obj not in self.unsupported_objects:
-
                 if str(obj).endswith("__c"):
                     custom_tab_result = self.sf.query_all(f"SELECT SObjectName FROM TabDefinition WHERE IsCustom = true AND SObjectName = '{obj}'")
                     if custom_tab_result.get("totalSize") == 0:
                         self.logger.info(f"{obj} does not have a Tab, so Recently Viewed cannot be automatically set. Skipping.")
-                        continue 
+                        continue
 
                 query = f"SELECT Id FROM {obj} ORDER BY CreatedDate DESC LIMIT {self.limit} FOR VIEW"
                 try:
@@ -820,8 +830,8 @@ class PopulateRecentlyViewed(BaseSalesforceApiTask, ABC):
                 except Exception as e:
                     self.logger.error(f"Error updating Recently Viewed List for {obj}: {e}")
 
-class UploadFiles(BaseSalesforceApiTask, ABC):
 
+class UploadFiles(BaseSalesforceApiTask, ABC):
     task_docs = """
     Uploads files from a given directory to Salesforce using a where clause to find a specific record.
     """
@@ -857,7 +867,6 @@ class UploadFiles(BaseSalesforceApiTask, ABC):
         self.library = self.options["library"] if "library" in self.options else None
 
     def create_document_link(self, content_doc_id, entity_id):
-        
         """
         Creates a document link between a ContentDocument and a given Entity
         """
@@ -872,7 +881,6 @@ class UploadFiles(BaseSalesforceApiTask, ABC):
             self.sf.ContentDocumentLink.create(content_document_link_data)
 
     def create_public_file_link(self, content_version_id, file_name):
-
         """
         Generates a public link for a given content version and file name
         """
@@ -894,7 +902,7 @@ class UploadFiles(BaseSalesforceApiTask, ABC):
 
         # Query Salesforce to find the record ID that matches the where clause
         multi_record = False
-        record_id = None 
+        record_id = None
         if self.where:
             record = self.sf.query(f"SELECT Id FROM {self.object} WHERE {self.where}")
             if record['totalSize'] == 0:
@@ -908,7 +916,6 @@ class UploadFiles(BaseSalesforceApiTask, ABC):
 
         # Loop through each file in the directory
         for filename in os.listdir(self.path):
-
             # Check File Was not Already Uploaded
             self.logger.info(f"\nChecking for existing file called {filename}:")
             content_document_id = None
@@ -918,7 +925,7 @@ class UploadFiles(BaseSalesforceApiTask, ABC):
                 self.logger.info(f" -> File already uploaded. Document Id: {content_document_id}")
             else:
                 self.logger.info(" -> File was not found in target org")
-                
+
                 # Upload File and create new ContentVersion
                 self.logger.info(f"\nUploading {filename}:")
                 file_path = os.path.join(self.path, filename)
@@ -962,20 +969,18 @@ class UploadFiles(BaseSalesforceApiTask, ABC):
                 else:
                     self.logger.info(f" -> Saving to Library called: {self.library}")
                     self.create_document_link(content_document_id, workspace_record['records'][0]['Id'])
-                
 
             self.logger.info(f" -> Upload Complete!")
 
     def _run_task(self):
-
         if (self.object and not self.where) or (not self.object and self.where):
             self.logger.error("You must specify both the Object and Where options if you want to associate to records. Cannot run task.")
             return
 
         self.upload_files_to_salesforce()
 
-class ComparePackages(BaseSalesforceApiTask, ABC):
 
+class ComparePackages(BaseSalesforceApiTask, ABC):
     task_docs = """
     Compares Packages referenced in the local project or local stack with packages currently listed within a target org
     """
@@ -999,10 +1004,8 @@ class ComparePackages(BaseSalesforceApiTask, ABC):
         super(ComparePackages, self)._init_options(kwargs)
         self.local_project = self.options["local_project"] if "local_project" in self.options else False
         self.show_all_matches = self.options["show_all_matches"] if "show_all_matches" in self.options else False
-        
 
     def _run_task(self):
-
         # Get Package List
         self.logger.info("\nSearching for Package Version IDs")
 
@@ -1036,10 +1039,9 @@ class ComparePackages(BaseSalesforceApiTask, ABC):
 
         # Compare Lists
         for package, qbrix_name in package_list:
-
             if self.show_all_matches:
                 self.logger.info(f"\nChecking Package ID: {package} from {qbrix_name}:")
-            
+
             package_found = False
             for package_id, package_name in org_packages:
                 if package == package_id:
@@ -1052,3 +1054,83 @@ class ComparePackages(BaseSalesforceApiTask, ABC):
                 if not self.show_all_matches:
                     self.logger.info(f"\nChecking Package ID: {package} from {qbrix_name}:")
                 self.logger.info(" -> ACTION - Check this package ID within the related Q Brix and update if required.")
+
+class QRetrieveChanges(RetrieveChanges):
+
+    """
+    Adds Q Brix custom logic to the Retrieve Changes Task
+    """
+
+    def _run_crma_checks(self):
+        # Check if Datasets have been captured then download data from org
+        self.logger.info("Checking that latest CRMA Datasets have been downloaded:")
+        run_cci_task("analytics_manager", self.org_config.name, mode="d", generate_metadata_desc=True)
+
+    def _run_bot_checks(self):
+        # Bot Checks
+        
+        # Check Bot Settings Exist in force-app folder
+        check_and_update_setting(
+            "force-app/main/default/settings/Bot.settings-meta.xml",
+            "BotSettings",
+            "enableBots",
+            "true"
+        )
+
+        # Check LiveChatButton is removed and robot script is created
+        # TODO
+
+    def _run_experience_bundle_checks(self):
+        # Experience Cloud Bundle Checks
+
+        # Check Experience Cloud Settings Exist in force-app folder
+        check_and_update_setting(
+            "force-app/main/default/settings/Communities.settings-meta.xml",
+            "CommunitiesSettings",
+            "enableNetworksEnabled",
+            "true"
+        )
+        check_and_update_setting(
+            "force-app/main/default/settings/ExperienceBundle.settings-meta.xml",
+            "ExperienceBundleSettings",
+            "enableExperienceBundleMetadata",
+            "true"
+        )
+
+    def _get_changes(self):
+        changes = super()._get_changes()
+
+        # Add your logic to capture and store the filtered variable
+        filtered = self._filter_changes(changes)[0]
+        self.filtered = filtered
+
+        return changes
+
+    def _run_task(self):
+        # Add your custom logic here before or after the original implementation
+
+        # Call the original _run_task method
+        super()._run_task()
+
+        # Add your custom logic here after the original implementation
+        
+        self.logger.info("Running Q Brix Checks...")
+        member_types = set(change['MemberType'] for change in self.filtered)
+
+        if "WaveDataset" in member_types:
+            self._run_crma_checks()
+
+        if "Bot" in member_types:
+            self._run_bot_checks()
+
+        if "ExperienceBundle" in member_types:
+            self._run_experience_bundle_checks()
+
+        self.logger.info("Checks complete!")
+
+        
+
+        
+
+        
+

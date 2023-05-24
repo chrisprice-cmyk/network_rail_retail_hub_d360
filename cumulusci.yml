@@ -96,6 +96,7 @@ tasks:
       exclude: *exclude-list
 
   retrieve_changes:
+    #class_path: qbrix.salesforce.qbrix_salesforce_tasks.QRetrieveChanges
     options:
       exclude: *exclude-list
 
