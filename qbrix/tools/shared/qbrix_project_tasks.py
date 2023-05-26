@@ -1375,3 +1375,50 @@ def remove_empty_translations():
     # Remove objectTranslations directory if empty
     if not os.listdir(obj_trans_dir):
         os.rmdir(obj_trans_dir)
+
+def pretty_print(elem, level=0):
+    indent = '    ' * level
+    if len(elem):
+        if not elem.text or not elem.text.strip():
+            elem.text = '\n' + indent + '    '
+        if not elem.tail or not elem.tail.strip():
+            elem.tail = '\n' + indent
+        for elem in elem:
+            pretty_print(elem, level + 1)
+        if not elem.tail or not elem.tail.strip():
+            elem.tail = '\n' + indent
+    else:
+        if level and (not elem.tail or not elem.tail.strip()):
+            elem.tail = '\n' + indent
+
+def check_and_update_setting(xml_file, settings_name, setting_name, setting_value):
+    # Ensure the directories exist
+    os.makedirs(os.path.dirname(xml_file), exist_ok=True)
+
+    namespace = "http://soap.sforce.com/2006/04/metadata"
+    nsmap = {'ns': namespace}
+
+    if not os.path.isfile(xml_file):
+        # File doesn't exist, create a new one with the settings element as the root
+        root = ET.Element(settings_name)
+        root.set("xmlns", namespace)
+    else:
+        # Parse the existing XML file
+        ET.register_namespace('', namespace)
+        tree = ET.parse(xml_file)
+        root = tree.getroot()
+
+    # Find the settings element
+    setting_element = root.find('.//ns:'+setting_name, namespaces=nsmap)
+    if setting_element is None:
+        setting_element = ET.SubElement(root, setting_name)
+        setting_element.text = str(setting_value)
+    elif setting_element.text != str(setting_value):
+        setting_element.text = str(setting_value)
+
+    # Write the modified XML back to the file with formatting
+    pretty_print(root)
+    # Add XML declaration manually
+    xml_content = '<?xml version="1.0" encoding="UTF-8"?>\n' + ET.tostring(root, encoding="unicode")
+    with open(xml_file, "w", encoding="utf-8") as file:
+        file.write(xml_content)

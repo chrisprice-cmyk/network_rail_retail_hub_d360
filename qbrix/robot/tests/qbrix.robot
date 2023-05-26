@@ -1,6 +1,5 @@
 *** Settings ***
 Resource            qbrix/robot/QRobot.robot
-
 Suite Setup         Run keyword    
 ...                    QRobot.Open Q Browser
 Suite Teardown      QRobot.Close Q Browser
