@@ -65,7 +65,6 @@ sources:
   base:
     github: https://github.com/sfdc-qbranch/QBrix-0-xDO-BaseConfig
 
-
 tasks:
   #------------------------------------#
   # CCI TASK DEFAULTS                  #
@@ -218,12 +217,12 @@ tasks:
   orgconfig_hydrate:
     description: injects additional context into the orgconfig that can be referenced downstream
     class_path: qbrix.tools.utils.qbrix_orgconfig_hydrate.NGOrgConfig
-    
+
   deploy_dx:
     class_path: cumulusci.tasks.sfdx.SFDXOrgTask
     options:
       command: project deploy start --source-dir force-app/main/default --ignore-conflicts
-  
+
   dustpan:
     description: injects additional context into the orgconfig that can be referenced downstream
     class_path: qbrix.tools.utils.qbrix_orgconfig_hydrate.NGBroom
@@ -231,6 +230,9 @@ tasks:
   flow_wrapper:
     description: Runs the specified task or flow of the qbrix in a subprocess in a single task. This allows us to use When against a flow.
     class_path: qbrix.tools.utils.qbrix_deploy.Deploy
+
+  qbrix_sfdx:
+    class_path: cumulusci.tasks.sfdx.SFDXOrgTask
 
   #------------------------------------#
   # CUSTOM TASKS                       #
@@ -247,8 +249,10 @@ flows:
   #    1:
   #      task: orgconfig_hydrate
   #    2:
-  #      task: qbrix_installer_tracking
-  #      when: org_config.is_psl_minimal_qty_available_in_org('InsightsInboxAdminAnalyticsPsl', 1000)
+  #      task: qbrix_sfdx
+  #      when: org_config.is_scratch_org
+  #      options:
+  #        command: org display
 
   # Prepares the Org with any required settings/testim scripts
   prepare_org:

@@ -290,6 +290,9 @@ class NGOrgConfig(SFDXBaseTask):
         if self.org_config.is_file_glob is None:
             self.org_config.is_file_glob = self._is_glob_file_search
             
+        if self.org_config.is_scratch_org is None:
+            self.org_config.is_scratch_org = self._is_scratch_org()
+            
         self._seed_initial_cache()
 
     def _seed_initial_cache(self):
@@ -309,6 +312,9 @@ class NGOrgConfig(SFDXBaseTask):
         self.logger.info(f'Cache::{key}::{val}')
         self.org_config.qbrix_cache[key]=val
         
+    def _is_scratch_org(self):
+        return ".scratch." in self.instanceurl
+    
     def _is_file(self,filetofind):
         return os.path.isfile(filetofind)
     
