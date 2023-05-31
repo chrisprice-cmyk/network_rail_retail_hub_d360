@@ -614,14 +614,15 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
             if data:
                 # Check and Update FieldNames
                 # print(f"\nChecking Data sources")
-                data_source_links = data["dataSourceLinks"]
-                for data_source_link in data_source_links:
-                    fields = data_source_link.get("fields")
-                    if fields:
-                        for f in fields:
-                            if f["fieldName"] == find_value and f["dataSourceName"] == data_source:
-                                f["fieldName"] = replace_value
-                                update_made = True
+                if data.get("dataSourceLinks"):
+                    data_source_links = data["dataSourceLinks"]
+                    for data_source_link in data_source_links:
+                        fields = data_source_link.get("fields")
+                        if fields:
+                            for f in fields:
+                                if f["fieldName"] == find_value and f["dataSourceName"] == data_source:
+                                    f["fieldName"] = replace_value
+                                    update_made = True
 
                 # Check Filters
                 # print(f"\nChecking Filters")
