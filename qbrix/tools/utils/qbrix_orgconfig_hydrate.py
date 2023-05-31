@@ -74,16 +74,22 @@ class NGSFDXWrapper(SFDXBaseTask):
                 self.targetusername = self.org_config.username
         else:
             self.targetusername = self.options["targetusername"]
+            
+        
+        subprocess.run(f"sfdx config:set instanceUrl={self.org_config.instance_url}", shell=True, capture_output=True)
+
         
         
         
     def _run_task(self):
         self._prepruntime()
-        cmd = f"sfdx {self.command} --target-org {self.targetusername}"
+        cmd = f"sfdx {self.command} --target-org '{self.targetusername}'"
         p= subprocess.Popen(cmd,stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1,universal_newlines=True,shell=True)
         (out, err)=p.communicate()
         self.logger.info(out)
         self.logger.error(err)
+        
+        subprocess.run("sfdx config:unset instanceUrl", shell=True, capture_output=True)
         
         if p.returncode != 0:
             raise subprocess.CalledProcessError(p.returncode, f"SFDX Command Failed:: {cmd} ")
@@ -253,6 +259,9 @@ class NGOrgConfig(SFDXBaseTask):
             
         if self.org_config.is_namespace_installed is None:
             self.org_config.is_namespace_installed = self._is_package_namespace_installed
+            
+        if self.org_config.is_package_installed is None:
+            self.org_config.is_package_installed = self._is_package_installed
 
         if self.org_config.is_org_identifier is None:
             self.org_config.is_org_identifier = self._check_id_or_guid_in_org
@@ -337,6 +346,24 @@ class NGOrgConfig(SFDXBaseTask):
         data = json.loads(response.text)
         self.logger.info(data["totalSize"])
         return data["totalSize"] == 1
+    
+    def _is_package_installed(self, packagename):
+
+        url = f"{self.instanceurl}/services/data/v56.0/tooling/query/?q=select+SubscriberPackage.Name+from+InstalledSubscriberPackage+order+by+SubscriberPackage.Name"
+        headers = {
+            'Authorization': f'Bearer {self.accesstoken}',
+            'Content-Type': 'application/json'
+        }
+        response = requests.request("GET", url, headers=headers)
+        # print(response.text)
+        data = json.loads(response.text)
+        for pkg in data['records']:
+            if(pkg['SubscriberPackage']['Name']==packagename):
+                return True
+            #self.logger.info(pkg['SubscriberPackage']['Name'])
+        
+        return False
+    
     
     def _is_object_present_in_org(self, targetobject):
         
