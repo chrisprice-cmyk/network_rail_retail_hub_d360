@@ -65,6 +65,7 @@ sources:
   base:
     github: https://github.com/sfdc-qbranch/QBrix-0-xDO-BaseConfig
 
+
 tasks:
   #------------------------------------#
   # CCI TASK DEFAULTS                  #
@@ -192,6 +193,9 @@ tasks:
   qbrix_metadata_checker:
     description: Q Brix Metadata Scan for missing metadata tool
     class_path: qbrix.tools.utils.qbrix_metadata_checker.MetadataChecker
+
+  qbrix_deployer:
+    class_path: qbrix.salesforce.qbrix_salesforce_tasks.QbrixDeployer
 
   #------------------------------------#
   # DATA TOOL INTEGRATION              #

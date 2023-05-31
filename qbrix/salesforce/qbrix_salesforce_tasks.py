@@ -16,13 +16,14 @@ from cumulusci.tasks.salesforce.update_dependencies import UpdateDependencies
 from cumulusci.tasks.sfdx import SFDXOrgTask
 from cumulusci.core.tasks import BaseTask
 from qbrix.tools.data.qbrix_analytics import AnalyticsManager
-from qbrix.tools.shared.qbrix_cci_tasks import run_cci_task
+from qbrix.tools.shared.qbrix_cci_tasks import run_cci_flow, run_cci_task
 from qbrix.tools.shared.qbrix_console_utils import init_logger
 from cumulusci.tasks.salesforce import BaseSalesforceApiTask
 from cumulusci.core.utils import process_list_of_pairs_dict_arg
 from cumulusci.tasks.salesforce.sourcetracking import RetrieveChanges
 
 from qbrix.tools.shared.qbrix_project_tasks import check_and_update_setting, get_packages_in_stack
+from qbrix.tools.health.qbrix_project_checks import run_experience_cloud_checks, run_einstein_checks, run_crm_analytics_checks
 
 log = init_logger()
 now = datetime.now()
@@ -725,65 +726,51 @@ class QBrixInstalled(BaseTask, ABC):
 
 class QUpdateDependencies(UpdateDependencies, ABC):
 
+    def _install_dependency(self, dependency):
+
+        if hasattr(dependency, "github") and len(dependency.github) > 1:
+            if "qbrix" in dependency.github.lower():
+                qbrix_name = dependency.github.rsplit('/', 1)[-1]
+                if QbrixInstallCheck(qbrix_name, self.org_config):
+                    return
+                
+        super()._install_dependency(dependency)
+
+class QbrixDeployer(BaseSalesforceApiTask, ABC):
+    task_docs = """
+    Overview: Deploys the Q Brix if not already deployed
+    """
+
+    task_options = {
+        "qbrix_name": {
+            "description": "Name of the Q Brix, starting with Qbrix-",
+            "required": True
+        },
+        "org": {
+            "description": "Org alias",
+            "required": False
+        }
+    }
+
+    salesforce_task = True
+
     def _init_options(self, kwargs):
-        super(QUpdateDependencies, self)._init_options(kwargs)
+        super(QbrixDeployer, self)._init_options(kwargs)
+        self.qbrix_name = self.options["qbrix_name"] if "qbrix_name" in self.options else None
 
     def _run_task(self):
-        if not self.dependencies:
-            self.logger.info("Project has no dependencies, doing nothing")
+
+        if not self.project_config.sources:
+            print("No sources found in project config")
             return
 
-        log.info("Resolving dependencies...")
-        if "ignore_dependencies" in self.options:
-            filter_function = dependency_filter_ignore_deps(
-                self.options["ignore_dependencies"]
-            )
-        else:
-            filter_function = None
-
-        dependencies = self._filter_dependencies(
-            get_static_dependencies(
-                self.project_config,
-                dependencies=self.dependencies,
-                strategies=self.resolution_strategy,
-                filter_function=filter_function,
-            )
-        )
-        log.info("Collected dependencies:")
-
-        for d in dependencies:
-            if isinstance(d, PackageVersionIdDependency):
-                desc = self.options["base_package_url_format"].format(d.version_id)
-            elif isinstance(d, PackageNamespaceVersionDependency):
-                if d.version_id:
-                    desc = self.options["base_package_url_format"].format(d.version_id)
-                else:
-                    desc = ""
-            elif isinstance(d, UnmanagedGitHubRefDependency):
-                if "qbrix" in d.github.lower():
-                    desc = "Q Brix"
-                else:
-                    desc = ""
+        for name, value in self.project_config.sources.items():
+            if 'github' in value and self.qbrix_name in value['github']:
+                if not QbrixInstallCheck(self.qbrix_name, self.org_config):
+                    run_cci_flow(flow_name=f"{name}:deploy_qbrix", org_name=self.org_config.name)
             else:
-                desc = "unpackaged"
-
-            desc = f" ({desc})" if desc else desc
-            self.logger.info(f"    {d}{desc}")
-
-        if self.options["interactive"]:
-            if not click.confirm("Continue to install dependencies?", default=True):
-                raise CumulusCIException("Dependency installation was canceled.")
-
-        for d in dependencies:
-            if isinstance(d, UnmanagedGitHubRefDependency):
-                if "qbrix" in d.github.lower():
-                    uqbrix_name = d.github.rsplit('/', 1)[-1]
-                    if QbrixInstallCheck(uqbrix_name, self.org_config):
-                        continue
-            self._install_dependency(d)
-
-        self.org_config.reset_installed_packages()
-
+                print("Source name not found in Q Brix")
+    
 
 class PopulateRecentlyViewed(BaseSalesforceApiTask, ABC):
     task_docs = """
@@ -1055,54 +1042,20 @@ class ComparePackages(BaseSalesforceApiTask, ABC):
                     self.logger.info(f"\nChecking Package ID: {package} from {qbrix_name}:")
                 self.logger.info(" -> ACTION - Check this package ID within the related Q Brix and update if required.")
 
-class QRetrieveChanges(RetrieveChanges):
 
+class QRetrieveChanges(RetrieveChanges):
     """
     Adds Q Brix custom logic to the Retrieve Changes Task
     """
 
-    def _run_crma_checks(self):
-        # Check if Datasets have been captured then download data from org
-        self.logger.info("Checking that latest CRMA Datasets have been downloaded:")
-        run_cci_task("analytics_manager", self.org_config.name, mode="d", generate_metadata_desc=True)
-
-    def _run_bot_checks(self):
-        # Bot Checks
-        
-        # Check Bot Settings Exist in force-app folder
-        check_and_update_setting(
-            "force-app/main/default/settings/Bot.settings-meta.xml",
-            "BotSettings",
-            "enableBots",
-            "true"
-        )
-
-        # Check LiveChatButton is removed and robot script is created
-        # TODO
-
-    def _run_experience_bundle_checks(self):
-        # Experience Cloud Bundle Checks
-
-        # Check Experience Cloud Settings Exist in force-app folder
-        check_and_update_setting(
-            "force-app/main/default/settings/Communities.settings-meta.xml",
-            "CommunitiesSettings",
-            "enableNetworksEnabled",
-            "true"
-        )
-        check_and_update_setting(
-            "force-app/main/default/settings/ExperienceBundle.settings-meta.xml",
-            "ExperienceBundleSettings",
-            "enableExperienceBundleMetadata",
-            "true"
-        )
-
     def _get_changes(self):
         changes = super()._get_changes()
 
-        # Add your logic to capture and store the filtered variable
-        filtered = self._filter_changes(changes)[0]
-        self.filtered = filtered
+        if changes:
+            filtered = self._filter_changes(changes)[0]
+            self.filtered = filtered
+        else:
+            self.filtered = None
 
         return changes
 
@@ -1113,24 +1066,17 @@ class QRetrieveChanges(RetrieveChanges):
         super()._run_task()
 
         # Add your custom logic here after the original implementation
-        
+
         self.logger.info("Running Q Brix Checks...")
         member_types = set(change['MemberType'] for change in self.filtered)
 
         if "WaveDataset" in member_types:
-            self._run_crma_checks()
+            run_crm_analytics_checks(self.org_config.name)
 
         if "Bot" in member_types:
-            self._run_bot_checks()
+            run_einstein_checks()
 
         if "ExperienceBundle" in member_types:
-            self._run_experience_bundle_checks()
+            run_experience_cloud_checks()
 
         self.logger.info("Checks complete!")
-
-        
-
-        
-
-        
-
