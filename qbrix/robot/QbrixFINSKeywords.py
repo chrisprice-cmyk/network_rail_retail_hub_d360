@@ -71,9 +71,10 @@ class QbrixFINSKeywords(BaseLibrary):
         checked = "checked" in self.browser.get_element_states(".toggle:has-text('Disabled')")
         if not checked:
             self.browser.click(".toggle:has-text('Disabled')")
-            sleep(3)
+            sleep(5)
+            self.browser.wait_for_elements_state("button:has-text('Enable')", ElementState.visible, '30s')
             self.browser.click("button:has-text('Enable')")
-            sleep(3)
+            sleep(5)
 
     def enable_financial_account_setting(self):
         """
@@ -99,6 +100,6 @@ class QbrixFINSKeywords(BaseLibrary):
         checked = "checked" in self.browser.get_element_states("label:has-text('Disabled')")
         if not checked:
             self.browser.click("label:has-text('Disabled')")
-            sleep(3)
+            sleep(5)
             self.browser.click("button:has-text('Enable')")
-            sleep(3)
+            sleep(5)
