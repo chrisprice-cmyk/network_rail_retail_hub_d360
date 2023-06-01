@@ -312,6 +312,15 @@ Set Guest API Access for MFG Channel Menu
 Enable Interest Tagging
     Enable Interest Tagging
 
+Enable Record Alert Access
+    Enable Record Alert Access
+
+Enable Business Rules Engine
+    Enable Business Rules Engine
+
+Enable Financial Account Setting
+    Enable Financial Account Setting
+
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # NON PROFIT NGO Cloud Operations
 # -----------------------------------------------------------------------------------------------------------------------------------------
