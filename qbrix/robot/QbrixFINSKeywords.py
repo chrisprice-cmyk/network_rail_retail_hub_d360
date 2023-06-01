@@ -89,3 +89,16 @@ class QbrixFINSKeywords(BaseLibrary):
                 ":nth-match(label:has-text('Off'), 1)")
             self.browser.click(toggle_switch)
             sleep(1)
+
+    def enable_actionable_segmentation_settings(self):
+        """
+        Enables Business Rules Engine for Financial Services
+        """
+        self.shared.go_to_setup_admin_page("ActionableSegmentationSettings/home")
+        self.browser.wait_for_elements_state("span:text-is('Actionable Segmentation Settings')", ElementState.visible, '30s')
+        checked = "checked" in self.browser.get_element_states("label:has-text('Disabled')")
+        if not checked:
+            self.browser.click("label:has-text('Disabled')")
+            sleep(3)
+            self.browser.click("button:has-text('Enable')")
+            sleep(3)

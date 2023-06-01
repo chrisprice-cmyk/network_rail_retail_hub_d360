@@ -321,6 +321,9 @@ Enable Business Rules Engine
 Enable Financial Account Setting
     Enable Financial Account Setting
 
+Enable Actionable Segmentation Settings
+    Enable Actionable Segmentation Settings
+
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # NON PROFIT NGO Cloud Operations
 # -----------------------------------------------------------------------------------------------------------------------------------------
