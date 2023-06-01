@@ -12,6 +12,7 @@ from cumulusci.core.config import ScratchOrgConfig, TaskConfig
 from cumulusci.core.dependencies.dependencies import PackageVersionIdDependency, PackageNamespaceVersionDependency, UnmanagedGitHubRefDependency
 from cumulusci.core.dependencies.resolvers import dependency_filter_ignore_deps, get_static_dependencies
 from cumulusci.core.exceptions import CumulusCIException
+from cumulusci.core.flowrunner import FlowCoordinator
 from cumulusci.tasks.salesforce.update_dependencies import UpdateDependencies
 from cumulusci.tasks.sfdx import SFDXOrgTask
 from cumulusci.core.tasks import BaseTask
@@ -767,7 +768,8 @@ class QbrixDeployer(BaseSalesforceApiTask, ABC):
         for name, value in self.project_config.sources.items():
             if 'github' in value and self.qbrix_name in value['github']:
                 if not QbrixInstallCheck(self.qbrix_name, self.org_config):
-                    run_cci_flow(flow_name=f"{name}:deploy_qbrix", org_name=self.org_config.name)
+                    coordinator = FlowCoordinator(self.project_config)
+                    coordinator.run(f'{self.qbrix_name}:deploy_qbrix')
             else:
                 print("Source name not found in Q Brix")
     
