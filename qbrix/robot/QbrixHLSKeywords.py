@@ -49,7 +49,7 @@ class QbrixHLSKeywords(BaseLibrary):
         if not checked:
             self.browser.click(".toggle:has-text('Disabled')")
             sleep(5)
-            self.browser.wait_for_elements_state("button:has-text('Enable')", ElementState.visible, '30s')
+            self.browser.wait_for_elements_state("button:has-text('Turn On')", ElementState.visible, '30s')
             self.browser.click("button:has-text('Turn On')")
             sleep(5)
 
