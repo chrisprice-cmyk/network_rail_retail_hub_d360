@@ -340,3 +340,6 @@ Enable Care Plans
 
 Enable Care Plans Grantmaking
     Enable Care Plans Grantmaking
+
+Enable Assessments
+    Enable Assessments

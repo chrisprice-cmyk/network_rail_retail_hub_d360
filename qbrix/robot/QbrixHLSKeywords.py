@@ -39,6 +39,20 @@ class QbrixHLSKeywords(BaseLibrary):
             self.browser.click(toggle_switch)
             sleep(1)
 
+    def enable_assessments(self):
+        """
+        Enables Assessments for HLS
+        """
+        self.shared.go_to_setup_admin_page("AssessmentSettings/home")
+        self.browser.wait_for_elements_state("h3:text-is('Guest User Assessments')", ElementState.visible, '30s')
+        checked = "checked" in self.browser.get_element_states(".toggle:has-text('Disabled')")
+        if not checked:
+            self.browser.click(".toggle:has-text('Disabled')")
+            sleep(5)
+            self.browser.wait_for_elements_state("button:has-text('Enable')", ElementState.visible, '30s')
+            self.browser.click("button:has-text('Turn On')")
+            sleep(5)
+
     def enable_care_plans_grantmaking(self):
         """
         Enables Care Plans Grantmaking for HLS
