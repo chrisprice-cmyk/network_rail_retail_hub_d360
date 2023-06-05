@@ -23,7 +23,11 @@ class OmniScript:
         self.subtype = subtype
         self.language = language
         self.id = id
-        self.name = f"{type}{subtype}{language}".lower()
+        
+        if(self.language=="Multi-Language"):
+            self.language="MultiLanguage"
+            
+        self.name = f"{type}{subtype}{self.language}".lower()
         self.disklocation = ""
         self.foldername = ""
         self.updated = updated
