@@ -7,7 +7,7 @@
     {
       "label": "Q BRIX [ORG]: Create New Developer Org (Alias 'dev')",
       "type": "shell",
-      "command": "cci org remove dev && cci org info dev && cci flow run deploy_qbrix --org dev && echo 'New Developer Scratch Org has been created with alias dev.'",
+      "command": "cci org remove dev && cci org info dev && cci flow run deploy_qbrix --org dev && cci task run snapshot_changes && echo 'New Developer Scratch Org has been created with alias dev.'",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
