@@ -24,7 +24,7 @@ from qbrix.tools.shared.qbrix_shared_checks import is_github_url
 
 log = init_logger()
 
-DEFAULT_UPDATE_LOCATION = "https://qbrix-core-stage.herokuapp.com/qbrix/q_update_package.zip"
+DEFAULT_UPDATE_LOCATION = "https://qbrix-core.herokuapp.com/qbrix/q_update_package.zip"
 
 
 def replace_file_text(file_location, search_string, replacement_string, show_info=False, number_of_replacements=-1):
