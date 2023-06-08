@@ -648,6 +648,20 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
                                     queryLine = queryLine.replace("\'"+find_value+"\'", "\'"+replace_value+"\'").replace("\""+find_value+"\"", "\""+replace_value+"\"").replace("~~~"+find_value, "~~~"+replace_value).replace("("+find_value+")", "("+replace_value+")")
                                     queryLine = queryLine.replace("\"unique_"+find_value, "\"unique_"+replace_value).replace("\"avg_"+find_value, "\"avg_"+replace_value).replace("\"sum_"+find_value, "\"sum_"+replace_value)
                                     queryLine = queryLine.replace("\'unique_"+find_value, "\'unique_"+replace_value).replace("\'avg_"+find_value, "\'avg_"+replace_value).replace("\'sum_"+find_value, "\'sum_"+replace_value)
+                                    queryLine = queryLine.replace(find_value+"_Second", replace_value+"_Second")
+                                    queryLine = queryLine.replace(find_value+"_Minute", replace_value+"_Minute")
+                                    queryLine = queryLine.replace(find_value+"_Hour", replace_value+"_Hour")
+                                    queryLine = queryLine.replace(find_value+"_Day", replace_value+"_Day")
+                                    queryLine = queryLine.replace(find_value+"_Week", replace_value+"_Week")
+                                    queryLine = queryLine.replace(find_value+"_Month", replace_value+"_Month")
+                                    queryLine = queryLine.replace(find_value+"_Quarter", replace_value+"_Quarter")
+                                    queryLine = queryLine.replace(find_value+"_Year", replace_value+"_Year")
+                                    queryLine = queryLine.replace(find_value+"_Week_Fiscal", replace_value+"_Week_Fiscal")
+                                    queryLine = queryLine.replace(find_value+"_Month_Fiscal", replace_value+"_Month_Fiscal")
+                                    queryLine = queryLine.replace(find_value+"_Quarter_Fiscal", replace_value+"_Quarter_Fiscal")
+                                    queryLine = queryLine.replace(find_value+"_Year_Fiscal", replace_value+"_Year_Fiscal")
+                                    queryLine = queryLine.replace(find_value+"_sec_epoch", replace_value+"_sec_epoch")
+                                    queryLine = queryLine.replace(find_value+"_day_epoch", replace_value+"_day_epoch")
                                     update_made = True
                                     composedQuery = composedQuery + queryLine + '\n'
                                     
@@ -661,6 +675,20 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
                                 s["query"]["query"] = s["query"].get("query").replace("\'"+find_value+"\'", "\'"+replace_value+"\'").replace("\""+find_value+"\"", "\""+replace_value+"\"").replace("~~~"+find_value, "~~~"+replace_value).replace("("+find_value+")", "("+replace_value+")")
                                 s['query']['query'] = json.loads(json.dumps(s['query'].get('query')).replace("\"unique_"+find_value, "\"unique_"+replace_value).replace("\"avg_"+find_value, "\"avg_"+replace_value).replace("\"sum_"+find_value, "\"sum_"+replace_value))
                                 s['query']['query'] = json.loads(json.dumps(s['query'].get('query')).replace("\'unique_"+find_value, "\'unique_"+replace_value).replace("\'avg_"+find_value, "\'avg_"+replace_value).replace("\'sum_"+find_value, "\'sum_"+replace_value))
+                                s['query']['query'] = json.loads(json.dumps(s['query'].get('query')).replace(find_value+"_Second", replace_value+"_Second"))
+                                s['query']['query'] = json.loads(json.dumps(s['query'].get('query')).replace(find_value+"_Minute", replace_value+"_Minute"))
+                                s['query']['query'] = json.loads(json.dumps(s['query'].get('query')).replace(find_value+"_Hour", replace_value+"_Hour"))
+                                s['query']['query'] = json.loads(json.dumps(s['query'].get('query')).replace(find_value+"_Day", replace_value+"_Day"))
+                                s['query']['query'] = json.loads(json.dumps(s['query'].get('query')).replace(find_value+"_Week", replace_value+"_Week"))
+                                s['query']['query'] = json.loads(json.dumps(s['query'].get('query')).replace(find_value+"_Month", replace_value+"_Month"))
+                                s['query']['query'] = json.loads(json.dumps(s['query'].get('query')).replace(find_value+"_Quarter", replace_value+"_Quarter"))
+                                s['query']['query'] = json.loads(json.dumps(s['query'].get('query')).replace(find_value+"_Year", replace_value+"_Year"))
+                                s['query']['query'] = json.loads(json.dumps(s['query'].get('query')).replace(find_value+"_Week_Fiscal", replace_value+"_Week_Fiscal"))
+                                s['query']['query'] = json.loads(json.dumps(s['query'].get('query')).replace(find_value+"_Month_Fiscal", replace_value+"_Month_Fiscal"))
+                                s['query']['query'] = json.loads(json.dumps(s['query'].get('query')).replace(find_value+"_Quarter_Fiscal", replace_value+"_Quarter_Fiscal"))
+                                s['query']['query'] = json.loads(json.dumps(s['query'].get('query')).replace(find_value+"_Year_Fiscal", replace_value+"_Year_Fiscal"))
+                                s['query']['query'] = json.loads(json.dumps(s['query'].get('query')).replace(find_value+"_sec_epoch", replace_value+"_sec_epoch"))
+                                s['query']['query'] = json.loads(json.dumps(s['query'].get('query')).replace(find_value+"_day_epoch", replace_value+"_day_epoch"))
                                 update_made = True
                                 
                         if s.get('values') and find_value in json.dumps(s.get('values')):
@@ -704,7 +732,7 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
                                 w['parameters']['title'] = json.loads(json.dumps(w['parameters'].get('title')).replace("\""+find_value, "\""+replace_value))
                                 update_made = True
                             if w['parameters'].get('content') and find_value in json.dumps(w['parameters'].get('content')):
-                                w['parameters']['content'] = json.loads(json.dumps(w['parameters'].get('content')).replace("\""+find_value, "\""+replace_value))
+                                w['parameters']['content'] = json.loads(json.dumps(w['parameters'].get('content')).replace("\""+find_value+"\"", "\""+replace_value+"\"").replace("["+find_value+"]", "["+replace_value+"]"))
                                 update_made = True
 
                 if update_made:
