@@ -294,7 +294,7 @@ class CreateUser(BaseSalesforceApiTask, ABC):
             submitted_dict.update({"Email": generated_email})
 
         if "Username" not in submitted_dict.keys():
-            generated_username = f"{submitted_dict.get('FirstName').lower()}{now.strftime('%m%Y%H%M%S')}@example.com"
+            generated_username = f"{submitted_dict.get('FirstName').lower()}{submitted_dict.get('LastName').lower()}{now.strftime('%m%Y%H%M%S%f')}@example.com"
             submitted_dict.update({"Username": generated_username})
 
         if "EmailEncodingKey" not in submitted_dict.keys():
