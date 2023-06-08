@@ -614,6 +614,7 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
             if data:
                 # Check and Update FieldNames
                 # print(f"\nChecking Data sources")
+
                 if data.get("dataSourceLinks"):
                     data_source_links = data["dataSourceLinks"]
                     for data_source_link in data_source_links:
@@ -623,7 +624,6 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
                                 if f["fieldName"] == find_value and f["dataSourceName"] == data_source:
                                     f["fieldName"] = replace_value
                                     update_made = True
-
                 # Check Filters
                 # print(f"\nChecking Filters")
                 filters = data.get("filters")
@@ -648,6 +648,7 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
                                     queryLine = queryLine.replace("\'"+find_value+"\'", "\'"+replace_value+"\'").replace("\""+find_value+"\"", "\""+replace_value+"\"").replace("~~~"+find_value, "~~~"+replace_value).replace("("+find_value+")", "("+replace_value+")")
                                     queryLine = queryLine.replace("\"unique_"+find_value, "\"unique_"+replace_value).replace("\"avg_"+find_value, "\"avg_"+replace_value).replace("\"sum_"+find_value, "\"sum_"+replace_value)
                                     queryLine = queryLine.replace("\'unique_"+find_value, "\'unique_"+replace_value).replace("\'avg_"+find_value, "\'avg_"+replace_value).replace("\'sum_"+find_value, "\'sum_"+replace_value)
+
                                     queryLine = queryLine.replace(find_value+"_Second", replace_value+"_Second")
                                     queryLine = queryLine.replace(find_value+"_Minute", replace_value+"_Minute")
                                     queryLine = queryLine.replace(find_value+"_Hour", replace_value+"_Hour")
@@ -733,6 +734,9 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
                                 update_made = True
                             if w['parameters'].get('content') and find_value in json.dumps(w['parameters'].get('content')):
                                 w['parameters']['content'] = json.loads(json.dumps(w['parameters'].get('content')).replace("\""+find_value+"\"", "\""+replace_value+"\"").replace("["+find_value+"]", "["+replace_value+"]"))
+                                update_made = True
+                            if w['parameters'].get('tooltip') and find_value in json.dumps(w['parameters'].get('tooltip')):
+                                w['parameters']['tooltip'] = json.loads(json.dumps(w['parameters'].get('tooltip')).replace("\""+find_value+"\"", "\""+replace_value+"\"").replace("["+find_value+"]", "["+replace_value+"]"))
                                 update_made = True
 
                 if update_made:
