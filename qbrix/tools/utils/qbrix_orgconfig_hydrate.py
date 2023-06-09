@@ -207,7 +207,7 @@ class NGOrgConfig(SFDXBaseTask):
             self.keychain = self.keychain_cls(self.project_config, keychain_key)
             self.project_config.keychain = self.keychain
 
-    def _prepruntime(self, a):
+    def _prepruntime(self):
 
         if ("org" in self.options and not self.options["org"] is None) and self.keychain is None:
             self._load_keychain()
@@ -236,6 +236,7 @@ class NGOrgConfig(SFDXBaseTask):
             self.instanceurl = self.options["instanceurl"]
 
         self._inject_max_runtime()
+        self._seed_initial_cache()
 
     def _inject_max_runtime(self):
 
@@ -243,7 +244,7 @@ class NGOrgConfig(SFDXBaseTask):
             self.org_config.qbrix_cache = {}
 
         if self.org_config.max_org_api_version is None:
-            self.org_config.max_org_api_version = self._get_org_max_api_version()
+            self.org_config.max_org_api_version = self._get_org_max_api_version
 
         if self.org_config.is_qbrix_installed is None:
             self.org_config.is_qbrix_installed = self._is_qbrix_installed
@@ -291,9 +292,9 @@ class NGOrgConfig(SFDXBaseTask):
             self.org_config.is_file_glob = self._is_glob_file_search
             
         if self.org_config.is_scratch_org is None:
-            self.org_config.is_scratch_org = self._is_scratch_org()
+            self.org_config.is_scratch_org = self._is_scratch_org
             
-        self._seed_initial_cache()
+        
 
     def _seed_initial_cache(self):
         if(self.org_config.qbrix_cache is None):
@@ -418,7 +419,7 @@ class NGOrgConfig(SFDXBaseTask):
         response = requests.request("GET", url, headers=headers)
         
         data = json.loads(response.text)
-        self.logger.info(data)
+        #self.logger.info(data)
         self.logger.info(data["totalSize"])
         return data["totalSize"] > 0
         
@@ -601,7 +602,7 @@ class NGOrgConfig(SFDXBaseTask):
 
     def _run_task(self):
 
-        self._prepruntime(self)
+        self._prepruntime()
 
     def _handle_returncode(self, returncode, stderr):
         if returncode:

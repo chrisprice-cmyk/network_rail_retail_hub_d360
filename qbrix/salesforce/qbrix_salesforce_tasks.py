@@ -25,6 +25,7 @@ from cumulusci.tasks.salesforce.sourcetracking import RetrieveChanges
 
 from qbrix.tools.shared.qbrix_project_tasks import check_and_update_setting, get_packages_in_stack
 from qbrix.tools.health.qbrix_project_checks import run_experience_cloud_checks, run_einstein_checks, run_crm_analytics_checks
+from qbrix.tools.utils.qbrix_orgconfig_hydrate import NGOrgConfig
 
 log = init_logger()
 now = datetime.now()
@@ -133,7 +134,7 @@ def _remove_missing_field_schema(submitted_dict, field_names):
     return submitted_dict
 
 
-class CreateUser(BaseSalesforceApiTask, ABC):
+class CreateUser(BaseSalesforceApiTask,NGOrgConfig, ABC):
     salesforce_task = True
 
     task_docs = """
@@ -209,8 +210,11 @@ class CreateUser(BaseSalesforceApiTask, ABC):
 
     def _init_options(self, kwargs):
         super(CreateUser, self)._init_options(kwargs)
+        
+        
         self.data = process_list_of_pairs_dict_arg(self.options["data"]) if "data" in self.options else None
         self.role = self.options["role"] if "role" in self.options else None
+        self.when = self.options["when"] if "role" in self.options else None
         self.profile = self.options["profile"] if "profile" in self.options else None
         self.permission_set_api_names = list(self.options["permission_set_api_names"]) if "permission_set_api_names" in self.options else None
         self.permission_set_group_api_names = list(self.options["permission_set_group_api_names"]) if "permission_set_group_api_names" in self.options else None
@@ -618,6 +622,11 @@ class CreateUser(BaseSalesforceApiTask, ABC):
 
     def _run_task(self):
         api = self.sf
+        
+        #inject in the orgc_config pointers. We might be running the task directly 
+        #e.g.: cci task run user_manager --path blah/blah.yml --org goat
+        self._prepruntime()
+        self._inject_max_runtime()
 
         if api is not None:
             # Check for invalid configuration
@@ -638,9 +647,26 @@ class CreateUser(BaseSalesforceApiTask, ABC):
                 with open(self.path, "r") as file:
                     user_data = yaml.load(file, Loader=yaml.FullLoader)
                 for user in user_data["users"]:
+                        
                     user_record_data = user_data["users"][user]
-                    if user_record_data:
+                    self.logger.info(user_record_data)    
+                    whenclauseskip=False
+                    if("when" in user_record_data and not user_record_data['when'] is None):
+                        #self.logger.info(user_record_data['when'])   
+                        exp = user_record_data["when"].replace("org_config","self.org_config")
+                        self.logger.info(exp)   
+                        compliledcode = compile(exp, "<string>", "eval")
+                        #no builtins = no __import__ # DO NOT allow globals
+                        #restrict scope to expression - no builtins and only locals self
+                        res = eval(compliledcode,{},{"self":self})
+                
+                        if(res == False):
+                            whenclauseskip=True
+                        
+                    if(whenclauseskip==False):
                         self._process_user_record(user_record_data, field_names)
+                    else:
+                        self.logger.info(f"User create skipped for not meeting when clause::{exp}")
             else:
                 log.info("SINGLE RECORD MODE ENABLED")
 
