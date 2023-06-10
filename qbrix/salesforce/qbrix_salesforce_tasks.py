@@ -225,6 +225,7 @@ class CreateUser(BaseSalesforceApiTask,NGOrgConfig, ABC):
         self.link_contact_record = self.options["link_contact_record"] if "link_contact_record" in self.options else False
         self.manager_external_id = self.options["manager_external_id"] if "manager_external_id" in self.options else False
         self.contact_external_id = self.options["contact_external_id"] if "contact_external_id" in self.options else False
+        self.ignore_failures = bool(self.options["ignore_failures"]) if "ignore_failures" in self.options else False
 
     def _get_user_desc(self, tmp_file_location=None):
         """
@@ -459,7 +460,7 @@ class CreateUser(BaseSalesforceApiTask,NGOrgConfig, ABC):
 
             log.info("Image Uploaded and assigned!")
 
-    def _assign_permission(self, mode, user_id, api_names):
+    def _assign_permission(self, mode, user_id, api_names,ignore_failures=False):
         """
         Assigns Permission Sets or Permission Set Groups or Permission Set Licenses based on the mode. 
 
@@ -495,53 +496,67 @@ class CreateUser(BaseSalesforceApiTask,NGOrgConfig, ABC):
                 log.error(f"Error: Invalid mode passed. Only Permission Sets (PERMISSIONSET) or Permission Set Groups (PERMISSIONSETGROUP) or Permission Set Licenses (PERMISSIONSETLICENSE) are supported. Mode passed: {mode}")
                 return False
 
+            
             # Loop Through Permission Set Names
             for perm in list(api_names):
-                api = self.sf
+                    
+                    try:
+                        
+                        api = self.sf
 
-                # Check for labels and non api names
-                if " " in perm:
-                    log.debug(f"{message_name} {perm} is not a valid api name for a {message_name}. Please check the api names are valid and try again. Continuing to next record.")
-                    continue
+                        # Check for labels and non api names
+                        if " " in perm:
+                            log.debug(f"{message_name} {perm} is not a valid api name for a {message_name}. Please check the api names are valid and try again. Continuing to next record.")
+                            continue
 
-                # Check Permission Set Exists
-                permission_set_query = api.query(f"SELECT Id FROM {object_name} WHERE {lookup_field} = '{perm}' LIMIT 1")
-                if permission_set_query["totalSize"] == 0:
-                    log.debug(f"{message_name} with api name {perm} was not found in the target org, skipping assignment.")
-                    continue
-                else:
-                    permission_set_id = permission_set_query["records"][0]["Id"]
+                        # Check Permission Set Exists
+                        permission_set_query = api.query(f"SELECT Id FROM {object_name} WHERE {lookup_field} = '{perm}' LIMIT 1")
+                        if permission_set_query["totalSize"] == 0:
+                            log.debug(f"{message_name} with api name {perm} was not found in the target org, skipping assignment.")
+                            continue
+                        else:
+                            permission_set_id = permission_set_query["records"][0]["Id"]
 
-                # Check for existing Permission Set, Group or License has been already assigned
-                permission_set_assignment_query = api.query(f"SELECT Id FROM {assignment_object} WHERE AssigneeId = '{user_id}' AND {assignment_field} = '{permission_set_id}' LIMIT 1")
-                if permission_set_assignment_query["totalSize"] == 1:
-                    log.info(f"{message_name} with api name {perm} has already been assigned to the user. Skipping...")
-                    continue
+                        # Check for existing Permission Set, Group or License has been already assigned
+                        permission_set_assignment_query = api.query(f"SELECT Id FROM {assignment_object} WHERE AssigneeId = '{user_id}' AND {assignment_field} = '{permission_set_id}' LIMIT 1")
+                        if permission_set_assignment_query["totalSize"] == 1:
+                            log.info(f"{message_name} with api name {perm} has already been assigned to the user. Skipping...")
+                            continue
 
-                permset_creation_result = None
-                if str(mode).upper() != "PERMISSIONSETLICENSE":
-                    # Create Permission Set Assignment
-                    permset_creation_result = api.PermissionSetAssignment.create(
-                        {
-                            "AssigneeId": user_id,
-                            str(assignment_field): permission_set_id
-                        }
-                    )
-                else:
-                    # Create Permission Set License Assignment
-                    permset_creation_result = api.PermissionSetLicenseAssign.create(
-                        {
-                            "AssigneeId": user_id,
-                            str(assignment_field): permission_set_id
-                        }
-                    )
+                        permset_creation_result = None
+                        if str(mode).upper() != "PERMISSIONSETLICENSE":
+                            # Create Permission Set Assignment
+                            permset_creation_result = api.PermissionSetAssignment.create(
+                                {
+                                    "AssigneeId": user_id,
+                                    str(assignment_field): permission_set_id
+                                }
+                            )
+                        else:
+                            # Create Permission Set License Assignment
+                            permset_creation_result = api.PermissionSetLicenseAssign.create(
+                                {
+                                    "AssigneeId": user_id,
+                                    str(assignment_field): permission_set_id
+                                }
+                            )
 
-                if not permset_creation_result is None and permset_creation_result["id"]:
-                    log.info(f"{message_name} (With API Name: {perm}) has been assigned (ID: {permset_creation_result['id']})!")
-                else:
-                    log.error(f"{message_name} (With API Name: {perm}) failed to assign. Moving onto next {message_name} (if any). Details: {permset_creation_result}")
-                    return False
+                        if not permset_creation_result is None and permset_creation_result["id"]:
+                            log.info(f"{message_name} (With API Name: {perm}) has been assigned (ID: {permset_creation_result['id']})!")
+                        else:
+                            log.error(f"{message_name} (With API Name: {perm}) failed to assign. Moving onto next {message_name} (if any). Details: {permset_creation_result}")
+                            
+                            if(ignore_failures):
+                                continue
+                            else:
+                                return False
 
+                    except Exception as e:
+                        log.debug("Error: Failure in user upsert.")
+                        log.debug(e)
+                        if(ignore_failures==False):    
+                            return False
+                        
         else:
             log.debug("Error: No Mode was passed for processing. You must pass in a mode.")
             return False
@@ -559,6 +574,10 @@ class CreateUser(BaseSalesforceApiTask,NGOrgConfig, ABC):
         link_contact_record = user_record_data["link_contact_record"] if "link_contact_record" in dict(user_record_data).keys() else None
         manager = user_record_data["manager_external_id"] if "manager_external_id" in dict(user_record_data).keys() else None
         contact = user_record_data["contact_external_id"] if "contact_external_id" in dict(user_record_data).keys() else None
+        if "ignore_failures" in dict(user_record_data).keys():
+            ignore_failures = bool(user_record_data["ignore_failures"]) 
+        else:
+            ignore_failures =False
 
         log.info(f"Creating User with the following details: \n{json.dumps(data, indent=1, sort_keys=True)}")
         log.info("Preparing Data for User Record")
@@ -590,14 +609,14 @@ class CreateUser(BaseSalesforceApiTask,NGOrgConfig, ABC):
             # Load PSL First to make sure namespace access is ok
             if permission_set_license_api_names:
                 log.info("Assigning Permission Set Licenses...")
-                self._assign_permission("PERMISSIONSETLICENSE", final_user_id, permission_set_license_api_names)
+                self._assign_permission("PERMISSIONSETLICENSE", final_user_id, permission_set_license_api_names,ignore_failures)
             if permission_set_api_names:
                 log.info("Assigning Permission Sets...")
-                self._assign_permission("PERMISSIONSET", final_user_id, permission_set_api_names)
+                self._assign_permission("PERMISSIONSET", final_user_id, permission_set_api_names,ignore_failures)
 
             if permission_set_group_api_names:
                 log.info("Assigning Permission Set Groups...")
-                self._assign_permission("PERMISSIONSETGROUP", final_user_id, permission_set_group_api_names)
+                self._assign_permission("PERMISSIONSETGROUP", final_user_id, permission_set_group_api_names,ignore_failures)
 
         else:
             log.error("User Failed to insert...skipping")
@@ -703,15 +722,15 @@ class CreateUser(BaseSalesforceApiTask,NGOrgConfig, ABC):
                         # PSL First - to make sure namespace PSL get access first.
                         if self.permission_set_license_api_names:
                             log.info("Assigning Permission Set Licenses...")
-                            self._assign_permission("PERMISSIONSETLICENSE", final_user_id, self.permission_set_license_api_names)
+                            self._assign_permission("PERMISSIONSETLICENSE", final_user_id, self.permission_set_license_api_names,self.ignore_failures)
 
                         if self.permission_set_api_names:
                             log.info("Assigning Permission Sets...")
-                            self._assign_permission("PERMISSIONSET", final_user_id, self.permission_set_api_names)
+                            self._assign_permission("PERMISSIONSET", final_user_id, self.permission_set_api_names,self.ignore_failures)
 
                         if self.permission_set_group_api_names:
                             log.info("Assigning Permission Set Groups...")
-                            self._assign_permission("PERMISSIONSETGROUP", final_user_id, self.permission_set_group_api_names)
+                            self._assign_permission("PERMISSIONSETGROUP", final_user_id, self.permission_set_group_api_names,self.ignore_failures)
 
                     else:
                         log.error("User Failed to insert. Skipping...")
