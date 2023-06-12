@@ -52,6 +52,9 @@ Library     qbrix/robot/QbrixNGOKeywords.py
 # INDUSTRY - Healthcare Cloud
 Library     qbrix/robot/QbrixHLSKeywords.py
 
+# INDUSTRY - OmniStudio
+Library     qbrix/robot/QbrixDPAKeywords.py
+
 
 
 
