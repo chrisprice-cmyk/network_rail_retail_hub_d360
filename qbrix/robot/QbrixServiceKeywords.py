@@ -35,21 +35,11 @@ class QbrixServiceKeywords(BaseLibrary):
         """ Enables Slack Integration with the target org """
         self.shared.go_to_setup_admin_page("SlackSetupAssistant/home")
         sleep(2)
-        # logger.console(self.browser.get_element_states("label:has-text('Unaccepted')"))
         checked = "checked" in self.browser.get_element_states("label:has-text('Unaccepted')")
-        # logger.console(checked)
         if not checked:
             self.browser.click("label:has-text('Unaccepted')")
             sleep(3)
         self.browser.wait_for_elements_state("label:has-text('Accepted')", ElementState.visible, '15s')
-        sleep(3)
-        # logger.console(self.browser.get_element_states("label:has-text('Disabled')"))
-        # checked = "checked" in self.browser.get_element_states("label:has-text('Disabled')")
-        # detached = "detached" in self.browser.get_element_states("label:has-text('Disabled')")
-        # logger.console(checked)
-        # logger.console(detached)
-        # if not checked and not detached:
-            # self.browser.click("label:has-text('Disabled')")
 
     def enable_case_swarming(self):
         self.enable_slack_integration()
