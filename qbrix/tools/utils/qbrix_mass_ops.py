@@ -132,18 +132,7 @@ class MassFileOps(BaseTask, ABC):
             self.logger.info("Exiting Q Brix Mass Operations Utility")
             exit()
         elif option == "t":
-            # package_check = ComparePackages(
-            #     org_config=self.org_config,
-            #     project_config=self.project_config,
-            #     task_config=TaskConfig({"class_path": "qbrix.tools.salesforce.qbrix_salesforce_tasks.ComparePackages"})
-            # )
-            # package_check._run_task()
-            check_and_update_setting(
-                "force-app/main/default/settings/Chatter.settings-meta.xml",
-                "ChatterSettings",
-                "enableChatter",
-                "true"
-            )
+            print("test execution")
         else:
             self.logger.info("Invalid Menu Option Entered. Please choose a valid option from the list above.")
             self._run_task()
