@@ -343,3 +343,28 @@ Enable Care Plans Grantmaking
 
 Enable Assessments
     Enable Assessments
+
+
+# -----------------------------------------------------------------------------------------------------------------------------------------
+# OmniStudio Settings
+# -----------------------------------------------------------------------------------------------------------------------------------------
+OmniStudio Settings Activation
+    Activate Omnistudio Metadata
+    
+Standard OmniStudio Runtime Activation
+    Activate Standard OmniStudio Runtime
+
+Standard OmniStudio Runtime Deactivation
+    Deactivate Standard OmniStudio Runtime
+
+DataRaptor Versioning Activation
+    Activate DataRaptor Versioning
+
+DataRaptor Versioning Deactivation
+    Deactivate DataRaptor Versioning
+
+# -----------------------------------------------------------------------------------------------------------------------------------------
+# Documnet Generation Settings
+# -----------------------------------------------------------------------------------------------------------------------------------------
+DocGen Setup
+    Docgen Client Side Setup
