@@ -65,8 +65,12 @@ class QbrixDPAKeywords(BaseLibrary):
         js_var = self.build_toggle_on_js(0)
         self.browser.evaluate_javascript(":nth-match(runtime_omnistudio-pref-toggle,1)",js_var)
         sleep(15)
-        self.shared.click_button_with_text("OK")
-        sleep(10)
+        try:
+            self.shared.click_button_with_text("OK")
+            sleep(10)
+        except:
+            print('fail silently')
+            
         self.go_to_lightning_setup_omnistudio_settings()
         
         
