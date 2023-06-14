@@ -1,4 +1,5 @@
 import json
+import re
 from time import sleep
 from datetime import datetime
 from typing import Optional
@@ -543,3 +544,79 @@ class QbrixSharedKeywords(BaseLibrary):
         if not checked:
             self.browser.click("label:has-text('Disabled')")
             sleep(3)
+
+    def check_package_id_version(self, package_id=None, wait_for_upgrade=True):
+
+        if not package_id:
+            raise Exception("No Package ID Provided")
+
+        # PACKAGE INSTALL URL
+        package_install_url = f"{self.cumulusci.org.instance_url}/packagingSetupUI/ipLanding.app?apvId={package_id}"
+        
+        # Extend Current Browser Timeout
+        self.browser.set_browser_timeout("1000s")
+
+        # Load Package Page and Check for Update
+        self.browser.go_to(package_install_url, timeout="90s")
+        self.browser.wait_for_elements_state(":nth-match(button.slds-button, 1)", ElementState.visible, "240s")
+
+        if self.browser.get_element_count("h1.upgradeHeader:visible") > 0:
+            sleep(2)
+            version_regex = r"\((.*?)\)"
+
+            # Get Current Version
+            current_version_header = self.browser.get_property("h2.upgradeSubHeader:has-text('Installed')", "innerText")
+
+            # Get new version
+            new_version_header = self.browser.get_property("h2.upgradeSubHeader:has-text('New Version')", "innerText")
+            old_match = re.search(version_regex, current_version_header)
+            new_match = re.search(version_regex, new_version_header)
+
+            # Check Versions
+            if old_match and new_match:
+                new_version = new_match.group(1)
+                old_version = old_match.group(1)
+
+                if new_version != old_version:
+
+                    # Complete Upgrade Request
+                    self.browser.click("div.radioTextContainer:has-text('Install for All Users')")
+                    sleep(1)
+                    self.browser.click("div.securityReviewAcknowledgmentContainer >> input")
+                    sleep(3)
+                    self.browser.click("button.installButton")
+                    sleep(3)
+
+                    # Check for API Permissions
+                    if self.browser.get_element_count("div.grantAccessCheckbox >> input:visible") > 0:
+                        self.browser.click("div.grantAccessCheckbox >> input")
+                        sleep(1)
+
+                    # Check for Final Button 
+                    if self.browser.get_element_count("div.packagingSetupUIRssDialogFooter >> button.slds-button:has-text('Continue')") > 0:
+                        self.browser.click("div.packagingSetupUIRssDialogFooter >> button.slds-button:has-text('Continue')")
+                        sleep(1)
+
+                    # Wait for Update
+                    if wait_for_upgrade:
+                        
+                        # TODO
+                        # This needs to lookup the name of the app based on the package id
+                        # and then wait for the app to be installed
+
+                        # Lookup Name for the package Id
+                        # app_name = TODO
+
+                        # Wait for the app to be installed
+                        # while True:
+                        #     self.shared.go_to_setup_admin_page("ImportedPackage/home")
+                        #     sleep(2)
+                        #     current_version = self.browser.get_property(f"iframe >>> tr.dataRow:has-text('{app_name}') >> :nth-match(td.dataCell, 2)", "innerText")
+
+                        #     if not current_version:
+                        #         break
+
+                        #     if current_version == new_version:
+                        #         break
+                        #     else:
+                        #         sleep(10)

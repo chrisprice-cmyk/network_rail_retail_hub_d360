@@ -81,7 +81,7 @@ class QbrixCMS(BaseLibrary):
                 sleep(1)
                 self.browser.click("button.slds-button:has-text('Import')")
                 sleep(5)
-                self.browser.click("button.slds-button:has-text('ok')")
+                self.browser.click("button.slds-button:text('ok')")
                 sleep(2)
 
         else:
