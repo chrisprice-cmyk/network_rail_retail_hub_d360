@@ -599,6 +599,7 @@ class QbrixSharedKeywords(BaseLibrary):
 
                     # Wait for Update
                     if wait_for_upgrade:
+                        pass
                         
                         # TODO
                         # This needs to lookup the name of the app based on the package id
