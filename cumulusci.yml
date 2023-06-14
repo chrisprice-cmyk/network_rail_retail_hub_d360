@@ -231,6 +231,9 @@ tasks:
   qbrix_task_Testim:
     class_path: qbrix.tools.testing.qbrix_testim.RunTestim
 
+  qbrix_upload_files:
+    class_path: qbrix.salesforce.qbrix_salesforce_tasks.UploadFiles
+    
   #------------------------------------#
   # CUSTOM TASKS                       #
   #------------------------------------#

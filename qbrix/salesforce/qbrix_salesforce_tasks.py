@@ -891,6 +891,10 @@ class UploadFiles(BaseSalesforceApiTask, ABC):
             "description": "Name of library if uploading to a library",
             "required": False
         },
+         "exclude_extension": {
+            "description": "Exclued the file extension from the title",
+            "required": False
+        }
     }
 
     def _init_options(self, kwargs):
@@ -899,6 +903,11 @@ class UploadFiles(BaseSalesforceApiTask, ABC):
         self.where = self.options["where"] if "where" in self.options else None
         self.path = self.options["path"] if "path" in self.options else None
         self.library = self.options["library"] if "library" in self.options else None
+        
+        if "exclude_extension" in self.options:
+            self.exclude_extension = bool(self.options["exclude_extension"]) 
+        else:
+            self.exclude_extension = False
 
     def create_document_link(self, content_doc_id, entity_id):
         """
@@ -968,9 +977,17 @@ class UploadFiles(BaseSalesforceApiTask, ABC):
 
                 # Convert the file contents to base64 encoding
                 base64_file_contents = base64.b64encode(file_contents).decode('utf-8')
+                
+                title=filename
+                if(self.exclude_extension):
+                    filebase=os.path.basename(filename)
+                    title=os.path.splitext(filebase)[0]
+                    
+                
+                    
 
                 content_version_data = {
-                    'Title': filename,
+                    'Title': title,
                     'VersionData': base64_file_contents,
                     'PathOnClient': filename
                 }
