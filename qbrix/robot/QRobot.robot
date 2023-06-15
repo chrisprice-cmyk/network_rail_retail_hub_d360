@@ -55,6 +55,9 @@ Library     qbrix/robot/QbrixHLSKeywords.py
 # INDUSTRY - OmniStudio
 Library     qbrix/robot/QbrixDPAKeywords.py
 
+# MULESOFT - Connected app
+Library     qbrix/robot/QbrixMulesoftToolingKeywords.py
+
 
 
 

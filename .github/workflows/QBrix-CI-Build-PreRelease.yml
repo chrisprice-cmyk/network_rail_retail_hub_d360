@@ -221,6 +221,24 @@ jobs:
         id: loadtargetintanceurl
         run: echo "target-instanceurl=${{ steps.extrattargetinstanceurl.outputs.value }}" >> $GITHUB_OUTPUT
 
+      - name: fail details
+        uses: mathiasvr/command-output@v1
+        if: ${{ failure() && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
+        id: cci_failure_details
+        with:
+          run: |
+            cci error info | base64 -w 0
+
+      - name: fail status
+        if: ${{ failure() && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
+        uses: fjogeleit/http-request-action@v1
+        with:
+          url: "https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixBuildService"
+          method: "POST"
+          customHeaders: '{"Content-Type": "application/json","Authorization": "Bearer ${{ steps.qlabs_accesstoken.outputs.value }}"}'
+          data: '{"qbrixname": "${{ github.repository }}-${{ env.BUILD_SUFFIX }}", "buildstatus": "Failed", "details": "${{ steps.cci_failure_details.outputs.stdout }}" }'
+          timeout: 30000
+
   qbrix_deployments:
     needs: [collection_deployment_steps, target_org_env_build]
     runs-on: ubuntu-latest
