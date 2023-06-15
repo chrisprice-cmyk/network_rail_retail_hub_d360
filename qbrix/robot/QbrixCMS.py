@@ -77,6 +77,13 @@ class QbrixCMS(BaseLibrary):
                 upload_promise = self.browser.promise_to_upload_file(file_path)
                 self.browser.click(import_button_selector)
                 sleep(2)
+
+                if self.browser.get_element_count("div.modal-body >> div.slds-p-around_medium:has-text('Error encountered during import')") > 0:
+                    print("Import Failed. Skipping to the next import if any.")
+                    return
+                else:
+                    print("Import Successful")
+                    
                 self.browser.click("div.modal-body >> span.slds-checkbox >> span.slds-checkbox_faux")
                 sleep(1)
                 self.browser.click("button.slds-button:has-text('Import')")
