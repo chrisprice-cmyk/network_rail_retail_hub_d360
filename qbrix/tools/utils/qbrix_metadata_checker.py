@@ -179,19 +179,20 @@ class MetadataChecker(BaseTask, ABC):
         if not "key" in self.metadata_type_detail:
             self.metadata_type_detail["key"] = metadata_type[0:-1] if metadata_type.lower().endswith("s") else metadata_type
 
-        # the "meta_ext" is the extension name of the metadata file, we use it to check if the file is indeed a valid metadata file. by default, it will be .{key}-meta.xml
-        if not "meta_ext" in self.metadata_type_detail:
-            self.metadata_type_detail["meta_ext"] = f".{self.options['metadata_type'][0:-1]}-meta.xml" if "in_obj" in self.metadata_type_detail else f".{self.metadata_type_detail['key']}-meta.xml"
-
-        # define in which folder we will be searching for the metadata, usually will just be the metadata type
-        if not "folder" in self.metadata_type_detail:
-            self.metadata_type_detail["folder"] = metadata_type
         
         # for these special metadata types, they will sit within object folder, so we mark them by giving a "in_obj" key, and gave them special folder info
-        if metadata_type.lower() in ["businessprocesses","compactlayouts","fields","listviews","recordtypes","weblinks"]:
+        if metadata_type.lower() in ["businessprocesses","compactlayouts","fields","fieldsets","listviews","recordtypes","weblinks"]:
             self.metadata_type_detail["in_obj"] = True
             if not "folder" in self.metadata_type_detail:
                 self.metadata_type_detail["folder"] = f"objects/__object_api__/{self.options['metadata_type']}"
+        # for other none special types, define in which folder we will be searching for the metadata, usually will just be the metadata type
+        else: 
+            if not "folder" in self.metadata_type_detail:
+                self.metadata_type_detail["folder"] = metadata_type
+        
+        # the "meta_ext" is the extension name of the metadata file, we use it to check if the file is indeed a valid metadata file. by default, it will be .{key}-meta.xml
+        if not "meta_ext" in self.metadata_type_detail:
+            self.metadata_type_detail["meta_ext"] = f".{self.options['metadata_type'][0:-1]}-meta.xml" if "in_obj" in self.metadata_type_detail else f".{self.metadata_type_detail['key']}-meta.xml"
 
 
     def _refresh_base(self):
@@ -303,6 +304,10 @@ class MetadataChecker(BaseTask, ABC):
     def scan_metadata(self):
         for one_folder in ["force-app/main/default/","unpackaged/pre","unpackaged/post"]:
             one_folder_path = os.path.join("./",one_folder)
+
+            if not os.path.exists(one_folder_path):
+                continue
+            
             for one_metadata_type in os.listdir(one_folder_path):
                 # log.debug(f"check {one_metadata_type} in {one_folder}")
                 one_metadata_type_path = os.path.join(one_folder_path, one_metadata_type)
@@ -362,7 +367,6 @@ class MetadataChecker(BaseTask, ABC):
             meta_path = os.path.join(base_path, one_folder)
             meta_path = os.path.join(meta_path, self.metadata_type_detail["folder"].replace("__object_api__",object_api))
 
-            
             if not os.path.exists(meta_path):
                 continue
             
@@ -383,7 +387,8 @@ class MetadataChecker(BaseTask, ABC):
                 file_meta_plain = file_meta
 
                 if object_api:
-                    file_meta_plain = file_meta.replace(object_api.lower(),"")[1:]
+                    file_meta_plain = file_meta.replace(object_api.lower(),"")
+                    file_meta_plain = file_meta_plain[1:] if file_meta_plain.startswith('.') else file_meta_plain
                     if not "in_obj" in self.metadata_type_detail:
                         if not file_meta.startswith(object_api.lower()):
                             continue

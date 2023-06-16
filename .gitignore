@@ -60,6 +60,7 @@ qbrix/salesforce/__pycache__
 qbrix/tools/utils/__pycache__
 qbrix/tools/shared/__pycache__
 qbrix/tools/data/__pycache__
+qbrix/tools/health/__pycache__
 qbrix/tools/testing/__pycache__
 qbrix/tools/shared/__pycache__/*
 
