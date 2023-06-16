@@ -12,7 +12,6 @@ from qbrix.salesforce.qbrix_salesforce_tasks import QbrixInstallCheck
 from qbrix.tools.shared.qbrix_cci_tasks import run_cci_task, run_cci_flow
 from qbrix.tools.shared.qbrix_project_tasks import run_command
 from qbrix.tools.utils.qbrix_orgconfig_hydrate import NGOrgConfig
-from cumulusci.robotframework.CumulusCI import CumulusCI
 
 log = init_logger()
 
@@ -72,12 +71,17 @@ class RunPreflight(BaseTask, ABC):
 
     def deploy_settings(self):
 
-        # Deploy Settings if Present
         if not self.skip_settings_deployment:
-            cci = CumulusCI(org_name=self.org_config.name) 
-            cci.run_task(task_name="deploy", path="force-app/main/default/settings")
+
+            # Get Settings Path
+            settings_path = os.path.join(os.getcwd(), 'force-app', 'main', 'default', 'settings')
+
+            if os.path.exists(settings_path):
+                run_cci_task("deploy", self.org_config.name, path=settings_path)
+            else:
+                self.logger.info(f' -> Settings not found at {settings_path}, skipping settings deployment.')            
         else:
-            self.logger.info("PREFLIGHT: Skipping Settings Deployment.")
+            self.logger.info(" -> Option to Skip Enabled - Skipping Settings Deployment.")
 
     def deploy_qbrix_register(self):
         if not QbrixInstallCheck("QBrix-1-xDO-Tool-QBrixRegister", self.org_config):
@@ -131,16 +135,17 @@ class RunPreflight(BaseTask, ABC):
         self.deploy_qbrix_register()
 
     def _run_task(self):
-        self.logger.info("PREFLIGHT: Starting Q Brix Preflight Check")
+        self.logger.info("\nPREFLIGHT: Starting Q Brix Preflight Check")
 
         if not self.skip_hydrate:
-            self.logger.info("PREFLIGHT: Running Org Config Hydrate")
+            self.logger.info(" -> Running Org Config Hydrate")
             hydrate = NGOrgConfig(
                 org_config=self.org_config,
                 project_config=self.project_config,
                 task_config=TaskConfig({"class_path": "qbrix.tools.utils.qbrix_orgconfig_hydrate.NGOrgConfig"})
             )
             hydrate._run_task()
+            self.logger.info(" -> Org Config Hydrated!")
 
         self.logger.info("PREFLIGHT: Running Shared Tasks, which apply to all Orgs")
         self.shared_tasks()
