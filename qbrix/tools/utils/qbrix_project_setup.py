@@ -41,7 +41,7 @@ class InitProject(BaseTask, ABC):
         if "TestMode" in self.options:
             self.TestMode = self.options["TestMode"]
             if self.TestMode:
-                log.info("Test Mode Enabled. No Files will be updated.")
+                self.logger.info("Test Mode Enabled. No Files will be updated.")
 
     def update_create_qbrix_register(self, file_location):
 
@@ -93,25 +93,25 @@ class InitProject(BaseTask, ABC):
 
     def _run_task(self):
 
-        log.info("Starting Q Brix Project Setup")
+        self.logger.info("\nRunning Q Brix Setup Tasks")
 
-        log.info("Checking for library updates...")
-        download_and_unzip()
+        self.logger.info("\nChecking for Q Brix Extension updates...")
+        download_and_unzip(q_update=True)
 
-        log.info("Confirming Q Brix Repo Address...")
+        self.logger.info("\nConfirming Q Brix Repo Address...")
         repo_url = get_qbrix_repo_url()
         if repo_url != "":
             qbrix_name = repo_url.rsplit('/', 1)[-1]
             if qbrix_name is not None and qbrix_name != "":
                 self.repo_url = repo_url
                 self.project_name = qbrix_name
-                log.info(f"Found Q Brix Name: {qbrix_name} located on GitHub at {repo_url}")
+                self.logger.info(f" -> Found Q Brix Name: {qbrix_name} located on GitHub at {repo_url}")
         else:
-            log.error("Please confirm you are running this within a Q Brix Project as no GitHub Repo URL was found to be linked to the project.")
-            return
+            raise Exception("Unable to determine linked Github Repo. Ensure you are running this command within a CumulusCI project and that you have completed the prerequisites to install and configure Git and GitHub Desktop.")
 
         # YAML File Update
 
+        self.logger.info("\nConfirming Template Names have been replaced")
         if self.project_config.project__name == "xDO-Template" or self.project_config.project__name != qbrix_name:
             replace_file_text("cumulusci.yml", "xDO-Template", f"{qbrix_name}")
             replace_file_text("cumulusci.yml", f"name: {self.project_name}", f"name: {qbrix_name}")
@@ -120,7 +120,7 @@ class InitProject(BaseTask, ABC):
 
         # Registration File Update
 
-        log.info("Q Brix Details Check")
+        self.logger.info("\nQ Brix Details Check")
 
         if "OWNER NAME HERE" in self.qbrix_owner:
             self.qbrix_owner = input("\n\nEnter the owner name for this Q Brix (i.e. Who is the contact for issues?): ") or "OWNER NAME HERE"
@@ -158,14 +158,14 @@ class InitProject(BaseTask, ABC):
             if self.qbrix_description != "" and self.qbrix_description != "SHORT DESCRIPTION OF QBRIX HERE":
                 replace_file_text("README.md", "Write a few words describing your Q Brix.", self.qbrix_description)
 
-        log.info("Q Brix Details Updated")
+        self.logger.info("Q Brix Details Updated")
 
         file_name = self.project_name.replace("-", "_")
         final_file_name = f"force-app/main/default/customMetadata/xDO_Base_QBrix_Register.{file_name}.md-meta.xml"
 
         if exists(final_file_name):
             self.update_create_qbrix_register(final_file_name)
-            log.info("Q Brix Registration: Updated Q Brix Register File")
+            self.logger.info("Q Brix Registration: Updated Q Brix Register File")
         else:
 
             # Create Folder and File if they are missing
@@ -180,14 +180,14 @@ class InitProject(BaseTask, ABC):
                         recursive=True)
                     for file_to_delete in register_files:
                         os.remove(file_to_delete)
-                        log.info(f"Q Brix Registration: Removed old or incorrect file {file_to_delete}")
+                        self.logger.info(f"Q Brix Registration: Removed old or incorrect file {file_to_delete}")
 
                 if exists(self.template_file_location):
                     os.rename(self.template_file_location, final_file_name)
-                    log.info("Q Brix Registration: Renamed Q Brix Register File")
+                    self.logger.info("Q Brix Registration: Renamed Q Brix Register File")
 
                 self.update_create_qbrix_register(final_file_name)
-                log.info("Q Brix Registration: Updated Q Brix Register File")
+                self.logger.info("Q Brix Registration: Updated Q Brix Register File")
 
         # UPDATE SCRATCH ORG TEMPLATE FILES
 
@@ -196,7 +196,7 @@ class InitProject(BaseTask, ABC):
         if exists("orgs/dev_preview.json"):
             update_json_file_value("orgs/dev_preview.json", "orgName", f"{self.project_name} - Dev Preview org")
 
-        log.info("Q Brix Setup: Scratch Org Files Updated")
+        self.logger.info("Q Brix Setup: Scratch Org Files Updated")
 
-        log.info(
+        self.logger.info(
             "[Q Brix Setup Complete!]\n\n***Remember to update the Readme.md file and check in your changes.***")

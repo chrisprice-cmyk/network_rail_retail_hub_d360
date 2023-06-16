@@ -464,22 +464,20 @@ def download_and_unzip(url: Optional[str] = DEFAULT_UPDATE_LOCATION, archive_pas
 
         # When Q Brix Update, Ensure all paths are created and clear old download
         if q_update:
-            if not exists(".qbrix"):
-                os.mkdir(".qbrix")
 
-            if not exists(".qbrix/Update"):
-                os.mkdir(".qbrix/Update")
+            extract_path = os.path.join(".qbrix", "Update")
 
-            extract_path = ".qbrix/Update/"
+            if not exists(extract_path):
+                os.makedirs(name=extract_path, exist_ok=True)
 
-            if exists(".qbrix/Update/xDO-Template-main"):
-                shutil.rmtree(".qbrix/Update/xDO-Template-main")
+            if exists(os.path.join(".qbrix", "Update", "xDO-Template-main")):
+                shutil.rmtree(os.path.join(".qbrix", "Update", "xDO-Template-main"))
 
         # Ensure Extract Paths
         dir_check_list = [x for x in zipfile.namelist() if x.endswith('/')]
         for d in dir_check_list:
-            if not exists(extract_path + d):
-                os.mkdir(extract_path + d)
+            if not exists(os.path.join(extract_path, d)):
+                os.makedirs(name=os.path.join(extract_path, d), exist_ok=True)
 
         # Extract Files
         zipfile.extractall(path=extract_path)
