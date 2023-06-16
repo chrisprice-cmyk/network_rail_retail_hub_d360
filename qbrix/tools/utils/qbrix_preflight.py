@@ -12,6 +12,7 @@ from qbrix.salesforce.qbrix_salesforce_tasks import QbrixInstallCheck
 from qbrix.tools.shared.qbrix_cci_tasks import run_cci_task, run_cci_flow
 from qbrix.tools.shared.qbrix_project_tasks import run_command
 from qbrix.tools.utils.qbrix_orgconfig_hydrate import NGOrgConfig
+from cumulusci.robotframework.CumulusCI import CumulusCI
 
 log = init_logger()
 
@@ -70,20 +71,11 @@ class RunPreflight(BaseTask, ABC):
             print('Error on Preflight')
 
     def deploy_settings(self):
-        
-        settings_path = "force-app/main/default/settings"
-
-        cwd = os.getcwd()
-        pwd = os.getenv("PWD")
-
-        if pwd != cwd:
-            settings_path = os.path.join(cwd, settings_path)
-            self.logger.info(f"Updating settings path to {settings_path}")
 
         # Deploy Settings if Present
-        if os.path.exists(settings_path) and not self.skip_settings_deployment:
-            self.logger.info("PREFLIGHT: Deploying Settings Directory from force-app/main/default/settings")
-            run_command(f"cci task run deploy --path force-app/main/default/settings --org {self.org_config.name}", os.getcwd())
+        if not self.skip_settings_deployment:
+            cci = CumulusCI(org_name=self.org_config.name) 
+            cci.run_task(task_name="deploy", path="force-app/main/default/settings")
         else:
             self.logger.info("PREFLIGHT: Skipping Settings Deployment.")
 
