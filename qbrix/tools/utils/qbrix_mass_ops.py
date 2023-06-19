@@ -132,6 +132,8 @@ class MassFileOps(BaseTask, ABC):
                 else:
                     upsert_mode = False
 
+                perm_set_name = perm_set_name.replace(" ", "_")
+
                 self.logger.info(f" -> Generating Permission Set File in {perm_set_location} with file name {perm_set_name}.permissionset-meta.xml")
                 create_permission_set_file(perm_set_name.replace(" ", "_"), perm_set_name, perm_set_location, upsert_mode)
                 self.logger.info(" -> Permission Set Generated!")

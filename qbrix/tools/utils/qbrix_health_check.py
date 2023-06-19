@@ -101,12 +101,13 @@ class HealthChecker(BaseTask, ABC):
             if project_name:
                 self.logger.info("\nHealth Check: Checking and generating Permission Set for the Q Brix")
                 permission_set_file_name = project_name.replace(" ", "_")
-                permission_set_check = input(f"Please confirm that you understand that this will overwrite any existing file located at force-app/main/default/permissionsets/{permission_set_file_name}.permissionset-meta.xml: (y/n)")
-                if permission_set_check and permission_set_check.lower() == 'y':
-                    create_permission_set_file(permission_set_file_name, f"{project_name} Permission Set")
+                permission_set_check = input(f"Do you want to overwrite any existing file located at force-app/main/default/permissionsets/{permission_set_file_name}.permissionset-meta.xml: (y/N) ") or "n"
+                if permission_set_check and (permission_set_check.lower() == 'y' or permission_set_check.lower() == 'n'):
+                    upsert_mode = True if permission_set_check.lower() == 'y' else False
+                    create_permission_set_file(name=permission_set_file_name, label=f"{project_name} Permission Set", permission_set_path=None, run_as_upsert=upsert_mode)
                     self.logger.info(" -> Check Complete!")
                 else:
-                    self.logger.info("Confirmation was not received, skipping Permission Set check and rebuild.")
+                    self.logger.info("There was an unexpected response, expecting y or n, skipping Permission Set check and rebuild.")
 
         self.logger.info("\nHealth Check: Checking .gitignore file")
         test_list = []
