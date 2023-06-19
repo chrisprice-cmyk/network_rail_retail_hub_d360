@@ -1285,7 +1285,16 @@ def create_permission_set_file(name, label, permission_set_path=None, run_as_ups
             root.append(existing_permission)
 
     # Handle New or Additional Access
-    # TODO
+    pages_path = "force-app/main/default/pages"
+    if os.path.exists(pages_path):
+        for page_file in os.listdir(pages_path):
+            if page_file.endswith(".page-meta.xml"):
+                page_file = page_file[:-14]
+                page_permissions_element = find_existing_entry(existing_entries["apexPageAccess"], "apexPage", page_file)
+                if page_permissions_element is None:
+                    page_permissions_element = ET.SubElement(root, "apexPageAccess")
+                    ET.SubElement(page_permissions_element, "apexPage").text = page_file
+                    ET.SubElement(page_permissions_element, "enabled").text = "true"
 
     # USER PERMISSIONS
 
