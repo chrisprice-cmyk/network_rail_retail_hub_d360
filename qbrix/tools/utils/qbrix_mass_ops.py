@@ -113,10 +113,28 @@ class MassFileOps(BaseTask, ABC):
             if os.path.exists('upgrade_src'):
                 shutil.rmtree('upgrade_src')
         elif option.lower() == "6":
-            perm_set_name = input("What name would you like to give to the permission set? ")
+
+            self.logger.info("\n\nRunning Permission Set Generator")
+
+            perm_set_name = input("\nWhat name would you like to give to the permission set? ")
+
+            perm_set_location = input("\nWhere shall the Permission Set File be stored? (If no path is provided the default will be used) ")
+
+            perm_set_upsert = input("\nIf there is an existing file with the same name, do you want to upsert entries? Y/n (Default = y) ") or "y"
+
             if perm_set_name:
-                create_permission_set_file(perm_set_name.replace(" ", "_"), perm_set_name)
-                self.logger.info("Permission Set Generated!")
+
+                if not perm_set_location:
+                    perm_set_location = os.path.join("force-app", "main", "default", "permissionsets")
+
+                if perm_set_upsert.lower() == "y":
+                    upsert_mode = True
+                else:
+                    upsert_mode = False
+
+                self.logger.info(f" -> Generating Permission Set File in {perm_set_location} with file name {perm_set_name}.permissionset-meta.xml")
+                create_permission_set_file(perm_set_name.replace(" ", "_"), perm_set_name, perm_set_location, upsert_mode)
+                self.logger.info(" -> Permission Set Generated!")
         elif option.lower() == "7":
             print("LOADING STACK VIEWER")
             output_method = input("\n Would you like to output to terminal or to a text file? (terminal/file) : ") or "terminal"
