@@ -184,7 +184,7 @@ class MetadataChecker(BaseTask, ABC):
         if metadata_type.lower() in ["businessprocesses","compactlayouts","fields","fieldsets","listviews","recordtypes","weblinks"]:
             self.metadata_type_detail["in_obj"] = True
             if not "folder" in self.metadata_type_detail:
-                self.metadata_type_detail["folder"] = f"objects/__object_api__/{self.options['metadata_type']}"
+                self.metadata_type_detail["folder"] = f"objects/__object_api__/{metadata_type}"
         # for other none special types, define in which folder we will be searching for the metadata, usually will just be the metadata type
         else: 
             if not "folder" in self.metadata_type_detail:
@@ -192,7 +192,7 @@ class MetadataChecker(BaseTask, ABC):
         
         # the "meta_ext" is the extension name of the metadata file, we use it to check if the file is indeed a valid metadata file. by default, it will be .{key}-meta.xml
         if not "meta_ext" in self.metadata_type_detail:
-            self.metadata_type_detail["meta_ext"] = f".{self.options['metadata_type'][0:-1]}-meta.xml" if "in_obj" in self.metadata_type_detail else f".{self.metadata_type_detail['key']}-meta.xml"
+            self.metadata_type_detail["meta_ext"] = f".{metadata_type[0:-1]}-meta.xml" if "in_obj" in self.metadata_type_detail else f".{self.metadata_type_detail['key']}-meta.xml"
 
 
     def _refresh_base(self):
