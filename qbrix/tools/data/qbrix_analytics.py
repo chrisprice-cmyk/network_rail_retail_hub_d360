@@ -1157,7 +1157,7 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
                 org_dataset_dict.update({dataset["name"]: {"id": dataset["id"], "version": dataset_version}})
 
             if response["nextPageUrl"]:
-                org_dataset_dict = self.get_datasets_from_org(response['nextPageUrl'].replace('/services/data/v58.0/', ''), org_dataset_dict)
+                org_dataset_dict = self.get_datasets_from_org(response['nextPageUrl'].replace('/services/data/v{self.project_config.project__package__api_version}/', ''), org_dataset_dict)
 
         return org_dataset_dict      
 
