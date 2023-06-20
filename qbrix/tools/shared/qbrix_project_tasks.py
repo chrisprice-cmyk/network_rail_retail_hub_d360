@@ -1071,6 +1071,9 @@ def create_permission_set_file(name, label, permission_set_path=None, run_as_ups
     if os.path.exists(objects_path):
         for object_name in os.listdir(objects_path):
 
+            if object_name == '.DS_Store':
+                continue
+
             # Add Object Dir to Set
             objects_set.add(object_name)
         
