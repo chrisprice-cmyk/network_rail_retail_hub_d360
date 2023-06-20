@@ -1143,21 +1143,26 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
             "Accept": "application/json"
         }
 
-        response = self.sf.restful(endpoint, method="GET")
+        response = self.sf.restful(endpoint, method="GET", headers=headers)
 
         if response and response.get("datasets"):
             for dataset_dict in list(response["datasets"]):
                 
                 dataset = dict(dataset_dict)
                 dataset_version = dataset.get("currentVersionId")
+                dataset_name = dataset.get("name")
+                dataset_id = dataset.get("id")
 
                 if not dataset_version:
                     dataset_version = ''
 
+                if not dataset_name or not dataset_id:
+                    continue
+                
                 org_dataset_dict.update({dataset["name"]: {"id": dataset["id"], "version": dataset_version}})
 
             if response["nextPageUrl"]:
-                org_dataset_dict = self.get_datasets_from_org(response['nextPageUrl'].replace('/services/data/v{self.project_config.project__package__api_version}/', ''), org_dataset_dict)
+                org_dataset_dict = self.get_datasets_from_org(response['nextPageUrl'].replace(f'/services/data/v{self.project_config.project__package__api_version}/', ''), org_dataset_dict)
 
         return org_dataset_dict      
 
