@@ -1116,6 +1116,17 @@ def create_permission_set_file(name, label, permission_set_path=None, run_as_ups
                 fields_folder_path = os.path.join(object_folder_path, "fields")
                 if os.path.isdir(fields_folder_path):
                     for field_file in os.listdir(fields_folder_path):
+
+                        # Read File and skip MasterDetail and Formula Fields
+                        with open(os.path.join(fields_folder_path, field_file), "r") as file:
+                            contents = file.read()
+                            formula_reference_to_start = contents.find("<formula>")
+                            md_reference_to_start = contents.find("<type>MasterDetail</type>")
+                            req_reference_to_start = contents.find("<required>true</required>")
+
+                        if formula_reference_to_start > -1 or md_reference_to_start > -1 or req_reference_to_start > -1:
+                            continue
+
                         field_name = field_file[:-15]
                         field_key = f"{object_folder}.{field_name}"
                         field_permissions_element = find_existing_entry(existing_entries["fieldPermissions"], "field", field_key)
