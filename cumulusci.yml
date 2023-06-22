@@ -213,6 +213,9 @@ tasks:
   qbrix_sfdx:
     class_path: cumulusci.tasks.sfdx.SFDXOrgTask
 
+  qbrix_upload_files:
+    class_path: qbrix.salesforce.qbrix_salesforce_tasks.UploadFiles
+
   #------------------------------------#
   # DATA TOOL INTEGRATION              #
   #------------------------------------#
@@ -230,9 +233,6 @@ tasks:
 
   qbrix_task_Testim:
     class_path: qbrix.tools.testing.qbrix_testim.RunTestim
-
-  qbrix_upload_files:
-    class_path: qbrix.salesforce.qbrix_salesforce_tasks.UploadFiles
     
   #------------------------------------#
   # CUSTOM TASKS                       #
@@ -365,7 +365,7 @@ flows:
   deploy_qbrix_min:
     steps:
       1:
-        flow: deploy_qbrix
+        flow: deploy_qbrix_without_dependencies
 
   # Legacy flow to redirect to the new flow for deploying data.
   generate_qbrix_data:
