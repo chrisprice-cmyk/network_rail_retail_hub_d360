@@ -1144,3 +1144,69 @@ class QRetrieveChanges(RetrieveChanges):
             run_experience_cloud_checks()
 
         self.logger.info("Checks complete!")
+
+class publish_communities(BaseSalesforceApiTask, ABC):
+
+    task_docs = """
+    Publishes a given community (Experience Cloud Site) or if no names are given, publishes all live communities
+    """
+
+    task_options = {
+        "org": {
+            "description": "Org Alias for the target org",
+            "required": False
+        },
+        "community_names": {
+            "description": "List of Community Names to publish",
+            "required": False
+        }
+    }
+
+    def _init_options(self, kwargs):
+        super(publish_communities, self)._init_options(kwargs)
+        self.community_names = self.options["community_names"] if "community_names" in self.options else None
+        self.live_community_list = []
+
+    def _get_live_community_list(self):
+
+        api = self.sf
+        community_response = api.restful(
+            f"connect/communities/",
+            method="GET"
+        )
+
+        if community_response:
+            total_communities = community_response.get('total')
+            if total_communities and total_communities > 0:
+                community_response_records = community_response.get("communities")
+                for community in community_response_records:
+                    if community.get("status") == 'Live':
+                        if community.get("name"):
+                            self.live_community_list.append(community.get("name"))
+
+    def _publish_community(self, community_name):
+        if community_name:
+            try:
+                run_cci_task(task_name="publish_community", org_name=self.org_config.name, name=community_name)
+            except Exception as e:
+                self.logger.info(f" -> Failed to publish community with name: {community_name}")
+                self.logger.info(e)
+
+    def _run_task(self):
+
+        self.logger.info("\nStarting Community Publisher")
+        if not self.community_names:
+            self.logger.info(" -> Getting Live Community List...")
+            self._get_live_community_list()
+        else:
+            self.logger.info(" -> Reading Communities...")
+            self.live_community_list = self.community_names
+
+        if len(self.live_community_list) > 0:
+            for community in self.live_community_list:
+                self.logger.info(f" -> Publishing {community}...")
+                self._publish_community(community)
+        else:
+            self.logger.info(" -> No Communities Found to Publish")
+
+        self.logger.info("Publishing Complete!")
