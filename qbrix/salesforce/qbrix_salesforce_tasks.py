@@ -3,6 +3,7 @@ import json
 import os
 import pathlib
 import subprocess
+from time import sleep
 import yaml
 from abc import ABC
 from datetime import datetime, timedelta
@@ -1206,6 +1207,9 @@ class publish_communities(BaseSalesforceApiTask, ABC):
             for community in self.live_community_list:
                 self.logger.info(f" -> Publishing {community}...")
                 self._publish_community(community)
+
+                if len(self.live_community_list) > 1:
+                    sleep(60)
         else:
             self.logger.info(" -> No Communities Found to Publish")
 
