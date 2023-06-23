@@ -3,6 +3,7 @@ import json
 import os
 import pathlib
 import subprocess
+import requests
 from time import sleep
 import yaml
 from abc import ABC
@@ -1146,7 +1147,7 @@ class QRetrieveChanges(RetrieveChanges):
 
         self.logger.info("Checks complete!")
 
-class publish_communities(BaseSalesforceApiTask, ABC):
+class CommunityPublisher(BaseSalesforceApiTask, ABC):
 
     task_docs = """
     Publishes a given community (Experience Cloud Site) or if no names are given, publishes all live communities
@@ -1164,7 +1165,7 @@ class publish_communities(BaseSalesforceApiTask, ABC):
     }
 
     def _init_options(self, kwargs):
-        super(publish_communities, self)._init_options(kwargs)
+        super(CommunityPublisher, self)._init_options(kwargs)
         self.community_names = self.options["community_names"] if "community_names" in self.options else None
         self.live_community_list = []
 
@@ -1214,3 +1215,72 @@ class publish_communities(BaseSalesforceApiTask, ABC):
             self.logger.info(" -> No Communities Found to Publish")
 
         self.logger.info("Publishing Complete!")
+
+class RunPerfectDateWizard(BaseSalesforceApiTask, ABC):
+
+    task_docs = """
+    Requests Perfect Date Wizard is run against the target org
+    """
+
+    task_options = {
+        "org": {
+            "description": "Org Alias for the target org",
+            "required": False
+        }
+    }
+
+    def _init_options(self, kwargs):
+        super(RunPerfectDateWizard, self)._init_options(kwargs)
+        self.perfect_date_wizard_endpoint = "https://q-pdw-api.herokuapp.com/api/v1/trigger"
+
+    def _run_task(self):
+
+        self.logger.info("\nRun Perfect Date Wizard")
+
+        self.logger.info(" -> Getting required information...")
+
+        query_user_response = self.sf.query(f"SELECT FirstName, LastName, Email from User where Username = '{self.org_config.username}' LIMIT 1")
+        if query_user_response.get("totalSize") > 0:
+            pdw_email = str(query_user_response.get("records")[0].get("Email")) or ""
+            pdw_firstname = str(query_user_response.get("records")[0].get("FirstName")) or ""
+            pdw_lastname = str(query_user_response.get("records")[0].get("LastName")) or ""
+
+        qlabs_query_response = self.sf.query("SELECT Identifier__c, Org_Type__c FROM QLabs__mdt LIMIT 1")
+        if qlabs_query_response.get("totalSize") > 0:
+            pdw_instance_url = str(self.org_config.instance_url) or ""
+            pdw_org_token = str(self.org_config.access_token) or ""
+            pdw_org_type = str(qlabs_query_response.get("records")[0].get("Identifier__c")) or ""
+
+            # Request payload (data to be sent)
+            payload = {
+                "orgtype": pdw_org_type,
+                "firstname": pdw_firstname,
+                "lastname": pdw_lastname,
+                "email": pdw_email,
+                "instanceurl": pdw_instance_url,
+                "token": pdw_org_token,
+            }
+
+            self.logger.info(" -> Payload Generated...\n")
+            self.logger.info(payload)
+
+            self.logger.info("\nSending Request to Perfect Date Wizard...")
+            # Send the POST request
+            url = self.perfect_date_wizard_endpoint
+            headers = {
+                'Content-Type': 'application/json; charset=utf-8'
+            }
+
+            try:
+                response = requests.post(url, json=payload, headers=headers)
+            except Exception as e:
+                self.logger.info(e)
+
+            # Check the response status code
+            if response.status_code == requests.codes.ok:
+                # Successful request
+                self.logger.info('Request successful!')
+            else:
+                # Request encountered an error
+                self.logger.info('Request error:', response.status_code)
+        
