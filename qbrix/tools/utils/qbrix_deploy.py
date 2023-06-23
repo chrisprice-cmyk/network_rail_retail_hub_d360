@@ -146,10 +146,12 @@ class Deploy(SFDXBaseTask):
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1,
                 universal_newlines=True) as p:
             for line in p.stdout:
-                self.logger.info(line[20:])  # process line here
+                self.logger.info(line)  # process line here
+                #self.logger.info(line[20:])  # process line here
                 
             for line in p.stderr:
-                self.logger.error(line[20:])  # process line here
+                self.logger.error(line)  # process line here
+                #self.logger.error(line[20:])  # process line here
 
         if p.returncode != 0:
             raise subprocess.CalledProcessError(p.returncode, f"Failure running QBrix {self.entrypointtype} {self.entrypoint} ")
