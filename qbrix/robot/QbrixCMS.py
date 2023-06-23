@@ -1,6 +1,7 @@
 import json
 from time import sleep
 import os
+import time
 
 from Browser import ElementState, SelectAttribute
 from cumulusci.robotframework.base_library import BaseLibrary
@@ -74,15 +75,35 @@ class QbrixCMS(BaseLibrary):
 
                 self.browser.click(drop_down_menu_selector)
                 sleep(1)
+
+                # Upload CMS File
                 upload_promise = self.browser.promise_to_upload_file(file_path)
                 self.browser.click(import_button_selector)
-                sleep(2)
+                self.browser.wait_for_all_promises()
 
-                if self.browser.get_element_count("div.modal-body >> div.slds-p-around_medium:has-text('Error encountered during import')") > 0:
-                    print("Import Failed. Skipping to the next import if any.")
-                    return
-                else:
-                    print("Import Successful")
+                start_time = time.time()
+                timeout = 30
+
+                while True:
+
+                    error_message_selector = "div.modal-body >> div.slds-p-around_medium:has-text('Error encountered during import')"
+                    confirm_checkbox_selector = "div.modal-body >> span.slds-checkbox >> span.slds-checkbox_faux"
+                    import_button_selector = "button.slds-button:has-text('Import')"
+
+                    if self.browser.get_element_count(error_message_selector) > 0:
+                        print("Error Occurred During File Upload. CMS Import Failed")
+                        return
+                    
+                    if self.browser.get_element_count(confirm_checkbox_selector) > 0 or self.browser.get_element_count(import_button_selector) > 0:
+                        print("File Imported OK!")
+                        break
+
+                    # Check if the timeout has been reached
+                    elapsed_time = time.time() - start_time
+                    if elapsed_time >= timeout:
+                        break
+
+                    time.sleep(1)
                     
                 self.browser.click("div.modal-body >> span.slds-checkbox >> span.slds-checkbox_faux")
                 sleep(1)
