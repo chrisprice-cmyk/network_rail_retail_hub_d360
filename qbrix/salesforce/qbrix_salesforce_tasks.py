@@ -3,6 +3,7 @@ import json
 import os
 import pathlib
 import subprocess
+import tempfile
 import requests
 from time import sleep
 import yaml
@@ -207,6 +208,14 @@ class CreateUser(BaseSalesforceApiTask,NGOrgConfig, ABC):
         "contact_external_id": {
             "description": "External ID for the contact record to associate to the community user",
             "required": False
+        },
+        "gender": {
+            "description": "When Generating profile images, define a gender male or female are supported.",
+            "required": False
+        },
+        "where": {
+            "description": "Optional Where Clause",
+            "required": False
         }
     }
 
@@ -228,6 +237,7 @@ class CreateUser(BaseSalesforceApiTask,NGOrgConfig, ABC):
         self.manager_external_id = self.options["manager_external_id"] if "manager_external_id" in self.options else False
         self.contact_external_id = self.options["contact_external_id"] if "contact_external_id" in self.options else False
         self.ignore_failures = bool(self.options["ignore_failures"]) if "ignore_failures" in self.options else False
+        self.gender = self.options["gender"] if "gender" in self.options else None
 
     def _get_user_desc(self, tmp_file_location=None):
         """
@@ -426,41 +436,63 @@ class CreateUser(BaseSalesforceApiTask,NGOrgConfig, ABC):
                 log.error("Record Failed to Update. User ID: " + user_id)
                 return
 
-    def _upload_user_profile_image(self, user_id, path_to_image):
+    def _upload_user_profile_image(self, user_id, path_to_image, gender=None, nationality=None):
         """
         Uploads and assigns a user profile image
         """
+        if not os.path.exists(path_to_image) and not str(path_to_image).upper() == "AUTO":
+            log.error(f"Image file path ({path_to_image}) does not exist. Please check file path and try again.")
+
+        api = self.sf
 
         if str(path_to_image).upper() == "AUTO":
-            log.info("This feature is currently being built. Please provide the path to an image instead.")
-            return
+            # Generate a random image using randomuser.me
+            api_endpoint_url = "https://randomuser.me/api/?inc=picture"
+            if gender:
+                api_endpoint_url += f"&gender={gender}"
+            if nationality:
+                api_endpoint_url += f"&nat={nationality}"
 
-        if not os.path.exists(path_to_image):
-            log.error(f"Image file path ({path_to_image}) does not exist. Please check file path and try again.")
-        else:
-            try:
-                api = self.sf
-                path = pathlib.Path(path_to_image)
+            response = requests.get(api_endpoint_url)
+            data = response.json()
+            picture_url = data["results"][0]["picture"]["large"]
+
+            # Download the image and save it locally
+            with tempfile.NamedTemporaryFile(suffix=".jpg") as temp_file:
+                image_response = requests.get(picture_url)
+                temp_file.write(image_response.content)
+                temp_file.seek(0)
+
+                # Upload the image to Salesforce
+                path = pathlib.Path(temp_file.name)
+                image_data = base64.b64encode(path.read_bytes()).decode("utf-8")
+
                 photo_id = api.ContentVersion.create(
                     {
                         "PathOnClient": path.name,
                         "Title": path.stem,
-                        "VersionData": base64.b64encode(path.read_bytes()).decode("utf-8"),
+                        "VersionData": image_data,
                     }
                 )
+        else:
+            # Upload the image from the provided file path
+            path = pathlib.Path(path_to_image)
+            photo_id = api.ContentVersion.create(
+                {
+                    "PathOnClient": path.name,
+                    "Title": path.stem,
+                    "VersionData": base64.b64encode(path.read_bytes()).decode("utf-8"),
+                }
+            )
 
-                content_version_id = photo_id["id"]
-                content_document_id = api.query(f"SELECT Id, ContentDocumentId FROM ContentVersion WHERE Id = '{content_version_id}'")["records"][0]["ContentDocumentId"]
+        content_version_id = photo_id["id"]
+        content_document_id = api.query(f"SELECT Id, ContentDocumentId FROM ContentVersion WHERE Id = '{content_version_id}'")["records"][0]["ContentDocumentId"]
 
-                api.restful(
-                    f"connect/user-profiles/{user_id}/photo",
-                    data=json.dumps({"fileId": content_document_id}),
-                    method="POST",
-                )
-            except Exception as e:
-                log.error(f"Upload Failed. Error details: {e}")
-
-            log.info("Image Uploaded and assigned!")
+        api.restful(
+            f"connect/user-profiles/{user_id}/photo",
+            data=json.dumps({"fileId": content_document_id}),
+            method="POST",
+        )
 
     def _assign_permission(self, mode, user_id, api_names,ignore_failures=False):
         """
@@ -605,7 +637,15 @@ class CreateUser(BaseSalesforceApiTask,NGOrgConfig, ABC):
             # Handle Profile Image Upload
             if user_profile_image:
                 log.info("Adding User Profile Image...")
-                self._upload_user_profile_image(final_user_id, user_profile_image)
+
+                if user_profile_image:
+                    gender = user_record_data["gender"]
+                    if gender:
+                        gender = gender.lower()
+                else:
+                    gender = None
+
+                self._upload_user_profile_image(final_user_id, user_profile_image, gender)
 
             # Handle Permissions
             # Load PSL First to make sure namespace access is ok
@@ -718,7 +758,14 @@ class CreateUser(BaseSalesforceApiTask,NGOrgConfig, ABC):
                         # Handle Profile Image Upload
                         if self.user_profile_image:
                             log.info("Adding User Profile Image...")
-                            self._upload_user_profile_image(final_user_id, self.user_profile_image)
+                            if self.user_profile_image:
+                                gender = self.gender
+                                if gender:
+                                    gender = gender.lower()
+                            else:
+                                gender = None
+
+                            self._upload_user_profile_image(final_user_id, self.user_profile_image, gender)
 
                         # Handle Permissions
                         # PSL First - to make sure namespace PSL get access first.
