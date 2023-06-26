@@ -137,7 +137,7 @@ def _remove_missing_field_schema(submitted_dict, field_names):
     return submitted_dict
 
 
-class CreateUser(BaseSalesforceApiTask,NGOrgConfig, ABC):
+class CreateUser(BaseSalesforceApiTask, NGOrgConfig, ABC):
     salesforce_task = True
 
     task_docs = """
@@ -221,8 +221,7 @@ class CreateUser(BaseSalesforceApiTask,NGOrgConfig, ABC):
 
     def _init_options(self, kwargs):
         super(CreateUser, self)._init_options(kwargs)
-        
-        
+
         self.data = process_list_of_pairs_dict_arg(self.options["data"]) if "data" in self.options else None
         self.role = self.options["role"] if "role" in self.options else None
         self.when = self.options["when"] if "role" in self.options else None
@@ -494,7 +493,7 @@ class CreateUser(BaseSalesforceApiTask,NGOrgConfig, ABC):
             method="POST",
         )
 
-    def _assign_permission(self, mode, user_id, api_names,ignore_failures=False):
+    def _assign_permission(self, mode, user_id, api_names, ignore_failures=False):
         """
         Assigns Permission Sets or Permission Set Groups or Permission Set Licenses based on the mode. 
 
@@ -530,67 +529,64 @@ class CreateUser(BaseSalesforceApiTask,NGOrgConfig, ABC):
                 log.error(f"Error: Invalid mode passed. Only Permission Sets (PERMISSIONSET) or Permission Set Groups (PERMISSIONSETGROUP) or Permission Set Licenses (PERMISSIONSETLICENSE) are supported. Mode passed: {mode}")
                 return False
 
-            
             # Loop Through Permission Set Names
             for perm in list(api_names):
-                    
-                    try:
-                        
-                        api = self.sf
+                try:
+                    api = self.sf
 
-                        # Check for labels and non api names
-                        if " " in perm:
-                            log.debug(f"{message_name} {perm} is not a valid api name for a {message_name}. Please check the api names are valid and try again. Continuing to next record.")
-                            continue
+                    # Check for labels and non api names
+                    if " " in perm:
+                        log.debug(f"{message_name} {perm} is not a valid api name for a {message_name}. Please check the api names are valid and try again. Continuing to next record.")
+                        continue
 
-                        # Check Permission Set Exists
-                        permission_set_query = api.query(f"SELECT Id FROM {object_name} WHERE {lookup_field} = '{perm}' LIMIT 1")
-                        if permission_set_query["totalSize"] == 0:
-                            log.debug(f"{message_name} with api name {perm} was not found in the target org, skipping assignment.")
+                    # Check Permission Set Exists
+                    permission_set_query = api.query(f"SELECT Id FROM {object_name} WHERE {lookup_field} = '{perm}' LIMIT 1")
+                    if permission_set_query["totalSize"] == 0:
+                        log.debug(f"{message_name} with api name {perm} was not found in the target org, skipping assignment.")
+                        continue
+                    else:
+                        permission_set_id = permission_set_query["records"][0]["Id"]
+
+                    # Check for existing Permission Set, Group or License has been already assigned
+                    permission_set_assignment_query = api.query(f"SELECT Id FROM {assignment_object} WHERE AssigneeId = '{user_id}' AND {assignment_field} = '{permission_set_id}' LIMIT 1")
+                    if permission_set_assignment_query["totalSize"] == 1:
+                        log.info(f"{message_name} with api name {perm} has already been assigned to the user. Skipping...")
+                        continue
+
+                    permset_creation_result = None
+                    if str(mode).upper() != "PERMISSIONSETLICENSE":
+                        # Create Permission Set Assignment
+                        permset_creation_result = api.PermissionSetAssignment.create(
+                            {
+                                "AssigneeId": user_id,
+                                str(assignment_field): permission_set_id
+                            }
+                        )
+                    else:
+                        # Create Permission Set License Assignment
+                        permset_creation_result = api.PermissionSetLicenseAssign.create(
+                            {
+                                "AssigneeId": user_id,
+                                str(assignment_field): permission_set_id
+                            }
+                        )
+
+                    if not permset_creation_result is None and permset_creation_result["id"]:
+                        log.info(f"{message_name} (With API Name: {perm}) has been assigned (ID: {permset_creation_result['id']})!")
+                    else:
+                        log.error(f"{message_name} (With API Name: {perm}) failed to assign. Moving onto next {message_name} (if any). Details: {permset_creation_result}")
+
+                        if (ignore_failures):
                             continue
                         else:
-                            permission_set_id = permission_set_query["records"][0]["Id"]
-
-                        # Check for existing Permission Set, Group or License has been already assigned
-                        permission_set_assignment_query = api.query(f"SELECT Id FROM {assignment_object} WHERE AssigneeId = '{user_id}' AND {assignment_field} = '{permission_set_id}' LIMIT 1")
-                        if permission_set_assignment_query["totalSize"] == 1:
-                            log.info(f"{message_name} with api name {perm} has already been assigned to the user. Skipping...")
-                            continue
-
-                        permset_creation_result = None
-                        if str(mode).upper() != "PERMISSIONSETLICENSE":
-                            # Create Permission Set Assignment
-                            permset_creation_result = api.PermissionSetAssignment.create(
-                                {
-                                    "AssigneeId": user_id,
-                                    str(assignment_field): permission_set_id
-                                }
-                            )
-                        else:
-                            # Create Permission Set License Assignment
-                            permset_creation_result = api.PermissionSetLicenseAssign.create(
-                                {
-                                    "AssigneeId": user_id,
-                                    str(assignment_field): permission_set_id
-                                }
-                            )
-
-                        if not permset_creation_result is None and permset_creation_result["id"]:
-                            log.info(f"{message_name} (With API Name: {perm}) has been assigned (ID: {permset_creation_result['id']})!")
-                        else:
-                            log.error(f"{message_name} (With API Name: {perm}) failed to assign. Moving onto next {message_name} (if any). Details: {permset_creation_result}")
-                            
-                            if(ignore_failures):
-                                continue
-                            else:
-                                return False
-
-                    except Exception as e:
-                        log.debug("Error: Failure in user upsert.")
-                        log.debug(e)
-                        if(ignore_failures==False):    
                             return False
-                        
+
+                except Exception as e:
+                    log.debug("Error: Failure in user upsert.")
+                    log.debug(e)
+                    if (ignore_failures == False):
+                        return False
+
         else:
             log.debug("Error: No Mode was passed for processing. You must pass in a mode.")
             return False
@@ -609,9 +605,9 @@ class CreateUser(BaseSalesforceApiTask,NGOrgConfig, ABC):
         manager = user_record_data["manager_external_id"] if "manager_external_id" in dict(user_record_data).keys() else None
         contact = user_record_data["contact_external_id"] if "contact_external_id" in dict(user_record_data).keys() else None
         if "ignore_failures" in dict(user_record_data).keys():
-            ignore_failures = bool(user_record_data["ignore_failures"]) 
+            ignore_failures = bool(user_record_data["ignore_failures"])
         else:
-            ignore_failures =False
+            ignore_failures = False
 
         log.info(f"Creating User with the following details: \n{json.dumps(data, indent=1, sort_keys=True)}")
         log.info("Preparing Data for User Record")
@@ -651,14 +647,14 @@ class CreateUser(BaseSalesforceApiTask,NGOrgConfig, ABC):
             # Load PSL First to make sure namespace access is ok
             if permission_set_license_api_names:
                 log.info("Assigning Permission Set Licenses...")
-                self._assign_permission("PERMISSIONSETLICENSE", final_user_id, permission_set_license_api_names,ignore_failures)
+                self._assign_permission("PERMISSIONSETLICENSE", final_user_id, permission_set_license_api_names, ignore_failures)
             if permission_set_api_names:
                 log.info("Assigning Permission Sets...")
-                self._assign_permission("PERMISSIONSET", final_user_id, permission_set_api_names,ignore_failures)
+                self._assign_permission("PERMISSIONSET", final_user_id, permission_set_api_names, ignore_failures)
 
             if permission_set_group_api_names:
                 log.info("Assigning Permission Set Groups...")
-                self._assign_permission("PERMISSIONSETGROUP", final_user_id, permission_set_group_api_names,ignore_failures)
+                self._assign_permission("PERMISSIONSETGROUP", final_user_id, permission_set_group_api_names, ignore_failures)
 
         else:
             log.error("User Failed to insert...skipping")
@@ -683,9 +679,9 @@ class CreateUser(BaseSalesforceApiTask,NGOrgConfig, ABC):
 
     def _run_task(self):
         api = self.sf
-        
-        #inject in the orgc_config pointers. We might be running the task directly 
-        #e.g.: cci task run user_manager --path blah/blah.yml --org goat
+
+        # inject in the orgc_config pointers. We might be running the task directly
+        # e.g.: cci task run user_manager --path blah/blah.yml --org goat
         self._prepruntime()
         self._inject_max_runtime()
 
@@ -708,23 +704,22 @@ class CreateUser(BaseSalesforceApiTask,NGOrgConfig, ABC):
                 with open(self.path, "r") as file:
                     user_data = yaml.load(file, Loader=yaml.FullLoader)
                 for user in user_data["users"]:
-                        
                     user_record_data = user_data["users"][user]
-                    self.logger.info(user_record_data)    
-                    whenclauseskip=False
-                    if("when" in user_record_data and not user_record_data['when'] is None):
-                        #self.logger.info(user_record_data['when'])   
-                        exp = user_record_data["when"].replace("org_config","self.org_config")
-                        self.logger.info(exp)   
+                    self.logger.info(user_record_data)
+                    whenclauseskip = False
+                    if ("when" in user_record_data and not user_record_data['when'] is None):
+                        # self.logger.info(user_record_data['when'])
+                        exp = user_record_data["when"].replace("org_config", "self.org_config")
+                        self.logger.info(exp)
                         compliledcode = compile(exp, "<string>", "eval")
-                        #no builtins = no __import__ # DO NOT allow globals
-                        #restrict scope to expression - no builtins and only locals self
-                        res = eval(compliledcode,{},{"self":self})
-                
-                        if(res == False):
-                            whenclauseskip=True
-                        
-                    if(whenclauseskip==False):
+                        # no builtins = no __import__ # DO NOT allow globals
+                        # restrict scope to expression - no builtins and only locals self
+                        res = eval(compliledcode, {}, {"self": self})
+
+                        if (res == False):
+                            whenclauseskip = True
+
+                    if (whenclauseskip == False):
                         self._process_user_record(user_record_data, field_names)
                     else:
                         self.logger.info(f"User create skipped for not meeting when clause::{exp}")
@@ -771,15 +766,15 @@ class CreateUser(BaseSalesforceApiTask,NGOrgConfig, ABC):
                         # PSL First - to make sure namespace PSL get access first.
                         if self.permission_set_license_api_names:
                             log.info("Assigning Permission Set Licenses...")
-                            self._assign_permission("PERMISSIONSETLICENSE", final_user_id, self.permission_set_license_api_names,self.ignore_failures)
+                            self._assign_permission("PERMISSIONSETLICENSE", final_user_id, self.permission_set_license_api_names, self.ignore_failures)
 
                         if self.permission_set_api_names:
                             log.info("Assigning Permission Sets...")
-                            self._assign_permission("PERMISSIONSET", final_user_id, self.permission_set_api_names,self.ignore_failures)
+                            self._assign_permission("PERMISSIONSET", final_user_id, self.permission_set_api_names, self.ignore_failures)
 
                         if self.permission_set_group_api_names:
                             log.info("Assigning Permission Set Groups...")
-                            self._assign_permission("PERMISSIONSETGROUP", final_user_id, self.permission_set_group_api_names,self.ignore_failures)
+                            self._assign_permission("PERMISSIONSETGROUP", final_user_id, self.permission_set_group_api_names, self.ignore_failures)
 
                     else:
                         log.error("User Failed to insert. Skipping...")
@@ -822,14 +817,14 @@ class QBrixInstalled(BaseTask, ABC):
 class QUpdateDependencies(UpdateDependencies, ABC):
 
     def _install_dependency(self, dependency):
-
         if hasattr(dependency, "github") and len(dependency.github) > 1:
             if "qbrix" in dependency.github.lower():
                 qbrix_name = dependency.github.rsplit('/', 1)[-1]
                 if QbrixInstallCheck(qbrix_name, self.org_config):
                     return
-                
+
         super()._install_dependency(dependency)
+
 
 class QbrixDeployer(BaseSalesforceApiTask, ABC):
     task_docs = """
@@ -854,7 +849,6 @@ class QbrixDeployer(BaseSalesforceApiTask, ABC):
         self.qbrix_name = self.options["qbrix_name"] if "qbrix_name" in self.options else None
 
     def _run_task(self):
-
         if not self.project_config.sources:
             print("No sources found in project config")
             return
@@ -866,7 +860,7 @@ class QbrixDeployer(BaseSalesforceApiTask, ABC):
                     coordinator.run(f'{self.qbrix_name}:deploy_qbrix')
             else:
                 print("Source name not found in Q Brix")
-    
+
 
 class PopulateRecentlyViewed(BaseSalesforceApiTask, ABC):
     task_docs = """
@@ -940,7 +934,7 @@ class UploadFiles(BaseSalesforceApiTask, ABC):
             "description": "Name of library if uploading to a library",
             "required": False
         },
-         "exclude_extension": {
+        "exclude_extension": {
             "description": "Exclued the file extension from the title",
             "required": False
         }
@@ -952,9 +946,9 @@ class UploadFiles(BaseSalesforceApiTask, ABC):
         self.where = self.options["where"] if "where" in self.options else None
         self.path = self.options["path"] if "path" in self.options else None
         self.library = self.options["library"] if "library" in self.options else None
-        
+
         if "exclude_extension" in self.options:
-            self.exclude_extension = bool(self.options["exclude_extension"]) 
+            self.exclude_extension = bool(self.options["exclude_extension"])
         else:
             self.exclude_extension = False
 
@@ -1026,14 +1020,11 @@ class UploadFiles(BaseSalesforceApiTask, ABC):
 
                 # Convert the file contents to base64 encoding
                 base64_file_contents = base64.b64encode(file_contents).decode('utf-8')
-                
-                title=filename
-                if(self.exclude_extension):
-                    filebase=os.path.basename(filename)
-                    title=os.path.splitext(filebase)[0]
-                    
-                
-                    
+
+                title = filename
+                if (self.exclude_extension):
+                    filebase = os.path.basename(filename)
+                    title = os.path.splitext(filebase)[0]
 
                 content_version_data = {
                     'Title': title,
@@ -1194,8 +1185,8 @@ class QRetrieveChanges(RetrieveChanges):
 
         self.logger.info("Checks complete!")
 
-class CommunityPublisher(BaseSalesforceApiTask, ABC):
 
+class CommunityPublisher(BaseSalesforceApiTask, ABC):
     task_docs = """
     Publishes a given community (Experience Cloud Site) or if no names are given, publishes all live communities
     """
@@ -1217,7 +1208,6 @@ class CommunityPublisher(BaseSalesforceApiTask, ABC):
         self.live_community_list = []
 
     def _get_live_community_list(self):
-
         api = self.sf
         community_response = api.restful(
             f"connect/communities/",
@@ -1242,7 +1232,6 @@ class CommunityPublisher(BaseSalesforceApiTask, ABC):
                 self.logger.info(e)
 
     def _run_task(self):
-
         self.logger.info("\nStarting Community Publisher")
         if not self.community_names:
             self.logger.info(" -> Getting Live Community List...")
@@ -1263,10 +1252,10 @@ class CommunityPublisher(BaseSalesforceApiTask, ABC):
 
         self.logger.info("Publishing Complete!")
 
-class RunPerfectDateWizard(BaseSalesforceApiTask, ABC):
 
+class RunPerfectDateWizard(BaseSalesforceApiTask, ABC):
     task_docs = """
-    Requests Perfect Date Wizard is run against the target org
+    Requests Perfect Date Wizard is run against the target org. Ensure that you have defined the "--org" parameter when running as a task or run this within a flow.
     """
 
     task_options = {
@@ -1281,7 +1270,6 @@ class RunPerfectDateWizard(BaseSalesforceApiTask, ABC):
         self.perfect_date_wizard_endpoint = "https://q-pdw-api.herokuapp.com/api/v1/trigger"
 
     def _run_task(self):
-
         self.logger.info("\nRun Perfect Date Wizard")
 
         self.logger.info(" -> Getting required information...")
@@ -1330,4 +1318,3 @@ class RunPerfectDateWizard(BaseSalesforceApiTask, ABC):
             else:
                 # Request encountered an error
                 self.logger.info('Request error:', response.status_code)
-        
