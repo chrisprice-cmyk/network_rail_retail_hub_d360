@@ -3,7 +3,38 @@ from abc import ABC
 
 from cumulusci.core.tasks import BaseTask
 
-from tools.shared.qbrix_cci_tasks import run_cci_flow, run_cci_task
+from qbrix.tools.shared.qbrix_cci_tasks import run_cci_flow, run_cci_task
+
+def run_multiple_flows(flow_names, org_name, **options):
+        pool = multiprocessing.Pool()
+        pool.starmap(run_cci_flow_wrapper, [(flow_name, org_name, options) for flow_name in flow_names])
+        pool.close()
+        pool.join()
+
+def run_cci_flow_wrapper(flow_name, org_name, options):
+    try:
+        print(f"Starting Flow: {flow_name}.")
+        run_cci_flow(flow_name, org_name, **options)
+    except Exception as e:
+        print(f"Error running flow: {flow_name} - {str(e)}")
+    else:
+        print(f"Flow: {flow_name} completed.")
+
+def run_multiple_tasks(task_names, org_name):
+        pool = multiprocessing.Pool()
+        pool.starmap(run_cci_task_wrapper, [(task_name, org_name) for task_name in task_names])
+        pool.close()
+        pool.join()
+
+def run_cci_task_wrapper(task_name, org_name):
+    try:
+        print(f"Starting Task: {task_name}.")
+        run_cci_task(task_name, org_name)
+    except Exception as e:
+        print(f"Error running task: {task_name} - {str(e)}")
+    else:
+        print(f"Task: {task_name} completed.")
+
 
 
 class RunFuryMode(BaseTask, ABC):
@@ -25,7 +56,7 @@ class RunFuryMode(BaseTask, ABC):
             "required": False
         },
         "apex_scripts": {
-            "description": "List of Apex Scripts to run",
+            "description": "List of Apex Scripts to run (COMING SOON)",
             "required": False
         }
     }
@@ -36,23 +67,28 @@ class RunFuryMode(BaseTask, ABC):
         self.tasks = self.options["tasks"] if "tasks" in self.options else None
         self.apex_scripts = self.options["apex_scripts"] if "apex_scripts" in self.options else None
 
-    def _run_task(self, processes=None):
+    def _run_task(self):
 
-        for flow in self.flows:
-            flow_parameters = ["flow_name", flow, "org_name", self.org_config.name]
-            process = multiprocessing.Process(target=run_cci_flow, args=(flow_parameters,))
-            processes.append(process)
-            process.start()
+        self.logger.info("""
+         _____ ______ ______  _____ __   __                          
+        |  _  || ___ \| ___ \|_   _|\ \ / /                          
+        | | | || |_/ /| |_/ /  | |   \ V /                           
+        | | | || ___ \|    /   | |   /   \                           
+        \ \/' /| |_/ /| |\ \  _| |_ / /^\ \                          
+         \_/\_\\____/ \_| \_| \___/ \/   \/                          
+                                                                    
+                                                                    
+        ______  _   _ ______ __   __    ___  ___ _____ ______  _____ 
+        |  ___|| | | || ___ \\ \ / /    |  \/  ||  _  ||  _  \|  ___|
+        | |_   | | | || |_/ / \ V /     | .  . || | | || | | || |__  
+        |  _|  | | | ||    /   \ /      | |\/| || | | || | | ||  __| 
+        | |    | |_| || |\ \   | |      | |  | |\ \_/ /| |/ / | |___ 
+        \_|     \___/ \_| \_|  \_/      \_|  |_/ \___/ |___/  \____/
+        
+        """)
+        
+        if self.flows:
+            run_multiple_flows(flow_names=self.flows, org_name=self.org_config.name, options=self.options)
 
-        for task in self.tasks:
-            task_parameters = ["task_name", task, "org_name", self.org_config.name]
-            process = multiprocessing.Process(target=run_cci_task, args=(task_parameters,))
-            processes.append(process)
-            process.start()
-
-        for script in self.apex_scripts:
-            print("Apex Scripts not yet supported.")
-
-        # Wait for all processes to finish
-        for process in processes:
-            process.join()
+        if self.tasks:
+            run_multiple_tasks(task_names=self.tasks, org_name=self.org_config.name)
