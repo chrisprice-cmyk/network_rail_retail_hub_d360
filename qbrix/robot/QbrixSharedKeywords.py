@@ -2,6 +2,7 @@ import json
 import re
 from time import sleep
 from datetime import datetime
+import time
 from typing import Optional
 from Browser import ElementState, SelectAttribute
 from cumulusci.robotframework.base_library import BaseLibrary
@@ -26,15 +27,35 @@ class QbrixSharedKeywords(BaseLibrary):
         if self._salesforceapi is None:
             self._salesforceapi = SalesforceAPI()
         return self._salesforceapi
-
+    
     def go_to_lightning_setup_home(self):
         """
-        Goes directly to set up home page in Lightning UI
+        Browses to the Lightning Setup Home Page
         """
-        self.browser.set_browser_timeout("900 seconds")
-        self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/setup/SetupOneHome/home", timeout="90s")
-        self.browser.wait_for_elements_state("h1:has-text('Home')", ElementState.visible, '30s')
 
+        if not str(self.browser.get_url()).endswith("/lightning/setup/SetupOneHome/home"):
+            self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/setup/SetupOneHome/home", timeout="90s")
+
+        start_time = time.time()
+        timeout = 30
+        while True:
+            if self.browser.get_element_count("h1:has-text('Home')") > 0:
+                break
+
+            try:
+                self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/setup/SetupOneHome/home", timeout="90s")
+                self.browser.wait_for_elements_state("h1:has-text('Home')", ElementState.visible, '10s')
+                break
+            except Exception as e:
+                print(e)
+
+            elapsed_time = time.time() - start_time
+            if elapsed_time >= timeout:
+                print("TIMEOUT EXCEEDED")
+                break
+
+            time.sleep()
+        
     def disable_mfa(self):
         self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/setup/SecuritySession/home", timeout="90s")
         sleep(2)
@@ -110,7 +131,8 @@ class QbrixSharedKeywords(BaseLibrary):
 
         # Go To Page
         try:
-            self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/setup/{setup_page_url}", timeout='30s')
+            if not str(self.browser.get_url()).endswith(f"/lightning/setup/{setup_page_url}"):
+                self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/setup/{setup_page_url}", timeout="90s")
 
             # Handlers for help messages and new feature modals
             

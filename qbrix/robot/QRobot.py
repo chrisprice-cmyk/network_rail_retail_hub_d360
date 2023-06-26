@@ -58,7 +58,7 @@ class QRobot:
     context_id = self.browser.new_context(
         viewport={"width": 1920, "height": 1080}, recordVideo=rec
     )
-    self.browser.set_browser_timeout("240 seconds")
+    self.browser.set_browser_timeout("900 seconds")
     sleep(1)
 
     # Login to Org
