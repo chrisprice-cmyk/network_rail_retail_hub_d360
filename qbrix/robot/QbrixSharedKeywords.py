@@ -33,8 +33,10 @@ class QbrixSharedKeywords(BaseLibrary):
         Browses to the Lightning Setup Home Page
         """
 
-        if not str(self.browser.get_url()).endswith("/lightning/setup/SetupOneHome/home"):
-            self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/setup/SetupOneHome/home", timeout="90s")
+        SETUP_ADMIN_LOCATION = "/lightning/setup/SetupOneHome/home"
+
+        if not str(self.browser.get_url()).endswith(SETUP_ADMIN_LOCATION):
+            self.browser.go_to(f"{self.cumulusci.org.instance_url}{SETUP_ADMIN_LOCATION}", timeout="90s")
 
         start_time = time.time()
         timeout = 30
@@ -43,7 +45,7 @@ class QbrixSharedKeywords(BaseLibrary):
                 break
 
             try:
-                self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/setup/SetupOneHome/home", timeout="90s")
+                self.browser.go_to(f"{self.cumulusci.org.instance_url}{SETUP_ADMIN_LOCATION}", timeout="90s")
                 self.browser.wait_for_elements_state("h1:has-text('Home')", ElementState.visible, '10s')
                 break
             except Exception as e:
@@ -52,12 +54,14 @@ class QbrixSharedKeywords(BaseLibrary):
             elapsed_time = time.time() - start_time
             if elapsed_time >= timeout:
                 print("TIMEOUT EXCEEDED")
+                print(f"Q Robot was unable to get to the Setup Admin Home page, using URL {self.cumulusci.org.instance_url}{SETUP_ADMIN_LOCATION}")
+                self.browser.take_screenshot()
                 break
 
-            time.sleep()
+            time.sleep(3)
         
     def disable_mfa(self):
-        self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/setup/SecuritySession/home", timeout="90s")
+        self.go_to_setup_admin_page("SecuritySession/home")
         sleep(2)
         if "checked" in self.browser.get_element_states(f"{self.iframe_handler()} td:has(label:text-is('Require identity verification during multi-factor authentication (MFA) registration')) >> input"):
             self.browser.click(f"{self.iframe_handler()} td:has(label:text-is('Require identity verification during multi-factor authentication (MFA) registration')) >> input")
