@@ -81,6 +81,143 @@ def get_app_name(file_location: str = None):
         return file_data[start_pos:end_pos]
     else:
         return ""
+    
+class AnalyticsActionRunner(BaseSalesforceApiTask, ABC):
+
+    task_docs = """
+    Utility for running commands or actions in Analytics.
+    """
+
+    task_options = {
+        "org": {
+            "description": "The Target Salesforce Org Alias",
+            "required": False
+        },
+        "action": {
+            "description": "Choose from predefined actions (REFRESH_ACTIVE_DATAFLOWS, REFRESH_ACTIVE_RECIPES, REFRESH_ALL) or enter CUSTOM and define your own action using action_category, action_request, action_records_query and action_api_method. Defaults to CUSTOM",
+            "required": False
+        },
+        "action_category": {
+            "description": "The category for the action request, for example DataFlows",
+            "required": False
+        },
+        "action_request": {
+            "description": "A dict of the request. Add ___RECORD_ID___ where you want the Id field from the query to be inserted",
+            "required": False
+        },
+        "action_records_query": {
+            "description": "SOQL Query to identify records to process. If left blank, the action will be executed as is.",
+            "required": False
+        },
+        "action_api_method": {
+            "description": "API Method for the Action. Defaults to POST",
+            "required": False
+        },
+    }
+
+    def _init_options(self, kwargs):
+        super(AnalyticsActionRunner, self)._init_options(kwargs)
+        self.action_category = str(self.options["action_category"]) if "action_category" in self.options else None
+        self.action_request = dict(self.options["action_request"]) if "action_request" in self.options else None
+        self.action_records_query = str(self.options["action_records_query"]) if "action_records_query" in self.options else None
+        self.action_api_method = str(self.options["action_api_method"]).upper() if "action_api_method" in self.options else "POST"
+        self.bulk_mode = True if self.action_records_query and self.action_records_query.lower().startswith("select") else False
+        self.action = str(self.options["action"]).upper() if "action" in self.options else "CUSTOM"
+
+    def _refresh_active_dataflows(self):
+        self.logger.info(" -> Refreshing active Dataflows in the target org...")
+        ACTIVE_DATAFLOWS_SOQL = "SELECT Id FROM Dataflow WHERE State = 'Active' AND DataflowType = 'User' Order By DataflowType ASC"
+        self.bulk_mode = True
+        self.action_request = dict({
+            "dataflowId": "___RECORD_ID___",
+            "command": "start"
+        })
+        self.action_category = "dataflowjobs"
+        self._prepare_request(ACTIVE_DATAFLOWS_SOQL)
+
+    def _refresh_active_recipes(self):
+        self.logger.info(" -> Refreshing active Recipes in the target org...")
+        ACTIVE_RECIPES_SOQL = "SELECT Id FROM Dataflow WHERE State = 'Active' AND DataflowType = 'RecipeV3' Order By DataflowType ASC"
+        self.bulk_mode = True
+        self.action_request = dict({
+            "dataflowId": "___RECORD_ID___",
+            "command": "start"
+        })
+        self.action_category = "dataflowjobs"
+        self._prepare_request(ACTIVE_RECIPES_SOQL)
+
+    def _refresh_all(self):
+        self.logger.info(" -> Refreshing all Dataflows and Recipes in the target org...")
+        self._refresh_active_dataflows()
+        self._refresh_active_recipes()
+
+    def _prepare_request(self, records_query):
+
+        if self.bulk_mode:
+            self.logger.info(" -> Bulk Record Mode Enabled")
+
+            bulk_records_lookup = self.sf.query_all(records_query)
+
+            if bulk_records_lookup and bulk_records_lookup.get("totalSize") > 0:
+                self.logger.info(f" -> Processing {bulk_records_lookup.get('totalSize')} records...")
+
+                for record in bulk_records_lookup.get("records"):
+                    self._run_request(record["Id"])
+            else:
+                self.logger.info("No records found to process.")
+        else:
+            self._run_request()
+
+    def _run_request(self, record_id=None):
+
+        if self.bulk_mode:
+            
+            for key, value in self.action_request.items():
+                if isinstance(value, str) and "___RECORD_ID___" in value:
+                    self.logger.info(f" -> Replacing ___RECORD_ID___ in key {key}")
+                    updated_value = value.replace("___RECORD_ID___", record_id)
+                    self.action_request[key] = updated_value
+
+        request_response = self.sf.restful(
+            f"wave/{self.action_category}",
+            data=json.dumps(self.action_request),
+            method=self.action_api_method.upper(),
+        )
+
+        if request_response.get('id'):
+            while True:
+                job_check = self.sf.restful(
+                    f"wave/{self.action_category}/{request_response.get('id')}",
+                    method="GET"
+                )
+
+                self.logger.info(f" -> Job ID: {job_check.get('id')} | Status: {job_check.get('status')}")
+
+                if job_check.get('status') == "Success":
+                    self.logger.info(" -> Job Complete!")
+                    break
+
+                if job_check.get('status') not in ('Running', 'Queued', 'Success'):
+                    self.logger.error(f"Job ID: {job_check.get('id')} | FAILED\n{job_check}")
+                    break
+
+                sleep(5)
+       
+    def _run_task(self):
+        
+        self.logger.info(f"\nRunning Analytics Action Runner\nMode: {self.action}")
+
+        if self.action == "CUSTOM":
+            self._prepare_request(self.action_records_query)
+        elif self.action == "REFRESH_ACTIVE_DATAFLOWS":
+            self._refresh_active_dataflows()
+        elif self.action == "REFRESH_ACTIVE_RECIPES":
+            self._refresh_active_recipes()
+        elif self.action == "REFRESH_ALL":
+            self._refresh_all()
+
+        self.logger.info("Jobs Completed!")
+        
 
 
 class AnalyticsManager(BaseSalesforceApiTask, ABC):
