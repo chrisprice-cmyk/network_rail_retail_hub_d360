@@ -28,9 +28,16 @@ class QbrixSharedKeywords(BaseLibrary):
             self._salesforceapi = SalesforceAPI()
         return self._salesforceapi
     
-    def go_to_lightning_setup_home(self):
+    # ---------------------------------
+    # BROWSING AND NAVIGATION FUNCTIONS
+    # ---------------------------------
+    
+    def go_to_lightning_setup_home(self, wait_for_text: str = "Home"):
         """
-        Browses to the Lightning Setup Home Page
+        Browses to the Lightning Setup Home Page.
+
+        Args:
+            wait_for_text (str): Defaults to 'Home" but can be set to other text which resides within an H1 element.
         """
 
         SETUP_ADMIN_LOCATION = "/lightning/setup/SetupOneHome/home"
@@ -41,12 +48,12 @@ class QbrixSharedKeywords(BaseLibrary):
         start_time = time.time()
         timeout = 30
         while True:
-            if self.browser.get_element_count("h1:has-text('Home')") > 0:
+            if self.browser.get_element_count(f"h1:has-text('{wait_for_text}')") > 0:
                 break
 
             try:
                 self.browser.go_to(f"{self.cumulusci.org.instance_url}{SETUP_ADMIN_LOCATION}", timeout="90s")
-                self.browser.wait_for_elements_state("h1:has-text('Home')", ElementState.visible, '10s')
+                self.browser.wait_for_elements_state(f"h1:has-text('{wait_for_text}')", ElementState.visible, '10s')
                 break
             except Exception as e:
                 print(e)
@@ -59,72 +66,38 @@ class QbrixSharedKeywords(BaseLibrary):
                 break
 
             time.sleep(3)
+
+    def go_to_app(self, app_name: str):
+        """
+        Browses to the given app within the browser. For example "Sales" app.
         
-    def disable_mfa(self):
-        self.go_to_setup_admin_page("SecuritySession/home")
-        sleep(2)
-        if "checked" in self.browser.get_element_states(f"{self.iframe_handler()} td:has(label:text-is('Require identity verification during multi-factor authentication (MFA) registration')) >> input"):
-            self.browser.click(f"{self.iframe_handler()} td:has(label:text-is('Require identity verification during multi-factor authentication (MFA) registration')) >> input")
-        existing_list = self.browser.get_select_options(f"{self.iframe_handler()} #duel_select_1")
-        if len(existing_list) > 0 and any(d['label'] == 'Multi-Factor Authentication' for d in existing_list):
-            print("MFA")
-            self.browser.select_options_by(f"{self.iframe_handler()} #duel_select_1", SelectAttribute.text, "Multi-Factor Authentication")
-            self.browser.click(f"{self.iframe_handler()} div.duelingListBox >> img.leftArrowIcon")  
-
-        self.browser.click(f"{self.iframe_handler()} input.btn:has-text('Save')")
-        sleep(2)
-
-
-    def go_to_app(self, app_name):
-        """
-        Looks up the Application ID and then opens that app in the session.
-        :param app_name: The name of the app (NOT the api name)
-        :return:
+        Args:
+            app_name (str): Name of the Lightning App. Not the API Name.
         """
 
-        if app_name:
-            # Get the Application ID
-            results = self.salesforceapi.soql_query(
-                f"SELECT DurableId FROM AppDefinition where Label = '{app_name}' LIMIT 1")
+        if not app_name:
+            print("No App Name Provided")
+            return
 
-            if results["totalSize"] == 1:
-                app_id = results["records"][0]["DurableId"]
+        # Get the Application ID
+        application_query_result = self.salesforceapi.soql_query(f"SELECT DurableId FROM AppDefinition where Label = '{app_name}' LIMIT 1")
 
-                # Go to the app
-                self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/app/{app_id}", timeout='30s')
-
-    def set_org_wide_email(self, org_wide_email_address: Optional[str] = "sdo@salesforce.com"):
-        """
-        Sets and org wide email address for the target org, defaulting to the sdo address
-        :param org_wide_email_address: (Optional) Email Address to use as new org wide email, although this parameter will default to sdo@salesforce.com
-        """
-        try:
-            self.go_to_setup_admin_page("OrgWideEmailAddresses/home")
-            sleep(3)
-            iframe_handler = self.iframe_handler()
-            self.browser.wait_for_elements_state(f"{iframe_handler} h2:text-is('Organization-Wide Email Addresses for User Selection and Default No-Reply Use')", ElementState.visible, '15s')
-            if self.browser.get_element_count(f"{iframe_handler} td:has-text('{org_wide_email_address}')") == 0:
-                self.browser.click(f"{iframe_handler} div.pbHeader >> input.btn:text-is('Add')")
-                sleep(3)
-                self.browser.fill_text(f"{iframe_handler} tr:has-text('Display Name') >> input", "Default Email")
-                self.browser.fill_text(f"{iframe_handler} tr:has-text('Email Address') >> input", org_wide_email_address)
-                self.browser.select_options_by(f"{iframe_handler} tr:has-text('Purpose') >> select", SelectAttribute.text, "User Selection and Default No-Reply Address")
-                self.browser.click(f"{iframe_handler} :nth-match(.btn:text-is('Save'), 1)")
-                sleep(2)
-        except Exception as e:
-            self.browser.take_screenshot()
-            raise e
+        # Browse to the App if found
+        if application_query_result["totalSize"] == 1:
+            app_id = application_query_result["records"][0]["DurableId"]
+            self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/app/{app_id}", timeout='30s')
 
     def go_to_setup_admin_page(self, setup_page_url: str, sleep_length: Optional[int] = 2):
         """
         Browses to a lightning setup URL, provide everything after lightning/setup/ in the URL
 
-        :param setup_page_url: Requires the section of the URL Path which comes after lightning/setup
-        :param sleep_length: (Optional) Set the length of time (in seconds) which the robot will wait for the page to load. Defaults to 2 seconds.
+        Args:
+            setup_page_url (str): Requires the section of the URL Path which comes after lightning/setup
+            sleep_length (str): (Optional) Set the length of time (in seconds) which the robot will wait for the page to load. Defaults to 2 seconds.
         """
 
         # Handle empty URL
-        if setup_page_url is None or setup_page_url == "":
+        if not setup_page_url:
             raise Exception("URL Text must be specified")
 
         # Handle full url being passed in
@@ -160,25 +133,27 @@ class QbrixSharedKeywords(BaseLibrary):
         except Exception as e:
             self.browser.take_screenshot()
             raise e
-
+        
     def iframe_handler(self):
 
         """
-        Add to selector statements to handle iframes in Salesforce LEX UI
-        :return:
+        Add to the start of selector statements to handle iframes within Lightning Pages. Note that it will return >>> at the end of the statement so account for that in your selector.
         """
 
         sleep(2)
 
+        # This is a double check to ensure that once the page has finished loading elements, no iframes have appeared.
         if self.browser.get_element_count("iframe") == 0:
-            retries = 0
-            while retries < 4:
-                retries += 1
-                sleep(2)
-                if self.browser.get_element_count("iframe") == 0 and retries == 3:
+            retries = 1
+            while retries < 3:
+                
+                if self.browser.get_element_count("iframe") == 0 and retries == 2:
                     return ""
                 if self.browser.get_element_count("iframe") > 0:
-                    self.iframe_handler()
+                    break
+                
+                retries += 1
+                sleep(1)
 
         # Handles Console Layouts and Setup Pages where guidance prompts have opened
         if self.browser.get_element_count("div.mainContentMark") == 1:
@@ -196,16 +171,64 @@ class QbrixSharedKeywords(BaseLibrary):
             return "nth-match(iframe, 1) >>>"
 
         return ""
+    
+    # ------------------
+    # SECURITY FUNCTIONS
+    # ------------------
+        
+    def disable_mfa(self):
+
+        """
+        Disables MFA/2FA in the target org
+        """
+
+        self.go_to_setup_admin_page("SecuritySession/home")
+        if "checked" in self.browser.get_element_states(f"{self.iframe_handler()} td:has(label:text-is('Require identity verification during multi-factor authentication (MFA) registration')) >> input"):
+            self.browser.click(f"{self.iframe_handler()} td:has(label:text-is('Require identity verification during multi-factor authentication (MFA) registration')) >> input")
+        existing_list = self.browser.get_select_options(f"{self.iframe_handler()} #duel_select_1")
+        if len(existing_list) > 0 and any(d['label'] == 'Multi-Factor Authentication' for d in existing_list):
+            self.browser.select_options_by(f"{self.iframe_handler()} #duel_select_1", SelectAttribute.text, "Multi-Factor Authentication")
+            self.browser.click(f"{self.iframe_handler()} div.duelingListBox >> img.leftArrowIcon")  
+        self.browser.click(f"{self.iframe_handler()} input.btn:has-text('Save')")
+        sleep(1)
+
+    # ------------------
+    # LEX FUNCTIONS
+    # ------------------
+
+    def set_org_wide_email(self, org_wide_email_address: Optional[str] = "sdo@salesforce.com"):
+        """
+        Sets and org wide email address for the target org, defaulting to the sdo address
+        
+        Args:
+            org_wide_email_address (str): (Optional) Email Address to use as new org wide email, although this parameter will default to sdo@salesforce.com
+        """
+        try:
+            self.go_to_setup_admin_page("OrgWideEmailAddresses/home", 3)
+            iframe_handler = self.iframe_handler()
+            self.browser.wait_for_elements_state(f"{iframe_handler} h2:text-is('Organization-Wide Email Addresses for User Selection and Default No-Reply Use')", ElementState.visible, '15s')
+            if self.browser.get_element_count(f"{iframe_handler} td:has-text('{org_wide_email_address}')") == 0:
+                self.browser.click(f"{iframe_handler} div.pbHeader >> input.btn:text-is('Add')")
+                self.browser.wait_for_elements_state(f"{iframe_handler} tr:has-text('Display Name')", ElementState.visible, "5s")
+                self.browser.fill_text(f"{iframe_handler} tr:has-text('Display Name') >> input", "Default Email")
+                self.browser.fill_text(f"{iframe_handler} tr:has-text('Email Address') >> input", org_wide_email_address)
+                self.browser.select_options_by(f"{iframe_handler} tr:has-text('Purpose') >> select", SelectAttribute.text, "User Selection and Default No-Reply Address")
+                self.browser.click(f"{iframe_handler} :nth-match(.btn:text-is('Save'), 1)")
+                sleep(1)
+        except Exception as e:
+            self.browser.take_screenshot()
+            raise e
 
     def set_lightning_toggle(self, new_state: str):
         """
         Toggles a Salesforce Lightning Toggle either on or off
-        :param new_state: Define a new state for the lightning toggle (i.e. on or off)
+
+        Args:
+            new_state (str): Define a new state for the lightning toggle. Options are "on" or "off" as a string.
         """
-        if new_state is None:
+        if new_state is None or new_state.lower() not in ("on", "off"):
             raise Exception("State for the lightning toggle must be specified. State should be 'on' or 'off'.")
-        if new_state.lower() not in ("on", "off"):
-            raise Exception("define a state of 'on' or 'off'")
+
         visible = "visible" in self.browser.get_element_states("label:has-text('Off')")
         if visible and new_state.lower() == "on":
             toggle_switch = self.browser.get_element("label:has-text('Off')")
@@ -218,17 +241,17 @@ class QbrixSharedKeywords(BaseLibrary):
                 self.browser.click(toggle_switch)
                 sleep(2)
 
-    def click_button_with_text(self, button_text, uses_iframe: Optional[bool] = False, sleep_length: Optional[int] = 2):
+    def click_button_with_text(self, button_text, uses_iframe: Optional[bool] = False, sleep_length: Optional[int] = 1):
         """
-        Finds a button using the button text and clicks it providing it is visible on the page. You must define
-        the text for the label on the button.
+        Finds a button using the button text and clicks it providing it is visible on the page. You must define the text for the label on the button.
 
-        :param button_text: Exact text for the button you want to click
-        :param uses_iframe: Set to True to add iframe support to the button selector
-        :param sleep_length: (Optional) Set the length of time (in seconds) which the robot will wait for the page to load after button is clicked. Defaults to 2 seconds.
+        Args:
+            button_text (str): Exact text for the button you want to click
+            uses_iframe (str): Set to True to add iframe support to the button selector
+            sleep_length (str): (Optional) Set the length of time (in seconds) which the robot will wait for the page to load after button is clicked. Defaults to 1 second.
         """
 
-        if button_text is None:
+        if not button_text:
             raise Exception("Button Text must be specified")
 
         button_selector = f"button:has-text('{button_text}')"
@@ -237,8 +260,7 @@ class QbrixSharedKeywords(BaseLibrary):
 
         self.browser.wait_for_elements_state(button_selector, ElementState.visible, '30s')
 
-        button_visible = "visible" in self.browser.get_element_states(button_selector)
-        if button_visible:
+        if "visible" in self.browser.get_element_states(button_selector):
             self.browser.click(button_selector)
             sleep(sleep_length)
 
@@ -251,7 +273,7 @@ class QbrixSharedKeywords(BaseLibrary):
 
         """
 
-        if button_text is None:
+        if not button_text:
             raise Exception("Button Text must be specified")
 
         iframe_handler = self.iframe_handler()
@@ -266,35 +288,37 @@ class QbrixSharedKeywords(BaseLibrary):
         Finds a button using the button text and clicks it providing it is visible on the page within an iframe.
         You must define the text for the label on the button.
 
-        :param button_text: The text of the button you want to click
+        Args:
+            button_text: The text of the button you want to click
         """
-        if button_text is None:
+        if not button_text:
             raise Exception("Button Text must be specified")
-        visible = "visible" in self.browser.get_element_states(
-            f":nth-match(iframe,1) >>> input:has-text('{button_text}')")
-        if visible:
+
+        if "visible" in self.browser.get_element_states(f":nth-match(iframe,1) >>> input:has-text('{button_text}')"):
             button_to_click = self.browser.get_element(f":nth-match(iframe,1) >>> input:has-text('{button_text}')")
             self.browser.click(button_to_click)
             sleep(1)
 
-    def wait_for_page_title(self, page_title: str, title_element_type: Optional[str] = "h1",
-                            wait_time: Optional[str] = "10s", uses_iframe: Optional[bool] = True):
+    def wait_for_page_title(self, page_title: str, title_element_type: Optional[str] = "h1", wait_time: Optional[str] = "10s", uses_iframe: Optional[bool] = True):
         """
         Waits for a title on a lightning page to be loaded based on title text and optional element type.
 
-        :param page_title: Text of the title or text you want to wait on to know if the page has loaded.
-        :param title_element_type: (Optional) Type of element where the text is contained. Expects an HTML element and defaults to 'h1'
-        :param wait_time: (Optional) Length of time which you want to wait on the title to load, defaults to '10s'. Note: This is a string with the number and then the time i.e. s
-        :param uses_iframe: (Optional) Set to True if the element is within an iframe. Defaults to True
+        Args:
+            page_title (str): Text of the title or text you want to wait on to know if the page has loaded.
+            title_element_type (str): (Optional) Type of element where the text is contained. Expects an HTML element and defaults to 'h1'
+            wait_time (str): (Optional) Length of time which you want to wait on the title to load, defaults to '10s'.
+            uses_iframe (bool): (Optional) Set to True if the element is within an iframe. Defaults to True
         """
 
-        if page_title is None:
+        if not page_title:
             raise Exception("No page title specified")
 
         iframe_selector = ":nth-match(iframe,1) >>> " if uses_iframe else ""
+        self.browser.wait_for_elements_state(f"{iframe_selector}{title_element_type}:text-is('{page_title}')", ElementState.visible, wait_time)
 
-        self.browser.wait_for_elements_state(f"{iframe_selector}{title_element_type}:text-is('{page_title}')",
-                                             ElementState.visible, wait_time)
+    # ------------------
+    # SHARED FUNCTIONS
+    # ------------------
 
     def enable_omnichannel_for_bot(self, button_name: str, queue_name: str):
         """
