@@ -78,21 +78,18 @@ class QbrixSharedKeywords(BaseLibrary):
         if not app_name:
             print("No App Name Provided")
             return
-
-        # Get the Application ID
-        application_query_result = self.salesforceapi.soql_query(f"SELECT DurableId FROM AppDefinition where Label = '{app_name}' LIMIT 1")
-
+        
         # Browse to the App if found
-        if application_query_result["totalSize"] == 1:
-            app_id = application_query_result["records"][0]["DurableId"]
-            self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/app/{app_id}", timeout='30s')
+        application_id = self.find_id(object_api_name="AppDefinition", where_clause=f"Label = '{app_name}'", id_column_name="DurableId")
+        if application_id:
+            self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/app/{application_id}", timeout='30s')
 
     def go_to_setup_admin_page(self, setup_page_url: str, sleep_length: Optional[int] = 2):
         """
         Browses to a lightning setup URL, provide everything after lightning/setup/ in the URL
 
         Args:
-            setup_page_url (str): Requires the section of the URL Path which comes after lightning/setup
+            setup_page_url (str): Requires the section of the URL Path which comes after lightning/setup.
             sleep_length (str): (Optional) Set the length of time (in seconds) which the robot will wait for the page to load. Defaults to 2 seconds.
         """
 
@@ -320,6 +317,34 @@ class QbrixSharedKeywords(BaseLibrary):
     # SHARED FUNCTIONS
     # ------------------
 
+    def compile_all_apex(self, wait_time=600):
+        """
+        Does an Apex Recompile of all Classes
+
+        Args:
+            wait_time: Max wait time for the compile to run in seconds. Default is 600 seconds. 
+        """
+
+        self.go_to_setup_admin_page("ApexClasses/home", 15)
+        self.browser.click(f"iframe >>> id=all_classes_page:theTemplate:messagesForm:compileAll")
+
+        itcnt=0
+        while itcnt < wait_time:
+            try:
+                completed_element_states = self.browser.get_element_states("iframe >>> h4:has-text('Compilation Complete')")
+
+                if "visible" in completed_element_states and "enabled" in completed_element_states:
+                    sleep(2)
+                    break
+
+            except Exception as e:
+                self.browser.take_screenshot()
+                self.log_to_file(e)
+                break
+
+            itcnt += 1
+            sleep(5)
+
     def enable_omnichannel_for_bot(self, button_name: str, queue_name: str):
         """
         Sets a given Live Chat Button to Omni-Channel Routing with an associated Queue
@@ -429,38 +454,6 @@ class QbrixSharedKeywords(BaseLibrary):
             self.browser.click("iframe >>> :nth-match(.btn[value='Save'], 1)")
             sleep(8)
 
-    def find_profileid_by_name(self, profilename: str):
-        """
-        Locates the ID of a profile by friendly name
-        :param profilename: Name of the Salesforce Profile
-        :return: Returns Salesforce ID for the Profile Name (If Found) otherwise returns None.
-        """
-        if profilename is None:
-            raise Exception("Profile Name must be specified")
-
-        results = self.salesforceapi.soql_query(f"SELECT ID FROM Profile where Name ='{profilename}'")
-
-        # so this gets translated to a dict with 3 keys: 
-        # records
-        # totalSize
-        # done
-
-        if results["totalSize"] == 1:
-            return results["records"][0]["Id"]
-
-        return None
-
-    def log_to_file(self, data):
-        """
-        Use this for local debugging to write data to a temp file
-        :param data: Data which you want to log to file. File defaults to ./temp.log
-        """
-        now = datetime.now()
-        dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
-        with open(f"temp.log", "a") as tmpFile:
-            tmpFile.write(f"{dt_string}::{data}\n")
-            tmpFile.close()
-
     def add_service_presence_statuses_to_profile(self, profilename: str, servicestatus: str):
 
         """ Adds a specified service presence to the specified profile
@@ -493,95 +486,13 @@ class QbrixSharedKeywords(BaseLibrary):
         sleep(1)
         self.browser.click("iframe >>> .btn:text-is('Save')")
 
-    # -----------------------------------------------------------------------------------------------------------------------------------------
-    # Chat Agent Configurations
-    # -----------------------------------------------------------------------------------------------------------------------------------------
-    def add_profile_to_chat_configuration(self, liveagentconfigname: str, profilename: str):
-        """
-        Adds a specified profile to the specified Chat User Config
-        :param liveagentconfigname: Live Chat User Config Name
-        :param profilename: Salesforce Profile Name
-        """
-
-        if profilename is None:
-            raise Exception("Profile Name must be specified")
-
-        if liveagentconfigname is None:
-            raise Exception("Live Chat User Config Name must be specified")
-
-        self.go_to_setup_admin_page("EnhancedProfiles/home", 12)
-        liveagentconfig = self.find_livechatuserconfig_by_name(liveagentconfigname)
-        editurl = f"LiveChatUserConfigSettings/page?address=%2F{liveagentconfig}"
-        self.go_to_setup_admin_page(editurl)
-        sleep(5)
-        self.browser.click("iframe >>> .btn:text-is('Edit')")
-        sleep(10)
-
-        self.browser.select_options_by(f"iframe >>> td.selectCell:has-text('{profilename}') >> select",
-                                       SelectAttribute.text, profilename)
-        # there are 5 dueling lists. second one is profiles
-        self.browser.click("iframe >>> :nth-match(img.rightArrowIcon, 2)")
-        sleep(1)
-        # button at top and one on the bottom. dealer's choice
-        self.browser.click("iframe >>> :nth-match(.btn:text-is('Save'), 1)")
-
-    def find_livechatuserconfig_by_name(self, configname: str):
-        """
-        Locates the ID of a Live Chat User Config by Master Label. See: select id, MasterLabel from
-        LiveChatUserConfig
-        :param configname: Live Chat User Configuration Name (Use the Master Label not the api name)
-        :return: Returns Salesforce ID for the Live Chat User Configuration, if found. Otherwise, returns None.
-        """
-        if configname is None:
-            raise Exception("Live Chat User Config Name must be specified")
-
-        soql = f"SELECT ID FROM LiveChatUserConfig where MasterLabel ='{configname}'"
-        self.log_to_file(soql)
-        results = self.salesforceapi.soql_query(soql)
-
-        # so this gets translated to a dict with 3 keys: 
-        # records
-        # totalSize
-        # done
-        self.log_to_file(results)
-        if results["totalSize"] == 1:
-            return results["records"][0]["Id"]
-
-        return None
-
-    def compile_all_apex(self, waittime="600"):
-        """
-        Does an Apex Recompile of all Classes
-        :param waittime: Max wait time for the compile to run. Default is 2 minutes. 
-        """
-        self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/setup/ApexClasses/home")
-        sleep(30)
-        self.browser.click(f"iframe >>> id=all_classes_page:theTemplate:messagesForm:compileAll")
-        sleep(30)
-        
-        sleep_countdown = 600
-        itcnt=0
-        while itcnt<sleep_countdown:
-            
-             #we are done
-            visible = "visible" in self.browser.get_element_states("iframe >>> h4:has-text('Compilation Complete')")
-            enabled = "enabled" in self.browser.get_element_states("iframe >>> h4:has-text('Compilation Complete')")
-            if visible and enabled:
-                sleep(20)
-                break
-            
-            itcnt+=1
-            sleep(30)
-
     def enable_custom_help_in_user_engagement(self):
         """
         Enables the Customize Help Option under User Engagement Help Menu
         """  
-        self.go_to_setup_admin_page("HelpMenu/home")
-        sleep(2)
+        self.go_to_setup_admin_page("HelpMenu/home", 4)
         toggle_span_count = self.browser.get_element_count(f"{self.iframe_handler()} span.slds-checkbox_off:visible")
         if toggle_span_count and toggle_span_count > 0:
-            print("Clicking Toggle")
             self.browser.click(f"{self.iframe_handler()} ol.slds-setup-assistant:has-text('Customize the Help Menu') >> .slds-checkbox_faux")
 
     def enable_data_pipelines(self):
@@ -590,8 +501,7 @@ class QbrixSharedKeywords(BaseLibrary):
         """  
         self.go_to_setup_admin_page("SonicGettingStarted/home")
         self.browser.wait_for_elements_state("h2:text-is('Data Pipelines')", ElementState.visible, '30s')
-        checked = "checked" in self.browser.get_element_states("label:has-text('Disabled')")
-        if not checked:
+        if not "checked" in self.browser.get_element_states("label:has-text('Disabled')"):
             self.browser.click("label:has-text('Disabled')")
             sleep(3)
 
@@ -671,3 +581,128 @@ class QbrixSharedKeywords(BaseLibrary):
                         #         break
                         #     else:
                         #         sleep(10)
+
+    def add_profile_to_chat_configuration(self, liveagentconfigname: str, profilename: str):
+        """
+        Adds a specified profile to the specified Chat User Config
+        :param liveagentconfigname: Live Chat User Config Name
+        :param profilename: Salesforce Profile Name
+        """
+
+        if profilename is None:
+            raise Exception("Profile Name must be specified")
+
+        if liveagentconfigname is None:
+            raise Exception("Live Chat User Config Name must be specified")
+
+        self.go_to_setup_admin_page("EnhancedProfiles/home", 12)
+        liveagentconfig = self.find_livechatuserconfig_by_name(liveagentconfigname)
+        editurl = f"LiveChatUserConfigSettings/page?address=%2F{liveagentconfig}"
+        self.go_to_setup_admin_page(editurl)
+        sleep(5)
+        self.browser.click("iframe >>> .btn:text-is('Edit')")
+        sleep(10)
+
+        self.browser.select_options_by(f"iframe >>> td.selectCell:has-text('{profilename}') >> select",
+                                       SelectAttribute.text, profilename)
+        # there are 5 dueling lists. second one is profiles
+        self.browser.click("iframe >>> :nth-match(img.rightArrowIcon, 2)")
+        sleep(1)
+        # button at top and one on the bottom. dealer's choice
+        self.browser.click("iframe >>> :nth-match(.btn:text-is('Save'), 1)")
+
+    # ------------------
+    # LOOKUP FUNCTIONS
+    # ------------------
+
+    def find_id(self, object_api_name: str, where_clause: str, id_column_name: str = "Id", enable_logging: bool = False):
+
+        """
+        Queries the target Salesforce Org for an ID based on a given object name and where clause.
+
+        Args:
+            object_api_name (str): The API name for the sObject within Salesforce
+            where_clause (str): The filter which is applied after the "where" within the query statement
+            id_column_name (str): Optional string which defines the Id column name, which is not always Id but this will default to Id if not specified.
+            enable_logging (bool): Set to True if you want to log the SOQL Query and Results to a local file. Defaults to False.
+
+        Returns:
+            If a record is found, then the Id value is returned. Otherwise None is returned
+        """
+
+        # Error Control
+        if " " in object_api_name:
+            raise Exception("Invalid object api name specified")
+        
+        if " " in id_column_name:
+            raise Exception("Invalid ID Column name specified")
+        
+        if where_clause.lower().startswith("where"):
+            where_clause = where_clause.replace("where", "")
+
+        try:
+            soql_query = f"SELECT {id_column_name} FROM {object_api_name} where {where_clause} LIMIT 1"
+
+            if enable_logging:
+                self.log_to_file(soql_query)
+
+            lookup_result = self.salesforceapi.soql_query(soql_query)
+
+            if enable_logging:
+                self.log_to_file(lookup_result)
+
+            if lookup_result["totalSize"] == 1:
+                return lookup_result["records"][0][id_column_name]
+            
+            return None
+        except Exception as e:
+            self.log_to_file(e)
+            raise e
+
+
+    def find_profileid_by_name(self, profile_name: str):
+        """
+        Locates the ID of a profile by friendly name
+        
+        Args:
+            profile_name: Name of the Salesforce Profile
+        
+        Returns:
+            Returns Salesforce ID for the Profile Name (If Found) otherwise returns None.
+        """
+        if not profile_name:
+            raise Exception("Profile Name must be specified")
+        
+        return self.find_id("Profile", f"Name ='{profile_name}'")
+    
+    def find_livechatuserconfig_by_name(self, config_name: str):
+        """
+        Locates the ID of a Live Chat User Config by Master Label. See: select id, MasterLabel from LiveChatUserConfig
+        
+        Args:
+            configname (str): Live Chat User Configuration Name (Use the Master Label not the api name)
+        
+        Returns:
+            Returns Salesforce ID for the Live Chat User Configuration, if found. Otherwise, returns None.
+        """
+        if not config_name:
+            raise Exception("Live Chat User Config Name must be specified")
+        
+        return self.find_id("LiveChatUserConfig", f"MasterLabel ='{config_name}'")
+    
+    # ------------------
+    # LOGGING FUNCTIONS
+    # ------------------
+
+    def log_to_file(self, data):
+        """
+        Use this for local debugging to write data to a temp file
+        
+        Args:
+            data: Data which you want to log to file. File defaults to ./temp.log
+        """
+        now = datetime.now()
+        dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+        with open(f"temp.log", "a") as tmpFile:
+            tmpFile.write(f"{dt_string}::{data}\n")
+            tmpFile.close()
