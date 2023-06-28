@@ -1,39 +1,46 @@
+import datetime
 import multiprocessing
 from abc import ABC
+import time
 
 from cumulusci.core.tasks import BaseTask
 
 from qbrix.tools.shared.qbrix_cci_tasks import run_cci_flow, run_cci_task
 
-def run_multiple_flows(flow_names, org_name, **options):
-        pool = multiprocessing.Pool()
-        pool.starmap(run_cci_flow_wrapper, [(flow_name, org_name, options) for flow_name in flow_names])
-        pool.close()
-        pool.join()
+def execute_tasks_and_flows(tasks_and_flows, org_name, **options):
+    processes = []
+    for item in tasks_and_flows:
+        if item[1] == "task":
+            process = multiprocessing.Process(target=run_cci_task_wrapper, args=(item[0], org_name,))
+        elif item[1] == "flow":
+            process = multiprocessing.Process(target=run_cci_flow_wrapper, args=(item[0], org_name, options,))
+        else:
+            print("Invalid item type:", item)
+            continue
+
+        processes.append(process)
+        process.start()
+
+    for process in processes:
+        process.join()
 
 def run_cci_flow_wrapper(flow_name, org_name, options):
     try:
-        print(f"Starting Flow: {flow_name}.")
+        print(f"{flow_name} | STARTED")
         run_cci_flow(flow_name, org_name, **options)
     except Exception as e:
-        print(f"Error running flow: {flow_name} - {str(e)}")
+        print(f"{flow_name} | ERROR | {e}")
     else:
-        print(f"Flow: {flow_name} completed.")
-
-def run_multiple_tasks(task_names, org_name):
-        pool = multiprocessing.Pool()
-        pool.starmap(run_cci_task_wrapper, [(task_name, org_name) for task_name in task_names])
-        pool.close()
-        pool.join()
+        print(f"{flow_name} | COMPLETE!")
 
 def run_cci_task_wrapper(task_name, org_name):
     try:
-        print(f"Starting Task: {task_name}.")
+        print(f"{task_name} | STARTED")
         run_cci_task(task_name, org_name)
     except Exception as e:
-        print(f"Error running task: {task_name} - {str(e)}")
+        print(f"{task_name} | ERROR | {e}")
     else:
-        print(f"Task: {task_name} completed.")
+        print(f"{task_name} | COMPLETE")
 
 
 
@@ -54,10 +61,6 @@ class RunFuryMode(BaseTask, ABC):
         "tasks": {
             "description": "List of Tasks to execute. These must already be defined with options in the tasks area.",
             "required": False
-        },
-        "apex_scripts": {
-            "description": "List of Apex Scripts to run (COMING SOON)",
-            "required": False
         }
     }
 
@@ -65,19 +68,10 @@ class RunFuryMode(BaseTask, ABC):
         super(RunFuryMode, self)._init_options(kwargs)
         self.flows = self.options["flows"] if "flows" in self.options else None
         self.tasks = self.options["tasks"] if "tasks" in self.options else None
-        self.apex_scripts = self.options["apex_scripts"] if "apex_scripts" in self.options else None
 
     def _run_task(self):
 
-        self.logger.info("""
-         _____ ______ ______  _____ __   __                          
-        |  _  || ___ \| ___ \|_   _|\ \ / /                          
-        | | | || |_/ /| |_/ /  | |   \ V /                           
-        | | | || ___ \|    /   | |   /   \                           
-        \ \/' /| |_/ /| |\ \  _| |_ / /^\ \                          
-         \_/\_\\____/ \_| \_| \___/ \/   \/                          
-                                                                    
-                                                                    
+        self.logger.info("""                      
         ______  _   _ ______ __   __    ___  ___ _____ ______  _____ 
         |  ___|| | | || ___ \\ \ / /    |  \/  ||  _  ||  _  \|  ___|
         | |_   | | | || |_/ / \ V /     | .  . || | | || | | || |__  
@@ -86,9 +80,27 @@ class RunFuryMode(BaseTask, ABC):
         \_|     \___/ \_| \_|  \_/      \_|  |_/ \___/ |___/  \____/
         
         """)
-        
-        if self.flows:
-            run_multiple_flows(flow_names=self.flows, org_name=self.org_config.name, options=self.options)
 
-        if self.tasks:
-            run_multiple_tasks(task_names=self.tasks, org_name=self.org_config.name)
+        if not self.flows and not self.tasks:
+            self.logger.info("Skipping Fury Mode as there are no requests to process.")
+            return
+        
+        process_request_list = []
+        flow_count = 0
+        task_count = 0
+
+        for flow in self.flows:
+            process_request_list.append((flow, "flow"))
+            flow_count += 1
+        
+        for task in self.tasks:
+            process_request_list.append((task, "task"))
+            task_count += 1
+
+        self.logger.info(f"\nStarting Fury Mode\nRunning {flow_count} flow(s) and {task_count} task(s)\n")
+        start_time = time.time()
+        execute_tasks_and_flows(tasks_and_flows=process_request_list, org_name=self.org_config.name, options=self.options)
+        end_time = time.time()
+        execution_time = end_time - start_time
+        formatted_time = str(datetime.timedelta(seconds=execution_time))
+        self.logger.info(f"\n{task_count + flow_count} requests completed in {formatted_time}\nNormal Mode Restored. Tasks and Flows have completed.")
