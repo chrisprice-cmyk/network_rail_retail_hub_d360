@@ -1318,3 +1318,180 @@ class RunPerfectDateWizard(BaseSalesforceApiTask, ABC):
             else:
                 # Request encountered an error
                 self.logger.info('Request error:', response.status_code)
+
+class UserActionRunner(BaseSalesforceApiTask, ABC):
+
+    task_docs = """
+    Utility for running commands or actions against Users in the target Salesforce Org
+    """
+
+    task_options = {
+        "org": {
+            "description": "The Target Salesforce Org Alias",
+            "required": False
+        },
+        "reset_user_passwords": {
+            "description": "Set to True to reset passwords for a given selection of users.",
+            "required": False
+        },
+        "password": {
+            "description": "The password to reset all user passwords to. Default is salesforce1",
+            "required": False
+        },
+        "standardize_usernames": {
+            "description": "Set to True to standardize usernames for the target Salesforce org.",
+            "required": False
+        },
+        "user_profiles": {
+            "description": "A list of Profile names to use when selecting users",
+            "required": False
+        }
+    }
+
+    def _init_options(self, kwargs):
+        super(UserActionRunner, self)._init_options(kwargs)
+        self.password = self.options["password"] if "password" in self.options else "salesforce1"
+        self.user_profiles = self.options["user_profiles"] if "user_profiles" in self.options else []
+        self.standardize_usernames = self.options["standardize_usernames"] if "standardize_usernames" in self.options else True
+        self.reset_user_passwords = self.options["reset_user_passwords"] if "reset_user_passwords" in self.options else True
+
+    def _set_user_password(self, user_id):
+
+        headers = {
+            'Content-Type': 'application/json; charset=utf-8'
+        }
+
+        try:
+            response = self.sf.restful(
+                f"sobjects/user/{user_id}/password",
+                method="POST",
+                headers=headers,
+                data=json.dumps({ "NewPassword" : f"{self.password}" }),
+            )
+            
+        except Exception as e:
+
+            # Nothing is returned for this so need to handle completion via the exception, if any.
+
+            if str(e).startswith("Expecting value"):
+                self.logger.info(f"Reset Password for User ID: {user_id}")
+                return 
+            
+            if e.content and e.content[0].get("errorCode"):
+                self.logger.error(f" -> Unable to set password for User ID: {user_id} | {e.content[0].get('errorCode')} | {e.content[0].get('message')}")
+            
+            return 
+
+    def _get_users_with_profiles(self, username):
+
+        if self.user_profiles:
+
+            user_profile_lookup = "Select Id, FirstName, LastName, Username From User Where IsActive = true And Profile.Name In ("
+
+            for user_profile in self.user_profiles:
+                user_profile_lookup += f"'{user_profile}',"
+            
+            if user_profile_lookup.endswith(","):
+                user_profile_lookup = user_profile_lookup[:-1]
+
+            user_profile_lookup += f") AND Username != '{username}'"
+
+            lookup_results = self.sf.query(user_profile_lookup)
+
+            if lookup_results.get("totalSize") > 0:
+                return lookup_results.get("records")
+            else:
+                return None
+
+    def _get_community_users(self, username):
+
+        lookup_results = self.sf.query(f"SELECT Member.Id, Member.Username, Member.FirstName, Member.LastName FROM NetworkMember WHERE Member.IsActive = true AND Member.FirstName != NULL AND Member.Username !='{username}' AND (NOT(Member.Profile.Name LIKE '%Admin%'))")
+
+        if lookup_results.get("totalSize") > 0:
+            return lookup_results.get("records")
+        else:
+            return None
+        
+    def _standardize_usernames(self, username, users):
+
+        domain = str(username).split("@")[1]
+
+        updated_user_set = set()
+
+        for user in users:
+            
+            user_id, user_username, user_first_name, user_last_name = user
+            new_username = f"{user_first_name}.{user_last_name}@{domain}".lower()
+            self.logger.info(f" -> Updated {user_username} to {new_username}")
+
+            updated_user_set.add((user_id, new_username, user_first_name, user_last_name))
+
+        return updated_user_set
+    
+    def _run_composite_request(self, records):
+        self.logger.info(" -> Starting request to update User records")
+        res = self.sf.restful(method='PATCH', path='composite/sobjects', json=dict(records=records))
+        if res:
+            for r in res:
+                if r.get("success") == True:
+                    self.logger.info(f"User ID: {r.get('id')} | UPDATED")
+                else:
+                    self.logger.info(f"User ID: {r.get('id')} | FAILED")
+                    for e in r.get("errors"):
+                        self.logger.info(e)
+       
+    def _run_task(self):
+        
+        self.logger.info(f"\nRunning User Action Runner")
+
+        users_to_update = set()
+
+        self.user_profiles = [
+            "*Customer Community - Members",
+            "*Customer Community Plus",
+            "*Service",
+            "*Sales",
+            "Community Member - Login-based",
+            "*Partners",
+            "FSL Standard User",
+        ]
+
+        for standard_user in self._get_users_with_profiles(self.org_config.username):
+
+            if not standard_user.get("Username"):
+                continue
+
+            users_to_update.add((standard_user.get("Id"), standard_user.get("Username"), standard_user.get("FirstName"), standard_user.get("LastName")))
+
+        for community_user in self._get_community_users(self.org_config.username):
+
+            if not community_user.get("Member").get("Username"):
+                continue
+
+            users_to_update.add((community_user.get("Member").get("Id"), community_user.get("Member").get("Username"), community_user.get("Member").get("FirstName"), community_user.get("Member").get("LastName")))
+
+        if self.standardize_usernames:
+            updated_set = self._standardize_usernames(self.org_config.username, users_to_update)
+        else:
+            updated_set = users_to_update
+
+        upload_list = []
+        for user in updated_set:
+            user_id, username, FirstName, LastName = user
+
+            upload_list.append(
+                {
+                    "attributes": {
+                        "type": "User"
+                    },
+                    "id" : f"{user_id}",
+                    "username": f"{username}"
+                }
+            )
+
+            if self.reset_user_passwords:
+                self._set_user_password(user_id)
+
+        self._run_composite_request(upload_list)
+
+        self.logger.info("Jobs Completed!")
