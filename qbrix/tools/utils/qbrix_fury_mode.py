@@ -89,13 +89,15 @@ class RunFuryMode(BaseTask, ABC):
         flow_count = 0
         task_count = 0
 
-        for flow in self.flows:
-            process_request_list.append((flow, "flow"))
-            flow_count += 1
+        if self.flows:
+            for flow in self.flows:
+                process_request_list.append((flow, "flow"))
+                flow_count += 1
         
-        for task in self.tasks:
-            process_request_list.append((task, "task"))
-            task_count += 1
+        if self.tasks:
+            for task in self.tasks:
+                process_request_list.append((task, "task"))
+                task_count += 1
 
         self.logger.info(f"\nStarting Fury Mode\nRunning {flow_count} flow(s) and {task_count} task(s)\n")
         start_time = time.time()
