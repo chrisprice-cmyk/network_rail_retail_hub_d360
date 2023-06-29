@@ -1,11 +1,16 @@
 from time import sleep
-from Browser import ElementState, SelectAttribute
+
+from Browser import ElementState
 from cumulusci.robotframework.base_library import BaseLibrary
-from qbrix.robot.QbrixSharedKeywords import QbrixSharedKeywords
 from cumulusci.robotframework.SalesforceAPI import SalesforceAPI
+from robot.api.deco import library
+
+from qbrix.robot.QbrixSharedKeywords import QbrixSharedKeywords
 
 
+@library(scope='GLOBAL', auto_keywords=True, doc_format='reST')
 class QbrixB2BKeywords(BaseLibrary):
+    """Commerce Cloud Keywords"""
 
     def __init__(self):
         super().__init__()
@@ -25,9 +30,18 @@ class QbrixB2BKeywords(BaseLibrary):
             self._salesforceapi = SalesforceAPI()
         return self._salesforceapi
 
-    def get_store_id(self, store_name):
+    def get_store_id(self, store_name: str):
+        """
+        Gets the Store Id for a given Store Name
+            Args:
+                store_name (str): The name of the store
+                
+            Returns:
+                (str) Store Id Value if found, else None
+        """
+
         if store_name is None:
-            raise Exception("Profile Name must be specified")
+            raise ValueError("Profile Name must be specified")
 
         results = self.salesforceapi.soql_query(f"SELECT Id from WebStore where Name = '{store_name}' LIMIT 1")
 
@@ -37,6 +51,13 @@ class QbrixB2BKeywords(BaseLibrary):
         return None
 
     def start_reindex(self, store_name):
+
+        """
+        Starts the Reindex for a given store
+        
+        Args:
+            store_name (str): The name of the store
+        """
 
         index_button_selector = ":nth-match(button.slds-button:text-is('Rebuild Index'):visible, 1)"
         index_confirmation_selector = ":nth-match(button.slds-button:text-is('Rebuild'):visible, 1)"
@@ -53,7 +74,15 @@ class QbrixB2BKeywords(BaseLibrary):
                 self.browser.click(index_confirmation_selector)
                 sleep(2)
 
-    def enable_B2B2C_for_sdo(self, store_name):
+    def enable_b2b2c_for_sdo(self, store_name):
+
+        """
+        Enables integrations for a given Store Name
+        
+        Args:
+            store_name (str): The name of the store.
+        """
+
         # Go To Tax Page and enable Tax Integration
         integration_button_selector = ":nth-match(button.slds-button:text-is('Link Integration'):visible, 1)"
         dialog_row_selector = "tr.slds-hint-parent:has-text('Standard Tax') >> label.slds-checkbox_faux"

@@ -1210,7 +1210,7 @@ class CommunityPublisher(BaseSalesforceApiTask, ABC):
     def _get_live_community_list(self):
         api = self.sf
         community_response = api.restful(
-            f"connect/communities/",
+            "connect/communities/",
             method="GET"
         )
 
@@ -1362,7 +1362,7 @@ class UserActionRunner(BaseSalesforceApiTask, ABC):
         }
 
         try:
-            response = self.sf.restful(
+            self.sf.restful(
                 f"sobjects/user/{user_id}/password",
                 method="POST",
                 headers=headers,
@@ -1442,7 +1442,7 @@ class UserActionRunner(BaseSalesforceApiTask, ABC):
        
     def _run_task(self):
         
-        self.logger.info(f"\nRunning User Action Runner")
+        self.logger.info("\nRunning User Action Runner")
 
         users_to_update = set()
 

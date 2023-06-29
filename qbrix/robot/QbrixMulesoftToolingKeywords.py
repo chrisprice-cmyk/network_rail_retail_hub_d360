@@ -2,10 +2,15 @@ from time import sleep
 
 from Browser import ElementState, SelectAttribute
 from cumulusci.robotframework.base_library import BaseLibrary
+from robot.api.deco import library
+
 from qbrix.robot.QbrixSharedKeywords import QbrixSharedKeywords
 
 
+@library(scope='GLOBAL', auto_keywords=True, doc_format='reST')
 class QbrixMulesoftToolingKeywords(BaseLibrary):
+
+    """Mulesoft Keywords for Robot"""
 
     def __init__(self):
         super().__init__()

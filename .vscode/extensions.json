@@ -4,6 +4,14 @@
     "redhat.vscode-yaml",
     "redhat.vscode-xml",
     "salesforce.salesforcedx-vscode-expanded",
-    "esbenp.prettier-vscode"
+    "esbenp.prettier-vscode",
+    "ms-python.pylint",
+    "streetsidesoftware.code-spell-checker",
+    "robocorp.robocorp-code",
+    "dbaeumer.vscode-eslint",
+    "ms-python.python",
+    "salesforce.salesforce-vscode-slds",
+    "salesforce.salesforcedx-vscode-visualforce",
+    "salesforce.codegenie"
   ]
 }

@@ -12,7 +12,7 @@ project:
   name: xDO-Template
   package:
     name: xDO-Template
-    api_version: "57.0"
+    api_version: "58.0"
   git:
     default_branch: "main"
     repo_url: https://github.com/sfdc-qbranch/xDO-Template
@@ -84,12 +84,6 @@ tasks:
   deploy:
     options:
       path: force-app
-
-  update_admin_profile:
-    options:
-      package_xml: files/package.xml
-      api_names:
-        - Admin
 
   list_changes:
     options:
@@ -224,15 +218,6 @@ tasks:
 
   deploy_nextgen_data:
     class_path: qbrix.tools.utils.qbrix_nextgen_datatool.RunDataTool
-
-  #------------------------------------#
-  # TESTIM INTEGRATION                 #
-  #------------------------------------#
-  # Note: This section can be removed if you are not using Testim.
-  # Guide: https://confluence.internal.salesforce.com/display/QNEXTGENDEMOS/Testim-via+CCI+Task
-
-  qbrix_task_Testim:
-    class_path: qbrix.tools.testing.qbrix_testim.RunTestim
     
   #------------------------------------#
   # CUSTOM TASKS                       #
@@ -243,6 +228,8 @@ flows:
   #------------------------------------#
   # STAGE 1 of 3: PRE-QBRIX DEPLOYMENT #
   #------------------------------------#
+  # Define steps to prepare the org and deploy other dependencies in this section
+  # NOTE: "prepare_org" and "source_dependencies" SHOULD ALWAYS BE DEFINED
 
   #sample_custom_flow:
   #  steps:
@@ -276,7 +263,8 @@ flows:
   #------------------------------------#
   # STAGE 2 of 3: Q BRIX DEPLOYMENT    #
   #------------------------------------#
-  #DEFAULT INSTALL FLOWS ARE DEFINED HERE. "deploy_qbrix" and "deploy_qbrix_min" SHOULD ALWAYS BE DEFINED
+  # DEFAULT INSTALL FLOWS ARE DEFINED HERE. 
+  # NOTE: "deploy_qbrix" and "deploy_qbrix_without_dependencies" SHOULD ALWAYS BE DEFINED
 
   # Deploys the q brix
   deploy_qbrix:
@@ -324,12 +312,11 @@ flows:
   # STAGE 3 of 3 (OPTIONAL) POST-QBRIX DEPLOYMENT   #
   #-------------------------------------------------#
   # ADD POST DEPLOYMENT STEPS HERE
+  # NOTE: "post_qbrix_deploy" SHOULD ALWAYS BE DEFINED
 
   post_qbrix_deploy:
     steps:
       1:
-        task: qbrix_landing
-      2:
         # Placeholder task, replace this with your custom steps
         task: None
 
@@ -337,6 +324,7 @@ flows:
   # QBRIX TEST VALIDATION              #
   #------------------------------------#
   # Add steps here to validate your org deployment through testing (for example with Testim or Q Robot)
+  # NOTE: "validate_qbrix" SHOULD ALWAYS BE DEFINED
 
   validate_qbrix:
     steps:
@@ -346,7 +334,8 @@ flows:
   #------------------------------------#
   # QBRIX DATA                         #
   #------------------------------------#
-  #DEFINE DATA GENERATION FLOWS AND TASKS HERE
+  # DEFINE DATA GENERATION FLOWS AND TASKS HERE
+  # NOTE: "deploy_qbrix_data" SHOULD ALWAYS BE DEFINED
 
   deploy_qbrix_data:
     steps:
@@ -385,6 +374,28 @@ flows:
       4:
         task: None
 
+  dev_org:
+    steps:
+      1:
+        flow: deploy_qbrix
+      2:
+        task: None
+      3: 
+        task: None
+      4:
+        task: snapshot_changes
+
+  qa_org:
+    steps:
+      1:
+        flow: deploy_qbrix
+      2:
+        task: None
+      3: 
+        task: None
+      4:
+        task: snapshot_changes
+
   dependencies:
     steps:
       1:
@@ -394,13 +405,25 @@ flows:
 
   config_dev:
     steps:
+      1:
+        task: None
+      2:
+        task: None
       3:
         flow: post_qbrix_deploy
+      90:
+        task: None
 
   config_qa:
     steps:
+      1:
+        task: None
+      2:
+        task: None
       3:
         flow: post_qbrix_deploy
+      90:
+        task: None
 
 orgs:
   #------------------------------------#

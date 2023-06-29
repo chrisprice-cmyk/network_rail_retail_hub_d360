@@ -1,5 +1,5 @@
 *** Settings ***
-Resource            qbrix/robot/QRobot.robot
+Resource            QRobot.resource
 Suite Setup         Run keyword    
 ...                    QRobot.Open Q Browser
 Suite Teardown      QRobot.Close Q Browser
@@ -26,10 +26,10 @@ Disable MFA in Org
     Disable MFA
 
 Enable Custom Help
-    enable_custom_help_in_user_engagement
+    Enable Custom Help In User Engagement
 
 Enable Data Pipelines
-    enable_data_pipelines
+    Enable Data Pipelines
 #
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # EINSTEIN TESTS
@@ -364,10 +364,10 @@ DataRaptor Versioning Deactivation
     Deactivate DataRaptor Versioning
 
 # -----------------------------------------------------------------------------------------------------------------------------------------
-# Documnet Generation Settings
+# Document Generation Settings
 # -----------------------------------------------------------------------------------------------------------------------------------------
 DocGen Setup
-    Docgen Client Side Setup
+    #Docgen Client Side Setup
 
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # Mulesoft Connected App

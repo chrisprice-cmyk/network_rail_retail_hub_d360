@@ -8,6 +8,11 @@ from cumulusci.core.tasks import BaseTask
 from qbrix.tools.shared.qbrix_cci_tasks import run_cci_flow, run_cci_task
 
 def execute_tasks_and_flows(tasks_and_flows, org_name, **options):
+
+    """
+    Runner for Tasks and Flows using multiprocessing
+    """
+
     processes = []
     for item in tasks_and_flows:
         if item[1] == "task":
@@ -93,7 +98,6 @@ class RunFuryMode(BaseTask, ABC):
             for flow in self.flows:
                 process_request_list.append((flow, "flow"))
                 flow_count += 1
-        
         if self.tasks:
             for task in self.tasks:
                 process_request_list.append((task, "task"))

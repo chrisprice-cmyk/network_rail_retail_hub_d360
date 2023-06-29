@@ -2,11 +2,15 @@ from time import sleep
 
 from Browser import ElementState, SelectAttribute
 from cumulusci.robotframework.base_library import BaseLibrary
-from qbrix.robot.QbrixSharedKeywords import QbrixSharedKeywords
 from cumulusci.robotframework.SalesforceAPI import SalesforceAPI
+from robot.api.deco import library
+
+from qbrix.robot.QbrixSharedKeywords import QbrixSharedKeywords
 
 
+@library(scope='GLOBAL', auto_keywords=True, doc_format='reST')
 class QbrixSalesCloudKeywords(BaseLibrary):
+    """Sales Cloud Keywords"""
 
     def __init__(self):
         super().__init__()
@@ -66,16 +70,16 @@ class QbrixSalesCloudKeywords(BaseLibrary):
             sleep(20)
 
 
-    def enable_sales_aggreements(self):
-        """ Enables Sales Agreements """
-
-        self.shared.go_to_setup_admin_page("SalesAgreementSettings/home", 5)
-
-        button_selector = f"{self.shared.iframe_handler()} button.slds-button:has-text('Enable Sales Agreements')"
-
-        if "visible" in self.browser.get_element_states(button_selector):
-            self.browser.click(button_selector)
-            sleep(20)
+    def enable_sales_agreements(self):
+        """
+        Enables Sales Agreement Setting in Salesforce Setup
+        """
+        self.shared.go_to_setup_admin_page("SalesAgreementSettings/home")
+        #self.browser.wait_for_elements_state("h1:text-is('Sales Agreements')", ElementState.visible, '30s')
+        sleep(5)
+        if not "checked" in self.browser.get_element_states("div.slds-grid:has-text('Enable Sales Agreements') >> label.slds-checkbox_toggle"):
+            self.browser.click("div.slds-grid:has-text('Enable Sales Agreements') >> label.slds-checkbox_toggle")
+            sleep(1)
         
 
     def set_guest_on_channel_menu(self, channel_menu_api_name):

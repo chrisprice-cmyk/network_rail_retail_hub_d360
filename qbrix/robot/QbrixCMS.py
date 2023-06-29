@@ -1,15 +1,19 @@
 import json
-from time import sleep
 import os
 import time
+from time import sleep
 
-from Browser import ElementState, SelectAttribute
+from Browser import ElementState
 from cumulusci.robotframework.base_library import BaseLibrary
-from qbrix.robot.QbrixSharedKeywords import QbrixSharedKeywords
 from cumulusci.robotframework.SalesforceAPI import SalesforceAPI
+from robot.api.deco import library
 
+from qbrix.robot.QbrixSharedKeywords import QbrixSharedKeywords
 
+@library(scope='GLOBAL', auto_keywords=True, doc_format='reST')
 class QbrixCMS(BaseLibrary):
+
+    """Qbrix CMS Library"""
 
     def __init__(self):
         super().__init__()

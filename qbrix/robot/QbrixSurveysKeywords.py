@@ -2,11 +2,15 @@ from time import sleep
 
 from Browser import ElementState, SelectAttribute
 from cumulusci.robotframework.base_library import BaseLibrary
+from robot.api.deco import library
+
 from qbrix.robot.QbrixSharedKeywords import QbrixSharedKeywords
 
 
+@library(scope='GLOBAL', auto_keywords=True, doc_format='reST')
 class QbrixSurveysKeywords(BaseLibrary):
-
+    """Robot Keywords for Surveys"""
+    
     def __init__(self):
         super().__init__()
         self._browser = None
@@ -14,6 +18,7 @@ class QbrixSurveysKeywords(BaseLibrary):
 
     @property
     def browser(self):
+        """Browser Instance"""
         if self._browser is None:
             self._browser = self.builtin.get_library_instance("Browser")
         return self._browser
@@ -39,17 +44,19 @@ class QbrixSurveysKeywords(BaseLibrary):
             self.browser.take_screenshot()
             raise e
 
-    def set_survey_default_community(self, communityname: str):
+    def set_survey_default_community(self, community_name: str):
         """
         Sets the Default Community for Surveys
-        :param communityname: Name of the Community to be used with Salesforce Surveys
+        
+        Args:
+            community_name (str): Name of the Community to be used with Salesforce Surveys
         """
-        if communityname is None:
-            raise Exception("A Community Name must be specified")
+        if community_name is None:
+            raise ValueError("A Community Name must be specified")
 
         self.enable_surveys()
         sleep(5)
 
         # Routing Type
-        self.browser.select_options_by("[class=\"slds-select\"]", SelectAttribute.text, communityname)
+        self.browser.select_options_by("[class=\"slds-select\"]", SelectAttribute.text, community_name)
         sleep(2)

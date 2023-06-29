@@ -1,13 +1,16 @@
 from time import sleep
 
-from Browser import ElementState, SelectAttribute
+from Browser import ElementState
 from cumulusci.robotframework.base_library import BaseLibrary
+from robot.api.deco import library
+
 from qbrix.robot.QbrixSharedKeywords import QbrixSharedKeywords
-from robot.api import logger
 
 
+@library(scope='GLOBAL', auto_keywords=True, doc_format='reST')
 class QbrixServiceKeywords(BaseLibrary):
-
+    """Service Cloud Keywords"""
+    
     def __init__(self):
         super().__init__()
         self._browser = None
@@ -42,6 +45,7 @@ class QbrixServiceKeywords(BaseLibrary):
         self.browser.wait_for_elements_state("label:has-text('Accepted')", ElementState.visible, '15s')
 
     def enable_case_swarming(self):
+        """Enables Case Swarming"""
         self.enable_slack_integration()
         self.shared.go_to_setup_admin_page("SlackServiceApp/home")
         checked = "checked" in self.browser.get_element_states("span.slds-checkbox_faux")
@@ -57,12 +61,14 @@ class QbrixServiceKeywords(BaseLibrary):
             sleep(1)
 
     def create_chat_button(self):
+        """Creates a new Chat Button"""
         self.shared.go_to_setup_admin_page("LiveChatButtonSettings/home")
         sleep(4)
         self.browser.get_element_states(".button:has-text('New')")
         sleep(5)
 
     def add_case_wrap_up_model(self):
+        """Add Case Wrap Up Model"""
         self.shared.go_to_setup_admin_page("EinsteinCaseClassification/home")
         sleep(2)
         if "visible" in self.browser.get_element_states("button.slds-button:text-is('Get Started')"):
@@ -90,6 +96,7 @@ class QbrixServiceKeywords(BaseLibrary):
         sleep(10)
 
     def create_case_classification_model(self):
+        """Create Case Classification"""
         self.shared.go_to_setup_admin_page("EinsteinCaseClassification/home")
         sleep(2)
         if "visible" in self.browser.get_element_states("button.slds-button:text-is('Get Started')"):
@@ -146,8 +153,6 @@ class QbrixServiceKeywords(BaseLibrary):
             self.shared.go_to_setup_admin_page("ConversationMessageDefinitions/home")
             self.browser.wait_for_elements_state("h1:has-text('Messaging Components')", ElementState.visible, '30s')
             sleep(2)
-
-
             self.shared.click_button_with_text("New Component")
             self.shared.click_button_with_text("Next")
             sleep(1)
@@ -161,8 +166,6 @@ class QbrixServiceKeywords(BaseLibrary):
             self.browser.fill_text(f"{iframe_handler} input[name='fullName']",one_msg["developer_name"])
             self.browser.fill_text(f"{iframe_handler} textarea[name='description']",one_msg["description"])
             self.shared.click_button_with_text("Done")
-
             sleep(4)
 
         return
-

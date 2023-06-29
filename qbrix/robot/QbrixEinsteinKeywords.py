@@ -1,10 +1,16 @@
 from time import sleep
+
 from Browser import ElementState
 from cumulusci.robotframework.base_library import BaseLibrary
+from robot.api.deco import library
+
 from qbrix.robot.QbrixSharedKeywords import QbrixSharedKeywords
 
 
+@library(scope='GLOBAL', auto_keywords=True, doc_format='reST')
 class QbrixEinsteinKeywords(BaseLibrary):
+
+    """Keywords for Qbrix Einstein"""
 
     def __init__(self):
         super().__init__()

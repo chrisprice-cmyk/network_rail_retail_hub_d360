@@ -1,24 +1,28 @@
 import json
-import sys
 import os
+import subprocess
+import sys
+from datetime import datetime
+from time import sleep
+from typing import Optional
 from xml import etree
 
 import pandas as pd
 import pandasql as ps
-import subprocess
-from time import sleep
-from datetime import datetime
-from typing import Optional
 from Browser import ElementState, SelectAttribute
 from cumulusci.robotframework.base_library import BaseLibrary
 from cumulusci.robotframework.SalesforceAPI import SalesforceAPI
+from robot.api.deco import library
+
 from qbrix.robot.QbrixSharedKeywords import QbrixSharedKeywords
 
 
 # pip install pandas
 # pip install pandasql3
-
+@library(scope='GLOBAL', auto_keywords=True, doc_format='reST')
 class QbrixValidationKeywords(BaseLibrary):
+
+    """Validation Keywords"""
 
     def __init__(self):
         super().__init__()

@@ -1,15 +1,19 @@
-import json
 import re
-from time import sleep
-from datetime import datetime
 import time
+from datetime import datetime
+from time import sleep
 from typing import Optional
+
 from Browser import ElementState, SelectAttribute
 from cumulusci.robotframework.base_library import BaseLibrary
 from cumulusci.robotframework.SalesforceAPI import SalesforceAPI
+from robot.api.deco import library
 
 
+@library(scope='GLOBAL', auto_keywords=True, doc_format='reST')
 class QbrixSharedKeywords(BaseLibrary):
+
+    """Shared Keywords for Robot"""
 
     def __init__(self):
         super().__init__()
