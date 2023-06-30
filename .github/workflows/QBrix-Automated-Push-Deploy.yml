@@ -1,0 +1,184 @@
+name: QBrix-Automated-Push-Deploy
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+  workflow_dispatch:
+env:
+  CUMULUSCI_KEYCHAIN_CLASS: cumulusci.core.keychain.EnvironmentProjectKeychain
+  CUMULUSCI_SERVICE_github: ${{ secrets.QBRIX_CUMULUSCI_SERVICE_github }}
+  SFDX_CLIENT_ID: ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
+  SFDX_HUB_KEY: ${{ secrets.QBRIX_DEVHUB_PRIVATE_KEY }}
+  TESTIM_KEY: ${{ secrets.QBRIX_TESTIM_KEY }}
+  TESTIM_GRID: ${{ secrets.QBRIX_TESTIM_GRID }}
+  TESTIM_PROJECT: ${{ secrets.QBRIX_TESTIM_PROJECT }}
+  DEVHUBCONSUMERKEY: ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
+  DEVHUBJWTKEYFILE: devhub.key
+  GITHUB_PAT: ${{ secrets.QBRIX_GITHUB_PAT}}
+  USE_TEMPLATE: true
+  TEMPLATEID: LATEST
+  TEMPLATE_INSTANCE: NA135
+  SFDX_DISABLE_DNS_CHECK: true
+  ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+  BUILD_SUFFIX: QBrix-Automated-Push-Deploy
+  QBRIX_SYSTEM_ID: GIT_BUILD_AUTOMATION
+  SF_USE_PROGRESS_BAR: false
+
+jobs:
+  collection_deployment_steps:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Check file existence
+        id: automated_deploy_present
+        uses: andstor/file-existence-action@v2
+        with:
+          files: "${{ github.workspace }}/automated_deploy.json"
+
+      - name: create defaullt matrix
+        if: steps.automated_deploy_present.outputs.files_exists == 'false'
+        uses: "DamianReeves/write-file-action@master"
+        with:
+          path: ${{ github.workspace }}/collection_run.json
+          write-mode: overwrite
+          contents: |
+            [{ "targetusername":"","action": "flow", "target": "deploy_qbrix", "description": "Deploy QBrix" }]
+
+      - uses: nelonoel/branch-name@v1.0.1
+        if: steps.automated_deploy_present.outputs.files_exists
+      - id: set-matrix
+        uses: JoshuaTheMiller/conditional-build-matrix@main
+        with:
+          filter: "[*]"
+          inputFile: ${{ github.workspace }}/automated_deploy.json
+
+  qbrix_deployments:
+    needs: [collection_deployment_steps]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{ fromJSON(needs.collection_deployment_steps.outputs.matrix) }}
+      max-parallel: 50 #run in parrallel
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Disable TCP/UDP Offloading (Linux)
+        if: matrix.targetusername!=''
+        shell: bash
+        run: sudo ethtool -K eth0 tx off rx off
+
+      - name: Core Setup - key for jwt auth
+        if: matrix.targetusername!=''
+        run: echo "${{ secrets.QBRIX_DEVHUB_PRIVATE_KEY }}" > devhub.key
+
+      # Install SFDX
+      - name: Install SFDX
+        if: matrix.targetusername!=''
+        run: npm install --location=global sfdx-cli
+
+      - name: The automated deploy matrix json contains the list of target org usernames (TSOs Ideally) to deploy against.
+        if: matrix.targetusername!=''
+        run: sfdx auth:jwt:grant -u ${{ matrix.targetusername }} -a dev_target_username -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
+
+      # We will use a common app with a common key -
+      - name: Create SFDX Session for DEV HUB ACCESS
+        if: matrix.targetusername!=''
+        run: sfdx auth:jwt:grant -u ${{ secrets.QBRIX_DEVHUB_USERACCOUNT }} -a DEVHUB_ACCT -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }} --setdefaultdevhubusername
+
+        #install Python Test Resources
+      - name: Install Python Test Resources
+        if: matrix.targetusername!=''
+        run: sudo apt install python3-testresources
+
+      #Setup PyOpenSSL and keyrings.alt
+      - name: Setup PyOpenSSL
+        if: matrix.targetusername!=''
+        run: |
+          pip install pyopenssl --upgrade
+          pip install keyrings.alt
+
+      #install CumumulsCI
+      - name: Install CumulusCI
+        if: matrix.targetusername!=''
+        run: pip install cumulusci
+
+      #install playright via CCI
+      - name: Install Playwright via CCI
+        if: matrix.targetusername!=''
+        run: cci robot install_playwright
+
+      #display cci version
+      - name: cci version
+        if: matrix.targetusername!=''
+        run: cci version
+
+      #CCI Service List
+      - name: cci service list
+        if: matrix.targetusername!=''
+        run: cci service list
+
+      #install Behave
+      - name: Install Behave Feature Testing
+        if: matrix.targetusername!=''
+        run: pip install behave
+
+      #install Pandas
+      - name: Install Pandas
+        if: matrix.targetusername!=''
+        run: pip install pandas
+
+      #install Pandasql
+      - name: Install Pandasql
+        if: matrix.targetusername!=''
+        run: pip install pandasql
+
+      # Install Vlocity
+      - name: Install Vlocity
+        if: matrix.targetusername!=''
+        run: npm install --location=global vlocity
+
+      # Install Testim
+      - name: Install Testim
+        if: matrix.targetusername!=''
+        run: npm install --location=global @testim/testim-cli
+
+      # Install sfdmu
+      - name: Install sfdmu
+        if: matrix.targetusername!=''
+        run: sfdx plugins:install sfdmu
+
+      # Install Shane Plugin - use echo y to bypass prompt
+      - name: Install Shane Plugin
+        if: matrix.targetusername!=''
+        run: echo y | sfdx plugins:install shane-sfdx-plugins
+
+      - name: Set CCI DevHub Username
+        if: matrix.targetusername!=''
+        run: cci service connect devhub --username DEVHUB_ACCT
+
+      # CCI Service List - we should have all 3 connected now: persistant, github (via env var) and devhub
+      - name: All connected services
+        if: matrix.targetusername!=''
+        run: cci service list
+
+      - name: Import the target username into the cci runtime step
+        if: matrix.targetusername!=''
+        run: cci org import ${{ matrix.targetusername }} dev
+
+      - name: Make sure session is valid
+        if: matrix.targetusername!=''
+        run: cci org info dev
+
+      - name: Running ${{ matrix.description }} ${{ matrix.action }}::${{ matrix.target }}
+        if: matrix.targetusername!=''
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 1440
+          retry_on: error
+          max_attempts: 2
+          command: cci ${{ matrix.action }} run ${{ matrix.target }}  --org dev
+          on_retry_command: cci error info
