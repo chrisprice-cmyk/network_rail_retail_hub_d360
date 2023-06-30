@@ -2,9 +2,7 @@ name: QBrix-Automated-Push-Deploy
 on:
   push:
     branches: ["main"]
-  pull_request:
-    branches: ["main"]
-
+  
   workflow_dispatch:
 env:
   CUMULUSCI_KEYCHAIN_CLASS: cumulusci.core.keychain.EnvironmentProjectKeychain
