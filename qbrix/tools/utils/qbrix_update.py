@@ -146,5 +146,11 @@ class QBrixUpdater(BaseTask, ABC):
             self.logger.info(f" -> Running custom update from {self.UpdateLocation}...")
             download_and_unzip(self.UpdateLocation, self.ArchivePassword, self.IgnoreOptionalUpdates)
             self.logger.info(" -> Custom update complete")
+
+        # Fixes for CumulusCI.yml
+        self.logger.info(" -> Updating robot references in CumulusCI.yml...")
+        replace_file_text("cumulusci.yml", "qbrix/robot/tests", "qbrix/robot", False)
+        if os.path.exists("qbrix/robot/tests"):
+            shutil.rmtree("qbrix/robot/tests")
         
         self.logger.info("Update Complete!")
