@@ -10,5 +10,9 @@
         "${workspaceFolder}",
         "${workspaceFolder}/qbrix",
         "${workspaceFolder}/qbrix/robot",
-    ]
+        "${workspaceFolder}/robot",
+    ],
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    },
 }
