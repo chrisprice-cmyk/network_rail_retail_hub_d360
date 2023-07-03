@@ -5,13 +5,14 @@ from time import sleep
 from typing import Optional
 
 from Browser import ElementState, SelectAttribute
-from cumulusci.robotframework.base_library import BaseLibrary
+from robot.libraries.BuiltIn import BuiltIn
 from cumulusci.robotframework.SalesforceAPI import SalesforceAPI
+from cumulusci.robotframework.CumulusCI import CumulusCI
 from robot.api.deco import library
 
 
 @library(scope='GLOBAL', auto_keywords=True, doc_format='reST')
-class QbrixSharedKeywords(BaseLibrary):
+class QbrixSharedKeywords():
 
     """Shared Keywords for Robot"""
 
@@ -19,6 +20,17 @@ class QbrixSharedKeywords(BaseLibrary):
         super().__init__()
         self._browser = None
         self._salesforceapi = None
+        self._builtin = None
+        self._cumulusci = None
+
+    @property
+    def builtin(self):
+
+        """Loads Builtin Methods"""
+
+        if getattr(self, "_builtin", None) is None:
+            self._builtin = BuiltIn()
+        return self._builtin
 
     @property
     def browser(self):
@@ -31,6 +43,15 @@ class QbrixSharedKeywords(BaseLibrary):
         if self._salesforceapi is None:
             self._salesforceapi = SalesforceAPI()
         return self._salesforceapi
+    
+    @property
+    def cumulusci(self):
+
+        """Loads Keyword Library for working with CumulusCI from Robot"""
+
+        if getattr(self, "_cumulusci", None) is None:
+            self._cumulusci = CumulusCI()
+        return self._cumulusci
     
     # ---------------------------------
     # BROWSING AND NAVIGATION FUNCTIONS

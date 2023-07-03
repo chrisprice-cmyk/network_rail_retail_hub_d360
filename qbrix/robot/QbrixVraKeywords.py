@@ -1,27 +1,15 @@
 from time import sleep
 
 from Browser import ElementState, SelectAttribute
-from cumulusci.robotframework.base_library import BaseLibrary
 from robot.api.deco import library
 
-from qbrix.robot.QbrixSharedKeywords import QbrixSharedKeywords
+from qbrix.core.qbrix_robot_base import QbrixRobotTask
 
 
 @library(scope='GLOBAL', auto_keywords=True, doc_format='reST')
-class QbrixVraKeywords(BaseLibrary):
+class QbrixVraKeywords(QbrixRobotTask):
 
     """Shared VRA Keywords"""
-
-    def __init__(self):
-        super().__init__()
-        self._browser = None
-        self.shared = QbrixSharedKeywords()
-
-    @property
-    def browser(self):
-        if self._browser is None:
-            self._browser = self.builtin.get_library_instance("Browser")
-        return self._browser
 
     def create_vra_service_channel(self):
         """ Creates the VRA Service Channel """

@@ -1,35 +1,15 @@
 from time import sleep
 
 from Browser import ElementState
-from cumulusci.robotframework.base_library import BaseLibrary
-from cumulusci.robotframework.SalesforceAPI import SalesforceAPI
 from robot.api.deco import library
 
-from qbrix.robot.QbrixSharedKeywords import QbrixSharedKeywords
+from qbrix.core.qbrix_robot_base import QbrixRobotTask
 
 
 @library(scope='GLOBAL', auto_keywords=True, doc_format='reST')
-class QbrixNGOKeywords(BaseLibrary):
+class QbrixNGOKeywords(QbrixRobotTask):
 
     """Shared Keywords for NGO"""
-
-    def __init__(self):
-        super().__init__()
-        self._browser = None
-        self.shared = QbrixSharedKeywords()
-        self._salesforceapi = None
-
-    @property
-    def browser(self):
-        if self._browser is None:
-            self._browser = self.builtin.get_library_instance("Browser")
-        return self._browser
-
-    @property
-    def salesforceapi(self):
-        if self._salesforceapi is None:
-            self._salesforceapi = SalesforceAPI()
-        return self._salesforceapi
 
     def enable_program_benefits(self):
         """

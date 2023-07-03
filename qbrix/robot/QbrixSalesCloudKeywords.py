@@ -1,34 +1,14 @@
 from time import sleep
 
 from Browser import ElementState, SelectAttribute
-from cumulusci.robotframework.base_library import BaseLibrary
-from cumulusci.robotframework.SalesforceAPI import SalesforceAPI
 from robot.api.deco import library
 
-from qbrix.robot.QbrixSharedKeywords import QbrixSharedKeywords
+from qbrix.core.qbrix_robot_base import QbrixRobotTask
 
 
 @library(scope='GLOBAL', auto_keywords=True, doc_format='reST')
-class QbrixSalesCloudKeywords(BaseLibrary):
+class QbrixSalesCloudKeywords(QbrixRobotTask):
     """Sales Cloud Keywords"""
-
-    def __init__(self):
-        super().__init__()
-        self._browser = None
-        self._salesforceapi = None
-        self.shared = QbrixSharedKeywords()
-
-    @property
-    def browser(self):
-        if self._browser is None:
-            self._browser = self.builtin.get_library_instance("Browser")
-        return self._browser
-
-    @property
-    def salesforceapi(self):
-        if self._salesforceapi is None:
-            self._salesforceapi = SalesforceAPI()
-        return self._salesforceapi
 
     def enable_forecasts(self):
         """Go directly to the Field Service admin page"""

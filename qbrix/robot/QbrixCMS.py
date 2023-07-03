@@ -2,44 +2,23 @@ import json
 import os
 import time
 from time import sleep
-
 from Browser import ElementState
-from cumulusci.robotframework.base_library import BaseLibrary
-from cumulusci.robotframework.SalesforceAPI import SalesforceAPI
 from robot.api.deco import library
-
-from qbrix.robot.QbrixSharedKeywords import QbrixSharedKeywords
+from qbrix.core.qbrix_robot_base import QbrixRobotTask
 
 @library(scope='GLOBAL', auto_keywords=True, doc_format='reST')
-class QbrixCMS(BaseLibrary):
+class QbrixCMS(QbrixRobotTask):
 
     """Qbrix CMS Library"""
 
-    def __init__(self):
-        super().__init__()
-        self._browser = None
-        self.shared = QbrixSharedKeywords()
-        self._salesforceapi = None
-
-    @property
-    def browser(self):
-        if self._browser is None:
-            self._browser = self.builtin.get_library_instance("Browser")
-        return self._browser
-
-    @property
-    def salesforceapi(self):
-        if self._salesforceapi is None:
-            self._salesforceapi = SalesforceAPI()
-        return self._salesforceapi
-
     def go_to_digital_experiences(self):
+        """Go to the Digital Experiences App"""
         self.shared.go_to_app("Digital Experiences")
 
     def download_all_content(self):
 
         # Get Workspace Names
-        results = self.salesforceapi.soql_query(f"SELECT Name FROM ManagedContentSpace WHERE IsDeleted=False")
+        results = self.salesforceapi.soql_query("SELECT Name FROM ManagedContentSpace WHERE IsDeleted=False")
         if results["totalSize"] == 0:
             return
 

@@ -5,14 +5,16 @@ from datetime import datetime
 from os.path import exists
 
 from cumulusci.core.tasks import BaseTask
-from qbrix.tools.shared.qbrix_console_utils import init_logger
-from qbrix.tools.shared.qbrix_project_tasks import download_and_unzip, get_qbrix_repo_url, replace_file_text
-from qbrix.tools.shared.qbrix_json_tasks import update_json_file_value
 
-log = init_logger()
+from qbrix.tools.shared.qbrix_json_tasks import update_json_file_value
+from qbrix.tools.shared.qbrix_project_tasks import (download_and_unzip,
+                                                    get_qbrix_repo_url,
+                                                    replace_file_text)
 
 
 class InitProject(BaseTask, ABC):
+
+    """Initializes a Q Brix Project"""
 
     task_docs = """
     Used to setup the initial project based on the connected Q Brix Repo. Must be run at initial project setup time before you start developing, although can be run anytime there after to update files and settings related to this project.
@@ -37,13 +39,15 @@ class InitProject(BaseTask, ABC):
         self.repo_url = self.project_config.project__git__repo_url
         self.template_file_location = "force-app/main/default/customMetadata/xDO_Base_QBrix_Register.xDO_Template.md-meta.xml"
 
-        self.TestMode = False
+        self.run_in_test_mode = False
         if "TestMode" in self.options:
-            self.TestMode = self.options["TestMode"]
-            if self.TestMode:
+            self.run_in_test_mode = self.options["TestMode"]
+            if self.run_in_test_mode:
                 self.logger.info("Test Mode Enabled. No Files will be updated.")
 
     def update_create_qbrix_register(self, file_location):
+
+        """Updates the Q Brix Register Detail File"""
 
         now = datetime.now()
 
@@ -85,11 +89,11 @@ class InitProject(BaseTask, ABC):
             </values>
       </CustomMetadata>"""
 
-        if self.TestMode:
+        if self.run_in_test_mode:
             print(xml)
         else:
-            with open(file_location, "w") as f:
-                f.write(xml)
+            with open(file_location, "w", encoding="utf-8") as qbrix_details_file:
+                qbrix_details_file.write(xml)
 
     def _run_task(self):
 
@@ -105,7 +109,7 @@ class InitProject(BaseTask, ABC):
             if qbrix_name is not None and qbrix_name != "":
                 self.repo_url = repo_url
                 self.project_name = qbrix_name
-                self.logger.info(f" -> Found Q Brix Name: {qbrix_name} located on GitHub at {repo_url}")
+                self.logger.info(f" -> Found Q Brix Name: %s located on GitHub at %s", qbrix_name, repo_url)
         else:
             raise Exception("Unable to determine linked Github Repo. Ensure you are running this command within a CumulusCI project and that you have completed the prerequisites to install and configure Git and GitHub Desktop.")
 

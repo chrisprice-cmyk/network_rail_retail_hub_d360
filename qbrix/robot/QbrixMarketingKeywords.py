@@ -1,27 +1,13 @@
 from time import sleep
-
 from Browser import ElementState, SelectAttribute
-from cumulusci.robotframework.base_library import BaseLibrary
 from robot.api.deco import library
-
-from qbrix.robot.QbrixSharedKeywords import QbrixSharedKeywords
+from qbrix.core.qbrix_robot_base import QbrixRobotTask
 
 
 @library(scope='GLOBAL', auto_keywords=True, doc_format='reST')
-class QbrixMarketingKeywords(BaseLibrary):
+class QbrixMarketingKeywords(QbrixRobotTask):
 
     """Marketing Cloud Keywords for Robot"""
-
-    def __init__(self):
-        super().__init__()
-        self._browser = None
-        self.shared = QbrixSharedKeywords()
-
-    @property
-    def browser(self):
-        if self._browser is None:
-            self._browser = self.builtin.get_library_instance("Browser")
-        return self._browser
 
     def enable_pardot_setting(self):
         """ Enables Pardot Setting"""
@@ -74,10 +60,8 @@ class QbrixMarketingKeywords(BaseLibrary):
         """ Enables Maps Territory Planning Settings"""
         self.shared.go_to_setup_admin_page("Territory2Settings/home")
         sleep(5)
-        visible = "visible" in self.browser.get_element_states(
-            f":nth-match(iframe,1) >>> button:has-text('Enable Enterprise Territory Management')")
+        visible = "visible" in self.browser.get_element_states(":nth-match(iframe,1) >>> button:has-text('Enable Enterprise Territory Management')")
         if visible:
-            button_to_click = self.browser.get_element(
-                f":nth-match(iframe,1) >>> button:has-text('Enable Enterprise Territory Management')")
+            button_to_click = self.browser.get_element(":nth-match(iframe,1) >>> button:has-text('Enable Enterprise Territory Management')")
             self.browser.click(button_to_click)
             sleep(1)

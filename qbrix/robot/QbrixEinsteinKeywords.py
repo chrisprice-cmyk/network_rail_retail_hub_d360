@@ -1,27 +1,15 @@
 from time import sleep
 
 from Browser import ElementState
-from cumulusci.robotframework.base_library import BaseLibrary
 from robot.api.deco import library
 
-from qbrix.robot.QbrixSharedKeywords import QbrixSharedKeywords
+from qbrix.core.qbrix_robot_base import QbrixRobotTask
 
 
 @library(scope='GLOBAL', auto_keywords=True, doc_format='reST')
-class QbrixEinsteinKeywords(BaseLibrary):
+class QbrixEinsteinKeywords(QbrixRobotTask):
 
     """Keywords for Qbrix Einstein"""
-
-    def __init__(self):
-        super().__init__()
-        self._browser = None
-        self.shared = QbrixSharedKeywords()
-
-    @property
-    def browser(self):
-        if self._browser is None:
-            self._browser = self.builtin.get_library_instance("Browser")
-        return self._browser
 
     def enable_einstein_analytics_crm(self):
         """
@@ -31,7 +19,7 @@ class QbrixEinsteinKeywords(BaseLibrary):
         self.browser.wait_for_elements_state("h1:has-text('Getting Started')", ElementState.visible, '60s')
         sleep(10)
         if "visible" in self.browser.get_element_states("button:has-text('Enable CRM Analytics')"):
-            QbrixSharedKeywords().click_button_with_text("Enable CRM Analytics")
+            self.shared.click_button_with_text("Enable CRM Analytics")
             sleep(30)
 
     def go_to_campaign_insights_setup_page(self):

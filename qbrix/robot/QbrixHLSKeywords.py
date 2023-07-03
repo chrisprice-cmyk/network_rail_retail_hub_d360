@@ -1,35 +1,13 @@
 from time import sleep
-
 from Browser import ElementState
-from cumulusci.robotframework.base_library import BaseLibrary
-from cumulusci.robotframework.SalesforceAPI import SalesforceAPI
 from robot.api.deco import library
-
-from qbrix.robot.QbrixSharedKeywords import QbrixSharedKeywords
+from qbrix.core.qbrix_robot_base import QbrixRobotTask
 
 
 @library(scope='GLOBAL', auto_keywords=True, doc_format='reST')
-class QbrixHLSKeywords(BaseLibrary):
+class QbrixHLSKeywords(QbrixRobotTask):
 
     """Shared Keywords for HLS"""
-
-    def __init__(self):
-        super().__init__()
-        self._browser = None
-        self.shared = QbrixSharedKeywords()
-        self._salesforceapi = None
-
-    @property
-    def browser(self):
-        if self._browser is None:
-            self._browser = self.builtin.get_library_instance("Browser")
-        return self._browser
-
-    @property
-    def salesforceapi(self):
-        if self._salesforceapi is None:
-            self._salesforceapi = SalesforceAPI()
-        return self._salesforceapi
 
     def enable_care_plans(self):
         """
@@ -81,5 +59,5 @@ class QbrixHLSKeywords(BaseLibrary):
             self.browser.click(toggle_switch)
             sleep(2)
             if "visible" in self.browser.get_element_states("button:has-text('Enable')"):
-                QbrixSharedKeywords().click_button_with_text("Enable")
+                self.shared.click_button_with_text("Enable")
                 sleep(5)

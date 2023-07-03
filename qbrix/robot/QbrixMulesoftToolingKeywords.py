@@ -1,54 +1,16 @@
 from time import sleep
-
 from Browser import ElementState, SelectAttribute
-from cumulusci.robotframework.base_library import BaseLibrary
 from robot.api.deco import library
-
-from qbrix.robot.QbrixSharedKeywords import QbrixSharedKeywords
+from qbrix.core.qbrix_robot_base import QbrixRobotTask
 
 
 @library(scope='GLOBAL', auto_keywords=True, doc_format='reST')
-class QbrixMulesoftToolingKeywords(BaseLibrary):
+class QbrixMulesoftToolingKeywords(QbrixRobotTask):
 
     """Mulesoft Keywords for Robot"""
 
-    def __init__(self):
-        super().__init__()
-        self._browser = None
-        self.shared = QbrixSharedKeywords()
-
-    @property
-    def browser(self):
-        if self._browser is None:
-            self._browser = self.builtin.get_library_instance("Browser")
-        return self._browser
-
-    # -----------------------------------------------------------------------------------------------------------------------------------------
-    # Q BRANCH TOOLING FUNCTIONS
-    # -----------------------------------------------------------------------------------------------------------------------------------------
-
-    def enable_admin_auth_for_connected_app(self, connected_app_label):
-        try:
-            self.shared.go_to_setup_admin_page("ConnectedApplication/home")
-            iframe_selector = self.shared.iframe_handler()
-            self.browser.wait_for_elements_state(f"{iframe_selector} h1:text-is('Connected Apps')", ElementState.visible, "15s")
-            self.browser.click(f"{iframe_selector} a:text-is('{connected_app_label}')")
-            self.browser.wait_for_elements_state(f"{iframe_selector} h2.mainTitle:text-is('Connected App Detail')", ElementState.visible, "15s")
-
-            if self.browser.get_element_count(f"{iframe_selector} td.dataCol:text-is('Admin approved users are pre-authorized')") == 0:
-                self.browser.click(f"{iframe_selector} .btn:has-text('Edit Policies')")
-                self.browser.wait_for_elements_state(f"{iframe_selector} h2.mainTitle:text-is('Connected App Edit')", ElementState.visible, "15s")
-                self.browser.select_options_by(f"{iframe_selector} #userpolicy", SelectAttribute.text, "Admin approved users are pre-authorized")
-                sleep(10)
-                self.browser.click(f"{iframe_selector} .btn:has-text('Save')")
-                self.browser.wait_for_elements_state(f"{iframe_selector} h2.mainTitle:text-is('Connected App Detail')", ElementState.visible, "15s")
-        except Exception as e:
-            self.browser.take_screenshot()
-            raise e
-
     def enable_connected_mule_tool(self):
         """ Enables Data Tool Connected App Settings"""
-        self.enable_admin_auth_for_connected_app("MuleSoft SE Technical Operations")
         iframe_selector = self.shared.iframe_handler()
         self.browser.wait_for_elements_state(f"{iframe_selector} .btn:has-text('Manage Profiles')", ElementState.visible, "15s")
         self.browser.click(f"{iframe_selector} .btn:has-text('Manage Profiles')")
