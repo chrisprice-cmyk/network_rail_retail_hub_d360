@@ -1,17 +1,20 @@
 import filecmp
-
-from abc import ABC
 import os
 import shutil
+from abc import ABC
 from os.path import exists
-from cumulusci.core.tasks import BaseTask
-from qbrix.tools.shared.qbrix_console_utils import init_logger, run_command
-from qbrix.tools.shared.qbrix_project_tasks import download_and_unzip, replace_file_text
 
-log = init_logger()
+from cumulusci.core.tasks import BaseTask
+
+from qbrix.tools.shared.qbrix_cci_tasks import run_cci_task
+from qbrix.tools.shared.qbrix_project_tasks import (download_and_unzip,
+                                                    replace_file_text)
 
 
 class QBrixUpdater(BaseTask, ABC):
+
+    """Updates Q Brix Scripts along with any optional, custom updates"""
+
     q_branch_location = "https://qbrix-core.herokuapp.com/qbrix/q_update_package.zip"
 
     task_docs = """
@@ -30,7 +33,7 @@ class QBrixUpdater(BaseTask, ABC):
             "required": False
         },
         "IgnoreOptionalUpdates": {
-            "description": "True or False - When True this will ignore any Optional Updates being added to the project.",
+            "description": "When set to True, will ignore updates defined as 'Optional' from the Q Branch Updates. Default is False.",
             "required": False
         }
     }
@@ -43,33 +46,33 @@ class QBrixUpdater(BaseTask, ABC):
 
     def _check_and_deploy_class(self, tasks: dict):
 
-        with open("cumulusci.yml", "r") as cci_file:
+        with open("cumulusci.yml", "r", encoding="utf-8") as cci_file:
             cci_file.seek(0)
             cci_data = cci_file.read()
 
         # Check for Placeholder
         if cci_data.find("# CUSTOM TASKS ADDED FOR Q BRIX DEVELOPMENT") == -1:
-            raise Exception("Unable to update cumulusci.yml file. Missing placeholder for Q Brix Tasks.")
+            self.logger.error("Unable to update cumulusci.yml file. Missing placeholder for Q Brix Tasks.")
+        else:
+            # Check and update custom tasks
+            for key, value in tasks.items():
+                self.logger.info(" -> Checking Q Brix Task: %s / %s", key, value)
 
-        # Check and update custom tasks
-        for key, value in tasks.items():
-            self.logger.info(f" -> Checking Q Brix Task: {key} / {value}")
+                key_index = cci_data.find(f"{key}:")
+                value_index = cci_data.find(value)
 
-            key_index = cci_data.find(f"{key}:")
-            value_index = cci_data.find(value)
-
-            if key_index < 0 and value_index < 0:
-                replacement_text = f"# CUSTOM TASKS ADDED FOR Q BRIX DEVELOPMENT\n\n  {key}:\n    class_path: {value}"
-                replace_file_text("cumulusci.yml", "# CUSTOM TASKS ADDED FOR Q BRIX DEVELOPMENT", replacement_text)
+                if key_index < 0 and value_index < 0:
+                    replacement_text = f"# CUSTOM TASKS ADDED FOR Q BRIX DEVELOPMENT\n\n  {key}:\n    class_path: {value}"
+                    replace_file_text("cumulusci.yml", "# CUSTOM TASKS ADDED FOR Q BRIX DEVELOPMENT", replacement_text)
 
     def _update_folder(self, folder_path, update_dir, remove_existing):
-        try:
-            if exists(folder_path) and remove_existing:
+
+        """Copies Files and Directories from the downloaded update to the corresponding location within the project"""
+
+        if exists(folder_path) and remove_existing:
                 shutil.rmtree(folder_path)
-            update_path = os.path.join(update_dir, folder_path)
-            shutil.copytree(src=update_path, dst=folder_path, dirs_exist_ok=True)
-        except Exception as e:
-            raise Exception(f"Update Failed: Error details... {e}")
+        update_path = os.path.join(update_dir, folder_path)
+        shutil.copytree(src=update_path, dst=folder_path, dirs_exist_ok=True)
 
     def _ensure_required_dirs(self):
 
@@ -137,14 +140,17 @@ class QBrixUpdater(BaseTask, ABC):
 
         if not filecmp.cmp(".qbrix/qbrix_update.py", "qbrix/tools/utils/qbrix_update.py"):
             self.logger.info(" -> Update Task has been upgraded, running update again...")
-            run_command("cci task run update_qbrix")
+            run_cci_task("update_qbrix", self.org_config.name)
 
         if os.path.exists("qbrix/qbrix_update.py"):
             os.remove("qbrix/qbrix_update.py")
 
         if self.UpdateLocation:
-            self.logger.info(f" -> Running custom update from {self.UpdateLocation}...")
-            download_and_unzip(self.UpdateLocation, self.ArchivePassword, self.IgnoreOptionalUpdates)
+            self.logger.info(" -> Running custom update from %s...", self.UpdateLocation)
+            download_and_unzip(
+                self.UpdateLocation,
+                self.ArchivePassword,
+                self.IgnoreOptionalUpdates)
             self.logger.info(" -> Custom update complete")
 
         # Fixes for CumulusCI.yml
@@ -152,5 +158,4 @@ class QBrixUpdater(BaseTask, ABC):
         replace_file_text("cumulusci.yml", "qbrix/robot/tests", "qbrix/robot", False)
         if os.path.exists("qbrix/robot/tests"):
             shutil.rmtree("qbrix/robot/tests")
-        
         self.logger.info("Update Complete!")
