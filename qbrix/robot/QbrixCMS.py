@@ -529,3 +529,16 @@ class QbrixCMS(QbrixRobotTask):
                     self.browser.click(f"li.oneConsoleTabItem:has-text('{results['records'][0]['Name']}'):visible >> div.close")
                 except:
                     continue
+
+    def open_experience_cloud_collections_page(self, experience_cloud_name):
+        """Opens the Content Collection Page for a given Experience Cloud site"""
+        self.shared.go_to_setup_admin_page('SetupNetworks/home', 5)
+        if self.browser.get_element_count(f"{self.shared.iframe_handler()} div.pbBody >> table.zen-data >> tr.dataRow:has-text('{experience_cloud_name}')") > 0:
+            self.browser.click(f"{self.shared.iframe_handler()} div.pbBody >> table.zen-data >> tr.dataRow:has-text('HLS - Experiences') >> a.networkManageLink")
+            sleep(2)
+            self.browser.switch_page('NEW')
+            sleep(10)
+            self.browser.click("a.js-workspace-contentManager")
+            sleep(5)
+            self.browser.click("a[id=cmcNodeItem-managedContentCollections]")
+            sleep(1)
