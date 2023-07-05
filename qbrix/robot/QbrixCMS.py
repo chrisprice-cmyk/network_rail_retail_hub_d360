@@ -2,7 +2,7 @@ import json
 import os
 import time
 from time import sleep
-from Browser import ElementState
+from Browser import ElementState, SelectAttribute
 from robot.api.deco import library
 from qbrix.core.qbrix_robot_base import QbrixRobotTask
 
@@ -531,14 +531,239 @@ class QbrixCMS(QbrixRobotTask):
                     continue
 
     def open_experience_cloud_collections_page(self, experience_cloud_name):
-        """Opens the Content Collection Page for a given Experience Cloud site"""
-        self.shared.go_to_setup_admin_page('SetupNetworks/home', 5)
+        """Browses to the Collections Page of an Experience Cloud Site"""
+        self.shared.go_to_setup_admin_page('SetupNetworks/home', 2)
+        self.browser.wait_for_elements_state("iframe >>> table.zen-data", ElementState.visible, "15s")
         if self.browser.get_element_count(f"{self.shared.iframe_handler()} div.pbBody >> table.zen-data >> tr.dataRow:has-text('{experience_cloud_name}')") > 0:
-            self.browser.click(f"{self.shared.iframe_handler()} div.pbBody >> table.zen-data >> tr.dataRow:has-text('HLS - Experiences') >> a.networkManageLink")
+            self.browser.click(f"{self.shared.iframe_handler()} div.pbBody >> table.zen-data >> tr.dataRow:has-text('{experience_cloud_name}') >> a.networkManageLink")
             sleep(2)
             self.browser.switch_page('NEW')
-            sleep(10)
+            self.browser.wait_for_elements_state("a.js-workspace-contentManager", ElementState.visible, "15s")
             self.browser.click("a.js-workspace-contentManager")
-            sleep(5)
+            self.browser.wait_for_elements_state("a[id=cmcNodeItem-managedContentCollections]", ElementState.visible, "15s")
             self.browser.click("a[id=cmcNodeItem-managedContentCollections]")
             sleep(1)
+
+    def generate_managed_content_collection_file(self, experience_cloud_name):
+        """Generate json file with details of collections"""
+        self.open_experience_cloud_collections_page(experience_cloud_name)
+        self.browser.wait_for_elements_state("table.slds-table", ElementState.visible, "15s")
+
+        collection_data_dict = dict({})
+
+        # Gather Current Details
+        tr_elements = self.browser.get_elements("table.slds-table >> tr:has(a)")
+
+        for elem in tr_elements:
+            self.browser.new_page(self.browser.get_property(f"{elem} >> a", "href"))
+            self.browser.wait_for_elements_state("h1.slds-page-header__title", ElementState.visible, "15s")
+
+            # Scrape Details
+            collection_name = self.browser.get_property("h1.slds-page-header__title", "innerText")
+            content_type = self.browser.get_property("li:has(p[title='Content Type']) >> :nth-match(p, 2)", "innerText")
+
+            listview_name = ""
+            collection_type = ""
+            collection_content_name_list = []
+
+            if self.browser.get_element_count("li:has(p[title='Content Source']):visible") > 0:
+                collection_type = "SALESFORCE"
+                listview_name = self.browser.get_property("li:has(p[title='List View']) >> :nth-match(p, 2)", "innerText")
+            else:
+                collection_type = "CMS"
+                for table_row in self.browser.get_elements("table.slds-table >> tr:has(a)"):
+                    collection_content_name_list.append(self.browser.get_property(f"{table_row} >> a", "innerText"))
+            
+            # Add Details to Dict
+            collection_data_dict.update({
+                collection_name: {
+                    "collection_type": collection_type,
+                    "content_type": content_type,
+                    "related_cms_content": collection_content_name_list,
+                    "object_name": content_type,
+                    "listview": listview_name
+                }
+            }
+            )
+
+            self.browser.close_page()
+
+        if collection_data_dict and len(collection_data_dict):
+            save_location = os.path.join("datasets", "cms_collection_data")
+            os.makedirs(save_location, exist_ok=True)
+
+            with open(os.path.join(save_location, "cms_collection_dataset.json"), "w", encoding="utf-8") as save_file:
+                save_file.write(json.dumps(collection_data_dict, indent=4))
+
+    def upload_cms_collections(self, site_name, upload_file_location=os.path.join("datasets", "cms_collection_data", "cms_collection_dataset.json"), ):
+
+        if not os.path.exists(upload_file_location):
+            raise Exception("No CMS Collection Data Found. Unable to upload.")
+        
+        with open(upload_file_location, 'r', encoding="utf-8") as dataset_file:
+            file_data = json.load(dataset_file)
+
+        if file_data:
+
+            self.open_experience_cloud_collections_page(site_name)
+            
+            # Wait for Collections to Load
+            no_collection_mode = False
+            found_element = False
+            counter = 1
+            while counter < 10:
+                sleep(1)
+                create_button_count = self.browser.get_element_count("button.newcollection:has-text('Create Collection')")
+                table_count = self.browser.get_element_count("table.slds-table")
+
+                if create_button_count > 0:
+                    no_collection_mode = True
+                    found_element = True
+                    print("Found Create Collection button...")
+                    break
+
+                if table_count > 0:
+                    no_collection_mode = False
+                    found_element = True
+                    print("Found Table button...")
+                    break 
+
+                counter += 1
+
+            if not found_element:
+                print("No Supported Elements Found")
+                return 
+            
+            # Set Defaults for Robot
+
+            modal_next_button = "div.modal-footer >> button.nextButton"
+            collections_to_add = set()
+
+            # Add Content
+
+            if no_collection_mode:
+                print(">>> Adding All Collections")
+
+            for collection, collection_details in file_data.items():
+
+                # Check if Collection Exists
+                if no_collection_mode:
+                    collections_to_add.add(collection)
+                else:
+                    print(f">>> Checking Collection {collection}")
+                    collection_found = False
+                    for table_row in self.browser.get_elements("table.slds-table >> tr:has(a)"):
+                        selection_text = self.browser.get_property(f"{table_row} >> a", "innerText")
+                        if selection_text == collection:
+                            collection_found = True
+                            break
+                    
+                    if collection_found:
+                        print(f">>> {collection} Found. Skipping")
+                    else:
+                        print(f">>> {collection} will be created")
+                        collections_to_add.add(collection)
+
+            if len(collections_to_add) > 0:
+
+                # Check That Salesforce CRM Connections Have Approved Objects
+                salesforce_objects = set()
+                for key, collection_detail in file_data.items():
+                    if collection_detail.get("collection_type") == "SALESFORCE":
+                        salesforce_objects.add(collection_detail.get("content_type"))
+
+                if len(salesforce_objects) > 0:
+                    # Check Object is Approved
+                    self.browser.click("a[id=cmcNodeItem-content]")
+                    sleep(1)
+                    self.browser.click("a[id=cmcNodeItem-managedContentTypes]")
+                    sleep(2)
+
+                    for obj in salesforce_objects:
+                        object_exists = False
+                        if self.browser.get_element_count("table.slds-table:visible") > 0:
+                            if self.browser.get_element_count(f"table.slds-table:visible >> tbody >> tr >> th:has-text('{obj}')") > 0:
+                                object_exists = True
+                        
+                        if not object_exists:
+                            # Add Object
+                            self.browser.click("button:has-text('Add CRM Connections')")
+                            self.browser.fill_text("div.communitySetupManagedContentMultiSelectTable >> input.slds-input", obj)
+                            sleep(5)
+                            if self.browser.get_element_count(f"div.listContainer >> table >> tbody >> tr:has-text('{obj}')") < 1:
+                                    print(f"Unable to find Object called '{obj}'. Skipping")
+                                    continue
+                            self.browser.click(f"div.listContainer >> table >> tbody >> :nth-match(tr:has-text('{obj}'), 1) >> th >> div.slds-truncate")
+                            self.browser.click("button.saveButton:visible")
+                            sleep(1)
+
+                    self.browser.click("a[id=cmcNodeItem-managedContentCollections]")
+                    sleep(1)
+
+                for collection_add in collections_to_add:
+
+                    # Create Collection
+                    if no_collection_mode:
+                        self.browser.click("button.slds-button:has-text('Create Collection')")
+                    else:
+                        self.browser.click("button.slds-button:text('New')")
+
+                    self.browser.wait_for_elements_state("div.stepContainer", ElementState.visible, "15s")
+
+                    # Add Collection Details
+                    collection_data = file_data.get(collection_add)
+
+                    collection_type = collection_data.get("collection_type")
+                    content_type = collection_data.get("content_type")
+                    cms_collection_content = collection_data.get("related_cms_content")
+                    sf_list_view = collection_data.get("listview")
+
+                    # Set Name
+                    self.browser.fill_text("div.stepContainer >> div.slds-form-element__control >> input.slds-input:visible", collection_add)
+                    self.browser.press_keys("div.stepContainer >> div.slds-form-element__control >> input.slds-input:visible", "Enter")
+
+                    # Set Type
+                    if collection_type == "SALESFORCE":
+
+                        # Add Salesforce Details
+                        self.browser.click("div.stepContainer >> div.slds-visual-picker >> label.crm")
+                        self.browser.click(modal_next_button)
+                        sleep(1)
+                        self.browser.click("div.stepContainer >> button.slds-combobox__input:visible")
+                        sleep(1)
+                        self.browser.click(f"div.activeStep >> div.slds-listbox >> lightning-base-combobox-item:has-text('{content_type}')")
+                        sleep(5)
+                        if self.browser.get_element_count(f"div.activeStep >> table >> tbody >> tr:has-text('{sf_list_view}')") < 1:
+                            print(f"Unable to Find List View '{sf_list_view}'")
+                            continue
+                        self.browser.click(f"div.activeStep >> table >> tbody >> tr:has-text('{sf_list_view}') >> span.slds-radio")
+                        self.browser.click(modal_next_button)
+                        sleep(2)
+                        
+
+                    elif collection_type == "CMS":
+                        # Add CMS Content
+                        self.browser.click("div.stepContainer >> div.slds-visual-picker >> label.cms")
+                        self.browser.click(modal_next_button)
+                        sleep(1)
+                        self.browser.select_options_by("div.slds-select_container >> select.slds-select", SelectAttribute.label, content_type)
+                        self.browser.click("div.activeStep >> div.slds-visual-picker >> label.manual")
+                        self.browser.click(modal_next_button)
+                        sleep(2)
+                        for cms_content in cms_collection_content:
+                            self.browser.fill_text("div.activeStep >> input.slds-input", cms_content)
+                            sleep(3)
+                            if self.browser.get_element_count(f"div.listContainer >> table >> tbody >> tr:has-text('{cms_content}')") < 1:
+                                print(f"Unable to find CMS Content called '{cms_content}'. Skipping")
+                                continue
+                            self.browser.click(f"div.listContainer >> table >> tbody >> tr:has-text('{cms_content}') >> th >> div.slds-truncate")
+                        self.browser.click(modal_next_button)
+                        sleep(2)
+
+                    else:
+                        print("TYPE NOT FOUND")
+
+                    self.browser.wait_for_elements_state("a[id=cmcNodeItem-managedContentCollections]", ElementState.visible, "15s")
+                    self.browser.click("a[id=cmcNodeItem-managedContentCollections]")
+                    sleep(2)
+
