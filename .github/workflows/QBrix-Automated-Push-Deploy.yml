@@ -110,6 +110,7 @@ jobs:
         run: sfdx force:org:display --target-org ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} --json > qlab_tmp.json
 
       - name: extract the accesstoken for qlabs
+        if: matrix.targetusername!=''
         uses: sergeysova/jq-action@v2
         id: qlabs_accesstoken
         with:
