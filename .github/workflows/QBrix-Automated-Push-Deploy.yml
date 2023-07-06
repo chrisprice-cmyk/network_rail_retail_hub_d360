@@ -102,9 +102,11 @@ jobs:
 
       # We will use a common app with a common key -
       - name: Create SFDX Session for QLABS Service Account
+        if: matrix.targetusername!=''
         run: sfdx auth:jwt:grant -u ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
 
       - name: Extract the accesstoken
+        if: matrix.targetusername!=''
         run: sfdx force:org:display --target-org ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} --json > qlab_tmp.json
 
       - name: extract the accesstoken for qlabs
