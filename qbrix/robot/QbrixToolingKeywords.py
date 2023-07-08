@@ -56,3 +56,15 @@ class QbrixToolingKeywords(QbrixRobotTask):
             self.browser.click(f"{iframe_selector} tr:has-text('System Administrator') >> input")
             self.browser.click(f"{iframe_selector} .btn:has-text('Save')")
             sleep(2)
+            
+    def enable_app_track(self):
+        """ Enables Data Tool Connected App Settings"""
+        self.enable_admin_auth_for_connected_app("Q Demo Tracker Prod")
+        iframe_selector = self.shared.iframe_handler()
+        self.browser.wait_for_elements_state(f"{iframe_selector} .btn:has-text('Manage Profiles')", ElementState.visible, "15s")
+        self.browser.click(f"{iframe_selector} .btn:has-text('Manage Profiles')")
+        self.browser.wait_for_elements_state(f"{iframe_selector} h1:text-is('Application Profile Assignment')", ElementState.visible, "15s")
+        if not "checked" in self.browser.get_element_states(f"{iframe_selector} tr:has-text('System Administrator') >> input"):
+            self.browser.click(f"{iframe_selector} tr:has-text('System Administrator') >> input")
+            self.browser.click(f"{iframe_selector} .btn:has-text('Save')")
+            sleep(2)
