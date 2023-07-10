@@ -142,6 +142,28 @@ class MetadataChecker(BaseTask, ABC):
                 "key": "settings",
                 "meta_ext": ".settings-meta.xml",
             },
+            "staticresources": {
+                "meta_ext": ".resource-meta.xml",
+            },
+            "contentassets": {
+                "meta_ext": ".asset-meta.xml",
+            },
+            "recommendationStrategies": {
+                "key": "recommendationStrategy",
+                "meta_ext": ".recommendationStrategy-meta.xml",
+            },
+            "omniDataTransforms": {
+                "meta_ext": ".rpt-meta.xml",
+            },
+            "omniIntegrationProcedures": {
+                "meta_ext": ".oip-meta.xml",
+            },
+            "omniScripts": {
+                "meta_ext": ".os-meta.xml",
+            },
+            "omniUiCard": {
+                "meta_ext": ".ouc-meta.xml",
+            },
         }
 
         try:
@@ -218,6 +240,19 @@ class MetadataChecker(BaseTask, ABC):
 
         if self.check_myself:
             self.base_folders.add("./")
+
+
+    def _get_all_code_folders(self, base_folder):
+        my_folders = ["force-app/main/default/"]
+
+        unpackaged_path = os.path.join(base_folder,"unpackaged")
+        if not os.path.exists(unpackaged_path):
+            return my_folders
+
+        for one_unpackaged_folder in os.listdir(unpackaged_path):
+            my_folders.append(f"unpackaged/{one_unpackaged_folder}")
+
+        return my_folders
 
 
     def find_metadata(self, metadata_type, api_names):
@@ -302,7 +337,8 @@ class MetadataChecker(BaseTask, ABC):
 
 
     def scan_metadata(self):
-        for one_folder in ["force-app/main/default/","unpackaged/pre","unpackaged/post"]:
+        code_folders = self._get_all_code_folders("./")
+        for one_folder in code_folders:
             one_folder_path = os.path.join("./",one_folder)
 
             if not os.path.exists(one_folder_path):
@@ -363,7 +399,8 @@ class MetadataChecker(BaseTask, ABC):
         my_results = ""
 
         # get the folder path of where the metadata should be
-        for one_folder in ["force-app/main/default/","unpackaged/pre","unpackaged/post"]:
+        code_folders = self._get_all_code_folders(base_path)
+        for one_folder in code_folders:
             meta_path = os.path.join(base_path, one_folder)
             meta_path = os.path.join(meta_path, self.metadata_type_detail["folder"].replace("__object_api__",object_api))
 
