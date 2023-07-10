@@ -73,12 +73,10 @@ class QbrixManufacturingKeywords(QbrixRobotTask):
         """
         Enables Partner Lead Management Settings Salesforce Setup
         """
-        enable_toggle = "span.slds-checkbox_off"
         self.shared.go_to_setup_admin_page("MfgPartnerLeadMgmtSettings/home")
         self.browser.wait_for_elements_state("h2:text-is('Partner Lead Management')", ElementState.visible, '30s')
-        visible = "visible" in self.browser.get_element_states(enable_toggle)
-        if visible:
-            self.browser.click(enable_toggle)
+        if "checked" not in self.browser.get_element_states("div.slds-card:has(h2:text-is('Partner Lead Management')) >> input[name='mfgPartnerLeadMgmtPref']"):
+            self.browser.click("div.slds-card:has(h2:text-is('Partner Lead Management')) >> lightning-input.slds-form-element")
             sleep(2)
             
 
@@ -86,24 +84,20 @@ class QbrixManufacturingKeywords(QbrixRobotTask):
         """
         Enables Program Based Business for Manufacturing Setting in Salesforce Setup
         """
-        enable_toggle = "span.slds-checkbox_off"
         self.shared.go_to_setup_admin_page("MfgProgramTemplates/home")
-        self.browser.wait_for_elements_state("h2:text-is('Warranty Administration')", ElementState.visible, '30s')
-        visible = "visible" in self.browser.get_element_states(enable_toggle)
-        if visible:
-            self.browser.click(enable_toggle)
+        self.browser.wait_for_elements_state("h2:text-is('Program Based Business')", ElementState.visible, '30s')
+        if "checked" not in self.browser.get_element_states("div.slds-card:has(h2:text-is('Program Based Business')) >> input[name='mfgProgramPref']"):
+            self.browser.click("div.slds-card:has(h2:text-is('Program Based Business')) >> lightning-input.slds-form-element")
             sleep(2)
 
     def enable_warranty_lifecycle_management(self):
         """
         Enables  Warranty Lifecycle Management for Manufacturing Setting in Salesforce Setup
         """
-        enable_toggle = "span.slds-checkbox_off"
         self.shared.go_to_setup_admin_page("MfgServiceSettings/home")
-        self.browser.wait_for_elements_state("h2:text-is('Warranty Administration')", ElementState.visible, '30s')
-        visible = "visible" in self.browser.get_element_states(enable_toggle)
-        if visible:
-            self.browser.click(enable_toggle)
+        self.browser.wait_for_elements_state("h2:text-is('Warranty Lifecycle Management')", ElementState.visible, '30s')
+        if "checked" not in self.browser.get_element_states("div.slds-card:has(h2:text-is('Warranty Lifecycle Management')) >> input[name='mfgServicePref']"):
+            self.browser.click("div.slds-card:has(h2:text-is('Warranty Lifecycle Management')) >> lightning-input.slds-form-element")
             sleep(2)
 
 
@@ -111,22 +105,18 @@ class QbrixManufacturingKeywords(QbrixRobotTask):
         """
         Enables Automotive Cloud Setting
         """
-        enable_autoCloud = "span.slds-checkbox_off"
         self.shared.go_to_setup_admin_page("AutomotiveFoundationSettings/home")
         self.browser.wait_for_elements_state("h2:text-is('Automotive')", ElementState.visible, '30s')
-        visible = "visible" in self.browser.get_element_states(enable_autoCloud)
-        if visible:
-            self.browser.click(enable_autoCloud)
+        if "checked" not in self.browser.get_element_states("lightning-layout.slds-grid:has(h2:text-is('Automotive')) >> input[name='automotivePref']"):
+            self.browser.click("lightning-layout.slds-grid:has(h2:text-is('Automotive')) >> lightning-input.slds-form-element")
             sleep(2)
 
     def enable_automotive_cloud_service_console_setting(self):
         """
         Enables Automotive Cloud Service Console Setting
         """
-        enable_autoServi = "span.slds-checkbox_off"
         self.shared.go_to_setup_admin_page("AutomotiveServiceExcellenceSettings/home")
         self.browser.wait_for_elements_state("h2:text-is('Service Console for Automotive')", ElementState.visible, '30s')
-        visible = "visible" in self.browser.get_element_states(enable_autoServi)
-        if visible:
-            self.browser.click(enable_autoServi)
+        if "checked" not in self.browser.get_element_states("div.slds-card:has(h2:text-is('Service Console for Automotive')) >> input[name='automotiveServiceExcellencePref']"):
+            self.browser.click("div.slds-card:has(h2:text-is('Service Console for Automotive')) >> lightning-input.slds-form-element")
             sleep(2)
