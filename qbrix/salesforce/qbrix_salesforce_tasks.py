@@ -551,13 +551,13 @@ class CreateUser(BaseSalesforceApiTask, NGOrgConfig, ABC):
             if nationality:
                 api_endpoint_url += f"&nat={nationality}"
 
-            response = requests.get(api_endpoint_url)
+            response = requests.get(api_endpoint_url, timeout = (5, 15))
             data = response.json()
             picture_url = data["results"][0]["picture"]["large"]
 
             # Download the image and save it locally
             with tempfile.NamedTemporaryFile(suffix=".jpg") as temp_file:
-                image_response = requests.get(picture_url)
+                image_response = requests.get(picture_url, timeout = (5, 15))
                 temp_file.write(image_response.content)
                 temp_file.seek(0)
 
@@ -584,9 +584,7 @@ class CreateUser(BaseSalesforceApiTask, NGOrgConfig, ABC):
             )
 
         content_version_id = photo_id["id"]
-        content_document_id = api.query(
-            f"SELECT Id, ContentDocumentId FROM ContentVersion WHERE Id = '{content_version_id}'"
-        )["records"][0]["ContentDocumentId"]
+        content_document_id = api.query(f"SELECT Id, ContentDocumentId FROM ContentVersion WHERE Id = '{content_version_id}')")["records"][0]["ContentDocumentId"]
 
         api.restful(
             f"connect/user-profiles/{user_id}/photo",
@@ -790,16 +788,14 @@ class CreateUser(BaseSalesforceApiTask, NGOrgConfig, ABC):
         final_user_id = self._load_data(data)
 
         if final_user_id:
-            log.info("Final User Record ID: " + final_user_id)
+            log.info("Final User Record ID: %s", final_user_id)
 
             # Handle Profile Image Upload
             if user_profile_image:
                 log.info("Adding User Profile Image...")
 
-                if user_profile_image:
-                    gender = user_record_data["gender"]
-                    if gender:
-                        gender = gender.lower()
+                if user_record_data.get("gender"):
+                    gender = user_record_data["gender"].lower()
                 else:
                     gender = None
 
@@ -947,15 +943,13 @@ class CreateUser(BaseSalesforceApiTask, NGOrgConfig, ABC):
                     final_user_id = self._load_data(self.data)
 
                     if final_user_id:
-                        log.info("Final User Record ID: " + final_user_id)
+                        log.info("Final User Record ID: %s", final_user_id)
 
                         # Handle Profile Image Upload
                         if self.user_profile_image:
                             log.info("Adding User Profile Image...")
-                            if self.user_profile_image:
-                                gender = self.gender
-                                if gender:
-                                    gender = gender.lower()
+                            if self.gender:
+                                gender = self.gender.lower()
                             else:
                                 gender = None
 
