@@ -178,15 +178,22 @@ class InstallRecorder(SFDXBaseTask):
             self.trackingdata["hostname"]=socket.gethostname()
             self.trackingdata["starttimestamp"]=(datetime.utcnow() - datetime(1970, 1, 1)).total_seconds()
             
-            orginzationdata = self._salesforce_query("select Id,CreatedDate,OrganizationType from Organization")
+            self.trackingdata["qbrix_sha"]=""
+            self.trackingdata["qbrix_image_id"]=""
+            
+            
+            orginzationdata = self._salesforce_query("select Id,CreatedDate,OrganizationType,InstanceName from Organization")
             if(not orginzationdata is None):
                 self.trackingdata["orgid"] = orginzationdata["result"]["records"][0]["Id"]
                 self.trackingdata["orgcreatedate"] = orginzationdata["result"]["records"][0]["CreatedDate"]
                 self.trackingdata["organizationtype"] = orginzationdata["result"]["records"][0]["OrganizationType"]
+                self.trackingdata["instancename"] = orginzationdata["result"]["records"][0]["InstanceName"]
             else:
                 self.trackingdata["orgid"] = ""
                 self.trackingdata["orgcreatedate"] = ""
                 self.trackingdata["organizationtype"] = ""
+                self.trackingdata["instancename"] = ""
+
             
             
             currentuserdata = self._salesforce_query(f"select Email from User where username='{self.org_config.username}'")
@@ -204,6 +211,11 @@ class InstallRecorder(SFDXBaseTask):
                 self.trackingdata["qlabsorgtype"] = ""
             
                 
+            maxapiversion =self._get_org_max_api_version()
+            if(not maxapiversion is None):
+                self.trackingdata["maxapiversion"] = maxapiversion
+            else:
+                self.trackingdata["maxapiversion"] = 0.0
             
             
             self.__writertrackingtofile()
@@ -214,6 +226,17 @@ class InstallRecorder(SFDXBaseTask):
         #Fake error
         #raise Exception("fake error for testing")
         
+    def _get_org_max_api_version(self):
+
+        url = f"{self.instanceurl}/services/data/"
+        headers = {
+            'Authorization': f'Bearer {self.accesstoken}',
+            'Content-Type': 'application/json'
+        }
+        response = requests.request("GET", url, headers=headers)
+        data = json.loads(response.text)
+        
+        return float(data[-1]['version'])
 
     def _salesforce_query(self,soql):
         

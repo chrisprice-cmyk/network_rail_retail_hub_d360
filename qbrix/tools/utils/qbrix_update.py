@@ -102,6 +102,7 @@ class QBrixUpdater(BaseTask, ABC):
             self._update_folder("qbrix", ".qbrix/Update/xDO-Template-main", False)
             self._update_folder(".vscode", ".qbrix/Update/xDO-Template-main", False)
             self._update_folder(".github", ".qbrix/Update/xDO-Template-main", False)
+            self._update_folder(".git/hooks", ".qbrix/Update/xDO-Template-main/qbrix/git/hooks", False)
 
             # Finally Clean Up Cached Folder
             self.logger.info(" -> Cleaning up temp files...")
@@ -133,6 +134,7 @@ class QBrixUpdater(BaseTask, ABC):
         tasks_to_update.update({'list_qbrix': 'qbrix.salesforce.qbrix_salesforce_tasks.ListQBrix'})
         tasks_to_update.update({'q_update_dependencies': 'qbrix.salesforce.qbrix_salesforce_tasks.QUpdateDependencies'})
         tasks_to_update.update({'mass_qbrix_update': 'qbrix.tools.utils.qbrix_mass_ops.MassFileOps'})
+        tasks_to_update.update({'precommit_check': 'qbrix.git.hooks_ext.pre_commit.PreCommit'})
 
         self._check_and_deploy_class(tasks_to_update)
 

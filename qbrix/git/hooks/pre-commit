@@ -1,0 +1,3 @@
+#!/bin/sh
+cci task run precommit-check
+

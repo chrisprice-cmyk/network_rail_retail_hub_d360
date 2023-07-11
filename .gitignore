@@ -77,3 +77,4 @@ qbrix/tools/data/__pycache__/qbrix_analytics.cpython-310.pyc
 validationresult.json
 *_results.xml
 qbrix/tools/shared/__pycache__/qbrix_project_tasks.cpython-310.pyc
+*.pyc
