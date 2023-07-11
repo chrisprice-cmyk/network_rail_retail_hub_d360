@@ -533,17 +533,13 @@ class CreateUser(BaseSalesforceApiTask, NGOrgConfig, ABC):
         """
         Uploads and assigns a user profile image
         """
-        if (
-            not os.path.exists(path_to_image)
-            and not str(path_to_image).upper() == "AUTO"
-        ):
-            log.error(
-                f"Image file path ({path_to_image}) does not exist. Please check file path and try again."
-            )
+        if (not os.path.exists(path_to_image) and not str(path_to_image).upper() == "AUTO"):
+            self.logger.error("Image file path (%s) does not exist. Please check file path and try again.", path_to_image)
 
         api = self.sf
 
         if str(path_to_image).upper() == "AUTO":
+            
             # Generate a random image using randomuser.me
             api_endpoint_url = "https://randomuser.me/api/?inc=picture"
             if gender:
@@ -584,7 +580,7 @@ class CreateUser(BaseSalesforceApiTask, NGOrgConfig, ABC):
             )
 
         content_version_id = photo_id["id"]
-        content_document_id = api.query(f"SELECT Id, ContentDocumentId FROM ContentVersion WHERE Id = '{content_version_id}')")["records"][0]["ContentDocumentId"]
+        content_document_id = api.query(f"SELECT Id, ContentDocumentId FROM ContentVersion WHERE Id = '{content_version_id}'")["records"][0]["ContentDocumentId"]
 
         api.restful(
             f"connect/user-profiles/{user_id}/photo",
@@ -592,7 +588,7 @@ class CreateUser(BaseSalesforceApiTask, NGOrgConfig, ABC):
             method="POST",
         )
 
-    def _assign_permission(self, mode, user_id, api_names, ignore_failures=False):
+    def _assign_permission(self, mode: str, user_id: str, api_names, ignore_failures: bool=False):
         """
         Assigns Permission Sets or Permission Set Groups or Permission Set Licenses based on the mode.
 
@@ -602,119 +598,102 @@ class CreateUser(BaseSalesforceApiTask, NGOrgConfig, ABC):
 
         User Record ID and the api names (as a list) are also required.
         """
-        if mode:
-            if str(mode).upper() == "PERMISSIONSET":
-                object_name = "PermissionSet"
-                message_name = "Permission Set"
-                lookup_field = "Name"
-                assignment_field = "PermissionSetId"
-                assignment_object = "PermissionSetAssignment"
 
-            if str(mode).upper() == "PERMISSIONSETGROUP":
-                object_name = "PermissionSetGroup"
-                message_name = "Permission Set Group"
-                lookup_field = "DeveloperName"
-                assignment_field = "PermissionSetGroupId"
-                assignment_object = "PermissionSetAssignment"
+        # Catch for Invalid Assignments
+        if not mode or mode.upper() not in ('PERMISSIONSET', 'PERMISSIONSETGROUP', 'PERMISSIONSETLICENSE'):
+            self.logger.error("Invalid permission type requested. Permission assignment skipped.")
+            return False
+        
+        # Set Mode
+        mode = mode.upper()
+        object_name = None
+        message_name = None
+        lookup_field = None
+        assignment_field = None
+        assignment_object = None
+        
+        if mode == "PERMISSIONSET":
+            object_name = "PermissionSet"
+            message_name = "Permission Set"
+            lookup_field = "Name"
+            assignment_field = "PermissionSetId"
+            assignment_object = "PermissionSetAssignment"
+        elif mode == "PERMISSIONSETGROUP":
+            object_name = "PermissionSetGroup"
+            message_name = "Permission Set Group"
+            lookup_field = "DeveloperName"
+            assignment_field = "PermissionSetGroupId"
+            assignment_object = "PermissionSetAssignment"
+        elif mode == "PERMISSIONSETLICENSE":
+            object_name = "PermissionSetLicense"
+            message_name = "Permission Set License"
+            lookup_field = "DeveloperName"
+            assignment_field = "PermissionSetLicenseId"
+            assignment_object = "PermissionSetLicenseAssign"
 
-            if str(mode).upper() == "PERMISSIONSETLICENSE":
-                object_name = "PermissionSetLicense"
-                message_name = "Permission Set License"
-                lookup_field = "DeveloperName"
-                assignment_field = "PermissionSetLicenseId"
-                assignment_object = "PermissionSetLicenseAssign"
+        # Loop Through Permission Set Names
+        for perm in list(api_names):
+            try:
+                api = self.sf
 
-            if (
-                str(mode).upper() != "PERMISSIONSETGROUP"
-                and str(mode).upper() != "PERMISSIONSET"
-                and str(mode).upper() != "PERMISSIONSETLICENSE"
-            ):
-                log.error(
-                    f"Error: Invalid mode passed. Only Permission Sets (PERMISSIONSET) or Permission Set Groups (PERMISSIONSETGROUP) or Permission Set Licenses (PERMISSIONSETLICENSE) are supported. Mode passed: {mode}"
+                # Check for labels and non api names
+                if " " in perm:
+                    self.logger.error("Warning: An invalid API name was passed '%s'. This will be skipped.", perm)
+                    continue
+
+                # Check Permission Set Exists
+                permission_set_query = api.query(
+                    f"SELECT Id FROM {object_name} WHERE {lookup_field} = '{perm}' LIMIT 1"
                 )
-                return False
+                if permission_set_query["totalSize"] == 0:
+                    self.logger.info("The requested permission '%s' was not found in the target salesforce org. Skipping.", perm)
+                    permission_set_id = None
+                    continue
+                else:
+                    permission_set_id = permission_set_query["records"][0]["Id"]
 
-            # Loop Through Permission Set Names
-            for perm in list(api_names):
-                try:
-                    api = self.sf
+                # Check for existing Permission Set, Group or License has been already assigned
+                permission_set_assignment_query = api.query(
+                    f"SELECT Id FROM {assignment_object} WHERE AssigneeId = '{user_id}' AND {assignment_field} = '{permission_set_id}' LIMIT 1"
+                )
+                if permission_set_assignment_query["totalSize"] == 1:
+                    self.logger.info("Permission '%s' already assigned to user. Skipping.", perm)
+                    continue
 
-                    # Check for labels and non api names
-                    if " " in perm:
-                        log.debug(
-                            f"{message_name} {perm} is not a valid api name for a {message_name}. Please check the api names are valid and try again. Continuing to next record."
-                        )
-                        continue
-
-                    # Check Permission Set Exists
-                    permission_set_query = api.query(
-                        f"SELECT Id FROM {object_name} WHERE {lookup_field} = '{perm}' LIMIT 1"
+                permset_creation_result = None
+                if mode == "PERMISSIONSETLICENSE":
+                    # Create Permission Set License Assignment
+                    permset_creation_result = api.PermissionSetLicenseAssign.create(
+                        {
+                            "AssigneeId": user_id,
+                            str(assignment_field): permission_set_id,
+                        }
                     )
-                    if permission_set_query["totalSize"] == 0:
-                        log.debug(
-                            f"{message_name} with api name {perm} was not found in the target org, skipping assignment."
-                        )
-                        continue
-                    else:
-                        permission_set_id = permission_set_query["records"][0]["Id"]
-
-                    # Check for existing Permission Set, Group or License has been already assigned
-                    permission_set_assignment_query = api.query(
-                        f"SELECT Id FROM {assignment_object} WHERE AssigneeId = '{user_id}' AND {assignment_field} = '{permission_set_id}' LIMIT 1"
+                else:
+                    # Create Permission Set Assignment
+                    permset_creation_result = api.PermissionSetAssignment.create(
+                        {
+                            "AssigneeId": user_id,
+                            str(assignment_field): permission_set_id,
+                        }
                     )
-                    if permission_set_assignment_query["totalSize"] == 1:
-                        log.info(
-                            f"{message_name} with api name {perm} has already been assigned to the user. Skipping..."
-                        )
+                    
+                if (permset_creation_result and permset_creation_result.get("id")):
+                    self.logger.info("%s (With API Name: %s) has been assigned (ID: {permset_creation_result['id']})!", message_name, perm)
+                else:
+                    self.logger.error("%s (With API Name: %s) failed to assign. Moving onto next %s (if any). Details: %s", message_name, perm, message_name, permset_creation_result)
+
+                    if ignore_failures:
                         continue
-
-                    permset_creation_result = None
-                    if str(mode).upper() != "PERMISSIONSETLICENSE":
-                        # Create Permission Set Assignment
-                        permset_creation_result = api.PermissionSetAssignment.create(
-                            {
-                                "AssigneeId": user_id,
-                                str(assignment_field): permission_set_id,
-                            }
-                        )
                     else:
-                        # Create Permission Set License Assignment
-                        permset_creation_result = api.PermissionSetLicenseAssign.create(
-                            {
-                                "AssigneeId": user_id,
-                                str(assignment_field): permission_set_id,
-                            }
-                        )
-
-                    if (
-                        not permset_creation_result is None
-                        and permset_creation_result["id"]
-                    ):
-                        log.info(
-                            f"{message_name} (With API Name: {perm}) has been assigned (ID: {permset_creation_result['id']})!"
-                        )
-                    else:
-                        log.error(
-                            f"{message_name} (With API Name: {perm}) failed to assign. Moving onto next {message_name} (if any). Details: {permset_creation_result}"
-                        )
-
-                        if ignore_failures:
-                            continue
-                        else:
-                            return False
-
-                except Exception as e:
-                    log.debug("Error: Failure in user upsert.")
-                    log.debug(e)
-                    if ignore_failures == False:
                         return False
 
-        else:
-            log.debug(
-                "Error: No Mode was passed for processing. You must pass in a mode."
-            )
-            return False
-
+            except Exception as permission_assingment_error:
+                self.logger.error("Permission Assignment to user failed. Error details: %s", permission_assingment_error)
+                if ignore_failures:
+                        continue
+                else:
+                    return False
         return True
 
     def _process_user_record(self, user_record_data, field_names):
