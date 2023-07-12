@@ -73,6 +73,16 @@ class QBrixUpdater(BaseTask, ABC):
                 shutil.rmtree(folder_path)
         update_path = os.path.join(update_dir, folder_path)
         shutil.copytree(src=update_path, dst=folder_path, dirs_exist_ok=True)
+        
+    def _update_folder_indirect_source(self, folder_path, update_dir, remove_existing):
+
+        """Copies content from an different source root to target"""
+        
+
+        if exists(folder_path) and remove_existing:
+                shutil.rmtree(folder_path)
+                
+        shutil.copytree(src=update_dir, dst=folder_path, dirs_exist_ok=True)
 
     def _ensure_required_dirs(self):
 
@@ -102,7 +112,10 @@ class QBrixUpdater(BaseTask, ABC):
             self._update_folder("qbrix", ".qbrix/Update/xDO-Template-main", False)
             self._update_folder(".vscode", ".qbrix/Update/xDO-Template-main", False)
             self._update_folder(".github", ".qbrix/Update/xDO-Template-main", False)
-            #self._update_folder(".git/hooks", ".qbrix/Update/xDO-Template-main/qbrix/.git/hooks", False)
+            self._update_folder_indirect_source(".git/hooks", ".qbrix/Update/xDO-Template-main/qbrix/git/hooks", False)
+            
+            
+            
 
             # Finally Clean Up Cached Folder
             self.logger.info(" -> Cleaning up temp files...")
@@ -134,7 +147,7 @@ class QBrixUpdater(BaseTask, ABC):
         tasks_to_update.update({'list_qbrix': 'qbrix.salesforce.qbrix_salesforce_tasks.ListQBrix'})
         tasks_to_update.update({'q_update_dependencies': 'qbrix.salesforce.qbrix_salesforce_tasks.QUpdateDependencies'})
         tasks_to_update.update({'mass_qbrix_update': 'qbrix.tools.utils.qbrix_mass_ops.MassFileOps'})
-        #tasks_to_update.update({'precommit_check': 'qbrix.git.hooks_ext.pre_commit.PreCommit'})
+        tasks_to_update.update({'precommit_check': 'qbrix.git.hooks_ext.pre_commit.PreCommit'})
 
         self._check_and_deploy_class(tasks_to_update)
 
