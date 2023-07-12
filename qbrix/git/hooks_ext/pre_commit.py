@@ -12,6 +12,7 @@ class PreCommit(SFDXBaseTask):
         
     def _run_task(self):
         ignoredirs=['./cci','./.cci','./config','./.config/sfdx','./.git','./.git/objects','./.qbrix','./qbrix','./.vscode','./.sfdx']
+        ignorefiles=['.DS_Store','.forceignore','.lock','.prettierignore']
         rootdir = "."
         pattern = re.compile("AIza[0-9A-Za-z-_]{35}")
         results=[]
@@ -20,6 +21,10 @@ class PreCommit(SFDXBaseTask):
                 continuepprocessing=True
                 for ign in ignoredirs:
                     if ign in subdir:
+                        continuepprocessing=False
+                        
+                for ign in ignorefiles:
+                    if ign in file:
                         continuepprocessing=False
                 
                 if(continuepprocessing):        
