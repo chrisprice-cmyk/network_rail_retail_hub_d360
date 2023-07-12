@@ -82,6 +82,60 @@ def get_app_name(file_location: str = None):
     else:
         return ""
     
+class AnalyticsFart(BaseSalesforceApiTask, ABC):
+
+    """Utility for replacing Analytics Dashboard placeholders with their ID in a target org."""
+
+    task_docs = """
+    Utility for replacing Analytics Dashboard placeholders with their ID in a target org.
+    """
+
+    task_options = {
+        "org": {
+            "description": "The Target Salesforce Org Alias",
+            "required": False
+        },
+        "placeholder": {
+            "description": "The placeholder to look for. It should be in the format ___My Dashboard Name Here___",
+            "required": True
+        },
+        "category": {
+            "description": "The type of analytics object, for example 'dashboards'",
+            "required": True
+        },
+        "file_path": {
+            "description": "The file the placeholder is located.",
+            "required": True
+        },
+    }
+
+    def _init_options(self, kwargs):
+        super(AnalyticsFart, self)._init_options(kwargs)
+        self.placeholder = self.options["placeholder"] if "placeholder" in self.options else None
+        self.action_category = str(self.options["category"]) if "category" in self.options else None
+        self.file_path = str(self.options["file_path"]) if "file_path" in self.options else None
+
+    def _run_task(self):
+
+        clean_placeholder = str(self.options["placeholder"]).replace("___", "")
+        request_response = self.sf.restful(
+            f"wave/{self.action_category}",
+            method="GET",
+        )
+
+        analytics_response = request_response.get(self.action_category)
+        analytics_record_id = None
+        for data_record in analytics_response:
+            if data_record.get('name') == clean_placeholder or data_record.get('label') == clean_placeholder:
+                analytics_record_id = data_record.get('id')
+                break
+
+        if analytics_record_id:
+            self.logger.info("Found ID: %s", analytics_record_id)
+            replace_file_text(self.file_path, self.placeholder, analytics_record_id, True)
+        else:
+            self.logger.info("Analytics item not found")
+    
 class AnalyticsActionRunner(BaseSalesforceApiTask, ABC):
 
     task_docs = """
