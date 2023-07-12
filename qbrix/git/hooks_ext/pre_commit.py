@@ -37,7 +37,7 @@ class PreCommit(SFDXBaseTask):
                     except UnicodeDecodeError:
                         pass
                         
-        if(len(filepath)>0):
+        if(len(results)>0):
             self.logger.error(f'*********************************************************************************')
             self.logger.error(f'*****COMMIT BLOCKED Possible Key(s) Google API Keys found in these files:********')
             self.logger.error(f'*********************************************************************************')
