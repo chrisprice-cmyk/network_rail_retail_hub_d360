@@ -1,6 +1,8 @@
 import filecmp
 import os
 import shutil
+import stat
+from pathlib import Path
 from abc import ABC
 from os.path import exists
 
@@ -114,6 +116,9 @@ class QBrixUpdater(BaseTask, ABC):
             self._update_folder(".github", ".qbrix/Update/xDO-Template-main", False)
             self._update_folder_indirect_source(".git/hooks", ".qbrix/Update/xDO-Template-main/qbrix/git/hooks", False)
             
+            #we are injecting pre-commit to use our cci extension but we need to make executeable
+            f = Path(".git/hooks/pre-commit")
+            f.chmod(f.stat().st_mode | stat.S_IEXEC)
             
             
 
