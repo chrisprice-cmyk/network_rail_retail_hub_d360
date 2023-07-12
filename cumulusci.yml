@@ -97,7 +97,10 @@ tasks:
   #------------------------------------#
   # Q BRIX TASKS                       #
   #------------------------------------#
-  # CUSTOM TASKS ADDED FOR Q BRIX DEVELOPMENT
+  # CUSTOM TASKS ADDED FOR Q BRIX
+
+  precommit_check:
+    class_path: qbrix.git.hooks_ext.pre_commit.PreCommit
 
   qbrix_landing:
     class_path: qbrix.tools.utils.qbrix_landing.RunLanding
@@ -218,7 +221,7 @@ tasks:
 
   deploy_nextgen_data:
     class_path: qbrix.tools.utils.qbrix_nextgen_datatool.RunDataTool
-    
+
   #------------------------------------#
   # CUSTOM TASKS                       #
   #------------------------------------#
@@ -263,7 +266,7 @@ flows:
   #------------------------------------#
   # STAGE 2 of 3: Q BRIX DEPLOYMENT    #
   #------------------------------------#
-  # DEFAULT INSTALL FLOWS ARE DEFINED HERE. 
+  # DEFAULT INSTALL FLOWS ARE DEFINED HERE.
   # NOTE: "deploy_qbrix" and "deploy_qbrix_without_dependencies" SHOULD ALWAYS BE DEFINED
 
   # Deploys the q brix
@@ -380,7 +383,7 @@ flows:
         flow: deploy_qbrix
       2:
         task: None
-      3: 
+      3:
         task: None
       4:
         task: snapshot_changes
@@ -391,7 +394,7 @@ flows:
         flow: deploy_qbrix
       2:
         task: None
-      3: 
+      3:
         task: None
       4:
         task: snapshot_changes
