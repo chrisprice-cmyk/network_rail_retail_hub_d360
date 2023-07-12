@@ -30,14 +30,17 @@ class PreCommit(SFDXBaseTask):
                 if(continuepprocessing):        
                     filepath = subdir + os.sep + file
                     #print(subdir)
-                    for i, line in enumerate(open(filepath)):
-                        for match in re.finditer(pattern, line):
-                            results.append(filepath)
+                    try:
+                        for i, line in enumerate(open(filepath)):
+                            for match in re.finditer(pattern, line):
+                                results.append(filepath)
+                    except UnicodeDecodeError:
+                        pass
                         
         if(len(filepath)>0):
-            self.logger.error(f'**************************************************************************')
-            self.logger.error(f'*****COMMIT BLOCKED Possible Google API Keys found in these files:********')
-            self.logger.error(f'**************************************************************************')
+            self.logger.error(f'*********************************************************************************')
+            self.logger.error(f'*****COMMIT BLOCKED Possible Key(s) Google API Keys found in these files:********')
+            self.logger.error(f'*********************************************************************************')
             for file in results:
                 self.logger.error(file)
             sys.exit(os.EX_DATAERR)
