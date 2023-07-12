@@ -35,9 +35,9 @@ class PreCommit(SFDXBaseTask):
                             results.append(filepath)
                         
         if(len(filepath)>0):
-            self.logger.error(f'*********************************************************************************')
-            self.logger.error(f'*****COMMIT BLOCKED Possible Key(s) Google API Keys found in these files:********')
-            self.logger.error(f'*********************************************************************************')
+            self.logger.error(f'**************************************************************************')
+            self.logger.error(f'*****COMMIT BLOCKED Possible Google API Keys found in these files:********')
+            self.logger.error(f'**************************************************************************')
             for file in results:
                 self.logger.error(file)
             sys.exit(os.EX_DATAERR)
