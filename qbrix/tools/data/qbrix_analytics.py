@@ -126,7 +126,11 @@ class AnalyticsFart(BaseSalesforceApiTask, ABC):
         analytics_response = request_response.get(self.action_category)
         analytics_record_id = None
         for data_record in analytics_response:
-            if data_record.get('name') == clean_placeholder or data_record.get('label') == clean_placeholder:
+            
+            analytics_record_name = data_record.get('name')
+            analytics_record_label = data_record.get('label')
+
+            if analytics_record_name == clean_placeholder or analytics_record_label == clean_placeholder:
                 analytics_record_id = data_record.get('id')
                 break
 
@@ -134,7 +138,7 @@ class AnalyticsFart(BaseSalesforceApiTask, ABC):
             self.logger.info("Found ID: %s", analytics_record_id)
             replace_file_text(self.file_path, self.placeholder, analytics_record_id, True)
         else:
-            self.logger.info("Analytics item not found")
+            self.logger.info("Analytics item '%s' not found", clean_placeholder)
     
 class AnalyticsActionRunner(BaseSalesforceApiTask, ABC):
 
