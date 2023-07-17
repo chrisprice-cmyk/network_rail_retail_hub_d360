@@ -58,6 +58,8 @@ Library     QbrixDPAKeywords.py
 # MULESOFT - Connected app
 Library     QbrixMulesoftToolingKeywords.py
 
+# GENERAL - OTHER
+Library    QbrixPatchAutomation.py
 
 
 

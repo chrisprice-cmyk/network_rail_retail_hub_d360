@@ -8,7 +8,7 @@ class QbrixFieldServiceKeywords(QbrixRobotTask):
 
     """Keywords for Qbrix Field Service"""
 
-    def enable_field_service(self):
+    def enable_field_service(self, turn_off: bool =False):
         """
         Enables Field Service Setting in Salesforce Setup
         """
@@ -19,7 +19,8 @@ class QbrixFieldServiceKeywords(QbrixRobotTask):
         # Enable Field Service Setting
         field_service_toggle_selector = "span.slds-form-element__label:has-text('Field Service')"
         self.browser.wait_for_elements_state(field_service_toggle_selector, ElementState.visible, '30s')
-        if not "checked" in self.browser.get_element_states(field_service_toggle_selector):
+        
+        if (not "checked" in self.browser.get_element_states(field_service_toggle_selector) and turn_off == False) or ("checked" in self.browser.get_element_states(field_service_toggle_selector) and turn_off):
             self.browser.click(field_service_toggle_selector)
             sleep(10)
 
