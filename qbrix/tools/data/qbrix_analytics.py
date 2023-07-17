@@ -5,7 +5,6 @@ import json
 import math
 import os
 import re
-import subprocess
 import json
 import csv
 import io
@@ -36,7 +35,7 @@ def cleanup_null_values(file_location: str = None):
     if not file_location or not str(file_location).endswith(".json") or not os.path.exists(file_location):
         raise Exception(f"Error: Unable to read the provided file at {file_location}. Ensure it is a valid json file.")
 
-    with open(file_location, 'r') as f:
+    with open(file_location, 'r', encoding="utf-8") as f:
         data = json.load(f)
 
     if data:
@@ -44,7 +43,7 @@ def cleanup_null_values(file_location: str = None):
             if "defaultValue" in o and "type" in o and o["type"] == "Numeric":
                 o["defaultValue"] = "0" if o["defaultValue"].lower() == "null" else o["defaultValue"]
 
-        with open(file_location, 'w') as f:
+        with open(file_location, 'w', encoding="utf-8") as f:
             json.dump(data, f)
 
 
@@ -70,7 +69,7 @@ def get_app_name(file_location: str = None):
         log.debug(f"A file has been passed to an Analytics method, which is not in the expected file format (i.e. File Extension should be .wds-meta.xml). This method will continue to review the file although there may be unexpected results. Please check the file {file_location}")
         return None
 
-    with open(file_location, 'r') as file:
+    with open(file_location, 'r', encoding="utf-8") as file:
         file.seek(0)
         file_data = file.read()
 
@@ -1190,7 +1189,7 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
                 query_params = {"query": paged_query}
 
                 # Make a POST request to the Wave query endpoint with the modified query
-                response = requests.post(query_url, headers=headers, data=json.dumps(query_params))
+                response = requests.post(query_url, headers=headers, data=json.dumps(query_params), timeout=90)
                 data = json.loads(response.content.decode('utf-8'))
 
                 if 'results' in data:
@@ -1218,7 +1217,7 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
 
                 batch_count += 1
 
-        self.logger.info(f" -> Loaded {row_count} rows into csv")
+        self.logger.info(" -> Loaded %i rows into csv", row_count)
 
         # Check Dashboard References
         self.logger.info("\nRunning Check to update old field references in Wave metadata:")
@@ -1330,7 +1329,12 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
                     print(f' -> Skipping {filename}. File size is {file_size / 1000000:.2f} MB.')
 
                     
-    def get_datasets_from_org(self, endpoint = f"wave/datasets?pageSize=25", org_dataset_dict = {}):
+    def get_datasets_from_org(self, endpoint: str = "wave/datasets?pageSize=25", org_dataset_dict = None):
+
+        """Retrieves Datasets from the source Salesforce Org"""
+
+        if not org_dataset_dict:
+            org_dataset_dict = {}
 
         # Retrieve the list of datasets
         headers = {
@@ -1359,7 +1363,7 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
             if response["nextPageUrl"]:
                 org_dataset_dict = self.get_datasets_from_org(response['nextPageUrl'].replace(f'/services/data/v{self.project_config.project__package__api_version}/', ''), org_dataset_dict)
 
-        return org_dataset_dict      
+        return org_dataset_dict 
 
 
     def _run_task(self):

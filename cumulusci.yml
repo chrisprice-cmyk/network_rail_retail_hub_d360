@@ -97,7 +97,7 @@ tasks:
   #------------------------------------#
   # Q BRIX TASKS                       #
   #------------------------------------#
-  # CUSTOM TASKS ADDED FOR Q BRIX
+  # CUSTOM TASKS ADDED FOR Q BRIX DEVELOPMENT
 
   precommit_check:
     class_path: qbrix.git.hooks_ext.pre_commit.PreCommit

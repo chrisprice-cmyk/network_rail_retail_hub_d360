@@ -16,6 +16,7 @@ class PreCommit(SFDXBaseTask):
         rootdir = "."
         pattern = re.compile("AIza[0-9A-Za-z-_]{35}")
         results=[]
+        matches=[]
         for subdir, dirs, files in os.walk(rootdir):
             for file in files:
                 continuepprocessing=True
@@ -41,6 +42,7 @@ class PreCommit(SFDXBaseTask):
             self.logger.error(f'*********************************************************************************')
             self.logger.error(f'*****COMMIT BLOCKED Possible Key(s) Google API Keys found in these files:********')
             self.logger.error(f'*********************************************************************************')
+            self.logger.error(matches)
             for file in results:
                 self.logger.error(file)
             sys.exit(os.EX_DATAERR)
