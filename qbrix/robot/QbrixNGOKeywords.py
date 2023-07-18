@@ -30,3 +30,31 @@ class QbrixNGOKeywords(QbrixRobotTask):
             toggle_switch2 = self.browser.get_element(
                 ":nth-match(label:has-text('Disabled'), 2)")
             self.browser.click(toggle_switch2)
+
+    def enable_referrals(self):
+        """
+        Enables Referral Settings for NGO Cloud
+        """
+        self.shared.go_to_setup_admin_page("CaseReferralSettings/home")
+        self.browser.wait_for_elements_state("p:text-is('Case Referral')", ElementState.visible, '30s')
+        checked = "checked" in self.browser.get_element_states(
+            ":nth-match(label:has-text('Disabled'), 1)")
+        if not checked:
+            toggle_switch = self.browser.get_element(
+                ":nth-match(label:has-text('Disabled'), 1)")
+            self.browser.click(toggle_switch)
+            sleep(1)
+
+    def enable_care_plans_ngo(self):
+        """
+        Enables Care Plan Settings for NGO Cloud
+        """
+        self.shared.go_to_setup_admin_page("CarePlanSettings/home")
+        self.browser.wait_for_elements_state("p:text-is('Care Plans')", ElementState.visible, '30s')
+        checked = "checked" in self.browser.get_element_states(
+            ":nth-match(label:has-text('Disabled'), 1)")
+        if not checked:
+            toggle_switch = self.browser.get_element(
+                ":nth-match(label:has-text('Disabled'), 1)")
+            self.browser.click(toggle_switch)
+            sleep(1)

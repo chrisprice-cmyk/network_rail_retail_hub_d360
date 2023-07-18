@@ -249,7 +249,7 @@ class MetadataChecker(BaseTask, ABC):
         if not os.path.exists(unpackaged_path):
             return my_folders
 
-        for one_unpackaged_folder in os.listdir(unpackaged_path):
+        for one_unpackaged_folder in sorted(os.listdir(unpackaged_path)):
             my_folders.append(f"unpackaged/{one_unpackaged_folder}")
 
         return my_folders
@@ -344,29 +344,29 @@ class MetadataChecker(BaseTask, ABC):
             if not os.path.exists(one_folder_path):
                 continue
             
-            for one_metadata_type in os.listdir(one_folder_path):
+            for one_metadata_type in sorted(os.listdir(one_folder_path)):
                 # log.debug(f"check {one_metadata_type} in {one_folder}")
                 one_metadata_type_path = os.path.join(one_folder_path, one_metadata_type)
                 if not os.path.isdir(one_metadata_type_path):
                     continue
 
                 if one_metadata_type in {"aura","lwc"}:
-                    self.find_metadata(one_metadata_type,",".join(os.listdir(one_metadata_type_path)))
+                    self.find_metadata(one_metadata_type,",".join(sorted(os.listdir(one_metadata_type_path))))
                     #do something
                 
                 elif one_metadata_type in {"objects"}:
-                    for one_object in os.listdir(one_metadata_type_path):
+                    for one_object in sorted(os.listdir(one_metadata_type_path)):
                         one_object_path = os.path.join(one_metadata_type_path, one_object)
                         if not os.path.isdir(one_object_path):
                             continue
 
-                        for one_obj_metadata in os.listdir(one_object_path):
+                        for one_obj_metadata in sorted(os.listdir(one_object_path)):
                             one_obj_metadata_path = os.path.join(one_object_path, one_obj_metadata)
                             if not os.path.isdir(one_obj_metadata_path):
                                 continue
 
                             api_names = ""
-                            for one_file in os.listdir(one_obj_metadata_path):
+                            for one_file in sorted(os.listdir(one_obj_metadata_path)):
                                 if re.search(r'\.\w+\-meta\.xml$',one_file):
                                     my_api = re.sub(r'\.\w+\-meta\.xml$',"",one_file)
                                     api_names += f",{one_object}.{my_api}"
@@ -375,7 +375,7 @@ class MetadataChecker(BaseTask, ABC):
                 
                 else:
                     api_names = ""
-                    for one_file in os.listdir(one_metadata_type_path):
+                    for one_file in sorted(os.listdir(one_metadata_type_path)):
                         if re.search(r'\.\w+\-meta\.xml$',one_file):
                             my_api = re.sub(r'\.\w+\-meta\.xml$',"",one_file)
                             api_names += f",{my_api}"
@@ -408,7 +408,7 @@ class MetadataChecker(BaseTask, ABC):
                 continue
             
             # while this "one_file" could be a file or a folder
-            for one_file in os.listdir(meta_path):
+            for one_file in sorted(os.listdir(meta_path)):
                 
                 file_meta = one_file.lower()
 
