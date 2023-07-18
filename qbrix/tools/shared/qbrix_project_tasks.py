@@ -990,18 +990,18 @@ def get_existing_entries(permission_set_file_path):
 
     # Define a dictionary to track existing entries
     existing_entries = {
-        "objectPermissions": [],
-        "fieldPermissions": [],
-        "recordTypeVisibilities": [],
-        "classAccesses": [],
-        "apexPageAccess": [],
-        "tabSettings": [],
         "applicationVisibilities": [],
+        "classAccesses": [],
         "customMetadataTypeAccesses": [],
         "customPermissions": [],
         "customSettingAccesses": [],
         "externalDataSourceAccesses": [],
+        "fieldPermissions": [],
         "flowAccesses": [],
+        "objectPermissions": [],
+        "pageAccesses": [],
+        "recordTypeVisibilities": [],
+        "tabSettings": [],
         "userPermissions": []
     }
 
@@ -1058,6 +1058,170 @@ def create_permission_set_file(name, label, permission_set_path=None, run_as_ups
     label_element = ET.SubElement(root, "label")
     label_element.text = label
 
+
+
+    # APPLICATION ACCESS
+
+    # Handle Existing Access if any
+    if len(existing_entries["applicationVisibilities"]) > 0:
+        for existing_app_permission in existing_entries["applicationVisibilities"]:
+            root.append(existing_app_permission)
+
+    # Handle New or Additional Access
+    apps_path = "force-app/main/default/applications"
+    if os.path.exists(apps_path):
+        for apps_file in sorted(os.listdir(apps_path)):
+            if apps_file.endswith(".app-meta.xml"):
+                app_name = apps_file[:-13]
+                app_permissions_element = find_existing_entry(existing_entries["applicationVisibilities"], "application", app_name)
+                if app_permissions_element is None:
+                    app_permissions_element = ET.SubElement(root, "applicationVisibilities")
+                    ET.SubElement(app_permissions_element, "application").text = app_name
+                    ET.SubElement(app_permissions_element, "visible").text = "true"
+
+
+
+    # APEX Class Access
+
+    # Handle Existing Access if any
+    if len(existing_entries["classAccesses"]) > 0:
+        for existing_ac_permission in existing_entries["classAccesses"]:
+            root.append(existing_ac_permission)
+
+    # Handle New or Additional Access
+    classes_path = "force-app/main/default/classes"
+    if os.path.exists(classes_path):
+        for class_file in sorted(os.listdir(classes_path)):
+            if class_file.endswith(".cls"):
+                class_name = class_file[:-4]
+                class_permissions_element = find_existing_entry(existing_entries["classAccesses"], "apexClass", class_name)
+                if class_permissions_element is None:
+                    class_permissions_element = ET.SubElement(root, "classAccesses")
+                    ET.SubElement(class_permissions_element, "apexClass").text = class_name
+                    ET.SubElement(class_permissions_element, "enabled").text = "true"
+
+
+
+    # CUSTOM METADATA ACCESS
+    
+    # Handle Existing Access if any
+    if len(existing_entries["customMetadataTypeAccesses"]) > 0:
+        for existing_permission in existing_entries["customMetadataTypeAccesses"]:
+            root.append(existing_permission)
+
+    # Handle New or Additional Access
+    custom_md_path = "force-app/main/default/customMetadata"
+    if os.path.exists(custom_md_path):
+        for custom_md_file in sorted(os.listdir(custom_md_path)):
+            if custom_md_file.endswith(".md-meta.xml"):
+                md_file_name = os.path.basename(custom_md_file)
+                md_name = md_file_name.split(".")[0]
+                md_name += "__mdt"
+                md_permissions_element = find_existing_entry(existing_entries["customMetadataTypeAccesses"], "name", md_name)
+                if md_permissions_element is None:
+                    md_permissions_element = ET.SubElement(root, "customMetadataTypeAccesses")
+                    ET.SubElement(md_permissions_element, "name").text = md_name
+                    ET.SubElement(md_permissions_element, "enabled").text = "true"
+
+
+
+    # CUSTOM PERMISSIONS
+    
+    # Handle Existing Access if any
+    if len(existing_entries["customPermissions"]) > 0:
+        for existing_permission in existing_entries["customPermissions"]:
+            root.append(existing_permission)
+
+    # Handle New or Additional Access
+    # TODO
+
+
+
+    # CUSTOM SETTING ACCESS
+    
+    # Handle Existing Access if any
+    if len(existing_entries["customSettingAccesses"]) > 0:
+        for existing_permission in existing_entries["customSettingAccesses"]:
+            root.append(existing_permission)
+
+    # Handle New or Additional Access
+    # TODO
+
+
+
+    # EXTERNAL DATASOURCE ACCESS
+    
+    # Handle Existing Access if any
+    if len(existing_entries["externalDataSourceAccesses"]) > 0:
+        for existing_permission in existing_entries["externalDataSourceAccesses"]:
+            root.append(existing_permission)
+
+    # Handle New or Additional Access
+    # TODO
+
+
+
+    # object path needed later for field, object and recordtype
+    objects_path = os.path.join("force-app", "main", "default", "objects")
+
+
+
+    # FIELD PERMISSIONS
+
+    # Add Existing Entries, if any
+    if len(existing_entries["fieldPermissions"]) > 0:
+        for existing_field_permission in existing_entries["fieldPermissions"]:
+            root.append(existing_field_permission)
+
+    # Check for New or Additional Entries and add them
+    if os.path.exists(objects_path):
+        for object_folder in sorted(os.listdir(objects_path)):
+            object_folder_path = os.path.join(objects_path, object_folder)
+            if os.path.isdir(object_folder_path):
+                fields_folder_path = os.path.join(object_folder_path, "fields")
+                if os.path.isdir(fields_folder_path):
+                    for field_file in sorted(os.listdir(fields_folder_path)):
+
+                        # Read File and skip MasterDetail and Formula Fields
+                        with open(os.path.join(fields_folder_path, field_file), "r") as file:
+                            contents = file.read()
+                            formula_reference_to_start = contents.find("<formula>")
+                            md_reference_to_start = contents.find("<type>MasterDetail</type>")
+                            req_reference_to_start = contents.find("<required>true</required>")
+
+                        if formula_reference_to_start > -1 or md_reference_to_start > -1 or req_reference_to_start > -1:
+                            continue
+
+                        field_name = field_file[:-15]
+                        field_key = f"{object_folder}.{field_name}"
+                        field_permissions_element = find_existing_entry(existing_entries["fieldPermissions"], "field", field_key)
+                        if field_permissions_element is None:
+                            field_permissions_element = ET.SubElement(root, "fieldPermissions")
+                            ET.SubElement(field_permissions_element, "editable").text = "true"
+                            ET.SubElement(field_permissions_element, "field").text = field_key
+                            ET.SubElement(field_permissions_element, "readable").text = "true"
+
+    # FLOW ACCESS
+
+    # Handle Existing Access if any
+    if len(existing_entries["flowAccesses"]) > 0:
+        for existing_permission in existing_entries["flowAccesses"]:
+            root.append(existing_permission)
+
+    # Handle New or Additional Access
+    flows_path = "force-app/main/default/flows"
+    if os.path.exists(flows_path):
+        for flow_file in sorted(os.listdir(flows_path)):
+            if flow_file.endswith(".flow-meta.xml"):
+                flow_name = flow_file[:-14]
+                flow_permissions_element = find_existing_entry(existing_entries["flowAccesses"], "flow", flow_name)
+                if flow_permissions_element is None:
+                    flow_permissions_element = ET.SubElement(root, "flowAccesses")
+                    ET.SubElement(flow_permissions_element, "flow").text = flow_name
+                    ET.SubElement(flow_permissions_element, "enabled").text = "true"
+
+
+
     # OBJECT PERMISSIONS
 
     # Handle Any Existing Entries
@@ -1067,9 +1231,8 @@ def create_permission_set_file(name, label, permission_set_path=None, run_as_ups
 
     # Check for additional or new entries 
     objects_set = set()
-    objects_path = os.path.join("force-app", "main", "default", "objects")
     if os.path.exists(objects_path):
-        for object_name in os.listdir(objects_path):
+        for object_name in sorted(os.listdir(objects_path)):
 
             if object_name == '.DS_Store':
                 continue
@@ -1080,7 +1243,7 @@ def create_permission_set_file(name, label, permission_set_path=None, run_as_ups
             # Add object permissions for lookup fields that reference objects not in the project
             fields_folder_path = os.path.join(objects_path, object_name, "fields")
             if os.path.isdir(fields_folder_path):
-                for field_file in os.listdir(fields_folder_path):
+                for field_file in sorted(os.listdir(fields_folder_path)):
                     field_path = os.path.join(fields_folder_path, field_file)
                     with open(field_path, "r") as file:
                         contents = file.read()
@@ -1104,40 +1267,28 @@ def create_permission_set_file(name, label, permission_set_path=None, run_as_ups
                 ET.SubElement(object_permissions_element, "object").text = obj
                 ET.SubElement(object_permissions_element, "viewAllRecords").text = "true"               
 
-    # FIELD PERMISSIONS
 
-    # Add Existing Entries, if any
-    if len(existing_entries["fieldPermissions"]) > 0:
-        for existing_field_permission in existing_entries["fieldPermissions"]:
-            root.append(existing_field_permission)
 
-    # Check for New or Additional Entries and add them
-    if os.path.exists(objects_path):
-        for object_folder in os.listdir(objects_path):
-            object_folder_path = os.path.join(objects_path, object_folder)
-            if os.path.isdir(object_folder_path):
-                fields_folder_path = os.path.join(object_folder_path, "fields")
-                if os.path.isdir(fields_folder_path):
-                    for field_file in os.listdir(fields_folder_path):
+    # APEX PAGE VISUALFORCE PERMISSIONS
 
-                        # Read File and skip MasterDetail and Formula Fields
-                        with open(os.path.join(fields_folder_path, field_file), "r") as file:
-                            contents = file.read()
-                            formula_reference_to_start = contents.find("<formula>")
-                            md_reference_to_start = contents.find("<type>MasterDetail</type>")
-                            req_reference_to_start = contents.find("<required>true</required>")
+    # Handle Existing Access if any
+    if len(existing_entries["pageAccesses"]) > 0:
+        for existing_permission in existing_entries["pageAccesses"]:
+            root.append(existing_permission)
 
-                        if formula_reference_to_start > -1 or md_reference_to_start > -1 or req_reference_to_start > -1:
-                            continue
-
-                        field_name = field_file[:-15]
-                        field_key = f"{object_folder}.{field_name}"
-                        field_permissions_element = find_existing_entry(existing_entries["fieldPermissions"], "field", field_key)
-                        if field_permissions_element is None:
-                            field_permissions_element = ET.SubElement(root, "fieldPermissions")
-                            ET.SubElement(field_permissions_element, "editable").text = "true"
-                            ET.SubElement(field_permissions_element, "field").text = field_key
-                            ET.SubElement(field_permissions_element, "readable").text = "true"
+    
+    # Handle New or Additional Access
+    pages_path = "force-app/main/default/pages"
+    if os.path.exists(pages_path):
+        for page_file in os.listdir(pages_path):
+            if page_file.endswith(".page-meta.xml"):
+                page_file = page_file[:-14]
+                page_permissions_element = find_existing_entry(existing_entries["pageAccesses"], "apexPage", page_file)
+                if page_permissions_element is None:
+                    page_permissions_element = ET.SubElement(root, "pageAccesses")
+                    ET.SubElement(page_permissions_element, "apexPage").text = page_file
+                    ET.SubElement(page_permissions_element, "enabled").text = "true"
+    
                                 
 
     # RECORD TYPE ACCESS
@@ -1149,12 +1300,12 @@ def create_permission_set_file(name, label, permission_set_path=None, run_as_ups
 
     # Handle New or Additional Access
     if os.path.exists(objects_path):
-        for object_folder in os.listdir(objects_path):
+        for object_folder in sorted(os.listdir(objects_path)):
             object_folder_path = os.path.join(objects_path, object_folder)
             if os.path.isdir(object_folder_path):
                 record_types_folder_path = os.path.join(object_folder_path, "recordTypes")
                 if os.path.isdir(record_types_folder_path):
-                    for record_type_file in os.listdir(record_types_folder_path):
+                    for record_type_file in sorted(os.listdir(record_types_folder_path)):
                         if record_type_file.endswith(".recordType-meta.xml"):
                             record_type_name = record_type_file[:-20]
                             record_type_key = f"{object_folder}.{record_type_name}"
@@ -1164,24 +1315,7 @@ def create_permission_set_file(name, label, permission_set_path=None, run_as_ups
                                 ET.SubElement(record_type_permissions_element, "recordType").text = record_type_key
                                 ET.SubElement(record_type_permissions_element, "visible").text = "true"
 
-    # APEX Class Access
-
-    # Handle Existing Access if any
-    if len(existing_entries["classAccesses"]) > 0:
-        for existing_ac_permission in existing_entries["classAccesses"]:
-            root.append(existing_ac_permission)
-
-    # Handle New or Additional Access
-    classes_path = "force-app/main/default/classes"
-    if os.path.exists(classes_path):
-        for class_file in os.listdir(classes_path):
-            if class_file.endswith(".cls"):
-                class_name = class_file[:-4]
-                class_permissions_element = find_existing_entry(existing_entries["classAccesses"], "apexClass", class_name)
-                if class_permissions_element is None:
-                    class_permissions_element = ET.SubElement(root, "classAccesses")
-                    ET.SubElement(class_permissions_element, "apexClass").text = class_name
-                    ET.SubElement(class_permissions_element, "enabled").text = "true"
+    
 
     # TAB PERMISSIONS
 
@@ -1193,7 +1327,7 @@ def create_permission_set_file(name, label, permission_set_path=None, run_as_ups
     # Handle New or Additional Access
     tabs_path = "force-app/main/default/tabs"
     if os.path.exists(tabs_path):
-        for tab_file in os.listdir(tabs_path):
+        for tab_file in sorted(os.listdir(tabs_path)):
             if tab_file.endswith(".tab-meta.xml"):
                 tab_name = tab_file[:-13]
                 tab_permissions_element = find_existing_entry(existing_entries["tabSettings"], "tab", tab_name)
@@ -1202,113 +1336,7 @@ def create_permission_set_file(name, label, permission_set_path=None, run_as_ups
                     ET.SubElement(tab_permissions_element, "tab").text = tab_name
                     ET.SubElement(tab_permissions_element, "visibility").text = "Visible"
 
-    # APPLICATION ACCESS
-
-    # Handle Existing Access if any
-    if len(existing_entries["applicationVisibilities"]) > 0:
-        for existing_app_permission in existing_entries["applicationVisibilities"]:
-            root.append(existing_app_permission)
-
-    # Handle New or Additional Access
-    apps_path = "force-app/main/default/applications"
-    if os.path.exists(apps_path):
-        for apps_file in os.listdir(apps_path):
-            if apps_file.endswith(".app-meta.xml"):
-                app_name = apps_file[:-13]
-                app_permissions_element = find_existing_entry(existing_entries["applicationVisibilities"], "application", app_name)
-                if app_permissions_element is None:
-                    app_permissions_element = ET.SubElement(root, "applicationVisibilities")
-                    ET.SubElement(app_permissions_element, "application").text = app_name
-                    ET.SubElement(app_permissions_element, "visible").text = "true"
-
-    # FLOW ACCESS
-
-    # Handle Existing Access if any
-    if len(existing_entries["flowAccesses"]) > 0:
-        for existing_permission in existing_entries["flowAccesses"]:
-            root.append(existing_permission)
-
-    # Handle New or Additional Access
-    flows_path = "force-app/main/default/flows"
-    if os.path.exists(flows_path):
-        for flow_file in os.listdir(flows_path):
-            if flow_file.endswith(".flow-meta.xml"):
-                flow_name = flow_file[:-14]
-                flow_permissions_element = find_existing_entry(existing_entries["flowAccesses"], "flow", flow_name)
-                if flow_permissions_element is None:
-                    flow_permissions_element = ET.SubElement(root, "flowAccesses")
-                    ET.SubElement(flow_permissions_element, "flow").text = flow_name
-                    ET.SubElement(flow_permissions_element, "enabled").text = "true"
-
-    # CUSTOM METADATA ACCESS
     
-    # Handle Existing Access if any
-    if len(existing_entries["customMetadataTypeAccesses"]) > 0:
-        for existing_permission in existing_entries["customMetadataTypeAccesses"]:
-            root.append(existing_permission)
-
-    # Handle New or Additional Access
-    custom_md_path = "force-app/main/default/customMetadata"
-    if os.path.exists(custom_md_path):
-        for custom_md_file in os.listdir(custom_md_path):
-            if custom_md_file.endswith(".md-meta.xml"):
-                md_file_name = os.path.basename(custom_md_file)
-                md_name = md_file_name.split(".")[0]
-                md_name += "__mdt"
-                md_permissions_element = find_existing_entry(existing_entries["customMetadataTypeAccesses"], "name", md_name)
-                if md_permissions_element is None:
-                    md_permissions_element = ET.SubElement(root, "customMetadataTypeAccesses")
-                    ET.SubElement(md_permissions_element, "name").text = md_name
-                    ET.SubElement(md_permissions_element, "enabled").text = "true"
-
-    # CUSTOM PERMISSIONS
-    
-    # Handle Existing Access if any
-    if len(existing_entries["customPermissions"]) > 0:
-        for existing_permission in existing_entries["customPermissions"]:
-            root.append(existing_permission)
-
-    # Handle New or Additional Access
-    # TODO
-
-    # CUSTOM SETTING ACCESS
-    
-    # Handle Existing Access if any
-    if len(existing_entries["customSettingAccesses"]) > 0:
-        for existing_permission in existing_entries["customSettingAccesses"]:
-            root.append(existing_permission)
-
-    # Handle New or Additional Access
-    # TODO
-
-    # EXTERNAL DATASOURCE ACCESS
-    
-    # Handle Existing Access if any
-    if len(existing_entries["externalDataSourceAccesses"]) > 0:
-        for existing_permission in existing_entries["externalDataSourceAccesses"]:
-            root.append(existing_permission)
-
-    # Handle New or Additional Access
-    # TODO
-
-    # APEX PAGE VISUALFORCE PERMISSIONS
-
-    # Handle Existing Access if any
-    if len(existing_entries["apexPageAccess"]) > 0:
-        for existing_permission in existing_entries["apexPageAccess"]:
-            root.append(existing_permission)
-
-    # Handle New or Additional Access
-    pages_path = "force-app/main/default/pages"
-    if os.path.exists(pages_path):
-        for page_file in os.listdir(pages_path):
-            if page_file.endswith(".page-meta.xml"):
-                page_file = page_file[:-14]
-                page_permissions_element = find_existing_entry(existing_entries["apexPageAccess"], "apexPage", page_file)
-                if page_permissions_element is None:
-                    page_permissions_element = ET.SubElement(root, "apexPageAccess")
-                    ET.SubElement(page_permissions_element, "apexPage").text = page_file
-                    ET.SubElement(page_permissions_element, "enabled").text = "true"
 
     # USER PERMISSIONS
 
@@ -1337,7 +1365,7 @@ def create_permission_set_file(name, label, permission_set_path=None, run_as_ups
 
         # Write Permission Set File
         xml_dom = minidom.parseString(xml_string)
-        formatted_xml = xml_dom.toprettyxml(indent="  ", encoding="utf-8")
+        formatted_xml = xml_dom.toprettyxml(indent="    ", encoding="utf-8")
         file.write(formatted_xml)
 
 def find_existing_entry(existing_entries, child_tag, child_text):
