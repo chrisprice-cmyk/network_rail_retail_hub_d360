@@ -27,7 +27,7 @@ class QbrixPatchAutomation(QbrixRobotTask):
         self.field_service_keywords.enable_field_service(turn_off=True)  
 
     def enable_messaging_channels(self):
-        pass 
+        pass
 
     def update_sdo_service_omniflow(self):
         pass 

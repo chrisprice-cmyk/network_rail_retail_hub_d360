@@ -167,3 +167,112 @@ class QbrixServiceKeywords(QbrixRobotTask):
                 print(f"Conversation '{one_msg['name']}' Component Already Exists")
 
         return
+    
+    def add_messaging_channel(self, channel_name: str = None):
+
+        if not channel_name:
+            return
+
+        self.shared.go_to_setup_admin_page("LiveMessageSetup/home")
+        self.browser.wait_for_elements_state("table[aria-label='All messaging channels']", ElementState.visible, "15s")
+
+        # Check if channel is already present
+        if self.browser.get_element_count(f"table[aria-label='All messaging channels'] >> th >> a:text-is('{channel_name}')") == 0:
+            
+            # Add New Channel
+            self.browser.click("button:text-is('New Channel'):visible")
+            sleep(2)
+            self.browser.click("button:text-is('Start'):visible")
+            sleep(2)
+            self.browser.click("p[title='Messaging for In-App and Web']")
+            sleep(1)
+            self.browser.fill_text("div[data-aura-class='setup_serviceLsfContent'] >> :nth-match(input.slds-input:visible, 1)", channel_name)
+            self.browser.click("label:text-is('Developer Name')")
+            sleep(2)
+            self.browser.click("button:text-is('Save'):visible")
+            sleep(3)
+        
+            # Setup Initial Settings for Channel
+            self.browser.click("lightning-combobox[data-element-name='RoutingType'] >> lightning-base-combobox.slds-combobox_container")
+            self.browser.click("lightning-base-combobox-item[data-value='Omni-Flow']")
+            sleep(1)
+            self.browser.fill_text("lightning-grouped-combobox[data-element-name='FlowLookup'] >> input", "SDO Service")
+            self.browser.click("lightning-base-combobox-formatted-text[title='SDO Service - MIAW Omni-Flow']")
+            sleep(1)
+            self.browser.fill_text("lightning-grouped-combobox[data-element-name='FallbackQueueLookup'] >> input", "Messaging")
+            self.browser.click("lightning-base-combobox-formatted-text[title='Messaging']")
+            sleep(1)
+            self.browser.scroll_to_element("button:text-is('Save')")
+            sleep(1)
+            self.browser.fill_text("lightning-grouped-combobox[data-element-name='InitialResponseLookup'] >> input", "ConversationAcknowledgement")
+            self.browser.click("lightning-base-combobox-formatted-text[title='ConversationAcknowledgement']")
+            sleep(1)
+            self.browser.fill_text("lightning-grouped-combobox[data-element-name='EngagedResponseLookup'] >> input", "StartConversation")
+            self.browser.click("lightning-base-combobox-item:has-text('StartConversation'):visible")
+            sleep(1)
+            self.browser.fill_text("lightning-grouped-combobox[data-element-name='ConversationEndResponseLookup'] >> input", "EndConversation")
+            self.browser.click("lightning-base-combobox-item:has-text('EndConversation'):visible")
+            sleep(1)
+            self.browser.click("lightning-grouped-combobox[data-element-name='EndUserInactiveResponseLookup']")
+            self.browser.fill_text("lightning-grouped-combobox[data-element-name='EndUserInactiveResponseLookup'] >> input", "inactive")
+            self.browser.click("lightning-base-combobox-item:has-text('InactiveConversation'):visible")
+            sleep(1)
+            self.browser.click("button:text-is('Save')")
+
+            # Go to Channel Page and Setup
+            channel_id_result = self.salesforceapi.soql_query(f"SELECT Id from MessagingChannel where MasterLabel = '{channel_name.replace('&amp;', '&')}'")
+            if channel_id_result and channel_id_result['totalSize'] > 0:
+                self.shared.go_to_setup_admin_page(f"LiveMessageSetup/{channel_id_result['records'][0]['Id']}/view")
+
+                # Add Parameter Mappings
+                mappings = [
+                    {
+                        "ParameterName": "First Name",
+                        "FlowVariable": "firstName"
+                    },
+                    {
+                        "ParameterName": "Last Name",
+                        "FlowVariable": "lastName"
+                    },
+                    {
+                        "ParameterName": "Email",
+                        "FlowVariable": "email"
+                    },
+                    {
+                        "ParameterName": "Subject",
+                        "FlowVariable": "subject"
+                    }
+                ]
+
+                new_button_selector = "header:has-text('Parameter Mappings') >> button:has-text('New')"
+                modal_selector = "div.slds-modal__container:has-text('New Parameter Mapping')"
+
+                for mapping in mappings:
+
+                    # Check Mapping Is Not Already Present
+                    if self.browser.get_element_count("lightning-card:has-text('Parameter Mappings') >> table") > 0:
+                        if self.browser.get_element_count(f"lightning-card:has-text('Parameter Mappings') >> table >> th[data-label='Parameter Name']:has-text('{mapping['ParameterName']}')") > 0:
+                            continue
+                    
+                    # Create New Mapping
+                    self.browser.click(new_button_selector)
+                    self.browser.click(f"{modal_selector} >> lightning-grouped-combobox >> input")
+                    sleep(1)
+                    self.browser.click(f"lightning-base-combobox-item:has-text('{mapping['ParameterName']}'):visible", )
+                    sleep(1)
+                    self.browser.fill_text(f"{modal_selector} >> lightning-input >> input.slds-input", mapping["FlowVariable"])
+                    sleep(1)
+                    self.browser.click("button:text-is('Save'):visible")
+                    sleep(2)
+
+                # Activate Channel
+                if self.browser.get_element_count("button:text-is('Activate')") > 0:
+                    self.browser.click("button:text-is('Activate')")
+                    sleep(2)
+
+                    if self.browser.get_element_count("lightning-modal:has-text('Terms and Conditions')") > 0:
+                        sleep(1)
+                        self.browser.click("lightning-modal:has-text('Terms and Conditions') >> label:has-text('By checking this box or accessing or using Messaging for In-App and Web')")
+                        sleep(2)
+                        self.browser.click("button:text-is('Accept'):visible")
+                        sleep(1)
