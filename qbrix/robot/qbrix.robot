@@ -331,6 +331,12 @@ Enable Actionable Segmentation Settings
 Enable Program Benefits
     Enable Program Benefits
 
+Enable Referrals
+    Enable Referrals
+
+Enable Care Plans Ngo   
+    Enable Care Plans Ngo
+
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # HealthCare Cloud Operations
 # -----------------------------------------------------------------------------------------------------------------------------------------
