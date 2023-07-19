@@ -13,6 +13,7 @@ class QBrixRobotLibrary():
         self._cumulusci = None
         self._salesforceapi = None
         self._browser = None
+        self._tooling = None
 
     @property
     def salesforceapi(self):
@@ -49,6 +50,15 @@ class QBrixRobotLibrary():
         if self._browser is None:
             self._browser = self.builtin.get_library_instance("Browser")
         return self._browser
+    
+    @property
+    def tooling(self):
+
+        """Loads Salesforce Tooling API"""
+
+        if self._tooling is None:
+            self._tooling = self.cumulusci._init_api("tooling/")
+        return self._tooling
 
 
 class QbrixRobotTask(QBrixRobotLibrary):
