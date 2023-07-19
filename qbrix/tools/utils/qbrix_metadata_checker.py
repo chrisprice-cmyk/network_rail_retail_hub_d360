@@ -424,7 +424,7 @@ class MetadataChecker(BaseTask, ABC):
                 file_meta_plain = file_meta
 
                 if object_api:
-                    file_meta_plain = file_meta.replace(object_api.lower(),"")
+                    file_meta_plain = file_meta_plain[len(object_api):] if file_meta_plain.startswith(object_api.lower()) else file_meta_plain
                     file_meta_plain = file_meta_plain[1:] if file_meta_plain.startswith('.') else file_meta_plain
                     if not "in_obj" in self.metadata_type_detail:
                         if not file_meta.startswith(object_api.lower()):
