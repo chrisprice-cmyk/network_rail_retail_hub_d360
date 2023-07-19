@@ -216,6 +216,6 @@ class QBrixUpdater(BaseTask, ABC):
         self.logger.info(" -> Updating robot references in CumulusCI.yml...")
         replace_file_text("cumulusci.yml", "qbrix/robot/tests", "qbrix/robot", False)
         if os.path.exists('robot'):
-            self._replace_string_in_files("robot", ".robot", "QRobot.robot", "QRobot.resource")
+            self._replace_string_in_files("robot", "robot", "QRobot.robot", "QRobot.resource")
 
         self.logger.info("Update Complete!")
