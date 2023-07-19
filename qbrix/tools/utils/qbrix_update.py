@@ -2,6 +2,7 @@ import filecmp
 import os
 import shutil
 import stat
+import fnmatch
 from pathlib import Path
 from abc import ABC
 from os.path import exists
@@ -9,15 +10,43 @@ from os.path import exists
 from cumulusci.core.tasks import BaseTask
 
 from qbrix.tools.shared.qbrix_cci_tasks import run_cci_task
-from qbrix.tools.shared.qbrix_project_tasks import (download_and_unzip,
-                                                    replace_file_text)
+from qbrix.tools.shared.qbrix_project_tasks import (download_and_unzip, replace_file_text)
+
+# UPDATE CONFIGURATION - CHANGE ITEMS HERE
+#
+# Q BRANCH UPDATE LOCATION - URL FOR GETTING THE LATEST TEMPLATE UPDATE
+Q_BRANCH_LOCATION = "https://qbrix-core.herokuapp.com/qbrix/q_update_package.zip"
+
+# QBRIX CUSTOM TASKS - THESE ARE INSERTED INTO THE CUMULUSCI.YML OF THE TARGET PROJECT
+# PARAM1 = The name of the task
+# PARAM2 = The class path of the task
+Q_BRIX_CUSTOM_TASKS = {
+    'qbrix_preflight': 'qbrix.tools.utils.qbrix_preflight.RunPreflight',
+    'qbrix_landing': 'qbrix.tools.utils.qbrix_landing.RunLanding',
+    'analytics_manager': 'qbrix.tools.data.qbrix_analytics.AnalyticsManager',
+    'user_manager': 'qbrix.salesforce.qbrix_salesforce_tasks.CreateUser',
+    'qbrix_installer_tracking': 'qbrix.tools.utils.qbrix_installtracking.InstallRecorder',
+    'qbrix_metadata_checker': 'qbrix.tools.utils.qbrix_metadata_checker.MetadataChecker',
+    'dustpan': 'qbrix.tools.utils.qbrix_orgconfig_hydrate.NGBroom',
+    'flow_wrapper': 'qbrix.tools.utils.qbrix_deploy.Deploy',
+    'qbrix_sfdx': 'cumulusci.tasks.sfdx.SFDXOrgTask',
+    'deploy_dx': 'cumulusci.tasks.sfdx.SFDXOrgTask',
+    'qbrix_cache_add': 'qbrix.tools.utils.qbrix_orgconfig_hydrate.NGCacheAdd',
+    'abort_install': 'qbrix.tools.utils.qbrix_orgconfig_hydrate.NGAbort',
+    'qbrix_shell_deploy_metadeploy': 'qbrix.tools.utils.qbrix_deploy.Deploy',
+    'health_check': 'qbrix.tools.utils.qbrix_health_check.HealthChecker',
+    'update_qbrix': 'qbrix.tools.utils.qbrix_update.QBrixUpdater',
+    'setup_qbrix': 'qbrix.tools.utils.qbrix_project_setup.InitProject',
+    'list_qbrix': 'qbrix.salesforce.qbrix_salesforce_tasks.ListQBrix',
+    'q_update_dependencies': 'qbrix.salesforce.qbrix_salesforce_tasks.QUpdateDependencies',
+    'mass_qbrix_update': 'qbrix.tools.utils.qbrix_mass_ops.MassFileOps',
+    'precommit_check': 'qbrix.git.hooks_ext.pre_commit.PreCommit'
+}
 
 
 class QBrixUpdater(BaseTask, ABC):
 
     """Updates Q Brix Scripts along with any optional, custom updates"""
-
-    q_branch_location = "https://qbrix-core.herokuapp.com/qbrix/q_update_package.zip"
 
     task_docs = """
     Updated the Q brix Extension Library and other Q Brix related bundles like GitHub Actions and VSCode Extensions in line with the XDO-Template (main branch). 
@@ -46,8 +75,15 @@ class QBrixUpdater(BaseTask, ABC):
         self.UpdateLocation = self.options["UpdateLocation"] if "UpdateLocation" in self.options else None
         self.IgnoreOptionalUpdates = self.options["IgnoreOptionalUpdates"] if "IgnoreOptionalUpdates" in self.options else False
 
-    def _check_and_deploy_class(self, tasks: dict):
+    def _check_and_deploy_class(self):
 
+        """Checks the CumulusCI.yml file for custom task definitions and adds them if missing"""
+
+        if not os.path.exists('cumulusci.yml'):
+            self.logger.error("ERROR: No Cumulusci.yml file found in project. Please check project directory.")
+            return
+
+        # Read Cumulus File
         with open("cumulusci.yml", "r", encoding="utf-8") as cci_file:
             cci_file.seek(0)
             cci_data = cci_file.read()
@@ -57,15 +93,28 @@ class QBrixUpdater(BaseTask, ABC):
             self.logger.error("Unable to update cumulusci.yml file. Missing placeholder for Q Brix Tasks.")
         else:
             # Check and update custom tasks
-            for key, value in tasks.items():
-                self.logger.info(" -> Checking Q Brix Task: %s / %s", key, value)
+            for custom_task_name, custom_task_class in Q_BRIX_CUSTOM_TASKS.items():
 
-                key_index = cci_data.find(f"{key}:")
-                value_index = cci_data.find(value)
+                # Check for task name
+                task_name_index = cci_data.find(f"{custom_task_name}:")
+                task_class_index = cci_data.find(custom_task_class)
 
-                if key_index < 0 and value_index < 0:
-                    replacement_text = f"# CUSTOM TASKS ADDED FOR Q BRIX DEVELOPMENT\n\n  {key}:\n    class_path: {value}"
+                # Check if Task Name Defined with incorrect class
+                if task_name_index > 0 and task_class_index == -1:
+                    self.logger.error("ERROR: Task '%s' is defined in the cumulusci.yml file with the incorrect class. Please update manually.", custom_task_name)
+                    continue
+
+                # Check if default name for task has been missed
+                if task_name_index == -1 and task_class_index > 0:
+                    self.logger.error("ERROR: Custom task class '%s' has been defined although the expected task name was not found. Please update manually.", custom_task_class)
+                    continue
+
+                # Check if task class and name is missing
+                if task_name_index == -1 and task_class_index == -1:
+                    self.logger.info(" -> Adding Missing Custom Task '%s' to Cumulusci.yml", custom_task_name)
+                    replacement_text = f"# CUSTOM TASKS ADDED FOR Q BRIX DEVELOPMENT\n\n  {custom_task_name}:\n    class_path: {custom_task_class}"
                     replace_file_text("cumulusci.yml", "# CUSTOM TASKS ADDED FOR Q BRIX DEVELOPMENT", replacement_text)
+                    
 
     def _update_folder(self, folder_path, update_dir, remove_existing):
 
@@ -91,8 +140,26 @@ class QBrixUpdater(BaseTask, ABC):
         """Ensures that required directories are created"""
 
         os.makedirs(".qbrix", exist_ok=True)
+        os.makedirs(".vscode", exist_ok=True)
+        os.makedirs(".git", exist_ok=True)
         os.makedirs("qbrix", exist_ok=True)
 
+    def _replace_string_in_files(self, directory, extension, search_string, replace_string):
+
+        """Replaces strings in any file within a directory"""
+
+        for root, dirnames, filenames in os.walk(directory):
+            for filename in fnmatch.filter(filenames, f'*.{extension}'):
+                file_path = os.path.join(root, filename)
+                with open(file_path, 'r', encoding="utf-8") as file:
+                    content = file.read()
+                
+                if search_string in content:
+                    content = content.replace(search_string, replace_string)
+                    
+                    with open(file_path, 'w', encoding="utf-8") as file:
+                        file.write(content)
+                        print(f" -> Replaced '{search_string}' with '{replace_string}' in {file_path}")
 
     def _run_task(self):
 
@@ -106,7 +173,7 @@ class QBrixUpdater(BaseTask, ABC):
             shutil.copyfile("qbrix/tools/utils/qbrix_update.py", ".qbrix/qbrix_update.py")
 
         self.logger.info(" -> Downloading Latest version...")
-        if download_and_unzip(self.q_branch_location, self.ArchivePassword, False, True):
+        if download_and_unzip(Q_BRANCH_LOCATION, self.ArchivePassword, False, True):
             # ADD FOLDERS HERE WHICH YOU WANT TO UPDATE IN PROJECT DIRECTORIES
             # PARAM1 = The folder as if it was from the root path
             # PARAM2 = The location where the source files should be located
@@ -116,51 +183,23 @@ class QBrixUpdater(BaseTask, ABC):
             self._update_folder(".github", ".qbrix/Update/xDO-Template-main", False)
             self._update_folder_indirect_source(".git/hooks", ".qbrix/Update/xDO-Template-main/qbrix/git/hooks", False)
             
-            #we are injecting pre-commit to use our cci extension but we need to make executeable
-            f = Path(".git/hooks/pre-commit")
-            f.chmod(f.stat().st_mode | stat.S_IEXEC)
+            #we are injecting pre-commit to use our cci extension but we need to make executable
+            commit_file = Path(".git/hooks/pre-commit")
+            commit_file.chmod(commit_file.stat().st_mode | stat.S_IEXEC)
             
-            
-
             # Finally Clean Up Cached Folder
             self.logger.info(" -> Cleaning up temp files...")
             shutil.rmtree(".qbrix/Update")
 
         self.logger.info(" -> Checking cumulusci.yml file...")
         
-        # ADD CUSTOM TASKS HERE
-        # PARAM1 = The name of the task
-        # PARAM2 = The class path of the task
-
-        tasks_to_update = {}
-        tasks_to_update.update({'qbrix_preflight': 'qbrix.tools.utils.qbrix_preflight.RunPreflight'})
-        tasks_to_update.update({'qbrix_landing': 'qbrix.tools.utils.qbrix_landing.RunLanding'})
-        tasks_to_update.update({'analytics_manager': 'qbrix.tools.data.qbrix_analytics.AnalyticsManager'})
-        tasks_to_update.update({'user_manager': 'qbrix.salesforce.qbrix_salesforce_tasks.CreateUser'})
-        tasks_to_update.update({'qbrix_installer_tracking': 'qbrix.tools.utils.qbrix_installtracking.InstallRecorder'})
-        tasks_to_update.update({'qbrix_metadata_checker': 'qbrix.tools.utils.qbrix_metadata_checker.MetadataChecker'})
-        tasks_to_update.update({'dustpan': 'qbrix.tools.utils.qbrix_orgconfig_hydrate.NGBroom'})
-        tasks_to_update.update({'flow_wrapper': 'qbrix.tools.utils.qbrix_deploy.Deploy'})
-        tasks_to_update.update({'qbrix_sfdx': 'cumulusci.tasks.sfdx.SFDXOrgTask'})
-        tasks_to_update.update({'deploy_dx': 'cumulusci.tasks.sfdx.SFDXOrgTask'})
-        tasks_to_update.update({'qbrix_cache_add': 'qbrix.tools.utils.qbrix_orgconfig_hydrate.NGCacheAdd'})
-        tasks_to_update.update({'abort_install': 'qbrix.tools.utils.qbrix_orgconfig_hydrate.NGAbort'})
-        tasks_to_update.update({'qbrix_shell_deploy_metadeploy': 'qbrix.tools.utils.qbrix_deploy.Deploy'})
-        tasks_to_update.update({'health_check': 'qbrix.tools.utils.qbrix_health_check.HealthChecker'})
-        tasks_to_update.update({'update_qbrix': 'qbrix.tools.utils.qbrix_update.QBrixUpdater'})
-        tasks_to_update.update({'setup_qbrix': 'qbrix.tools.utils.qbrix_project_setup.InitProject'})
-        tasks_to_update.update({'list_qbrix': 'qbrix.salesforce.qbrix_salesforce_tasks.ListQBrix'})
-        tasks_to_update.update({'q_update_dependencies': 'qbrix.salesforce.qbrix_salesforce_tasks.QUpdateDependencies'})
-        tasks_to_update.update({'mass_qbrix_update': 'qbrix.tools.utils.qbrix_mass_ops.MassFileOps'})
-        tasks_to_update.update({'precommit_check': 'qbrix.git.hooks_ext.pre_commit.PreCommit'})
-
-        self._check_and_deploy_class(tasks_to_update)
+        self._check_and_deploy_class()
 
         self.logger.info(" -> Checking for additional tasks to run...")
 
         if not filecmp.cmp(".qbrix/qbrix_update.py", "qbrix/tools/utils/qbrix_update.py"):
             self.logger.info(" -> Update Task has been upgraded, running update again...")
-            run_cci_task("update_qbrix", self.org_config.name)
+            run_cci_task("update_qbrix")
 
         if os.path.exists("qbrix/qbrix_update.py"):
             os.remove("qbrix/qbrix_update.py")
@@ -176,6 +215,7 @@ class QBrixUpdater(BaseTask, ABC):
         # Fixes for CumulusCI.yml
         self.logger.info(" -> Updating robot references in CumulusCI.yml...")
         replace_file_text("cumulusci.yml", "qbrix/robot/tests", "qbrix/robot", False)
-        if os.path.exists("qbrix/robot/tests"):
-            shutil.rmtree("qbrix/robot/tests")
+        if os.path.exists('robot'):
+            self._replace_string_in_files("robot", ".robot", "QRobot.robot", "QRobot.resource")
+
         self.logger.info("Update Complete!")
