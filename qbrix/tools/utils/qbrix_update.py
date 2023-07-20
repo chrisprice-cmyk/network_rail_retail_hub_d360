@@ -3,11 +3,15 @@ import os
 import shutil
 import stat
 import fnmatch
+import requests
+import time
+import subprocess
 from pathlib import Path
 from abc import ABC
 from os.path import exists
 
 from cumulusci.core.tasks import BaseTask
+from cumulusci.cli.utils import get_installed_version, get_cci_upgrade_command, get_latest_final_version, timestamp_file
 
 from qbrix.tools.shared.qbrix_cci_tasks import run_cci_task
 from qbrix.tools.shared.qbrix_project_tasks import (download_and_unzip, replace_file_text)
@@ -217,5 +221,41 @@ class QBrixUpdater(BaseTask, ABC):
         replace_file_text("cumulusci.yml", "qbrix/robot/tests", "qbrix/robot", False)
         if os.path.exists('robot'):
             self._replace_string_in_files("robot", "robot", "QRobot.robot", "QRobot.resource")
+
+        # Checking for Updates to CumulusCI
+        check = True
+
+        with timestamp_file() as f:
+            timestamp = float(f.read() or 0)
+        delta = time.time() - timestamp
+        check = delta > 3600
+
+        if check:
+            self.logger.info(" -> Checking for updates to CumulusCI")
+            try:
+                latest_version = get_latest_final_version()
+            except requests.exceptions.RequestException:
+                self.logger.error("There was an issue retrieving the latest CumulusCI version. Skipping task")
+
+            result = latest_version > get_installed_version()
+            if result:
+                try:
+                    subprocess.run(get_cci_upgrade_command(), shell=True, check=True, capture_output=True, text=True)
+                except subprocess.CalledProcessError as update_error:
+                    error_output = update_error.stderr.strip()
+                    self.logger.error("Error executing command to update SalesforceDX: %s", error_output)
+
+        # Checking for SalesforceDX Updates
+        self.logger.info(" -> Checking for SalesforceDX Updates")
+        try:
+            subprocess.run("sfdx update", shell=True, check=True, capture_output=True, text=True)
+        except subprocess.CalledProcessError as update_error:
+            error_output = update_error.stderr.strip()
+            self.logger.error("Error executing command to update SalesforceDX: %s", error_output)
+
+        # Checking for required py libraries for QBrix
+        self.logger.info(" -> Checking for required QBrix libraries")
+        run_cci_task("command", org_name=None, command="pip install pandas pandasql")
+
 
         self.logger.info("Update Complete!")
