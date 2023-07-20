@@ -222,15 +222,16 @@ class QBrixUpdater(BaseTask, ABC):
         if os.path.exists('robot'):
             self._replace_string_in_files("robot", "robot", "QRobot.robot", "QRobot.resource")
 
-        # Checking for Updates to CumulusCI
+        # Checking for Updates to CumulusCI and other tooling - no more than once every 7 days
         check = True
 
         with timestamp_file() as f:
             timestamp = float(f.read() or 0)
         delta = time.time() - timestamp
-        check = delta > 3600
+        check = delta > 604800
 
         if check:
+            # Check CumulusCI Updates
             self.logger.info(" -> Checking for updates to CumulusCI")
             try:
                 latest_version = get_latest_final_version()
@@ -245,17 +246,17 @@ class QBrixUpdater(BaseTask, ABC):
                     error_output = update_error.stderr.strip()
                     self.logger.error("Error executing command to update CumulusCI: %s", error_output)
 
-        # Checking for SalesforceDX Updates
-        self.logger.info(" -> Checking for SalesforceDX Updates")
-        try:
-            subprocess.run("sfdx update", shell=True, check=True, capture_output=True, text=True)
-        except subprocess.CalledProcessError as update_error:
-            error_output = update_error.stderr.strip()
-            self.logger.error("Error executing command to update SalesforceDX: %s", error_output)
+            # Checking for SalesforceDX Updates
+            self.logger.info(" -> Checking for SalesforceDX Updates")
+            try:
+                subprocess.run("sfdx update", shell=True, check=True, capture_output=True, text=True)
+            except subprocess.CalledProcessError as update_error:
+                error_output = update_error.stderr.strip()
+                self.logger.error("Error executing command to update SalesforceDX: %s", error_output)
 
-        # Checking for required py libraries for QBrix
-        self.logger.info(" -> Checking for required QBrix libraries")
-        run_cci_task("command", org_name=None, command="pip install pandas pandasql")
+            # Checking for required py libraries for QBrix
+            self.logger.info(" -> Checking for required QBrix libraries")
+            run_cci_task("command", org_name=None, command="pip install pandas pandasql")
 
 
         self.logger.info("Update Complete!")
