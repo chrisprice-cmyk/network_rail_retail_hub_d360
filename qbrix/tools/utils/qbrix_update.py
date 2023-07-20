@@ -105,12 +105,12 @@ class QBrixUpdater(BaseTask, ABC):
 
                 # Check if Task Name Defined with incorrect class
                 if task_name_index > 0 and task_class_index == -1:
-                    self.logger.error("ERROR: Task '%s' is defined in the cumulusci.yml file with the incorrect class. Please update manually.", custom_task_name)
+                    self.logger.error(" -X WARNING: Task '%s' is defined in the cumulusci.yml file with the incorrect class. Please update manually.", custom_task_name)
                     continue
 
                 # Check if default name for task has been missed
                 if task_name_index == -1 and task_class_index > 0:
-                    self.logger.error("ERROR: Custom task class '%s' has been defined although the expected task name was not found. Please update manually.", custom_task_class)
+                    self.logger.error(" -X WARNING: Custom task class '%s' has been defined although the expected task name was not found. Please update manually.", custom_task_class)
                     continue
 
                 # Check if task class and name is missing
@@ -152,7 +152,7 @@ class QBrixUpdater(BaseTask, ABC):
 
         """Replaces strings in any file within a directory"""
 
-        for root, dirnames, filenames in os.walk(directory):
+        for root, _, filenames in os.walk(directory):
             for filename in fnmatch.filter(filenames, f'*.{extension}'):
                 file_path = os.path.join(root, filename)
                 with open(file_path, 'r', encoding="utf-8") as file:
@@ -243,7 +243,7 @@ class QBrixUpdater(BaseTask, ABC):
                     subprocess.run(get_cci_upgrade_command(), shell=True, check=True, capture_output=True, text=True)
                 except subprocess.CalledProcessError as update_error:
                     error_output = update_error.stderr.strip()
-                    self.logger.error("Error executing command to update SalesforceDX: %s", error_output)
+                    self.logger.error("Error executing command to update CumulusCI: %s", error_output)
 
         # Checking for SalesforceDX Updates
         self.logger.info(" -> Checking for SalesforceDX Updates")
