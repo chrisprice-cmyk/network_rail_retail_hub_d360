@@ -14,7 +14,7 @@ from cumulusci.core.tasks import BaseTask
 from cumulusci.cli.utils import get_installed_version, get_cci_upgrade_command, get_latest_final_version, timestamp_file
 
 from qbrix.tools.shared.qbrix_cci_tasks import run_cci_task
-from qbrix.tools.shared.qbrix_project_tasks import (download_and_unzip, replace_file_text)
+from qbrix.tools.shared.qbrix_project_tasks import (download_and_unzip, replace_file_text, upsert_gitignore_entries)
 
 # UPDATE CONFIGURATION - CHANGE ITEMS HERE
 #
@@ -46,6 +46,29 @@ Q_BRIX_CUSTOM_TASKS = {
     'mass_qbrix_update': 'qbrix.tools.utils.qbrix_mass_ops.MassFileOps',
     'precommit_check': 'qbrix.git.hooks_ext.pre_commit.PreCommit'
 }
+
+Q_BRIX_GITIGNORE_ENTRIES = [
+    "qbrix/*",
+    "qbrix/__pycache__",
+    "qbrix/core/__pycache__",
+    "qbrix/robot/__pycache__",
+    "qbrix/git/hooks_ext/__pycache__",
+    "qbrix/salesforce/__pycache__",
+    "qbrix/tools/__pycache__",
+    "qbrix/tools/bundled/__pycache__",
+    "qbrix/tools/bundled/sam/__pycache__",
+    "qbrix/tools/utils/__pycache__",
+    "qbrix/tools/shared/__pycache__",
+    "qbrix/tools/data/__pycache__",
+    "qbrix/tools/industry/__pycache__",
+    "qbrix/tools/health/__pycache__",
+    "qbrix/tools/testing/__pycache__",
+    "qbrix/tools/shared/__pycache__/*",
+    "*.pyc",
+    ".idea/*",
+    "validationresult.json",
+    "*_results.xml"
+]
 
 
 class QBrixUpdater(BaseTask, ABC):
@@ -221,6 +244,10 @@ class QBrixUpdater(BaseTask, ABC):
         replace_file_text("cumulusci.yml", "qbrix/robot/tests", "qbrix/robot", False)
         if os.path.exists('robot'):
             self._replace_string_in_files("robot", "robot", "QRobot.robot", "QRobot.resource")
+
+        # Fixes for GitIgnore
+        self.logger.info(" -> Checking .gitignore file in repo")
+        upsert_gitignore_entries(Q_BRIX_GITIGNORE_ENTRIES)
 
         # Checking for Updates to CumulusCI and other tooling - no more than once every 7 days
         check = True

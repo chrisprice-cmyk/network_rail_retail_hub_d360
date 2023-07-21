@@ -652,9 +652,7 @@ def upsert_gitignore_entries(list_entries) -> bool:
     if not os.path.exists(".gitignore"):
         return False
 
-    log.info("Checking .gitignore File")
-
-    with open(".gitignore", 'a+') as git_file:
+    with open(".gitignore", 'a+', encoding="utf-8") as git_file:
         git_file.seek(0)
         content = git_file.read()
 

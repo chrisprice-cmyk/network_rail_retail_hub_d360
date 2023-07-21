@@ -56,25 +56,27 @@ report.html
 # Q BRIX
 .qbrix/*
 qbrix/__pycache__
+qbrix/core/__pycache__
 qbrix/robot/__pycache__
+qbrix/git/hooks_ext/__pycache__
 qbrix/salesforce/__pycache__
 qbrix/tools/__pycache__
+qbrix/tools/bundled/__pycache__
+qbrix/tools/bundled/sam/__pycache__
 qbrix/tools/utils/__pycache__
 qbrix/tools/shared/__pycache__
 qbrix/tools/data/__pycache__
+qbrix/tools/industry/__pycache__
 qbrix/tools/health/__pycache__
 qbrix/tools/testing/__pycache__
 qbrix/tools/shared/__pycache__/*
+*.pyc
 
 #Extra
-.idea/
+.idea/*
 tasks/custom/__pycache__
 qbrix/.idea/workspace.xml
-qbrix/tools/shared/__pycache__/qbrix_project_tasks.cpython-310.pyc
-qbrix/tools/data/__pycache__/qbrix_analytics.cpython-310.pyc
 
 #validation outputs
 validationresult.json
 *_results.xml
-qbrix/tools/shared/__pycache__/qbrix_project_tasks.cpython-310.pyc
-*.pyc
