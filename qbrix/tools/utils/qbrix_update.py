@@ -305,7 +305,7 @@ class QBrixUpdater(BaseTask, ABC):
         with timestamp_file() as f:
             timestamp = float(f.read() or 0)
         delta = time.time() - timestamp
-        check = delta > 604800
+        check = delta > 1
 
         if check:
 
