@@ -1,20 +1,24 @@
 import filecmp
+import fnmatch
 import os
 import shutil
 import stat
-import fnmatch
-import requests
-import time
 import subprocess
-from pathlib import Path
+import time
 from abc import ABC
 from os.path import exists
+from pathlib import Path
 
+import requests
+from cumulusci.cli.utils import (get_cci_upgrade_command,
+                                 get_installed_version,
+                                 get_latest_final_version, timestamp_file)
 from cumulusci.core.tasks import BaseTask
-from cumulusci.cli.utils import get_installed_version, get_cci_upgrade_command, get_latest_final_version, timestamp_file
 
 from qbrix.tools.shared.qbrix_cci_tasks import run_cci_task
-from qbrix.tools.shared.qbrix_project_tasks import (download_and_unzip, replace_file_text, upsert_gitignore_entries)
+from qbrix.tools.shared.qbrix_project_tasks import (download_and_unzip,
+                                                    replace_file_text,
+                                                    upsert_gitignore_entries)
 
 # UPDATE CONFIGURATION - CHANGE ITEMS HERE
 #
@@ -47,6 +51,7 @@ Q_BRIX_CUSTOM_TASKS = {
     'precommit_check': 'qbrix.git.hooks_ext.pre_commit.PreCommit'
 }
 
+# Entires which are needed in .gitignore
 Q_BRIX_GITIGNORE_ENTRIES = [
     "qbrix/*",
     "qbrix/__pycache__",
@@ -68,6 +73,14 @@ Q_BRIX_GITIGNORE_ENTRIES = [
     ".idea/*",
     "validationresult.json",
     "*_results.xml"
+]
+
+# Required Directories for Q Brix
+QBRIX_REQUIRED_DIRECTORIES = [
+    ".vscode",
+    ".qbrix",
+    ".git",
+    "qbrix"
 ]
 
 
@@ -116,9 +129,16 @@ class QBrixUpdater(BaseTask, ABC):
             cci_data = cci_file.read()
 
         # Check for Placeholder
-        if cci_data.find("# CUSTOM TASKS ADDED FOR Q BRIX DEVELOPMENT") == -1:
+        legacy_placeholder = cci_data.find("# CUSTOM TASKS ADDED FOR Q BRIX")
+        new_placeholder = cci_data.find("# CUSTOM TASKS ADDED FOR Q BRIX DEVELOPMENT")
+
+        if legacy_placeholder == -1 and new_placeholder == -1:
             self.logger.error("Unable to update cumulusci.yml file. Missing placeholder for Q Brix Tasks.")
-        else:
+
+        use_legacy_placeholder = True if legacy_placeholder >= 0 else False
+
+        if legacy_placeholder >= 0 or new_placeholder >= 0:
+
             # Check and update custom tasks
             for custom_task_name, custom_task_class in Q_BRIX_CUSTOM_TASKS.items():
 
@@ -139,9 +159,13 @@ class QBrixUpdater(BaseTask, ABC):
                 # Check if task class and name is missing
                 if task_name_index == -1 and task_class_index == -1:
                     self.logger.info(" -> Adding Missing Custom Task '%s' to Cumulusci.yml", custom_task_name)
+
                     replacement_text = f"# CUSTOM TASKS ADDED FOR Q BRIX DEVELOPMENT\n\n  {custom_task_name}:\n    class_path: {custom_task_class}"
-                    replace_file_text("cumulusci.yml", "# CUSTOM TASKS ADDED FOR Q BRIX DEVELOPMENT", replacement_text)
-                    
+
+                    if use_legacy_placeholder:
+                        replace_file_text("cumulusci.yml", "# CUSTOM TASKS ADDED FOR Q BRIX", replacement_text)
+                    else:
+                        replace_file_text("cumulusci.yml", "# CUSTOM TASKS ADDED FOR Q BRIX DEVELOPMENT", replacement_text)
 
     def _update_folder(self, folder_path, update_dir, remove_existing):
 
@@ -156,7 +180,6 @@ class QBrixUpdater(BaseTask, ABC):
 
         """Copies content from an different source root to target"""
         
-
         if exists(folder_path) and remove_existing:
                 shutil.rmtree(folder_path)
                 
@@ -166,14 +189,15 @@ class QBrixUpdater(BaseTask, ABC):
 
         """Ensures that required directories are created"""
 
-        os.makedirs(".qbrix", exist_ok=True)
-        os.makedirs(".vscode", exist_ok=True)
-        os.makedirs(".git", exist_ok=True)
-        os.makedirs("qbrix", exist_ok=True)
+        for directory in QBRIX_REQUIRED_DIRECTORIES:
+            os.makedirs(directory, exist_ok=True)
 
     def _replace_string_in_files(self, directory, extension, search_string, replace_string):
 
         """Replaces strings in any file within a directory"""
+
+        if not os.path.exists(directory):
+            return
 
         for root, _, filenames in os.walk(directory):
             for filename in fnmatch.filter(filenames, f'*.{extension}'):
@@ -186,7 +210,8 @@ class QBrixUpdater(BaseTask, ABC):
                     
                     with open(file_path, 'w', encoding="utf-8") as file:
                         file.write(content)
-                        print(f" -> Replaced '{search_string}' with '{replace_string}' in {file_path}")
+                    
+                    self.logger.info(" -> Replaced '%s' with '%s' in %s", search_string, replace_string, file_path)
 
     def _run_task(self):
 
@@ -225,7 +250,7 @@ class QBrixUpdater(BaseTask, ABC):
         self.logger.info(" -> Checking for additional tasks to run...")
 
         if not filecmp.cmp(".qbrix/qbrix_update.py", "qbrix/tools/utils/qbrix_update.py"):
-            self.logger.info(" -> Update Task has been upgraded, running update again...")
+            self.logger.info(" -> Update Task script has been changed, running update again...")
             run_cci_task("update_qbrix")
 
         if os.path.exists("qbrix/qbrix_update.py"):
@@ -244,6 +269,7 @@ class QBrixUpdater(BaseTask, ABC):
         replace_file_text("cumulusci.yml", "qbrix/robot/tests", "qbrix/robot", False)
         if os.path.exists('robot'):
             self._replace_string_in_files("robot", "robot", "QRobot.robot", "QRobot.resource")
+            self._replace_string_in_files("qbrix_local", "robot", "QRobot.robot", "QRobot.resource")
 
         # Fixes for GitIgnore
         self.logger.info(" -> Checking .gitignore file in repo")
