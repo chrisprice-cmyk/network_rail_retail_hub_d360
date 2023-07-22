@@ -302,10 +302,10 @@ class QBrixUpdater(BaseTask, ABC):
         # Checking for Updates to CumulusCI and other tooling - no more than once every 7 days
         check = True
 
-        with timestamp_file() as f:
-            timestamp = float(f.read() or 0)
+        with timestamp_file() as stamp_file:
+            timestamp = float(stamp_file.read() or 0)
         delta = time.time() - timestamp
-        check = delta > 1
+        check = delta > 604800
 
         if check:
 
