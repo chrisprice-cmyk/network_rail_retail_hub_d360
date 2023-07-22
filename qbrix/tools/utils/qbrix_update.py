@@ -5,6 +5,7 @@ import shutil
 import stat
 import subprocess
 import time
+import asyncio
 from abc import ABC
 from os.path import exists
 from pathlib import Path
@@ -213,6 +214,29 @@ class QBrixUpdater(BaseTask, ABC):
                     
                     self.logger.info(" -> Replaced '%s' with '%s' in %s", search_string, replace_string, file_path)
 
+    async def _run_cumulusci_update(self):
+        self.logger.info(" -> Checking for updates to CumulusCI")
+        try:
+            latest_version = get_latest_final_version()
+        except requests.exceptions.RequestException:
+            self.logger.error("There was an issue retrieving the latest CumulusCI version. Skipping task")
+
+        result = latest_version > get_installed_version()
+        if result:
+            try:
+                subprocess.run(get_cci_upgrade_command(), shell=True, check=True, capture_output=True, text=True)
+            except subprocess.CalledProcessError as update_error:
+                error_output = update_error.stderr.strip()
+                self.logger.error(" -X Error executing command to update CumulusCI: %s", error_output)
+
+    async def _run_salesforcedx_update(self):
+        self.logger.info(" -> Checking for SalesforceDX Updates")
+        try:
+            subprocess.run("sfdx update", shell=True, check=True, capture_output=True, text=True)
+        except subprocess.CalledProcessError as update_error:
+            error_output = update_error.stderr.strip()
+            self.logger.error(" -X Error executing command to update SalesforceDX: %s", error_output)
+
     def _run_task(self):
 
         """" Updates the Q brix Project with the latest files from xDO-Template main branch """
@@ -284,32 +308,14 @@ class QBrixUpdater(BaseTask, ABC):
         check = delta > 604800
 
         if check:
-            # Check CumulusCI Updates
-            self.logger.info(" -> Checking for updates to CumulusCI")
-            try:
-                latest_version = get_latest_final_version()
-            except requests.exceptions.RequestException:
-                self.logger.error("There was an issue retrieving the latest CumulusCI version. Skipping task")
 
-            result = latest_version > get_installed_version()
-            if result:
-                try:
-                    subprocess.run(get_cci_upgrade_command(), shell=True, check=True, capture_output=True, text=True)
-                except subprocess.CalledProcessError as update_error:
-                    error_output = update_error.stderr.strip()
-                    self.logger.error("Error executing command to update CumulusCI: %s", error_output)
-
-            # Checking for SalesforceDX Updates
-            self.logger.info(" -> Checking for SalesforceDX Updates")
-            try:
-                subprocess.run("sfdx update", shell=True, check=True, capture_output=True, text=True)
-            except subprocess.CalledProcessError as update_error:
-                error_output = update_error.stderr.strip()
-                self.logger.error("Error executing command to update SalesforceDX: %s", error_output)
+            # Run Dependency Updates
+            loop = asyncio.get_event_loop()
+            loop.run_until_complete(asyncio.gather(self._run_cumulusci_update(), self._run_salesforcedx_update()))
+            loop.close()
 
             # Checking for required py libraries for QBrix
             self.logger.info(" -> Checking for required QBrix libraries")
             run_cci_task("command", org_name=None, command="pip install pandas pandasql")
-
 
         self.logger.info("Update Complete!")
