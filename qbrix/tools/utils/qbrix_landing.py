@@ -1,6 +1,8 @@
 from abc import ABC
-from cumulusci.core.tasks import BaseTask
+
 from cumulusci.core.config import ScratchOrgConfig
+from cumulusci.core.tasks import BaseTask
+
 from qbrix.tools.shared.qbrix_console_utils import init_logger
 
 log = init_logger()

@@ -1,33 +1,30 @@
-from genericpath import isfile
-import json
-import requests
-import os
-import re
-import sys
-import subprocess
-import time
-import shutil
-import random
-from abc import abstractmethod
-from time import sleep
 import atexit
-import uuid
+import json
+import os
+import random
+import re
+import shutil
 import socket
+import subprocess
+import sys
+import time
+import uuid
+from abc import abstractmethod
 from datetime import datetime
+from time import sleep
 
-
-
+import requests
 from cumulusci.core.config import ScratchOrgConfig
-from cumulusci.tasks.sfdx import SFDXBaseTask
-from cumulusci.core.exceptions import TaskOptionsError
-from cumulusci.core.exceptions import CommandException
+from cumulusci.core.exceptions import CommandException, TaskOptionsError
 from cumulusci.core.keychain import BaseProjectKeychain
+from cumulusci.tasks.sfdx import SFDXBaseTask
+from genericpath import isfile
 
 LOAD_COMMAND = "sfdx force:apex:execute "
 
 class InstallRecorder(SFDXBaseTask):
-    
-    
+
+
     task_options = {
             "org": {
                 "description": "Target org instance installing the qbrix",
@@ -44,52 +41,52 @@ class InstallRecorder(SFDXBaseTask):
                 "required": False
             }
         }
-     
+
     def _setprojectdefaults(self, instanceurl):
         subprocess.run([f"sfdx config:set instanceUrl={instanceurl}"], shell=True, capture_output=True)
 
     def _init_options(self, kwargs):
         super(SFDXBaseTask, self)._init_options(kwargs)
-        
+
         try:
             self._trackingdata = None
             self.qbrixname = None
             self.context = None
-            
+
             self._starttimestamp=datetime.utcnow()
             self._hooks = ExitHooks()
             self._hooks.hook()
-            
+
             if(not self.org_config is None and self.org_config.tracking_data is None):
                 self.org_config.tracking_data={}
-                
-            
-            
+
+
+
             if(not self.org_config is None and self.org_config.genesis_qbrixname is None and not self.project_config.project__name is None):
                 self.org_config.genesis_qbrixname=self.project_config.project__name
                 self.logger.info(f"Setting Genesis QBrix::{self.org_config.genesis_qbrixname}")
-                
+
             if(not self.org_config is None and self.org_config.qbrix_ambient_tracking_id is None):
                 self.org_config.qbrix_ambient_tracking_id=str(uuid.uuid4())
                 self.logger.info(f"Generated Ambient Transient Key::{self.org_config.qbrix_ambient_tracking_id}")
             else:
                 self.logger.info(f"Existing Ambient Transient Key Found::{self.org_config.qbrix_ambient_tracking_id}")
-                
+
             atexit.register(self._exithandler)
         except:
             print('No Tracking')
-        
+
 
     @property
     def trackingdata(self):
         if(not self.org_config is None and self.org_config.tracking_data is None):
             self.org_config.tracking_data={}
-            
+
         if(not self.project_config.project__name in self.org_config.tracking_data.keys()):
 	        self.org_config.tracking_data[self.project_config.project__name] = {}
 
         return self.org_config.tracking_data[self.project_config.project__name]
-    
+
     @property
     def keychain_cls(self):
         klass = self.get_keychain_class()
@@ -124,19 +121,19 @@ class InstallRecorder(SFDXBaseTask):
         if ("org" in self.options and not self.options["org"] is None) and self.keychain is None:
             self._load_keychain()
             self.logger.info("Org passed in but no keychain found in runtime")
-            
+
         if ("qbrixname" in self.options and not self.options["qbrixname"] is None):
             self.qbrixname = self.options["qbrixname"]
-            
+
         if ("explicitexit" in self.options and not self.options["explicitexit"] is None):
             self.trackingdata["explicitexit"] = bool(self.options["explicitexit"])
         else:
             #death is the exit
             self.trackingdata["explicitexit"] = False
-            
+
         tmp=self.trackingdata["explicitexit"]
         self.logger.info(f"************explicitexit is {tmp}****************")
-        
+
         if self.org_config.access_token is not None:
             self.accesstoken = self.org_config.access_token
 
@@ -144,29 +141,29 @@ class InstallRecorder(SFDXBaseTask):
             self.instanceurl = self.org_config.instance_url
 
     def _run_task(self):
-        
+
         self._prepruntime()
         self.run()
-        
+
 
     def run(self):
-        
-        #if we are explicit done, we are 
+
+        #if we are explicit done, we are
         if(self.trackingdata["explicitexit"]):
             self.trackingdata["status"]="Completed"
             self.trackingdata["lasterror"]=""
             self.trackingdata["endtimestamp"]=(datetime.utcnow() - datetime(1970, 1, 1)).total_seconds()
-            
+
             if("starttimestamp" in self.trackingdata.keys()):
                 self.trackingdata["elapsedseconds"] =self.trackingdata["endtimestamp"] - self.trackingdata["starttimestamp"]
-                
+
             self.__writertrackingtofile()
             self._recordtracking()
-        
+
         else:
-            
-            
-            self.trackingdata["genesis_qbrixname"]=self.org_config.genesis_qbrixname    
+
+
+            self.trackingdata["genesis_qbrixname"]=self.org_config.genesis_qbrixname
             self.trackingdata["ambient_tracking_id"]=self.org_config.qbrix_ambient_tracking_id
             self.trackingdata["qbrixname"]=self.project_config.project__name
             self.trackingdata["trackingid"]=str(uuid.uuid4())
@@ -177,11 +174,11 @@ class InstallRecorder(SFDXBaseTask):
             self.trackingdata["instance"]=self.instanceurl
             self.trackingdata["hostname"]=socket.gethostname()
             self.trackingdata["starttimestamp"]=(datetime.utcnow() - datetime(1970, 1, 1)).total_seconds()
-            
+
             self.trackingdata["qbrix_sha"]=""
             self.trackingdata["qbrix_image_id"]=""
-            
-            
+
+
             orginzationdata = self._salesforce_query("select Id,CreatedDate,OrganizationType,InstanceName from Organization")
             if(not orginzationdata is None):
                 self.trackingdata["orgid"] = orginzationdata["result"]["records"][0]["Id"]
@@ -194,14 +191,14 @@ class InstallRecorder(SFDXBaseTask):
                 self.trackingdata["organizationtype"] = ""
                 self.trackingdata["instancename"] = ""
 
-            
-            
+
+
             currentuserdata = self._salesforce_query(f"select Email from User where username='{self.org_config.username}'")
             if(not currentuserdata is None):
                 self.trackingdata["installuseremail"] = currentuserdata["result"]["records"][0]["Email"]
             else:
                 self.trackingdata["installuseremail"] = ""
-                
+
             qlaborgdata = self._salesforce_query("select Identifier__c,Org_Type__c from QLabs__mdt")
             if(not qlaborgdata is None):
                 self.trackingdata["qlabsorgidentifier"] = qlaborgdata["result"]["records"][0]["Identifier__c"]
@@ -209,23 +206,23 @@ class InstallRecorder(SFDXBaseTask):
             else:
                 self.trackingdata["qlabsorgidentifier"] = ""
                 self.trackingdata["qlabsorgtype"] = ""
-            
-                
+
+
             maxapiversion =self._get_org_max_api_version()
             if(not maxapiversion is None):
                 self.trackingdata["maxapiversion"] = maxapiversion
             else:
                 self.trackingdata["maxapiversion"] = 0.0
-            
-            
+
+
             self.__writertrackingtofile()
-        
-       
-            
-        
+
+
+
+
         #Fake error
         #raise Exception("fake error for testing")
-        
+
     def _get_org_max_api_version(self):
 
         url = f"{self.instanceurl}/services/data/"
@@ -235,11 +232,11 @@ class InstallRecorder(SFDXBaseTask):
         }
         response = requests.request("GET", url, headers=headers)
         data = json.loads(response.text)
-        
+
         return float(data[-1]['version'])
 
     def _salesforce_query(self,soql):
-        
+
         if soql != "":
 
             dx_command = f"sfdx force:data:soql:query -q \"{soql}\" --json "
@@ -251,7 +248,7 @@ class InstallRecorder(SFDXBaseTask):
 
             result = subprocess.run(dx_command, shell=True, capture_output=True)
             subprocess.run("sfdx config:unset instanceUrl", shell=True, capture_output=True)
-            
+
             if result.returncode > 0:
 
                 if result.stderr:
@@ -261,15 +258,15 @@ class InstallRecorder(SFDXBaseTask):
                     self.logger.error("Salesforce Query Failed, although no error detail was returned.")
 
                 return None
-                
+
             json_result = json.loads(result.stdout)
             self.logger.info(json_result)
             return json_result
-        
+
 
         return None
- 
- 
+
+
     def _getlastccierror(self):
         try:
             result = subprocess.run("cci error info", shell=True, capture_output=True)
@@ -284,7 +281,7 @@ class InstallRecorder(SFDXBaseTask):
         if(self.project_config.project__name in self.trackingdata or self.trackingdata is None):
             self.logger.info("trackingdata is null")
             return
-        
+
         try:
             if os.path.isfile(f".qbrix/installtracking_{self.project_config.project__name}.json"):
                 os.remove(f".qbrix/installtracking_{self.project_config.project__name}.json")
@@ -293,11 +290,11 @@ class InstallRecorder(SFDXBaseTask):
                 jsondata = json.dumps(self.trackingdata)
                 tmpFile.write(jsondata)
                 tmpFile.close()
-            
+
         except:
             pass
-       
-        
+
+
     def _handle_returncode(self, returncode, stderr):
         if returncode:
             self.logger.error(message)
@@ -306,25 +303,25 @@ class InstallRecorder(SFDXBaseTask):
             message = "Return code: {}".format(returncode)
             if stderr:
                 message += "\nstderr: {}".format(stderr.read().decode("utf-8"))
-               
+
             raise CommandException(message)
 
 
     def _recordtracking(self):
-        
+
         if(self.trackingdata is None):
             return
-        
+
         url = "https://qbrix-core.herokuapp.com/qbrix/InstallTracking"
         payload = json.dumps(self.trackingdata )
         response = requests.request("POST", url, data=payload, verify=True)
         print(response.text)
 
-     
+
     def _exithandler(self):
-        
+
         if(self.trackingdata["explicitexit"]==False):
-            
+
             self.logger.info('Exit Handler Entry')
             self.trackingdata["endtimestamp"]=(datetime.utcnow() - datetime(1970, 1, 1)).total_seconds()
             self.trackingdata["elapsedseconds"] =self.trackingdata["endtimestamp"] - self.trackingdata["starttimestamp"]
@@ -335,24 +332,24 @@ class InstallRecorder(SFDXBaseTask):
                 self.trackingdata["lasterror"]=self._getlastccierror()
                 self.__writertrackingtofile()
                 self._recordtracking()
-                
+
             elif self._hooks.exception is not None:
                 print("death by exception: %s" % self._hooks.exception)
                 self.trackingdata["status"]="Failed"
                 self.trackingdata["lasterror"]=self._getlastccierror()
                 self.__writertrackingtofile()
                 self._recordtracking()
-                
+
             else:
                 print("natural death")
                 self.trackingdata["status"]="Completed"
                 self.trackingdata["lasterror"]=""
                 self.__writertrackingtofile()
                 self._recordtracking()
-                            
+
             self.logger.info('Exit Handler Exit')
 
-        
+
 class ExitHooks(object):
     def __init__(self):
         self.exit_code = None
@@ -372,4 +369,3 @@ class ExitHooks(object):
         self.exception = exc
         self._orig_exc_handler(self, exc_type, exc, *args)
 
-    

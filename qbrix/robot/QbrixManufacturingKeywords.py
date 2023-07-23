@@ -1,6 +1,8 @@
 from time import sleep
+
 from Browser import ElementState
 from robot.api.deco import library
+
 from qbrix.core.qbrix_robot_base import QbrixRobotTask
 
 
@@ -78,7 +80,7 @@ class QbrixManufacturingKeywords(QbrixRobotTask):
         if "checked" not in self.browser.get_element_states("div.slds-card:has(h2:text-is('Partner Lead Management')) >> input[name='mfgPartnerLeadMgmtPref']"):
             self.browser.click("div.slds-card:has(h2:text-is('Partner Lead Management')) >> lightning-input.slds-form-element")
             sleep(2)
-            
+
 
     def enable_program_based_business(self):
         """

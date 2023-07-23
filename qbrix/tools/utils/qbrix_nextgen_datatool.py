@@ -1,16 +1,15 @@
-from time import sleep
 import time
-import requests
+from abc import ABC, abstractmethod
+from time import sleep
 
-from abc import ABC
-from abc import abstractmethod
+import requests
+from cumulusci.core.config import ScratchOrgConfig
+from cumulusci.core.keychain import BaseProjectKeychain
 from cumulusci.core.tasks import BaseTask
 from cumulusci.tasks.sfdx import SFDXBaseTask
-from qbrix.tools.shared.qbrix_console_utils import init_logger
-from cumulusci.core.config import ScratchOrgConfig
-from qbrix.salesforce.qbrix_salesforce_tasks import salesforce_query
-from cumulusci.core.keychain import BaseProjectKeychain
 
+from qbrix.salesforce.qbrix_salesforce_tasks import salesforce_query
+from qbrix.tools.shared.qbrix_console_utils import init_logger
 
 log = init_logger()
 
@@ -39,7 +38,7 @@ class RunDataTool(SFDXBaseTask):
     task_docs = """
     Takes a list of data collection IDs which are then deployed using the NextGen Data Tool. At least one data collection ID must be specified.
     """
-    
+
     @property
     def keychain_cls(self):
         klass = self.get_keychain_class()
@@ -80,7 +79,7 @@ class RunDataTool(SFDXBaseTask):
 
         if not self.org_config.instance_url is None:
             self.instanceurl = self.org_config.instance_url
-            
+
     def _init_options(self, kwargs):
         super(RunDataTool, self)._init_options(kwargs)
         self.env = self._get_env()
@@ -135,7 +134,7 @@ class RunDataTool(SFDXBaseTask):
                 "instance_url": self.instanceurl,
                 "access_token": self.accesstoken
             }
-            
+
             #self.logger.info(data)
 
             self.logger.info(
@@ -188,9 +187,9 @@ class RunDataTool(SFDXBaseTask):
                     raise Exception("Data Load timed out. Data load failed.")
 
                 check_job_json = check_job.json()
-                
+
                 #self.logger.info(check_job_json)
-                
+
                 status = check_job_json["state"]
                 progress = check_job_json["progress"]
                 status_update = "Waiting to start."

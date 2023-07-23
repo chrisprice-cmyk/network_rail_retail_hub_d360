@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
-from cumulusci.tasks.command import Command
+
 from cumulusci.core.keychain import BaseProjectKeychain
+from cumulusci.tasks.command import Command
+
 
 class QbrixBaseSalesforceDXTask(Command, ABC):
 
@@ -44,7 +46,7 @@ class QbrixBaseSalesforceDXTask(Command, ABC):
     @abstractmethod
     def get_keychain_key(self):
         return None
-    
+
     def _load_keychain(self):
         if self.keychain is not None:
             return
@@ -78,5 +80,5 @@ class QbrixBaseSalesforceDXTask(Command, ABC):
         )
         if self.options.get("extra"):
             command += " {}".format(self.options["extra"])
-        
+
         return command

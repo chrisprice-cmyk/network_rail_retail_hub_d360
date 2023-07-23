@@ -60,7 +60,7 @@ class QbrixSalesCloudKeywords(QbrixRobotTask):
         if not "checked" in self.browser.get_element_states("div.slds-grid:has-text('Enable Sales Agreements') >> label.slds-checkbox_toggle"):
             self.browser.click("div.slds-grid:has-text('Enable Sales Agreements') >> label.slds-checkbox_toggle")
             sleep(1)
-        
+
 
     def set_guest_on_channel_menu(self, channel_menu_api_name):
 
@@ -104,13 +104,13 @@ class QbrixSalesCloudKeywords(QbrixRobotTask):
                         self.browser.select_options_by("iframe >>> td.selectCell:has-text('Available Users') >> select",SelectAttribute.text, name)
                         self.browser.click("iframe >>> img.rightArrowIcon")
                         changes_made = True
-                
+
                 if changes_made:
                     self.browser.click("iframe >>> .btn:text-is('Save')")
                 else:
                     self.browser.click("iframe >>> .btn:text-is('Cancel')")
 
-            
+
             sleep(8)
 
         # Setup Elliot Executive for VP of Sales - User.007
@@ -133,7 +133,7 @@ class QbrixSalesCloudKeywords(QbrixRobotTask):
                 else:
                     self.browser.click("iframe >>> .btn:text-is('Cancel')")
                 sleep(2)
-                
+
 
         sleep(10)
 

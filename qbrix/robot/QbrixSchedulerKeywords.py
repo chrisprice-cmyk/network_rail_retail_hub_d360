@@ -13,10 +13,10 @@ class QbrixSchedulerKeywords(QbrixRobotTask):
 
     def enable_scheduler(self):
         """ Enables Salesforce Scheduler """
-        
+
         settings_page_url = "LightningSchedulerSettings/home"
         wait_for_title = "h2:has-text('Event Management')"
-        
+
         # Go To Scheduler Setup
         self.shared.go_to_setup_admin_page(settings_page_url)
         self.browser.wait_for_elements_state(wait_for_title, ElementState.visible, '30s')

@@ -21,7 +21,7 @@ from cumulusci.tasks.sfdx import SFDXOrgTask
 
 from qbrix.tools.health.qbrix_project_checks import (
     run_crm_analytics_checks, run_einstein_checks, run_experience_cloud_checks)
-from qbrix.tools.shared.qbrix_cci_tasks import run_cci_task
+from qbrix.tools.shared.qbrix_cci_tasks import run_cci_task, run_cci_flow
 from qbrix.tools.shared.qbrix_console_utils import init_logger
 from qbrix.tools.shared.qbrix_project_tasks import get_packages_in_stack
 from qbrix.tools.utils.qbrix_orgconfig_hydrate import NGOrgConfig
@@ -75,9 +75,9 @@ def salesforce_query(soql, org_config, raw_return=False):
 
 def QbrixInstallCheck(qbrix_name, org_config):
     """Check if a QBrix is installed in the target org"""
-    
+
     log.info("Checking for Qbrix: %s", qbrix_name)
-    
+
     subprocess.run(
         f"sfdx config:set instanceUrl={org_config.instance_url}",
         shell=True,
@@ -154,6 +154,9 @@ def _remove_missing_field_schema(submitted_dict, field_names):
 
 
 class CreateUser(BaseSalesforceApiTask, NGOrgConfig, ABC):
+
+    """Creates a user or multiple user records in a target org."""
+
     salesforce_task = True
 
     task_docs = """
@@ -539,7 +542,7 @@ class CreateUser(BaseSalesforceApiTask, NGOrgConfig, ABC):
         api = self.sf
 
         if str(path_to_image).upper() == "AUTO":
-            
+
             # Generate a random image using randomuser.me
             api_endpoint_url = "https://randomuser.me/api/?inc=picture"
             if gender:
@@ -603,7 +606,7 @@ class CreateUser(BaseSalesforceApiTask, NGOrgConfig, ABC):
         if not mode or mode.upper() not in ('PERMISSIONSET', 'PERMISSIONSETGROUP', 'PERMISSIONSETLICENSE'):
             self.logger.error("Invalid permission type requested. Permission assignment skipped.")
             return False
-        
+
         # Set Mode
         mode = mode.upper()
         object_name = None
@@ -611,7 +614,7 @@ class CreateUser(BaseSalesforceApiTask, NGOrgConfig, ABC):
         lookup_field = None
         assignment_field = None
         assignment_object = None
-        
+
         if mode == "PERMISSIONSET":
             object_name = "PermissionSet"
             message_name = "Permission Set"
@@ -677,7 +680,7 @@ class CreateUser(BaseSalesforceApiTask, NGOrgConfig, ABC):
                             str(assignment_field): permission_set_id,
                         }
                     )
-                    
+
                 if (permset_creation_result and permset_creation_result.get("id")):
                     self.logger.info("%s (With API Name: %s) has been assigned (ID: {permset_creation_result['id']})!", message_name, perm)
                 else:
@@ -1031,9 +1034,7 @@ class QbrixDeployer(BaseSalesforceApiTask, ABC):
 
     def _init_options(self, kwargs):
         super(QbrixDeployer, self)._init_options(kwargs)
-        self.qbrix_name = (
-            self.options["qbrix_name"] if "qbrix_name" in self.options else None
-        )
+        self.qbrix_name = self.options["qbrix_name"] if "qbrix_name" in self.options else None
 
     def _run_task(self):
         if not self.project_config.sources:
@@ -1043,8 +1044,7 @@ class QbrixDeployer(BaseSalesforceApiTask, ABC):
         for name, value in self.project_config.sources.items():
             if "github" in value and self.qbrix_name in value["github"]:
                 if not QbrixInstallCheck(self.qbrix_name, self.org_config):
-                    coordinator = FlowCoordinator(self.project_config)
-                    coordinator.run(f"{self.qbrix_name}:deploy_qbrix")
+                    run_cci_flow(f"{name}:deploy_qbrix", self.org_config.name)
             else:
                 print("Source name not found in Q Brix")
 

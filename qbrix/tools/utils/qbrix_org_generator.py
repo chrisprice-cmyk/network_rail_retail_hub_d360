@@ -1,21 +1,20 @@
-from genericpath import isfile
 import json
 import os
-import re
-import sys
-import subprocess
-import time
-import shutil
 import random
+import re
+import shutil
+import subprocess
+import sys
+import time
 from abc import abstractmethod
 from time import sleep
 
 import yaml
 from cumulusci.core.config import ScratchOrgConfig
-from cumulusci.tasks.sfdx import SFDXBaseTask
-from cumulusci.core.exceptions import TaskOptionsError
-from cumulusci.core.exceptions import CommandException
+from cumulusci.core.exceptions import CommandException, TaskOptionsError
 from cumulusci.core.keychain import BaseProjectKeychain
+from cumulusci.tasks.sfdx import SFDXBaseTask
+from genericpath import isfile
 
 LOAD_COMMAND = "sfdx force:apex:execute "
 
@@ -322,7 +321,7 @@ class Spin(SFDXBaseTask):
                     self.deployqbrix.extend(required_qbrix)
                 else:
                     self.deployqbrix = []
-                    
+
                 self.logger.info(self.deployqbrix )
             except:
                 self.deployqbrix = []

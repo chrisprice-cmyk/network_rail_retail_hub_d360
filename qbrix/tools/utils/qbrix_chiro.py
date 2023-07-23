@@ -1,19 +1,17 @@
+import hashlib
 import json
 import os
 import re
-import sys
-import subprocess
-import keyring
-import hashlib
 import shutil
-
+import subprocess
+import sys
 from abc import abstractmethod
 
+import keyring
 from cumulusci.core.config import ScratchOrgConfig
-from cumulusci.tasks.command import Command
-from cumulusci.core.exceptions import TaskOptionsError
-from cumulusci.core.exceptions import CommandException
+from cumulusci.core.exceptions import CommandException, TaskOptionsError
 from cumulusci.core.keychain import BaseProjectKeychain
+from cumulusci.tasks.command import Command
 
 
 # class used to track os list as part of the process
@@ -23,10 +21,10 @@ class OmniScript:
         self.subtype = subtype
         self.language = language
         self.id = id
-        
+
         if(self.language=="Multi-Language"):
             self.language="MultiLanguage"
-            
+
         self.name = f"{type}{subtype}{self.language}".lower()
         self.disklocation = ""
         self.foldername = ""
@@ -104,8 +102,8 @@ class OmniscriptAlign(Command):
 
         if not self.org_config.instance_url is None:
             self.instanceurl = self.org_config.instance_url
-            
-        
+
+
         if "excludeomniscripts" in self.options and not self.options["excludeomniscripts"] is None:
 
             # cast to a dictionary
@@ -113,7 +111,7 @@ class OmniscriptAlign(Command):
         else:
             self.excludeomniscripts = []
             self.logger.info("No OmniScripts to Exclude ")
-         
+
         if "excludeomniuicards" in self.options and not self.options["excludeomniuicards"] is None:
 
             # cast to a dictionary
@@ -121,8 +119,8 @@ class OmniscriptAlign(Command):
         else:
             self.excludeomniuicards = []
             self.logger.info("No OmniUiCards to Exclude")
-            
-         
+
+
         if "excludelwcs" in self.options and not self.options["excludelwcs"] is None:
 
             # cast to a dictionary
@@ -134,10 +132,10 @@ class OmniscriptAlign(Command):
     def _run_task(self):
         self._prepruntime()
         self.create_working_area(self.accesstoken)
-        
+
         self.retrieve_metadata(self.accesstoken)
         self.prune_content(self.accesstoken)
-        
+
         targetnamespace = self.determinenamespace(self.accesstoken)
         oslist = self.getoslist(self.accesstoken, targetnamespace)
 
@@ -150,7 +148,7 @@ class OmniscriptAlign(Command):
             self.logger.info('No OmniProcess Object available')
 
         mergeoslist = oslist | omniprocesslist
-        
+
         self.logger.info(f"OS List Size:{len(mergeoslist)}")
         if len(mergeoslist) > 0:
             self.updatelwcsondisk(self.accesstoken, mergeoslist)
@@ -206,7 +204,7 @@ class OmniscriptAlign(Command):
                        capture_output=True,
                        cwd=qbrixtempdir)
 
-    
+
     def retrieve_metadata(self, username: str):
 
         """Get all the Metadata locally."""
@@ -222,42 +220,42 @@ class OmniscriptAlign(Command):
             subprocess.run([
                                f"export SFDX_ACCESS_TOKEN='{self.accesstoken}' && sfdx force:auth:accesstoken:store --instanceurl {self.instanceurl} -a {hashname} --noprompt --json --loglevel DEBUG  && sfdx force:source:retrieve -u {hashname} -m {targetTypes}"],
                            shell=True, capture_output=True, cwd=qbrixtempdir)
-                        
+
         except BaseException as err:
             self.logger.error(f"Pull Metadata-> Unexpected {err}")
-            
+
     def prune_content(self,username:str):
         try:
 
             hashname = hashlib.md5(username.encode()).hexdigest()
             qbrixtempdir = self.getqbrixdir(hashname)
-            
+
             for i in self.excludelwcs:
                 target =f"{qbrixtempdir}/force-app/main/default/lwc/{i}"
                 self.logger.info(f"Searching For::{target}")
                 if os.path.isdir(target):
                     shutil.rmtree(target)
                     self.logger.info(f"Pruned::{target}")
-                    
+
             for i in self.excludeomniscripts:
                 target =f"{qbrixtempdir}/force-app/main/default/omniScripts/{i}.os-meta.xml"
                 self.logger.info(f"Searching For::{target}")
                 if os.path.isfile(target):
                     os.remove(target)
                     self.logger.info(f"Pruned::{target}")
-                    
+
             for i in self.excludeomniuicards:
                 target =f"{qbrixtempdir}/force-app/main/default/omniUiCard/{i}.ouc-meta.xml"
                 self.logger.info(f"Searching For::{target}")
                 if os.path.isfile(target):
                     os.remove(target)
                     self.logger.info(f"Pruned::{target}")
-                        
-                    
+
+
 
         except BaseException as err:
             self.logger.error(f"Pull LWCs-> Unexpected {err}")
-            
+
     ###
     # Download the compiled LWCs that are already in the org.
     ###
@@ -293,8 +291,8 @@ class OmniscriptAlign(Command):
 
         except BaseException as err:
             self.logger.error(f"Pull LWCs-> Unexpected {err}")
-            
-            
+
+
     ###
     # Download the OmniScript Metadata
     ###
@@ -333,8 +331,8 @@ class OmniscriptAlign(Command):
 
         except BaseException as err:
             self.logger.error(f"Push OmniScript-> Unexpected {err}")
-            
-            
+
+
     ###
     # Download the OmniScript Metadata
     ###
@@ -351,7 +349,7 @@ class OmniscriptAlign(Command):
             subprocess.run([
                                f"export SFDX_ACCESS_TOKEN='{self.accesstoken}' && sfdx force:auth:accesstoken:store --instanceurl {self.instanceurl} -a {hashname} --noprompt --json --loglevel DEBUG  && sfdx force:source:retrieve -u {hashname} -m OmniUiCard"],
                            shell=True, capture_output=True, cwd=qbrixtempdir)
-            
+
         except BaseException as err:
             self.logger.error(f"Pull OmniScript-> Unexpected {err}")
 
@@ -457,7 +455,7 @@ class OmniscriptAlign(Command):
 
                     oslist[f"{i}".lower()].disklocation = f"{qbrixtempdir}/force-app/main/default/lwc/{i}"
                     oslist[f"{i}".lower()].foldername = f"{i}"
-                    
+
                     #self.logger.info(oslist[f"{i}".lower()].disklocation)
                     #self.logger.info(oslist[f"{i}".lower()].foldername)
 
@@ -469,21 +467,21 @@ class OmniscriptAlign(Command):
         except Exception as e:
             self.logger.error(e)
 
-        
+
         return oslist
 
     def updateoslwcid(self, omniscript: OmniScript):
 
         if isinstance(omniscript, OmniScript) and os.path.exists(
                 f"{omniscript.disklocation}/{omniscript.foldername}_def.js"):
-            
+
             self.logger.info(f"Starting On:{omniscript.disklocation}")
 
             with open(f"{omniscript.disklocation}/{omniscript.foldername}_def.js", "r") as tmpFile:
                 defcontents = tmpFile.read()
-                
+
                 tmpFile.close()
-                
+
                 #get the files and check for chunked
                 lwcfiles =os.listdir(f"{omniscript.disklocation}")
                 #self.logger.info(lwcfiles)
@@ -509,7 +507,7 @@ class OmniscriptAlign(Command):
                         defcontentsmodified = defcontentsmodified.rstrip(";")
 
                     defjson = json.loads(defcontentsmodified)
-                    
+
                     #self.logger.info(f'JSON:{defjson}')
 
                     try:
@@ -524,12 +522,12 @@ class OmniscriptAlign(Command):
 
                     except:
                         self.logger.error("fail on reading os def.js contents")
-                
+
                 #chunked files
                 if chunkfilesfound == True:
-                    defcontent = open(f"{omniscript.disklocation}/{omniscript.foldername}_def.js","r")                 
+                    defcontent = open(f"{omniscript.disklocation}/{omniscript.foldername}_def.js","r")
                     defcontentlines = defcontent.readlines()
-                    
+
                     #self.logger.info(defcontentlines)
                     previousprocessedpattern = 'let tmpDef =  JSON.parse(def);'
                     previousprocessed=False
@@ -550,7 +548,7 @@ class OmniscriptAlign(Command):
                         #iterate the file content lines and edit the lwc definition
                         for i in defcontentlines:
                             if(i.strip().startswith("export const OMNIDEF = JSON.parse(def);")):
-                                
+
                                 newfilelinecontent.append("//export const OMNIDEF = JSON.parse(def);")
                                 newfilelinecontent.append("\n")
 
@@ -559,20 +557,20 @@ class OmniscriptAlign(Command):
 
                                 newfilelinecontent.append(f"tmpDef.sOmniScriptId ='{omniscript.id}';")
                                 newfilelinecontent.append("\n")
-                                
+
                                 newfilelinecontent.append("export const OMNIDEF =tmpDef;")
                                 newfilelinecontent.append("\n")
                             else:
                                 newfilelinecontent.append(i)
                                 newfilelinecontent.append("\n")
-                    
+
                     if(len(newfilelinecontent)>0):
                         with open(f"{omniscript.disklocation}/{omniscript.foldername}_def.js", "w") as tmpFile:
                                 tmpFile.writelines(newfilelinecontent)
                                 tmpFile.close()
 
-                                
-                        
-                    
-                        
-                        
+
+
+
+
+

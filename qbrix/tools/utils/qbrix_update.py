@@ -90,7 +90,7 @@ class QBrixUpdater(BaseTask, ABC):
     """Updates Q Brix Scripts along with any optional, custom updates"""
 
     task_docs = """
-    Updated the Q brix Extension Library and other Q Brix related bundles like GitHub Actions and VSCode Extensions in line with the XDO-Template (main branch). 
+    Updated the Q brix Extension Library and other Q Brix related bundles like GitHub Actions and VSCode Extensions in line with the XDO-Template (main branch).
 
     Can also be used to update custom scripts and other custom directories from a .zip file which needs to be hosted somewhere (by setting the URL of the .zip file as the UpdateLocation option), in addition the .zip files can also have a password set and you can specify the password using the ArchivePassword option when running the task.
     """
@@ -176,14 +176,14 @@ class QBrixUpdater(BaseTask, ABC):
                 shutil.rmtree(folder_path)
         update_path = os.path.join(update_dir, folder_path)
         shutil.copytree(src=update_path, dst=folder_path, dirs_exist_ok=True)
-        
+
     def _update_folder_indirect_source(self, folder_path, update_dir, remove_existing):
 
         """Copies content from an different source root to target"""
-        
+
         if exists(folder_path) and remove_existing:
                 shutil.rmtree(folder_path)
-                
+
         shutil.copytree(src=update_dir, dst=folder_path, dirs_exist_ok=True)
 
     def _ensure_required_dirs(self):
@@ -205,13 +205,13 @@ class QBrixUpdater(BaseTask, ABC):
                 file_path = os.path.join(root, filename)
                 with open(file_path, 'r', encoding="utf-8") as file:
                     content = file.read()
-                
+
                 if search_string in content:
                     content = content.replace(search_string, replace_string)
-                    
+
                     with open(file_path, 'w', encoding="utf-8") as file:
                         file.write(content)
-                    
+
                     self.logger.info(" -> Replaced '%s' with '%s' in %s", search_string, replace_string, file_path)
 
     async def _run_cumulusci_update(self):
@@ -258,17 +258,17 @@ class QBrixUpdater(BaseTask, ABC):
             self._update_folder(".vscode", ".qbrix/Update/xDO-Template-main", False)
             self._update_folder(".github", ".qbrix/Update/xDO-Template-main", False)
             self._update_folder_indirect_source(".git/hooks", ".qbrix/Update/xDO-Template-main/qbrix/git/hooks", False)
-            
+
             #we are injecting pre-commit to use our cci extension but we need to make executable
             commit_file = Path(".git/hooks/pre-commit")
             commit_file.chmod(commit_file.stat().st_mode | stat.S_IEXEC)
-            
+
             # Finally Clean Up Cached Folder
             self.logger.info(" -> Cleaning up temp files...")
             shutil.rmtree(".qbrix/Update")
 
         self.logger.info(" -> Checking cumulusci.yml file...")
-        
+
         self._check_and_deploy_class()
 
         self.logger.info(" -> Checking for additional tasks to run...")

@@ -44,7 +44,7 @@ class QRobot:
         if getattr(self, "_cumulusci", None) is None:
             self._cumulusci = CumulusCI()
         return self._cumulusci
-    
+
     @property
     def browser(self):
 
@@ -76,7 +76,7 @@ class QRobot:
             return True
 
         except (AssertionError):
-            return False 
+            return False
 
     def open_q_browser(self, record_video=False):
 
@@ -119,7 +119,7 @@ class QRobot:
 
                 # Double Check we have not landed on Classic Layout
                 self._check_for_classic()
-                
+
             retries += 1
 
         if retries >= 3:

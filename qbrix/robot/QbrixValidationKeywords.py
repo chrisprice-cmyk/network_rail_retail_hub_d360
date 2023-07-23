@@ -1,10 +1,6 @@
 import json
 import os
 import subprocess
-import sys
-from datetime import datetime
-from time import sleep
-from typing import Optional
 from xml import etree
 
 import pandas as pd
@@ -343,7 +339,7 @@ class QbrixValidationKeywords(QbrixRobotTask):
             toolingendpoint = 'query?q='
             results = self.cumulusci.sf.toolingexecute(f"{toolingendpoint}{soql.replace(' ', '+')}")
 
-        # so this gets translated to a dict with 3 keys: 
+        # so this gets translated to a dict with 3 keys:
         # records
         # totalSize
         # done
@@ -391,10 +387,10 @@ class QbrixValidationKeywords(QbrixRobotTask):
 
         sobjectset = self.cumulusci.sf.describe()["sobjects"]
         #self.shared.log_to_file(f"SOjectKeys::{sobjectset}")
-        
+
          #default message: we did not locate the object to traverse the metadata
         message = f'Unable to locate the metadata object to locate the layer'
-        
+
         for x in sobjectset:
 
             foundlabel = x["label"]
@@ -445,7 +441,7 @@ class QbrixValidationKeywords(QbrixRobotTask):
                         dfqueryres = ps.sqldf(filter)
                         self.shared.log_to_file(f"Query Result::{dfqueryres}")
 
-                        # the dataframe will have a single row and column 
+                        # the dataframe will have a single row and column
                         if dfqueryres is not None and (len(dfqueryres) == 1 and int(dfqueryres.loc[0]['datacount']) > 0):
                             self.__recordPassingResult(resulttype, resultname, f"Metadata contains the specified",
                                                        datatag=datatag)

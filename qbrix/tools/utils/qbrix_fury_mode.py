@@ -1,11 +1,12 @@
 import datetime
 import multiprocessing
-from abc import ABC
 import time
+from abc import ABC
 
 from cumulusci.core.tasks import BaseTask
 
 from qbrix.tools.shared.qbrix_cci_tasks import run_cci_flow, run_cci_task
+
 
 def execute_tasks_and_flows(tasks_and_flows, org_name, **options):
 
@@ -76,20 +77,20 @@ class RunFuryMode(BaseTask, ABC):
 
     def _run_task(self):
 
-        self.logger.info("""                      
-        ______  _   _ ______ __   __    ___  ___ _____ ______  _____ 
+        self.logger.info("""
+        ______  _   _ ______ __   __    ___  ___ _____ ______  _____
         |  ___|| | | || ___ \\ \ / /    |  \/  ||  _  ||  _  \|  ___|
-        | |_   | | | || |_/ / \ V /     | .  . || | | || | | || |__  
-        |  _|  | | | ||    /   \ /      | |\/| || | | || | | ||  __| 
-        | |    | |_| || |\ \   | |      | |  | |\ \_/ /| |/ / | |___ 
+        | |_   | | | || |_/ / \ V /     | .  . || | | || | | || |__
+        |  _|  | | | ||    /   \ /      | |\/| || | | || | | ||  __|
+        | |    | |_| || |\ \   | |      | |  | |\ \_/ /| |/ / | |___
         \_|     \___/ \_| \_|  \_/      \_|  |_/ \___/ |___/  \____/
-        
+
         """)
 
         if not self.flows and not self.tasks:
             self.logger.info("Skipping Fury Mode as there are no requests to process.")
             return
-        
+
         process_request_list = []
         flow_count = 0
         task_count = 0

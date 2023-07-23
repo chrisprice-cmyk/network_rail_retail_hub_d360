@@ -1,19 +1,13 @@
-import json
 import os
 from abc import ABC
 
-import requests
-from cumulusci.core.exceptions import CommandException
+from cumulusci.core.config import ScratchOrgConfig, TaskConfig
 from cumulusci.core.keychain import BaseProjectKeychain
 from cumulusci.core.tasks import BaseTask
-from cumulusci.core.config import ScratchOrgConfig, TaskConfig
-from qbrix.tools.shared.qbrix_console_utils import init_logger
-from qbrix.salesforce.qbrix_salesforce_tasks import QbrixInstallCheck
-from qbrix.tools.shared.qbrix_cci_tasks import run_cci_task, run_cci_flow
-from qbrix.tools.shared.qbrix_project_tasks import run_command
-from qbrix.tools.utils.qbrix_orgconfig_hydrate import NGOrgConfig
 
-log = init_logger()
+from qbrix.salesforce.qbrix_salesforce_tasks import QbrixInstallCheck
+from qbrix.tools.shared.qbrix_cci_tasks import run_cci_flow, run_cci_task
+from qbrix.tools.utils.qbrix_orgconfig_hydrate import NGOrgConfig
 
 
 class RunPreflight(BaseTask, ABC):
@@ -53,7 +47,7 @@ class RunPreflight(BaseTask, ABC):
 
     def _init_options(self, kwargs):
         super(RunPreflight, self)._init_options(kwargs)
-        
+
         try:
             # Initiate Shared Variables
             self.scratch_org_mode = True if isinstance(self.org_config, ScratchOrgConfig) else False
@@ -65,7 +59,7 @@ class RunPreflight(BaseTask, ABC):
             self.skip_settings_deployment = self.options["skip_settings_deployment"] if "skip_settings_deployment" in self.options else False
             self.skip_hydrate = self.options["skip_hydrate"] if "skip_hydrate" in self.options else False
         except:
-            print('Error on Preflight')
+            self.logger.error('Error on Preflight')
 
     def deploy_settings(self):
 
@@ -79,7 +73,7 @@ class RunPreflight(BaseTask, ABC):
             if os.path.exists(settings_path):
                 run_cci_task("deploy", self.org_config.name, path=settings_path)
             else:
-                self.logger.info(f' -> Settings not found at {settings_path}, skipping settings deployment.')            
+                self.logger.info(f' -> Settings not found at {settings_path}, skipping settings deployment.')
         else:
             self.logger.info(" -> Option to Skip Enabled - Skipping Settings Deployment.")
 
@@ -134,7 +128,7 @@ class RunPreflight(BaseTask, ABC):
     def shared_tasks(self):
         # Deploy Settings
         self.deploy_settings()
-            
+
         # Check and deploy Q Brix Register
         self.deploy_qbrix_register()
 

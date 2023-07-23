@@ -1,12 +1,12 @@
 import os
 import subprocess
-import keyring
 from abc import abstractmethod
 
+import keyring
 from cumulusci.core.config import ScratchOrgConfig
-from cumulusci.tasks.command import Command
 from cumulusci.core.exceptions import CommandException
 from cumulusci.core.keychain import BaseProjectKeychain
+from cumulusci.tasks.command import Command
 
 
 class BehaveRunner(Command):

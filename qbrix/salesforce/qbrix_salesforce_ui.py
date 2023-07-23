@@ -2,12 +2,14 @@ import json
 import os
 import pathlib
 from abc import ABC
-from cumulusci.tasks.sfdx import SFDXOrgTask
-from cumulusci.core.tasks import BaseTask
-from qbrix.tools.shared.qbrix_console_utils import init_logger
-from cumulusci.tasks.salesforce import BaseSalesforceApiTask
+
 from cumulusci.core.config import ScratchOrgConfig
+from cumulusci.core.tasks import BaseTask
+from cumulusci.tasks.salesforce import BaseSalesforceApiTask
+from cumulusci.tasks.sfdx import SFDXOrgTask
+
 from qbrix.salesforce.qbrix_salesforce_tasks import salesforce_query
+from qbrix.tools.shared.qbrix_console_utils import init_logger
 
 log = init_logger()
 

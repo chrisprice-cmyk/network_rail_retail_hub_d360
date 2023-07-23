@@ -41,7 +41,7 @@ class QBrixRobotLibrary():
         if getattr(self, "_cumulusci", None) is None:
             self._cumulusci = CumulusCI()
         return self._cumulusci
-    
+
     @property
     def browser(self):
 
@@ -50,7 +50,7 @@ class QBrixRobotLibrary():
         if self._browser is None:
             self._browser = self.builtin.get_library_instance("Browser")
         return self._browser
-    
+
     @property
     def tooling(self):
 
@@ -68,7 +68,7 @@ class QbrixRobotTask(QBrixRobotLibrary):
     def __init__(self):
         super().__init__()
         self._shared = None
-    
+
     @property
     def shared(self):
 

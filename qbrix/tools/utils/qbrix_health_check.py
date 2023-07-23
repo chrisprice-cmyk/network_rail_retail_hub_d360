@@ -1,8 +1,17 @@
 from abc import ABC
-from qbrix.tools.shared.qbrix_console_utils import init_logger
-from qbrix.tools.shared.qbrix_project_tasks import clean_project_files, check_api_versions, check_permset_group_files, check_and_update_old_class_refs, create_external_id_field, create_permission_set_file, delete_standard_fields, remove_empty_translations, source_org_feature_checker, org_feature_checker, check_org_config_files, update_file_api_versions, upsert_gitignore_entries, replace_file_text, get_qbrix_repo_url
+
 from cumulusci.core.tasks import BaseTask
-from qbrix.tools.shared.qbrix_json_tasks import update_json_file_value, get_json_file_value
+
+from qbrix.tools.shared.qbrix_console_utils import init_logger
+from qbrix.tools.shared.qbrix_json_tasks import (get_json_file_value,
+                                                 update_json_file_value)
+from qbrix.tools.shared.qbrix_project_tasks import (
+    check_and_update_old_class_refs, check_api_versions,
+    check_org_config_files, check_permset_group_files, clean_project_files,
+    create_external_id_field, create_permission_set_file,
+    delete_standard_fields, get_qbrix_repo_url, org_feature_checker,
+    remove_empty_translations, replace_file_text, source_org_feature_checker,
+    update_file_api_versions, upsert_gitignore_entries)
 
 log = init_logger()
 
@@ -70,11 +79,11 @@ class HealthChecker(BaseTask, ABC):
         self.logger.info(" -> Check Complete!")
 
         self.logger.info("\nHealth Check: Checking that orgs/dev.json has all features from all sources related to this Q Brix.")
-        source_org_feature_checker(False, self.auto)
+        source_org_feature_checker()
         self.logger.info(" -> Check Complete!")
 
         self.logger.info("\nHealth Check: Checking that dev_preview has all features from dev.")
-        org_feature_checker(self.auto)
+        org_feature_checker()
         self.logger.info(" -> Check Complete!")
 
         self.logger.info("\nHealth Check: Checking that scratch org files are configured with required settings")

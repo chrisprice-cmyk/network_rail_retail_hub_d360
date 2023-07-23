@@ -1,6 +1,5 @@
 from time import sleep
 
-from Browser import ElementState, SelectAttribute
 from robot.api.deco import library
 
 from qbrix.core.qbrix_robot_base import QbrixRobotTask
@@ -146,7 +145,7 @@ class QbrixServiceKeywords(QbrixRobotTask):
             self.shared.go_to_setup_admin_page("ConversationMessageDefinitions/home")
             self.browser.wait_for_elements_state("h1:has-text('Messaging Components')", ElementState.visible, '30s')
             sleep(5)
-            
+
             # Check that Component is not already present
             if self.browser.get_element_count(f"tbody >> th[data-label='Name'] >> a:text-is('{one_msg['name']}')") == 0:
                 self.shared.click_button_with_text("New Component")
@@ -167,7 +166,7 @@ class QbrixServiceKeywords(QbrixRobotTask):
                 print(f"Conversation '{one_msg['name']}' Component Already Exists")
 
         return
-    
+
     def add_messaging_channel(self, channel_name: str = None):
 
         if not channel_name:
@@ -178,7 +177,7 @@ class QbrixServiceKeywords(QbrixRobotTask):
 
         # Check if channel is already present
         if self.browser.get_element_count(f"table[aria-label='All messaging channels'] >> th >> a:text-is('{channel_name}')") == 0:
-            
+
             # Add New Channel
             self.browser.click("button:text-is('New Channel'):visible")
             sleep(2)
@@ -191,7 +190,7 @@ class QbrixServiceKeywords(QbrixRobotTask):
             sleep(2)
             self.browser.click("button:text-is('Save'):visible")
             sleep(3)
-        
+
             # Setup Initial Settings for Channel
             self.browser.click("lightning-combobox[data-element-name='RoutingType'] >> lightning-base-combobox.slds-combobox_container")
             self.browser.click("lightning-base-combobox-item[data-value='Omni-Flow']")
@@ -253,7 +252,7 @@ class QbrixServiceKeywords(QbrixRobotTask):
                     if self.browser.get_element_count("lightning-card:has-text('Parameter Mappings') >> table") > 0:
                         if self.browser.get_element_count(f"lightning-card:has-text('Parameter Mappings') >> table >> th[data-label='Parameter Name']:has-text('{mapping['ParameterName']}')") > 0:
                             continue
-                    
+
                     # Create New Mapping
                     self.browser.click(new_button_selector)
                     self.browser.click(f"{modal_selector} >> lightning-grouped-combobox >> input")

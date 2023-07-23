@@ -5,10 +5,10 @@ from time import sleep
 from typing import Optional
 
 from Browser import ElementState, SelectAttribute
-from robot.libraries.BuiltIn import BuiltIn
-from cumulusci.robotframework.SalesforceAPI import SalesforceAPI
 from cumulusci.robotframework.CumulusCI import CumulusCI
+from cumulusci.robotframework.SalesforceAPI import SalesforceAPI
 from robot.api.deco import library
+from robot.libraries.BuiltIn import BuiltIn
 
 
 @library(scope='GLOBAL', auto_keywords=True, doc_format='reST')
@@ -43,7 +43,7 @@ class QbrixSharedKeywords():
         if self._salesforceapi is None:
             self._salesforceapi = SalesforceAPI()
         return self._salesforceapi
-    
+
     @property
     def cumulusci(self):
 
@@ -52,11 +52,11 @@ class QbrixSharedKeywords():
         if getattr(self, "_cumulusci", None) is None:
             self._cumulusci = CumulusCI()
         return self._cumulusci
-    
+
     # ---------------------------------
     # BROWSING AND NAVIGATION FUNCTIONS
     # ---------------------------------
-    
+
     def go_to_lightning_setup_home(self, wait_for_text: str = "Home"):
         """
         Browses to the Lightning Setup Home Page.
@@ -95,7 +95,7 @@ class QbrixSharedKeywords():
     def go_to_app(self, app_name: str):
         """
         Browses to the given app within the browser. For example "Sales" app.
-        
+
         Args:
             app_name (str): Name of the Lightning App. Not the API Name.
         """
@@ -103,7 +103,7 @@ class QbrixSharedKeywords():
         if not app_name:
             print("No App Name Provided")
             return
-        
+
         # Browse to the App if found
         application_id = self.find_id(object_api_name="AppDefinition", where_clause=f"Label = '{app_name}'", id_column_name="DurableId")
         if application_id:
@@ -134,7 +134,7 @@ class QbrixSharedKeywords():
                 self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/setup/{setup_page_url}", timeout="90s")
 
             # Handlers for help messages and new feature modals
-            
+
             if self.browser.get_element_count("button:has-text('Dismiss')") > 0:
                 for elem in self.browser.get_elements("button:has-text('Dismiss')"):
                     try:
@@ -151,11 +151,11 @@ class QbrixSharedKeywords():
 
             # Allow time for page load to complete
             sleep(sleep_length)
-            
+
         except Exception as e:
             self.browser.take_screenshot()
             raise e
-        
+
     def iframe_handler(self):
 
         """
@@ -168,12 +168,12 @@ class QbrixSharedKeywords():
         if self.browser.get_element_count("iframe") == 0:
             retries = 1
             while retries < 3:
-                
+
                 if self.browser.get_element_count("iframe") == 0 and retries == 2:
                     return ""
                 if self.browser.get_element_count("iframe") > 0:
                     break
-                
+
                 retries += 1
                 sleep(1)
 
@@ -193,11 +193,11 @@ class QbrixSharedKeywords():
             return "nth-match(iframe, 1) >>>"
 
         return ""
-    
+
     # ------------------
     # SECURITY FUNCTIONS
     # ------------------
-        
+
     def disable_mfa(self):
 
         """
@@ -210,7 +210,7 @@ class QbrixSharedKeywords():
         existing_list = self.browser.get_select_options(f"{self.iframe_handler()} #duel_select_1")
         if len(existing_list) > 0 and any(d['label'] == 'Multi-Factor Authentication' for d in existing_list):
             self.browser.select_options_by(f"{self.iframe_handler()} #duel_select_1", SelectAttribute.text, "Multi-Factor Authentication")
-            self.browser.click(f"{self.iframe_handler()} div.duelingListBox >> img.leftArrowIcon")  
+            self.browser.click(f"{self.iframe_handler()} div.duelingListBox >> img.leftArrowIcon")
         self.browser.click(f"{self.iframe_handler()} input.btn:has-text('Save')")
         sleep(1)
 
@@ -221,7 +221,7 @@ class QbrixSharedKeywords():
     def set_org_wide_email(self, org_wide_email_address: Optional[str] = "sdo@salesforce.com"):
         """
         Sets and org wide email address for the target org, defaulting to the sdo address
-        
+
         Args:
             org_wide_email_address (str): (Optional) Email Address to use as new org wide email, although this parameter will default to sdo@salesforce.com
         """
@@ -347,7 +347,7 @@ class QbrixSharedKeywords():
         Does an Apex Recompile of all Classes
 
         Args:
-            wait_time: Max wait time for the compile to run in seconds. Default is 600 seconds. 
+            wait_time: Max wait time for the compile to run in seconds. Default is 600 seconds.
         """
 
         self.go_to_setup_admin_page("ApexClasses/home", 15)
@@ -514,7 +514,7 @@ class QbrixSharedKeywords():
     def enable_custom_help_in_user_engagement(self):
         """
         Enables the Customize Help Option under User Engagement Help Menu
-        """  
+        """
         self.go_to_setup_admin_page("HelpMenu/home", 4)
         toggle_span_count = self.browser.get_element_count(f"{self.iframe_handler()} span.slds-checkbox_off:visible")
         if toggle_span_count and toggle_span_count > 0:
@@ -523,7 +523,7 @@ class QbrixSharedKeywords():
     def enable_data_pipelines(self):
         """
         Enables the Data Pipeline Toggle
-        """  
+        """
         self.go_to_setup_admin_page("SonicGettingStarted/home")
         self.browser.wait_for_elements_state("h2:text-is('Data Pipelines')", ElementState.visible, '30s')
         if not "checked" in self.browser.get_element_states("label:has-text('Disabled')"):
@@ -537,7 +537,7 @@ class QbrixSharedKeywords():
 
         # PACKAGE INSTALL URL
         package_install_url = f"{self.cumulusci.org.instance_url}/packagingSetupUI/ipLanding.app?apvId={package_id}"
-        
+
         # Extend Current Browser Timeout
         self.browser.set_browser_timeout("1000s")
 
@@ -577,7 +577,7 @@ class QbrixSharedKeywords():
                         self.browser.click("div.grantAccessCheckbox >> input")
                         sleep(1)
 
-                    # Check for Final Button 
+                    # Check for Final Button
                     if self.browser.get_element_count("div.packagingSetupUIRssDialogFooter >> button.slds-button:has-text('Continue')") > 0:
                         self.browser.click("div.packagingSetupUIRssDialogFooter >> button.slds-button:has-text('Continue')")
                         sleep(1)
@@ -585,7 +585,7 @@ class QbrixSharedKeywords():
                     # Wait for Update
                     if wait_for_upgrade:
                         pass
-                        
+
                         # TODO
                         # This needs to lookup the name of the app based on the package id
                         # and then wait for the app to be installed
@@ -658,10 +658,10 @@ class QbrixSharedKeywords():
         # Error Control
         if " " in object_api_name:
             raise Exception("Invalid object api name specified")
-        
+
         if " " in id_column_name:
             raise Exception("Invalid ID Column name specified")
-        
+
         if where_clause.lower().startswith("where"):
             where_clause = where_clause.replace("where", "")
 
@@ -678,7 +678,7 @@ class QbrixSharedKeywords():
 
             if lookup_result["totalSize"] == 1:
                 return lookup_result["records"][0][id_column_name]
-            
+
             return None
         except Exception as e:
             self.log_to_file(e)
@@ -688,33 +688,33 @@ class QbrixSharedKeywords():
     def find_profileid_by_name(self, profile_name: str):
         """
         Locates the ID of a profile by friendly name
-        
+
         Args:
             profile_name: Name of the Salesforce Profile
-        
+
         Returns:
             Returns Salesforce ID for the Profile Name (If Found) otherwise returns None.
         """
         if not profile_name:
             raise Exception("Profile Name must be specified")
-        
+
         return self.find_id("Profile", f"Name ='{profile_name}'")
-    
+
     def find_livechatuserconfig_by_name(self, config_name: str):
         """
         Locates the ID of a Live Chat User Config by Master Label. See: select id, MasterLabel from LiveChatUserConfig
-        
+
         Args:
             configname (str): Live Chat User Configuration Name (Use the Master Label not the api name)
-        
+
         Returns:
             Returns Salesforce ID for the Live Chat User Configuration, if found. Otherwise, returns None.
         """
         if not config_name:
             raise Exception("Live Chat User Config Name must be specified")
-        
+
         return self.find_id("LiveChatUserConfig", f"MasterLabel ='{config_name}'")
-    
+
     # ------------------
     # LOGGING FUNCTIONS
     # ------------------
@@ -722,7 +722,7 @@ class QbrixSharedKeywords():
     def log_to_file(self, data):
         """
         Use this for local debugging to write data to a temp file
-        
+
         Args:
             data: Data which you want to log to file. File defaults to ./temp.log
         """

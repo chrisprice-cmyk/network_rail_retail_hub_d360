@@ -13,7 +13,7 @@ class QbrixToolingKeywords(QbrixRobotTask):
     def go_to_connected_app_page(self, connected_app_name: str):
         """
         Go to the Detail Page for a Connected App
-        
+
         Args:
             connected_app_name (str): The label for the Connected App
         """
@@ -28,7 +28,7 @@ class QbrixToolingKeywords(QbrixRobotTask):
     def enable_admin_auth_for_connected_app(self, connected_app_name, browse_to_app_page: bool = True):
         """
         Updates the User Policy for a connected up to 'Admin approved users are pre-authorized'
-        
+
         Args:
             connected_app_name (str): The label for the Connected App
             browse_to_app_page (bool): Set to true (The Default) when you want this function to browse to the connected app page. This can be set to False if it is assumed the browser will be on the connected app page, when its run.
@@ -36,7 +36,7 @@ class QbrixToolingKeywords(QbrixRobotTask):
         try:
             if browse_to_app_page:
                 self.go_to_connected_app_page(connected_app_name)
-            
+
             iframe_selector = self.shared.iframe_handler()
             if self.browser.get_element_count(f"{iframe_selector} td.dataCol:text-is('Admin approved users are pre-authorized')") == 0:
                 self.browser.click(f"{iframe_selector} .btn:has-text('Edit Policies')")
@@ -48,11 +48,11 @@ class QbrixToolingKeywords(QbrixRobotTask):
         except Exception as e:
             self.browser.take_screenshot()
             raise e
-        
+
     def enable_system_admin_profile_for_connected_app(self, connected_app_name: str, browse_to_app_page: bool = True):
         """
         Enables the System Administrator Profile for a connected app
-        
+
         Args:
             connected_app_name (str): The label for the Connected App
             browse_to_app_page (bool): Set to true (The Default) when you want this function to browse to the connected app page. This can be set to False if it is assumed the browser will be on the connected app page, when its run.
@@ -91,7 +91,7 @@ class QbrixToolingKeywords(QbrixRobotTask):
         connected_app_name = "NXDO Data Tool"
         self.enable_admin_auth_for_connected_app(connected_app_name)
         self.enable_system_admin_profile_for_connected_app(connected_app_name, False)
-            
+
     def enable_app_track(self):
         """ Enables App Track Connected App Settings"""
         connected_app_name = "Q Demo Tracker Prod"

@@ -1,6 +1,8 @@
 from time import sleep
+
 from Browser import ElementState
 from robot.api.deco import library
+
 from qbrix.core.qbrix_robot_base import QbrixRobotTask
 
 
@@ -13,15 +15,15 @@ class QbrixB2BKeywords(QbrixRobotTask):
         Gets the Store Id for a given Store Name
             Args:
                 store_name (str): The name of the store
-                
+
             Returns:
                 (str) Store Id Value if found, else None
         """
 
         if store_name is None:
-            raise ValueError("Profile Name must be specified")
+            raise ValueError("Store Name must be specified")
 
-        results = self.salesforceapi.soql_query(f"SELECT Id from WebStore where Name = '{store_name}' LIMIT 1")
+        results = self.salesforceapi.soql_query(f"SELECT Id FROM WebStore WHERE Name = '{store_name}' LIMIT 1")
 
         if results["totalSize"] == 1:
             return results["records"][0]["Id"]
@@ -32,7 +34,7 @@ class QbrixB2BKeywords(QbrixRobotTask):
 
         """
         Starts the Reindex for a given store
-        
+
         Args:
             store_name (str): The name of the store
         """
@@ -45,7 +47,7 @@ class QbrixB2BKeywords(QbrixRobotTask):
         if store_id:
             self.browser.go_to(
                 f"{self.cumulusci.org.instance_url}/lightning/page/commerceSearch?lightning__webStoreId={store_id}&ws=%2Flightning%2Fr%2FWebStore%2F{store_id}%2Fview")
-            self.browser.wait_for_elements_state(index_button_selector, ElementState.visible, '10s')
+            self.browser.wait_for_elements_state(index_button_selector, ElementState.visible, '15s')
             if "enabled" in self.browser.get_element_states(index_button_selector):
                 self.browser.click(index_button_selector)
                 sleep(2)
@@ -56,7 +58,7 @@ class QbrixB2BKeywords(QbrixRobotTask):
 
         """
         Enables integrations for a given Store Name
-        
+
         Args:
             store_name (str): The name of the store.
         """
@@ -93,4 +95,3 @@ class QbrixB2BKeywords(QbrixRobotTask):
             self.browser.click(integration_button_selector)
             sleep(2)
 
-        sleep(5)

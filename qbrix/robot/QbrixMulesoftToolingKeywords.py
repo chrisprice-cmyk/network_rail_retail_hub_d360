@@ -1,6 +1,7 @@
 from time import sleep
-from Browser import ElementState, SelectAttribute
+
 from robot.api.deco import library
+
 from qbrix.core.qbrix_robot_base import QbrixRobotTask
 
 

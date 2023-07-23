@@ -4,9 +4,9 @@ import subprocess
 from abc import abstractmethod
 
 from cumulusci.core.config import ScratchOrgConfig
-from cumulusci.tasks.sfdx import SFDXBaseTask
 from cumulusci.core.exceptions import CommandException
 from cumulusci.core.keychain import BaseProjectKeychain
+from cumulusci.tasks.sfdx import SFDXBaseTask
 
 LOAD_COMMAND = "sfdx sfdmu:run --sourceusername CSVFILE --targetusername {targetusername} -p {pathtoexportjson} --canmodify {instanceurl} --noprompt --verbose"
 SCRATCHORG_LOAD_COMMAND = "sfdx sfdmu:run --sourceusername CSVFILE --targetusername {targetusername} -p {pathtoexportjson} --noprompt --verbose"

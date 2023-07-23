@@ -152,13 +152,13 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
         # Assign Permission Set to Admin User
         self.cumulusci.run_task(task_name="assign_permission_sets", api_names='EinsteinAgent')
         sleep(3)
-        
+
     def einstein_case_classification_post_setup(self):
 
         # Check that Classification is Enabled
         self.enable_einstein_classification()
         iframe_handle = self.shared.iframe_handler()
-        
+
         # Get All Listed Models (Which should now be at Ready to Activate Status)
         self.browser.wait_for_elements_state(f"{iframe_handle} :nth-match(#modelTable, 1)", ElementState.visible, '15s')
         models = self.browser.get_elements(f"{iframe_handle} #modelTable >> tbody >> tr")
@@ -172,7 +172,7 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
 
             if model_status:
                 if model_status not in ("Ready to Activate", "Active"):
-                    rebuild_needed = True 
+                    rebuild_needed = True
                     break
 
         if rebuild_needed:
@@ -203,7 +203,7 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
                 sleep(2)
                 self.browser.click("div.modal-footer >> button.slds-button:has-text('Activate')")
                 sleep(1)
-            
+
             # Return to main setup page
             self.shared.go_to_setup_admin_page("EinsteinCaseClassification/home")
             sleep(1)
@@ -270,7 +270,7 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
         # Check and enable Salesforce Inbox Settings
         self.shared.go_to_setup_admin_page("EmailIqSetupPage/home")
         sleep(1)
-        
+
         if "checked" not in self.browser.get_element_states(f"{iframe_handler} div.slds-card__header:has-text('Make Inbox Available to Users') >> input"):
             self.browser.click(f"{iframe_handler} div.slds-card__header:has-text('Make Inbox Available to Users') >> input")
             sleep(1)
@@ -300,7 +300,7 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
         if not checked:
             self.browser.click("label:has-text('Off')")
             sleep(3)
-        
+
         # Finish if Einstein Article Recommendations model is already active
         if not "visible" in self.browser.get_element_states("button:has-text('Let\\'s go')"):
             print('already done setup')
@@ -366,7 +366,7 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
         sleep(2)
         self.browser.click(f":nth-match({iframe_handler} Button:text-is('Activate'),2)")
         sleep(4)
-    
+
 
     def einstein_article_recommendations_setup(self):
         """
@@ -385,7 +385,7 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
         if not checked:
             self.browser.click("label:has-text('Off')")
             sleep(3)
-        
+
         # Finish if Einstein Article Recommendations model is already active
         if not "visible" in self.browser.get_element_states("button:has-text('Let\\'s go')"):
             print('already done setup')

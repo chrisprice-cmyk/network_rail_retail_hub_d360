@@ -1,25 +1,24 @@
-from genericpath import isfile
-from time import sleep
-import requests
+import base64
 import json
 import os
 import re
-import sys
 import subprocess
-import base64
+import sys
 from abc import abstractmethod
+from time import sleep
 
+import requests
 from cumulusci.core.config import ScratchOrgConfig
-from cumulusci.tasks.sfdx import SFDXBaseTask
-from cumulusci.core.exceptions import TaskOptionsError
-from cumulusci.core.exceptions import CommandException
+from cumulusci.core.exceptions import CommandException, TaskOptionsError
 from cumulusci.core.keychain import BaseProjectKeychain
+from cumulusci.tasks.sfdx import SFDXBaseTask
+from genericpath import isfile
 
 LOAD_COMMAND = "sfdx force:apex:execute "
 
 #TODO: MOVE OUT OT Industries BaseConfig
 class SFIDirectDatapackDeployer(SFDXBaseTask):
-    
+
     keychain_class = BaseProjectKeychain
     task_options = {
         "org": {
@@ -31,14 +30,14 @@ class SFIDirectDatapackDeployer(SFDXBaseTask):
             "required": False
         }
     }
-    
+
     def _setprojectdefaults(self, instanceurl):
         subprocess.run([f"sfdx config:set instanceUrl={instanceurl}"], shell=True, capture_output=True)
 
     def _init_options(self, kwargs):
         super(SFIDirectDatapackDeployer, self)._init_options(kwargs)
         self.env = self._get_env()
-        
+
     @property
     def keychain_cls(self):
         klass = self.get_keychain_class()
@@ -79,18 +78,18 @@ class SFIDirectDatapackDeployer(SFDXBaseTask):
 
         if not self.org_config.instance_url is None:
             self.instanceurl = self.org_config.instance_url
-            
+
         if "datapacks" in self.options and not self.options["datapacks"] is None:
             self.datapacks = self.options["datapacks"]
         else:
             self.datapacks = []
             self.logger.info("No Datapacks Specified")
-            
+
     def deploy_datapacks(self):
         for datapackfile in self.datapacks:
             self.logger.info(f"DataPack::{datapackfile}")
             if os.path.isfile(datapackfile):
-                
+
                 targetnamespace = self.determinenamespace(self.accesstoken)
                 self.logger.info(f"TargetNamespace::{targetnamespace}")
 
@@ -98,25 +97,25 @@ class SFIDirectDatapackDeployer(SFDXBaseTask):
                     datapackcontents = tmpFile.read()
                     tmpFile.close()
                 datapackcontents = datapackcontents.replace("%vlocity_namespace%",targetnamespace)
-                
+
                 dpdict={
                     "VlocityDataPackData": json.loads(datapackcontents),
                     "ignoreAllErrors": True
                 }
-                
+
                 dppayload =base64.b64encode(json.dumps(dpdict).encode("utf-8"))
-                
-                
+
+
                 dictpayload= {
                     "payload": str(dppayload.decode()),
                     "dpStep": "",
                     "status": ""
                     }
                 self.process_datapack_payload(json.dumps(dictpayload))
-                
+
             else:
                 self.logger.error(f"DataPack::{datapackfile}::File Not Found")
-                
+
     def process_datapack_payload(self,payload:str):
         if(payload is None):
             return
@@ -129,14 +128,14 @@ class SFIDirectDatapackDeployer(SFDXBaseTask):
             }
 
             #self.logger.info(f"Payload::{payload}")
-            response = requests.request("POST", url, headers=headers, data=payload)            
+            response = requests.request("POST", url, headers=headers, data=payload)
             payloadresponse = json.loads(response.text)
-            
+
             status =payloadresponse["status"]
             msg=f"DataPack Processing::Status::{status}"
             self.logger.info(msg)
-            
-        
+
+
             # we will auto activate till we get a staus of error or dpStep and Status of complete Complete
             #yes dpStep complete is lower case
             if payloadresponse["status"] == "Error" or (payloadresponse["dpStep"] == "complete" and payloadresponse["status"] == "Complete"):
@@ -149,17 +148,17 @@ class SFIDirectDatapackDeployer(SFDXBaseTask):
                 #echo it back through
                 sleep(2)
                 return  self.process_datapack_payload(response.text)
-            
-            
+
+
 
 
         except BaseException as err:
             self.logger.error(f"Datapack Deploy Error::{err}")
-        
+
 
     def _setprojectdefaults(self, instanceurl):
         subprocess.run([f"sfdx config:set instanceUrl={instanceurl}"], shell=True, capture_output=True)
-        
+
     def determinenamespace(self, username: str):
 
         result = subprocess.run([
@@ -176,9 +175,9 @@ class SFIDirectDatapackDeployer(SFDXBaseTask):
 
         # fallback
         return "omnistudio"
-        
+
     def _run_task(self):
         self._prepruntime()
         self._setprojectdefaults(self.instanceurl)
         self.deploy_datapacks()
-        
+

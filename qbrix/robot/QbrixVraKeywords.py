@@ -16,8 +16,7 @@ class QbrixVraKeywords(QbrixRobotTask):
         self.shared.go_to_setup_admin_page("ServiceChannelSettings/home")
         iframe_selector = self.shared.iframe_handler()
         self.browser.wait_for_elements_state(f"{iframe_selector} .btn:has-text('New')", ElementState.visible, '15s')
-        visible = "visible" in self.browser.get_element_states("iframe >>> .listRelatedObject:has-text('SDO_VRA_End_User_Session_Request')")
-        if not visible:
+        if not "visible" in self.browser.get_element_states("iframe >>> .listRelatedObject:has-text('SDO_VRA_End_User_Session_Request')"):
             self.browser.click(f"{iframe_selector} .btn:has-text('New')")
             self.browser.fill_text(f"{iframe_selector} tr:has-text('Service Channel Name') >> input", "VRA - End User Session Request")
             self.browser.fill_text(f"{iframe_selector} tr:has-text('Developer Name') >> input", "")

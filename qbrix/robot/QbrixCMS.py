@@ -2,9 +2,12 @@ import json
 import os
 import time
 from time import sleep
+
 from Browser import ElementState, SelectAttribute
 from robot.api.deco import library
+
 from qbrix.core.qbrix_robot_base import QbrixRobotTask
+
 
 @library(scope='GLOBAL', auto_keywords=True, doc_format='reST')
 class QbrixCMS(QbrixRobotTask):
@@ -76,7 +79,7 @@ class QbrixCMS(QbrixRobotTask):
                     if self.browser.get_element_count(error_message_selector) > 0:
                         print("Error Occurred During File Upload. CMS Import Failed")
                         return
-                    
+
                     if self.browser.get_element_count(confirm_checkbox_selector) > 0 or self.browser.get_element_count(import_button_selector) > 0:
                         print("File Imported OK!")
                         break
@@ -87,7 +90,7 @@ class QbrixCMS(QbrixRobotTask):
                         break
 
                     time.sleep(1)
-                    
+
                 self.browser.click("div.modal-body >> span.slds-checkbox >> span.slds-checkbox_faux")
                 sleep(1)
                 self.browser.click("button.slds-button:has-text('Import')")
@@ -128,7 +131,7 @@ class QbrixCMS(QbrixRobotTask):
                     return
 
                 # Select all checkboxes
-                no_items = False 
+                no_items = False
                 while True:
 
                     total_cms_elements = self.browser.get_element(f"{iframe_handler} p.slds-page-header__meta-text")
@@ -151,7 +154,7 @@ class QbrixCMS(QbrixRobotTask):
 
                     else:
                         break
-                
+
                 if no_items:
                     return
 
@@ -573,7 +576,7 @@ class QbrixCMS(QbrixRobotTask):
                 collection_type = "CMS"
                 for table_row in self.browser.get_elements("table.slds-table >> tr:has(a)"):
                     collection_content_name_list.append(self.browser.get_property(f"{table_row} >> a", "innerText"))
-            
+
             # Add Details to Dict
             collection_data_dict.update({
                 collection_name: {
@@ -599,14 +602,14 @@ class QbrixCMS(QbrixRobotTask):
 
         if not os.path.exists(upload_file_location):
             raise Exception("No CMS Collection Data Found. Unable to upload.")
-        
+
         with open(upload_file_location, 'r', encoding="utf-8") as dataset_file:
             file_data = json.load(dataset_file)
 
         if file_data:
 
             self.open_experience_cloud_collections_page(site_name)
-            
+
             # Wait for Collections to Load
             no_collection_mode = False
             found_element = False
@@ -626,14 +629,14 @@ class QbrixCMS(QbrixRobotTask):
                     no_collection_mode = False
                     found_element = True
                     print("Found Table button...")
-                    break 
+                    break
 
                 counter += 1
 
             if not found_element:
                 print("No Supported Elements Found")
-                return 
-            
+                return
+
             # Set Defaults for Robot
 
             modal_next_button = "div.modal-footer >> button.nextButton"
@@ -657,7 +660,7 @@ class QbrixCMS(QbrixRobotTask):
                         if selection_text == collection:
                             collection_found = True
                             break
-                    
+
                     if collection_found:
                         print(f">>> {collection} Found. Skipping")
                     else:
@@ -684,7 +687,7 @@ class QbrixCMS(QbrixRobotTask):
                         if self.browser.get_element_count("table.slds-table:visible") > 0:
                             if self.browser.get_element_count(f"table.slds-table:visible >> tbody >> tr >> th:has-text('{obj}')") > 0:
                                 object_exists = True
-                        
+
                         if not object_exists:
                             # Add Object
                             self.browser.click("button:has-text('Add CRM Connections')")
@@ -739,7 +742,7 @@ class QbrixCMS(QbrixRobotTask):
                         self.browser.click(f"div.activeStep >> table >> tbody >> tr:has-text('{sf_list_view}') >> span.slds-radio")
                         self.browser.click(modal_next_button)
                         sleep(2)
-                        
+
 
                     elif collection_type == "CMS":
                         # Add CMS Content

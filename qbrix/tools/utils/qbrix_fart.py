@@ -2,9 +2,10 @@ import json
 import os
 import subprocess
 from abc import abstractmethod
-from cumulusci.tasks.command import Command
+
 from cumulusci.core.exceptions import CommandException
 from cumulusci.core.keychain import BaseProjectKeychain
+from cumulusci.tasks.command import Command
 
 
 class FART(Command):
@@ -156,7 +157,7 @@ class FART(Command):
     def run(self):
         if self.fartmode == "Text":
             self.runwithtext()
-            
+
         if self.fartmode == "Cache":
             self.runwithcache()
 
@@ -171,10 +172,10 @@ class FART(Command):
 
     def runwithcache(self):
         cacheval = self.org_config.qbrix_cache_get(self.fartreplacewith)
-        
+
         if(not cacheval is None):
             self.fart(self.fartpath, self.fartfind, cacheval, self.formatval)
-        
+
     def runwithtext(self):
         self.fart(self.fartpath, self.fartfind, self.fartreplacewith, self.formatval)
 

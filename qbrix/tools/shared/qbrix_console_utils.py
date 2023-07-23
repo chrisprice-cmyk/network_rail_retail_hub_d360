@@ -1,60 +1,30 @@
 import logging
-import subprocess
-import sys
-import textwrap
 import shlex
+import os
+import subprocess
+import textwrap
 from abc import ABC
 
 from cumulusci.tasks.command import Command
-
-
-class CustomFormatter(logging.Formatter):
-    """Logging colored formatter """
-
-    grey = '\x1b[38;21m'
-    blue = '\x1b[38;5;39m'
-    yellow = '\x1b[38;5;226m'
-    red = '\x1b[38;5;196m'
-    bold_red = '\x1b[31;1m'
-    reset = '\x1b[0m'
-
-    def __init__(self, fmt):
-        super().__init__()
-        self.fmt = fmt
-        self.FORMATS = {
-            logging.DEBUG: self.yellow + self.fmt + self.reset,
-            logging.INFO: self.blue + self.fmt + self.reset,
-            logging.WARNING: self.yellow + self.fmt + self.reset,
-            logging.ERROR: self.red + self.fmt + self.reset,
-            logging.CRITICAL: self.bold_red + self.fmt + self.reset
-        }
-
-    def format(self, record):
-        log_fmt = self.FORMATS.get(record.levelno)
-        formatter = logging.Formatter(log_fmt, "%Y-%m-%d %H:%M:%S")
-        return formatter.format(record)
-
+from cumulusci.cli.logger import init_logger as cci_init_logger
 
 def init_logger():
-    """ Initiates the custom logger for Q Brix Extensions """
-    if not logging.getLogger(__name__).hasHandlers():
-        logger = logging.getLogger(__name__)
-        logger.setLevel(logging.DEBUG)
 
-        # Define format for logs
-        fmt = '%(asctime)s | %(levelname)8s | %(message)s'
+    """
+    Initiates cumulusci logger for static methods
 
-        # Create stdout handler for logging to the console (logs all five levels)
-        stdout_handler = logging.StreamHandler()
-        stdout_handler.setLevel(logging.DEBUG)
-        stdout_handler.setFormatter(CustomFormatter(fmt))
-        logger.addHandler(stdout_handler)
-        return logger
-    else:
-        logger = logging.getLogger(__name__)
-        return logger
+    Usage:
+        from qbrix.tools.shared.qbrix_console_utils import init_logger
 
+        def test_func():
+            logger = init_logger()
+            logger.info("hey")
 
+    """
+
+    cci_init_logger(False)
+    logger = logging.getLogger('cumulusci')
+    return logger
 class CreateBanner(Command, ABC):
     task_docs = """Creates a full width banner in the console with the provided text"""
 
@@ -121,24 +91,43 @@ def get_terminal_width():
     return 0
 
 
-def run_command(command, cwd=None):
+def run_command(command: str, cwd=None) -> int:
     """
     Runs a command as a subprocess and returns the result code
-    :param command: string command statement
-    :param cwd: (Optional) Current Working Directory override
-    :return: code (0 = success, 1 or above = error/failure)
+
+    Args:
+        command (str): string command statement
+        cwd (str): (Optional) Current Working Directory override
+
+    Returns:
+        (int) code (0 = success, 1 or above = error/failure)
     """
 
+    log = init_logger()
+
+    # Check Command
+    if command:
+
+        # Blacklisted Command Keywords
+        blacklisted_keywords = {
+            'rm', 'shutdown', 'reboot', 'dd', 'mkfs', 'fdisk',  # Linux/Unix commands
+            'del', 'format', 'rmdir', 'rd', 'sfc', 'chkdsk', 'move', 'attrib',  # Windows commands
+            'mv', 'chmod', 'chown', 'sudo', 'kill', 'killall', 'iptables'  # More Linux/Unix commands
+        }
+
+        # Check if any blacklisted keyword is in the command
+        if any(keyword in command.split() for keyword in blacklisted_keywords):
+            raise ValueError(f"Dangerous command detected: {command}")
+
+    else:
+        raise ValueError("No command was passed to the run_command function. Stopping script.")
+
+    # Check Current Working Directory
     if not cwd:
         cwd = "."
+    cwd = os.path.normpath(cwd)
 
-    if not command:
-        print("No Command Passed. Returning.")
-        return None
-
-    print(f"Running Command: {command} in directory {cwd}\n")
-
-    log = init_logger()
+    log.info("Running Command: '%s' in directory '%s'...", command, cwd)
 
     try:
         with subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8', text=True) as proc:
@@ -153,9 +142,9 @@ def run_command(command, cwd=None):
         result = subprocess.CompletedProcess(command, proc.returncode, stdout, "\n".join(errs))
     except subprocess.TimeoutExpired:
         proc.kill()
-        log.error("Subprocess Timeout. Killing Process")
+        log.error(" -X Subprocess Timeout. Killing Process")
     except Exception as e:
         proc.kill()
-        log.error(f"Subprocess Failed. Error details: {e}")
+        log.error(" -X Subprocess Failed. Error details: %s", e)
 
     return result.returncode

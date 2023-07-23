@@ -1,21 +1,22 @@
 import base64
+import csv
 import glob
 import gzip
+import io
 import json
 import math
 import os
 import re
-import json
-import csv
-import io
-import requests
-from datetime import datetime
-from dateutil.parser import parse
-from abc import ABC
-from pathlib import Path
 import shlex
+from abc import ABC
+from datetime import datetime
+from pathlib import Path
 from time import sleep
-from cumulusci.tasks.salesforce.BaseSalesforceApiTask import BaseSalesforceApiTask
+
+import requests
+from cumulusci.tasks.salesforce.BaseSalesforceApiTask import \
+    BaseSalesforceApiTask
+from dateutil.parser import parse
 
 from qbrix.tools.shared.qbrix_console_utils import init_logger
 from qbrix.tools.shared.qbrix_project_tasks import replace_file_text

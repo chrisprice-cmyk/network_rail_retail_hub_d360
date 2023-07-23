@@ -1,7 +1,10 @@
 from time import sleep
+
 from Browser import ElementState, SelectAttribute
 from robot.api.deco import library
+
 from qbrix.core.qbrix_robot_base import QbrixRobotTask
+
 
 @library(scope='GLOBAL', auto_keywords=True, doc_format='reST')
 class QbrixFieldServiceKeywords(QbrixRobotTask):
@@ -19,7 +22,7 @@ class QbrixFieldServiceKeywords(QbrixRobotTask):
         # Enable Field Service Setting
         field_service_toggle_selector = "span.slds-form-element__label:has-text('Field Service')"
         self.browser.wait_for_elements_state(field_service_toggle_selector, ElementState.visible, '30s')
-        
+
         if (not "checked" in self.browser.get_element_states(field_service_toggle_selector) and turn_off == False) or ("checked" in self.browser.get_element_states(field_service_toggle_selector) and turn_off):
             self.browser.click(field_service_toggle_selector)
             sleep(10)
@@ -137,7 +140,7 @@ class QbrixFieldServiceKeywords(QbrixRobotTask):
             self.browser.select_options_by(vf_page_selector, SelectAttribute.text, "SDO_FSL_Launch_Sliding_Flow_Launch_Slide")
             self.browser.select_options_by(custom_perm_selector, SelectAttribute.text, "Bulk Schedule")
             custom_actions_added = True
-         
+
         if custom_actions_added:
             self.browser.click(save_button_selector)
             sleep(5)
@@ -231,9 +234,9 @@ class QbrixFieldServiceKeywords(QbrixRobotTask):
         Relaxes Security Options on the Fields Service Mobile Apps. Should only be used for demo purposes.
         """
         self.shared.go_to_setup_admin_page("ConnectedApplication/home")
-        iframe_selector = self.shared.iframe_handler()        
+        iframe_selector = self.shared.iframe_handler()
         self.browser.wait_for_elements_state(f"{iframe_selector} h1:text-is('Connected Apps')", ElementState.visible, "15s")
-        
+
         #click on the label column to filter descending - reduce pages and pages
         self.browser.click(f"{iframe_selector} a:text-is('Master Label')")
         sleep(10)
@@ -293,7 +296,7 @@ class QbrixFieldServiceKeywords(QbrixRobotTask):
 
             self.browser.click("{} >> label:text-matches('^{}$')".format(territory_location_row_selector, territory.replace('*', '.')))
             self.browser.click("{} >> svg.slds-icon.favorite-territory".format(territory_location_row_selector))
-            self.browser.click("{} >> span.switch-location".format(territory_location_row_selector)) 
+            self.browser.click("{} >> span.switch-location".format(territory_location_row_selector))
 
             sleep(1)
         else:

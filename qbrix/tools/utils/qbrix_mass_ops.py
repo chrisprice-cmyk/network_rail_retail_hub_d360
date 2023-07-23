@@ -1,22 +1,20 @@
 import os
 import shutil
-from abc import ABC
 import sys
+from abc import ABC
 from time import sleep
 
 from cumulusci.core.tasks import BaseTask
 
 from qbrix.tools.bundled.sam.main import migrate
-from qbrix.tools.shared.qbrix_project_tasks import (
-    assign_prefix_to_files,
-    compare_metadata,
-    create_external_id_field,
-    create_permission_set_file,
-    delete_standard_fields,
-    generate_stack_view,
-    push_changes,
-    update_file_api_versions,
-)
+from qbrix.tools.shared.qbrix_project_tasks import (assign_prefix_to_files,
+                                                    compare_metadata,
+                                                    create_external_id_field,
+                                                    create_permission_set_file,
+                                                    delete_standard_fields,
+                                                    generate_stack_view,
+                                                    push_changes,
+                                                    update_file_api_versions)
 
 
 class MassFileOps(BaseTask, ABC):
@@ -41,8 +39,8 @@ class MassFileOps(BaseTask, ABC):
             [6]     Permission Set Generator : Generate Permission Set for Objects, Fields, Tabs and Classes in your project.\n
             [7]     Q Brix Stack Viewer (BETA): Generates a view of the metadata deployed by the whole stack of Q Brix.\n
             [8]     SAM CRM Analytics Migration Tool (v0.4.1 - BETA): Can be used to migrate CRMA Assets from one Salesforce Org to Another\n
-            [r]     Reset Menu 
-            [e]     Exit   
+            [r]     Reset Menu
+            [e]     Exit
             """
         )
 

@@ -3,6 +3,8 @@ from time import sleep
 from Browser import ElementState, SelectAttribute
 from robot.api.deco import library
 
+from cumulusci.robotframework.utils import capture_screenshot_on_error
+
 from qbrix.core.qbrix_robot_base import QbrixRobotTask
 
 
@@ -10,6 +12,7 @@ from qbrix.core.qbrix_robot_base import QbrixRobotTask
 class QbrixSurveysKeywords(QbrixRobotTask):
     """Robot Keywords for Surveys"""
 
+    @capture_screenshot_on_error
     def enable_surveys(self):
         """
         Enables Salesforce Survey Setting in target Salesforce Org
@@ -31,10 +34,11 @@ class QbrixSurveysKeywords(QbrixRobotTask):
             self.browser.take_screenshot()
             raise e
 
+    @capture_screenshot_on_error
     def set_survey_default_community(self, community_name: str):
         """
         Sets the Default Community for Surveys
-        
+
         Args:
             community_name (str): Name of the Community to be used with Salesforce Surveys
         """
