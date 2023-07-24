@@ -1192,6 +1192,7 @@ class UploadFiles(BaseSalesforceApiTask, ABC):
                     "Title": title,
                     "VersionData": base64_file_contents,
                     "PathOnClient": filename,
+                    "IsAssetEnabled": True
                 }
 
                 content_version = self.sf.ContentVersion.create(content_version_data)
