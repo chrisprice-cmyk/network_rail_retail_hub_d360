@@ -81,6 +81,7 @@ def run_cci_task(task_name: str, org_name: str = None, **options) -> bool:
         org_config = CliRuntime().project_config.keychain.get_org(org_name)
     task = _init_task(class_path, options, task_config, org_config)
     _run_task(task)
+    return True
 
 
 def run_cci_flow(flow_name: str, org_name: str = None, **options) -> bool:

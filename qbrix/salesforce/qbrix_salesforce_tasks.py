@@ -2,7 +2,6 @@ import base64
 import json
 import os
 import pathlib
-import subprocess
 import tempfile
 from abc import ABC
 from datetime import datetime, timedelta
@@ -10,8 +9,6 @@ from time import sleep
 
 import requests
 import yaml
-from cumulusci.core.config import ScratchOrgConfig
-from cumulusci.core.flowrunner import FlowCoordinator
 from cumulusci.core.tasks import BaseTask
 from cumulusci.core.utils import process_list_of_pairs_dict_arg
 from cumulusci.tasks.salesforce import BaseSalesforceApiTask
@@ -23,96 +20,59 @@ from qbrix.tools.health.qbrix_project_checks import (
     run_crm_analytics_checks, run_einstein_checks, run_experience_cloud_checks)
 from qbrix.tools.shared.qbrix_cci_tasks import run_cci_task, run_cci_flow
 from qbrix.tools.shared.qbrix_console_utils import init_logger
-from qbrix.tools.shared.qbrix_project_tasks import get_packages_in_stack
 from qbrix.tools.utils.qbrix_orgconfig_hydrate import NGOrgConfig
+from cumulusci.robotframework.CumulusCI import CumulusCI
 
 log = init_logger()
 now = datetime.now()
 
 
-def salesforce_query(soql, org_config, raw_return=False):
-    """Runs a Salesforce Query and returns the results"""
-    if soql != "" and org_config is not None:
-        dx_command = f'sfdx force:data:soql:query -q "{soql}" --json '
+def salesforce_query(soql_select_statement, org_alias, raw_return=False):
 
-        subprocess.run(
-            f"sfdx config:set instanceUrl={org_config.instance_url}",
-            shell=True,
-            capture_output=True,
-        )
+    """
+    Runs a Salesforce Query and returns the results
 
-        if isinstance(org_config, ScratchOrgConfig):
-            dx_command += " -u {username}".format(username=org_config.username)
-        else:
-            dx_command += " -u {username}".format(username=org_config.access_token)
+    Args:
+        soql_select_statement (str): The SELECT statement you wish to run against the Salesforce API for the target org
+        org_alias (str): The alias for the Salesforce Org you are targeting
+        raw_return (bool): When True it returns whatever the query returns, when False this returns the first column of the first row.
 
-        result = subprocess.run(dx_command, shell=True, capture_output=True)
-        subprocess.run("sfdx config:unset instanceUrl", shell=True, capture_output=True)
+    Returns:
+        if raw_return is True > dict
+        else > string
 
-        if result.returncode > 0:
-            if result.stderr:
-                error_detail = result.stderr.decode("UTF-8")
-                log.error(f"Salesforce Query Error - Details: %s", error_detail)
-            else:
-                log.error(
-                    "Salesforce Query Failed, although no error detail was returned."
-                )
+    """
 
-            return None
+    if not str(soql_select_statement).lower().startswith("select"):
+        raise ValueError(f"The provided SOQL Statement is not recognized as a SELECT statement. Please review your statement ({soql_select_statement})and try again.")
 
-        json_result = json.loads(result.stdout)
+    query_result = CumulusCI(org_name=org_alias).sf.query_all(soql_select_statement)
 
-        if json_result["result"]["totalSize"] >= 1:
-            if raw_return:
-                return json_result
-            else:
-                return json_result["result"]["records"][0][
-                    list(json_result["result"]["records"][0].keys())[1]
-                ]
-        else:
-            return None
+    if query_result.get("totalSize") == 0:
+        return None
+
+    if raw_return:
+        return query_result
+
+    return query_result["records"][0][list(query_result["records"][0].keys())[1]]
 
 
-def QbrixInstallCheck(qbrix_name, org_config):
-    """Check if a QBrix is installed in the target org"""
+def QbrixInstallCheck(qbrix_name, org_alias):
 
-    log.info("Checking for Qbrix: %s", qbrix_name)
+    """
+    Check if a QBrix is installed in the target org
 
-    subprocess.run(
-        f"sfdx config:set instanceUrl={org_config.instance_url}",
-        shell=True,
-        capture_output=True,
-    )
+    Args:
+        qbrix_name (str): The name of the Q brix, for example 'QBrix-0-xDO-BaseConfig'
+        org_alias (str): The alias for the target org, for example 'dev'
 
-    dx_soql = f"SELECT Id from xDO_Base_QBrix_Register__mdt WHERE xDO_Repository_URL__c LIKE '%{qbrix_name}%'"
-    dx_command = f'sfdx force:data:soql:query -q "{dx_soql}" --json '
+    Returns:
+        bool: True if installed, False if not
+    """
 
-    if isinstance(org_config, ScratchOrgConfig):
-        dx_command += " -u {username}".format(username=org_config.username)
-    else:
-        dx_command += " -u {username}".format(username=org_config.access_token)
-
-    result = subprocess.run(dx_command, shell=True, capture_output=True)
-    subprocess.run("sfdx config:unset instanceUrl", shell=True, capture_output=True)
-
-    if result is None:
-        log.error(
-            "Nothing was returned. Check that the org still exists and that you can login via cci."
-        )
-        return False
-
-    json_result = json.loads(result.stdout)
-
-    if "result" not in json_result or len(json_result["result"]) == 0:
-        log.info("No Q Brix installed")
-        return False
-
-    if json_result["result"]["totalSize"] >= 1:
-        log.info(f"{qbrix_name} is installed.")
-        return True
-    else:
-        log.info(f"{qbrix_name} is NOT installed.")
-        return False
+    log.info("Checking for Qbrix: %s in org", qbrix_name)
+    check_result = salesforce_query(f"SELECT Id from xDO_Base_QBrix_Register__mdt WHERE xDO_Repository_URL__c LIKE '%{qbrix_name}%'", org_alias, True)
+    return check_result.get("totalSize") > 0
 
 
 def _time_since_modified(path):
@@ -1003,7 +963,7 @@ class QBrixInstalled(BaseTask, ABC):
         self.qbrix_name = self.options["qbrix_name"]
 
     def _run_task(self):
-        self.return_value = QbrixInstallCheck(self.qbrix_name, self.org_config)
+        self.return_value = QbrixInstallCheck(self.qbrix_name, self.org_config.name)
 
 
 class QUpdateDependencies(UpdateDependencies, ABC):
@@ -1011,7 +971,7 @@ class QUpdateDependencies(UpdateDependencies, ABC):
         if hasattr(dependency, "github") and len(dependency.github) > 1:
             if "qbrix" in dependency.github.lower():
                 qbrix_name = dependency.github.rsplit("/", 1)[-1]
-                if QbrixInstallCheck(qbrix_name, self.org_config):
+                if QbrixInstallCheck(qbrix_name, self.org_config.name):
                     return
 
         super()._install_dependency(dependency)
@@ -1043,7 +1003,7 @@ class QbrixDeployer(BaseSalesforceApiTask, ABC):
 
         for name, value in self.project_config.sources.items():
             if "github" in value and self.qbrix_name in value["github"]:
-                if not QbrixInstallCheck(self.qbrix_name, self.org_config):
+                if not QbrixInstallCheck(self.qbrix_name, self.org_config.name):
                     run_cci_flow(f"{name}:deploy_qbrix", self.org_config.name)
             else:
                 print("Source name not found in Q Brix")
@@ -1279,96 +1239,6 @@ class UploadFiles(BaseSalesforceApiTask, ABC):
             return
 
         self.upload_files_to_salesforce()
-
-
-class ComparePackages(BaseSalesforceApiTask, ABC):
-    task_docs = """
-    Compares Packages referenced in the local project or local stack with packages currently listed within a target org
-    """
-
-    task_options = {
-        "org": {"description": "Org Alias for the target org", "required": False},
-        "local_project": {
-            "description": "When True, only compares packages declared within the current project and not the stack of Q Brix",
-            "required": False,
-        },
-        "show_all_matches": {
-            "description": "When True, output will show all matches not just those which require action. Defaults to False which only shows matches which require action",
-            "required": False,
-        },
-    }
-
-    def _init_options(self, kwargs):
-        super(ComparePackages, self)._init_options(kwargs)
-        self.local_project = (
-            self.options["local_project"] if "local_project" in self.options else False
-        )
-        self.show_all_matches = (
-            self.options["show_all_matches"]
-            if "show_all_matches" in self.options
-            else False
-        )
-
-    def _run_task(self):
-        # Get Package List
-        self.logger.info("\nSearching for Package Version IDs")
-
-        package_list = []
-
-        if self.local_project:
-            package_list = get_packages_in_stack(True, False)
-        else:
-            package_list = get_packages_in_stack(False, self.local_project)
-
-        if len(package_list) > 0:
-            self.logger.info(f"{len(package_list)} packages found")
-        else:
-            self.logger.info("No Package References Found")
-            return
-
-        # Get Package List from Org
-        self.logger.info("\nGetting Installed Packages from Org and comparing")
-        soql = "SELECT SubscriberPackage.Name, SubscriberPackageVersionId FROM InstalledSubscriberPackage ORDER BY SubscriberPackage.Name"
-        toolingendpoint = "query?q="
-        results = self.sf.toolingexecute(f"{toolingendpoint}{soql.replace(' ', '+')}")
-        org_packages = []
-        if results["totalSize"] > 0:
-            self.logger.info(f"{results['totalSize']} Packages Found in Target Org")
-            for result in results["records"]:
-                if result["SubscriberPackageVersionId"]:
-                    org_packages.append(
-                        (
-                            result["SubscriberPackageVersionId"],
-                            result["SubscriberPackage"]["Name"],
-                        )
-                    )
-        else:
-            self.logger.info("No Packages found in org.")
-            return
-
-        # Compare Lists
-        for package, qbrix_name in package_list:
-            if self.show_all_matches:
-                self.logger.info(f"\nChecking Package ID: {package} from {qbrix_name}:")
-
-            package_found = False
-            for package_id, package_name in org_packages:
-                if package == package_id:
-                    package_found = True
-                    if self.show_all_matches:
-                        self.logger.info(
-                            f" -> Found Package in Org, with name: {package_name}"
-                        )
-                    break
-
-            if not package_found:
-                if not self.show_all_matches:
-                    self.logger.info(
-                        f"\nChecking Package ID: {package} from {qbrix_name}:"
-                    )
-                self.logger.info(
-                    " -> ACTION - Check this package ID within the related Q Brix and update if required."
-                )
 
 
 class QRetrieveChanges(RetrieveChanges):

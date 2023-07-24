@@ -11,6 +11,10 @@ from qbrix.tools.utils.qbrix_orgconfig_hydrate import NGOrgConfig
 
 
 class RunPreflight(BaseTask, ABC):
+
+    """Runs initial setup tasks before any other deployment happens"""
+
+
     task_docs = """
     Q Brix Preflight runs multiple tasks and flows against your target org to prepare it for the main deployment. By default it deploys settings and ensures that the Q Brix Registration package is installed.
     """
@@ -47,23 +51,19 @@ class RunPreflight(BaseTask, ABC):
 
     def _init_options(self, kwargs):
         super(RunPreflight, self)._init_options(kwargs)
+        # Initiate Shared Variables
+        self.scratch_org_mode = bool(isinstance(self.org_config, ScratchOrgConfig))
 
-        try:
-            # Initiate Shared Variables
-            self.scratch_org_mode = True if isinstance(self.org_config, ScratchOrgConfig) else False
+        # Initiate Options
+        self.include_base_config = self.options["include_base_config"] if "include_base_config" in self.options else False
+        self.base_config_only_scratch = self.options["base_config_only_scratch"] if "base_config_only_scratch" in self.options else False
+        self.only_base_config = self.options["only_base_config"] if "only_base_config" in self.options else False
+        self.skip_settings_deployment = self.options["skip_settings_deployment"] if "skip_settings_deployment" in self.options else False
+        self.skip_hydrate = self.options["skip_hydrate"] if "skip_hydrate" in self.options else False
 
-            # Initiate Options
-            self.include_base_config = self.options["include_base_config"] if "include_base_config" in self.options else False
-            self.base_config_only_scratch = self.options["base_config_only_scratch"] if "base_config_only_scratch" in self.options else False
-            self.only_base_config = self.options["only_base_config"] if "only_base_config" in self.options else False
-            self.skip_settings_deployment = self.options["skip_settings_deployment"] if "skip_settings_deployment" in self.options else False
-            self.skip_hydrate = self.options["skip_hydrate"] if "skip_hydrate" in self.options else False
-        except:
-            self.logger.error('Error on Preflight')
+    def _deploy_settings(self):
 
-    def deploy_settings(self):
-
-        self.logger.info(f"\nPREFLIGHT TASK: Pre-Deploy Org Settings to Org with alias {self.org_config.name}")
+        self.logger.info("\nPREFLIGHT TASK: Pre-Deploy Org Settings to Org with alias %s", self.org_config.name)
 
         if not self.skip_settings_deployment:
 
@@ -73,7 +73,7 @@ class RunPreflight(BaseTask, ABC):
             if os.path.exists(settings_path):
                 run_cci_task("deploy", self.org_config.name, path=settings_path)
             else:
-                self.logger.info(f' -> Settings not found at {settings_path}, skipping settings deployment.')
+                self.logger.info(" -> Settings not found at %s, skipping settings deployment.", settings_path)
         else:
             self.logger.info(" -> Option to Skip Enabled - Skipping Settings Deployment.")
 
@@ -83,7 +83,7 @@ class RunPreflight(BaseTask, ABC):
         # Check if Q Brix Registration is already installed
         self.logger.info(f"\nPREFLIGHT TASK: Check Q Brix Register is deployed in org with alias {self.org_config.name}")
 
-        if not QbrixInstallCheck("QBrix-1-xDO-Tool-QBrixRegister", self.org_config):
+        if not QbrixInstallCheck("QBrix-1-xDO-Tool-QBrixRegister", self.org_config.name):
             self.logger.info(f" -> Deploying Q Brix Registration to Org {self.org_config.name}")
             checkreg_deploy_result = run_cci_task("base:check_register", self.org_config.name)
             if checkreg_deploy_result:
@@ -94,40 +94,49 @@ class RunPreflight(BaseTask, ABC):
     def deploy_base_config_and_data(self):
         self.logger.info(f"\nPREFLIGHT TASK: Deploy Base Config and Base Data to org with alias {self.org_config.name}")
 
-        if not QbrixInstallCheck("QBrix-0-xDO-BaseConfig", self.org_config):
+        if not QbrixInstallCheck("QBrix-0-xDO-BaseConfig", self.org_config.name):
             self.logger.info(" -> Deploying Q Brix Base Config")
-            deploy_result = run_cci_flow(f"base:deploy_qbrix", self.org_config.name)
+            deploy_result = run_cci_flow("base:deploy_qbrix", self.org_config.name)
 
             if deploy_result:
-                self.logger.info(f" -> Q Brix Base Config Deployment Complete!")
+                self.logger.info(" -> Q Brix Base Config Deployment Complete!")
             else:
-                log.error(f" -> Q Brix Base Config Deployment Failed. Check errors and warnings (if any) mentioned above.")
+                self.logger.error(" -> Q Brix Base Config Deployment Failed. Check errors and warnings (if any) mentioned above.")
         else:
             self.logger.info(" -> Q Brix Base Config Deployed")
 
         if not self.only_base_config:
-            if not QbrixInstallCheck("QBrix-0-xDO-BaseData", self.org_config):
+            if not QbrixInstallCheck("QBrix-0-xDO-BaseData", self.org_config.name):
                 self.logger.info(" -> Installing Q Brix Base Data")
-                deploy_result = run_cci_flow(f"base:deploy_qbrix_base_data", self.org_config.name)
+                deploy_result = run_cci_flow("base:deploy_qbrix_base_data", self.org_config.name)
 
                 if deploy_result:
-                    self.logger.info(f" -> Q Brix Base Data Deployment Complete!")
+                    self.logger.info(" -> Q Brix Base Data Deployment Complete!")
                 else:
-                    log.error(f" ->Q Brix Base Data Deployment Failed. Check errors and warnings (if any) mentioned above.")
+                    self.logger.error(" ->Q Brix Base Data Deployment Failed. Check errors and warnings (if any) mentioned above.")
             else:
                 self.logger.info(" -> Q Brix Base Data Deployed")
 
     def scratch_org_tasks(self):
+
+        """Add Tasks here to be executed when the target org is a Scratch Org or Sandbox"""
+
         if self.include_base_config:
             self.deploy_base_config_and_data()
 
     def production_org_tasks(self):
+
+        """Add Tasks here to be executed when the target org is a Production Org"""
+
         if self.include_base_config and self.base_config_only_scratch is False:
             self.deploy_base_config_and_data()
 
     def shared_tasks(self):
+
+        """Add Tasks here to be executed for all deployments"""
+
         # Deploy Settings
-        self.deploy_settings()
+        self._deploy_settings()
 
         # Check and deploy Q Brix Register
         self.deploy_qbrix_register()
