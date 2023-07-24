@@ -71,7 +71,10 @@ def QbrixInstallCheck(qbrix_name, org_alias):
     """
 
     log.info("Checking for Qbrix: %s in org", qbrix_name)
-    check_result = salesforce_query(f"SELECT Id from xDO_Base_QBrix_Register__mdt WHERE xDO_Repository_URL__c LIKE '%{qbrix_name}%'", org_alias, True)
+    try:
+        check_result = salesforce_query(f"SELECT Id from xDO_Base_QBrix_Register__mdt WHERE xDO_Repository_URL__c LIKE '%{qbrix_name}%'", org_alias, True)
+    except Execption as e:
+        return False
     return check_result.get("totalSize") > 0
 
 
