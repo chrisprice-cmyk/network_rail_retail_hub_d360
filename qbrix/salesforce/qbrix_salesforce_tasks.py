@@ -75,7 +75,7 @@ def QbrixInstallCheck(qbrix_name, org_alias):
         check_result = salesforce_query(f"SELECT Id from xDO_Base_QBrix_Register__mdt WHERE xDO_Repository_URL__c LIKE '%{qbrix_name}%'", org_alias, True)
     except Exception as e:
         return False
-    return check_result.get("totalSize") > 0
+    return bool(check_result and check_result.get("totalSize") > 0)
 
 
 def _time_since_modified(path):
