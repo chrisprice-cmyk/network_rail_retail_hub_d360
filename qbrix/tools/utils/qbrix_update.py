@@ -134,10 +134,10 @@ class QBrixUpdater(BaseTask, ABC):
 
         if legacy_placeholder == -1 and new_placeholder == -1:
             self.logger.error("Unable to update cumulusci.yml file. Missing placeholder for Q Brix Tasks.")
+        else:
 
-        use_legacy_placeholder = True if legacy_placeholder >= 0 else False
-
-        if legacy_placeholder >= 0 or new_placeholder >= 0:
+            # Check for Legacy Placeholder
+            use_legacy_placeholder = True if legacy_placeholder >= 0 and new_placeholder == -1 else False
 
             # Check and update custom tasks
             for custom_task_name, custom_task_class in Q_BRIX_CUSTOM_TASKS.items():
