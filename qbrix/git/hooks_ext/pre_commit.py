@@ -1,15 +1,11 @@
-      
-import os,sys,re,json
+import os
+import re
+import sys
 
-from cumulusci.tasks.sfdx import SFDXBaseTask
+from cumulusci.core.tasks import BaseTask
 
-class PreCommit(SFDXBaseTask):
-    task_options = {
-    }
-    
-    def _init_options(self, kwargs):
-        super(PreCommit, self)._init_options(kwargs)
-        
+class PreCommit(BaseTask):
+
     def _run_task(self):
         ignoredirs=['./cci','./.cci','./config','./.config/sfdx','./.git','./.git/objects','./.qbrix','./qbrix','./.vscode','./.sfdx']
         ignorefiles=['.DS_Store','.forceignore','.lock','.prettierignore']
@@ -23,12 +19,12 @@ class PreCommit(SFDXBaseTask):
                 for ign in ignoredirs:
                     if ign in subdir:
                         continuepprocessing=False
-                        
+
                 for ign in ignorefiles:
                     if ign in file:
                         continuepprocessing=False
-                
-                if(continuepprocessing):        
+
+                if(continuepprocessing):
                     filepath = subdir + os.sep + file
                     #print(subdir)
                     try:
@@ -37,7 +33,7 @@ class PreCommit(SFDXBaseTask):
                                 results.append(filepath)
                     except UnicodeDecodeError:
                         pass
-                        
+
         if(len(results)>0):
             self.logger.error(f'*********************************************************************************')
             self.logger.error(f'*****COMMIT BLOCKED Possible Key(s) Google API Keys found in these files:********')
