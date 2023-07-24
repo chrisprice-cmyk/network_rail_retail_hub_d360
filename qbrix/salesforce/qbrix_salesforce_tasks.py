@@ -48,6 +48,9 @@ def salesforce_query(soql_select_statement, org_alias, raw_return=False):
 
     query_result = CumulusCI(org_name=org_alias).sf.query_all(soql_select_statement)
 
+    if not query_result:
+        return None
+
     if query_result.get("totalSize") == 0:
         return None
 
