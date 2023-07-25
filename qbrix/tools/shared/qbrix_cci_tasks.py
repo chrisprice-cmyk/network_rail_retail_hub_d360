@@ -3,7 +3,8 @@ import shutil
 
 from cumulusci.cli.runtime import CliRuntime
 from cumulusci.core.utils import import_global
-from cumulusci.robotframework.CumulusCI import CumulusCI
+from cumulusci.core.tasks import CURRENT_TASK
+from cumulusci.core.exceptions import TaskOptionsError
 
 from qbrix.tools.shared.qbrix_console_utils import init_logger
 
@@ -39,9 +40,8 @@ def rebuild_cci_cache(cci_project_cache_directory: str = None, rebuild_flow: str
     return True
 
 def _init_task(class_path, options, task_config, org_config=None):
-    cci = CumulusCI()
     task_class = import_global(class_path)
-    task_config = cci._parse_task_options(options, task_class, task_config)
+    task_config = _parse_task_options(options, task_class, task_config)
 
     if org_config:
         task = task_class(
@@ -56,6 +56,30 @@ def _init_task(class_path, options, task_config, org_config=None):
         )
     return task
 
+def _parse_task_options(options, task_class, task_config):
+    """
+    Task Option Parser
+    """
+
+    if "options" not in task_config.config:
+        task_config.config["options"] = {}
+    # Parse options and add to task config
+    if options:
+        for name, value in options.items():
+            # Validate the option
+            if name not in task_class.task_options:
+                raise TaskOptionsError(
+                    'Option "{}" is not available for task {}'.format(
+                        name, task_class
+                    )
+                )
+
+            # Override the option in the task config
+            task_config.config["options"][name] = value
+
+    return task_config
+
+
 def _run_task(task):
     logger = init_logger()
     task()
@@ -67,7 +91,7 @@ def run_cci_task(task_name: str, org_name: str = None, **options) -> bool:
 
     Args:
         task_name (str): The name of the task to run
-        org_name (str): The optional alias for the org
+        org_name (str): The optional alias for the org, this defaults to "dev"
         options: Additional options for the task that you want to provide, for example the 'deploy' task has an option for path, so you can define path='my/path/here'
 
     Example Usage:
@@ -75,13 +99,33 @@ def run_cci_task(task_name: str, org_name: str = None, **options) -> bool:
     run_cci_task('deploy', 'dev', path='force-app')
     """
 
+    if not org_name:
+        org_name = "dev"
+
+    if getattr(CURRENT_TASK, "stack", None) and CURRENT_TASK.stack[0].project_config:
+        _project_config = CURRENT_TASK.stack[0].project_config
+    else:
+        _project_config = CliRuntime().project_config
+
+    if getattr(CURRENT_TASK, "stack", None) and CURRENT_TASK.stack[0].org_config:
+        _org = CURRENT_TASK.stack[0].org_config
+    else:
+        _org = CliRuntime().project_config.keychain.get_org(org_name)
+
     task_config = CliRuntime().project_config.get_task(task_name)
-    class_path = task_config.class_path
-    if org_name:
-        org_config = CliRuntime().project_config.keychain.get_org(org_name)
-    task = _init_task(class_path, options, task_config, org_config)
-    _run_task(task)
-    return True
+    task_class = import_global(task_config.class_path)
+    task_config = _parse_task_options(options, task_class, task_config)
+    task = task_class(
+        task_config.project_config or _project_config,
+        task_config,
+        org_config=_org,
+    )
+
+    try:
+        _run_task(task)
+        return True
+    except Exception as e:
+        raise Exception(f"Task Runner Failed. {e}")
 
 
 def run_cci_flow(flow_name: str, org_name: str = None, **options) -> bool:
