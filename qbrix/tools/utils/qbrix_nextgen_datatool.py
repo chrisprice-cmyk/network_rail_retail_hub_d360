@@ -103,7 +103,7 @@ class RunDataTool(SFDXBaseTask):
 
         # Get Email from target org
         email_address = salesforce_query(
-            f"SELECT Email From User Where Username = '{self.org_config.username}' LIMIT 1", self.org_config)
+            f"SELECT Email From User Where Username = '{self.org_config.username}' LIMIT 1", self.org_config.name)
         if email_address is None or email_address == "":
             raise Exception("Unable to get email address from the target org. Stopping Data Load.")
 
