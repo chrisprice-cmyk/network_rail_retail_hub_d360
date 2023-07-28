@@ -65,7 +65,7 @@ jobs:
       target-org: ${{ steps.extrattargetorg.outputs.value }}
       target-accesstoken: ${{ steps.extrattargetaccesstoken.outputs.value }}
       target-instanceurl: ${{ steps.extrattargetinstanceurl.outputs.value }}
-      target-auto-publish-metadeploy: ${{ steps.extrattargetinstanceurl.outputs.value }}
+      target-auto-publish-metadeploy: ${{ steps.extractautopublishmetadeploy.outputs.value }}
     steps:
       - uses: actions/checkout@v3
 
@@ -120,6 +120,8 @@ jobs:
 
       - name: extract qlabs config setting
         run: |
+          echo '${{ steps.qlab_config_settings.outputs.response }}' > qlabs_settings.json
+          more qlabs_settings.json
           echo ${{ steps.qlab_config_settings.outputs.response }}
           echo ${{ fromJson(steps.qlab_config_settings.outputs.response).templateid }}
           echo "::set-env name=TEMPLATEID::${{ fromJson(steps.qlab_config_settings.outputs.response).templateid }}"
@@ -211,6 +213,17 @@ jobs:
         id: extrattargetinstanceurl
         with:
           cmd: jq '.instance_url' targetorg.json -r
+
+      - name: extract the metadeploy publish qlabs setting if we will autopublish this to metadeploy
+        uses: sergeysova/jq-action@v2
+        id: extractautopublishmetadeploy
+        with:
+          cmd: jq '.auto_publish_metadeploy' qlabs_settings.json -r
+      
+      - name: set output extract metadeploy publish
+        id: loadtautopublishmetadeploy
+        run: 
+          echo "target-auto-publish-metadeploy=${{steps.extractautopublishmetadeploy.outputs.value }}" >> $GITHUB_OUTPUT
 
       - name: set qlabs setting if we will autopublish this to metadeploy
         id: auto_publish_metadeploy
@@ -387,44 +400,44 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Disable TCP/UDP Offloading (Linux)
-        if: needs.target_org_env_build.outputs.target-auto-publish-metadeploy != 'false' && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        if: (needs.target_org_env_build.outputs.target-auto-publish-metadeploy == 'true' && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'))
         shell: bash
         run: sudo ethtool -K eth0 tx off rx off
 
         #install Python Test Resources
       - name: Install Python Test Resources
-        if: needs.target_org_env_build.outputs.target-auto-publish-metadeploy != 'false' && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        if: (needs.target_org_env_build.outputs.target-auto-publish-metadeploy == 'true' && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'))
         run: sudo apt install python3-testresources
 
       #Setup PyOpenSSL and keyrings.alt
       - name: Setup PyOpenSSL
-        if: needs.target_org_env_build.outputs.target-auto-publish-metadeploy != 'false' && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        if: (needs.target_org_env_build.outputs.target-auto-publish-metadeploy == 'true' && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'))
         run: |
           pip install pyopenssl --upgrade
           pip install keyrings.alt
 
       #install CumumulsCI
       - name: Install CumulusCI
-        if: needs.target_org_env_build.outputs.target-auto-publish-metadeploy != 'false' && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        if: (needs.target_org_env_build.outputs.target-auto-publish-metadeploy == 'true' && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'))
         run: pip install cumulusci
 
       #install playright via CCI
       - name: Install Playwright via CCI
-        if: needs.target_org_env_build.outputs.target-auto-publish-metadeploy != 'false' && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        if: (needs.target_org_env_build.outputs.target-auto-publish-metadeploy == 'true' && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'))
         run: cci robot install_playwright
 
       #display cci version
       - name: cci version
-        if: needs.target_org_env_build.outputs.target-auto-publish-metadeploy != 'false' && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        if: (needs.target_org_env_build.outputs.target-auto-publish-metadeploy == 'true' && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'))
         run: cci version
 
       #CCI Service List
       - name: cci service list
-        if: needs.target_org_env_build.outputs.target-auto-publish-metadeploy != 'false' && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        if: (needs.target_org_env_build.outputs.target-auto-publish-metadeploy == 'true' && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'))
         run: cci service list
 
       - name: metadeploy publish - if applicable
-        if: needs.target_org_env_build.outputs.target-auto-publish-metadeploy != 'false' && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        if: (needs.target_org_env_build.outputs.target-auto-publish-metadeploy == 'true' && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'))
         uses: nick-fields/retry@v2
         with:
           timeout_minutes: 1440
