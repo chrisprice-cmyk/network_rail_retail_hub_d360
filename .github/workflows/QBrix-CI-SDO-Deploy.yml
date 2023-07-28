@@ -65,7 +65,7 @@ jobs:
       target-org: ${{ steps.extrattargetorg.outputs.value }}
       target-accesstoken: ${{ steps.extrattargetaccesstoken.outputs.value }}
       target-instanceurl: ${{ steps.extrattargetinstanceurl.outputs.value }}
-      target-auto-publish-metadeploy: ${{ steps.extrattargetinstanceurl.outputs.value }}
+      target-auto-publish-metadeploy: ${{ steps.extractautopublishmetadeploy.outputs.value }}
     steps:
       - uses: actions/checkout@v3
 
