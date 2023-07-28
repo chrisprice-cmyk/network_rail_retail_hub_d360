@@ -236,6 +236,13 @@ class QBrixUpdater(BaseTask, ABC):
             error_output = update_error.stderr.strip()
             self.logger.error(" -X Error executing command to update SalesforceDX: %s", error_output)
 
+    def _remove_pycache(self, start_path:str = '.'):
+        for dirpath, dirnames, _ in os.walk(start_path):
+            if '__pycache__' in dirnames:
+                pycache_path = os.path.join(dirpath, '__pycache__')
+                shutil.rmtree(pycache_path)
+                self.logger.info('Removed %s', pycache_path)
+
     def _run_task(self):
 
         """" Updates the Q brix Project with the latest files from xDO-Template main branch """
@@ -297,6 +304,9 @@ class QBrixUpdater(BaseTask, ABC):
         # Fixes for GitIgnore
         self.logger.info(" -> Checking .gitignore file in repo")
         upsert_gitignore_entries(Q_BRIX_GITIGNORE_ENTRIES)
+
+        # Remove PyCache directories
+        self._remove_pycache()
 
         # Checking for Updates to CumulusCI and other tooling - no more than once every 7 days
         check = True
