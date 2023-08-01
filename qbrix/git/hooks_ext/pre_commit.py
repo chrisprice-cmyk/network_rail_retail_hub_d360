@@ -77,7 +77,8 @@ class PreCommit(BaseTask):
         patterns['Paypal / Braintree-Access Token']=re.compile("access_token\,production\$[0-9a-z]{161[0-9a,]{32}")
         
         #twilio - messaging
-        patterns['Twilio-API key']=re.compile("55[0-9a-fA-F]{32}")
+        # a lot of false positives in static resources 
+        #patterns['Twilio-API key']=re.compile("55[0-9a-fA-F]{32}")
         
         #slack - messaging
         patterns['Slack-OAuth v2 Bot Access Token']=re.compile("xoxb-[0-9]{11}-[0-9]{11}-[0-9a-zA-Z]{24}")
@@ -95,7 +96,7 @@ class PreCommit(BaseTask):
         patterns['Heroku-OAuth 2.0']=re.compile("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
         
         #custom
-        patterns['QBranch NextGen Legacy Generic Token']=re.compile(".token=.{42}")
+        patterns['QBranch NextGen Legacy Generic Token']=re.compile(".\?token=.{42}")
 
         
         results=[]
