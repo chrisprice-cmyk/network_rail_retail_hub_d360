@@ -308,6 +308,11 @@ class QBrixUpdater(BaseTask, ABC):
         # Remove PyCache directories
         self._remove_pycache()
 
+        # Remove Old Update Script if present
+        if os.path.exists(os.path.join("scripts", "qbrix", "UpdateVSCodeTasks.sh")):
+            self.logger.info(" -> Removing old update script")
+            os.remove(os.path.join("scripts", "qbrix", "UpdateVSCodeTasks.sh"))
+
         # Checking for Updates to CumulusCI and other tooling - no more than once every 7 days
         check = True
 
