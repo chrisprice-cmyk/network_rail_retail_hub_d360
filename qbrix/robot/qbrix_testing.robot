@@ -18,5 +18,4 @@ Suite Teardown      QRobot.Close Q Browser
 # Note: The default timeout for this is 900 seconds but if you have a long running process, ensure you change the value above next to "Set browser timeout" to something more suitable for the overall timeout for everything you are running.
 #
 Run Automation
-    Deactivate Flow    SDO Service - Messaging Session - On Create
-    Deactivate Flow    SDO Service - Messaging User - On Create
+    move_app_to_start_of_app_menu    Sales

@@ -5,6 +5,7 @@ from time import sleep
 from typing import Optional
 
 from Browser import ElementState, SelectAttribute
+from Browser.utils.data_types import MouseButtonAction
 from cumulusci.robotframework.CumulusCI import CumulusCI
 from cumulusci.robotframework.SalesforceAPI import SalesforceAPI
 from robot.api.deco import library
@@ -731,3 +732,23 @@ class QbrixSharedKeywords():
         with open(f"temp.log", "a") as tmpFile:
             tmpFile.write(f"{dt_string}::{data}\n")
             tmpFile.close()
+
+    def move_app_to_start_of_app_menu(self, app_name):
+
+        """Moves a given app to the start of the app menu"""
+
+        self.go_to_app("Sales")
+        sleep(4)
+        self.browser.click("div.slds-icon-waffle")
+        sleep(2)
+        self.browser.click("button.slds-button:text-is('View All')")
+        sleep(3)
+
+        app_tile_selector = f"div.slds-app-launcher__tile-body >> p.slds-truncate:text-is('{app_name}')"
+
+        self.browser.scroll_to_element(app_tile_selector)
+        self.browser.hover(app_tile_selector)
+        self.browser.mouse_button(MouseButtonAction.down)
+        self.browser.mouse_move_relative_to(":nth-match(div.slds-app-launcher__tile-body, 1)")
+        self.browser.mouse_button(MouseButtonAction.up)
+        sleep(3)
