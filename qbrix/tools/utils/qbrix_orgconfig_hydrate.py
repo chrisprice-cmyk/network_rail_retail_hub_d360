@@ -10,6 +10,135 @@ from cumulusci.core.exceptions import CommandException
 from cumulusci.core.keychain import BaseProjectKeychain
 from cumulusci.tasks.sfdx import SFDXBaseTask
 
+class NGTrapDoorInjector(SFDXBaseTask):
+    task_options = {
+        
+        "trapname": {
+            "description": "The name to store under in the trapdoor package",
+            "required": False
+        },
+        "context": {
+            "description": "Value to store. Max 1020 bytes",
+            "required": False
+        },
+        "org": {
+            "description": "Value to replace every instance of the find value in the source file.",
+            "required": False
+        }
+    }
+
+    def _init_options(self, kwargs):
+        super(NGTrapDoorInjector, self)._init_options(kwargs)
+        self.env = self._get_env()
+        self.trapname=None
+        self.context=None
+
+    @property
+    def keychain_cls(self):
+        klass = self.get_keychain_class()
+        return klass or self.keychain_class
+
+    @abstractmethod
+    def get_keychain_class(self):
+        return None
+
+    @property
+    def keychain_key(self):
+        return self.get_keychain_key()
+
+    @abstractmethod
+    def get_keychain_key(self):
+        return None
+
+    def _load_keychain(self):
+        if self.keychain is not None:
+            return
+
+        keychain_key = self.keychain_key if self.keychain_cls.encrypted else None
+
+        if self.project_config is None:
+            self.keychain = self.keychain_cls(self.universal_config, keychain_key)
+        else:
+            self.keychain = self.keychain_cls(self.project_config, keychain_key)
+            self.project_config.keychain = self.keychain
+
+
+    def _prepruntime(self):
+
+        if "trapname" not in self.options or not self.options["trapname"]:
+            self.trapname =None
+        else:
+            self.trapname =self.options["trapname"]
+            
+        if "context" not in self.options or not self.options["context"]:
+            self.context =None
+        else:
+            self.context =self.options["context"]
+
+        if "targetusername" not in self.options or not self.options["targetusername"]:
+
+            if not isinstance(self.org_config, ScratchOrgConfig):
+                self.targetusername = self.org_config.access_token
+            else:
+                self.targetusername = self.org_config.username
+        else:
+            self.targetusername = self.options["targetusername"]
+        
+        #self.logger.info(f'TRAPNAME::{self.trapname}')
+        #self.logger.info(f'CONTEXT::{self.context}')
+
+        self._translate_context()
+    def getenvironvariable(self,name):
+        return os.environ.get(name)
+    
+
+    def _translate_context(self):
+        
+        if(not self.context is None and self.context.startswith("${{") and self.context.endswith("}}")):
+            try:
+                sub1="${{"
+                sub2="}}"
+                idx1 = self.context.find(sub1)
+                idx2 = self.context.find(sub2)
+                exp = self.context[idx1 + len(sub1) : idx2]
+
+                #exit if inline import detected
+                if "__import__" in exp:
+                    return
+                #self.logger.info(f'EVALUATING::{exp}')
+                compliledcode = compile(exp, "<string>", "eval")
+                #no builtins = no __import__ # DO NOT allow globals
+                #restrict scope to expression - no builtins and only locals self
+                res = eval(compliledcode,{},{"self":self})
+                #self.logger.info(f"EXPRESSION::VAL::{res}")
+                if(not res is None):
+                    self.context = res
+                else:
+                    self.context =''
+                    
+            except Exception as inst:
+                self.logger.error(f"Unable to evaluate dynamic express::{inst}")
+        
+    def _run_task(self):
+    
+        self._prepruntime()
+
+        url = f"{self.org_config.instance_url}/services/apexrest/qbrix_devops/NGContextTrapDoorService"
+        inject={}
+        inject['name'] = self.trapname
+        inject['context'] = self.context
+
+        payload = json.dumps(inject)
+        #self.logger.info(url)
+        #self.logger.info(payload)
+        headers = {
+        'Authorization': f'Bearer {self.org_config.access_token}',
+        'Content-Type': 'application/json'
+        }
+
+        response = requests.request("POST", url, headers=headers, data=payload)
+        #self.logger.info(response)
+        #print(response.text)
 
 class NGSFDXWrapper(SFDXBaseTask):
     task_options = {

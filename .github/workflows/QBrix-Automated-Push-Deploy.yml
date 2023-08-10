@@ -82,7 +82,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix: ${{ fromJSON(needs.collection_deployment_steps.outputs.matrix) }}
-      max-parallel: 50 #run in parrallel
+      max-parallel: 250 #run in parrallel
     steps:
       - uses: actions/checkout@v3
 
