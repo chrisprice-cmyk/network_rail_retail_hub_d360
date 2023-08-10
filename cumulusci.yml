@@ -99,9 +99,12 @@ tasks:
   #------------------------------------#
   # CUSTOM TASKS ADDED FOR Q BRIX DEVELOPMENT
 
+  qbrix_robot_test:
+    class_path: qbrix.tools.utils.qbrix_launch_test_robot.QRobotTestCapture
+
   qbrix_trapdoor_add:
     class_path: qbrix.tools.utils.qbrix_orgconfig_hydrate.NGTrapDoorInjector
-    
+
   precommit_check:
     class_path: qbrix.git.hooks_ext.pre_commit.PreCommit
 

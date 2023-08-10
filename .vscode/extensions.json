@@ -12,6 +12,7 @@
     "ms-python.python",
     "salesforce.salesforce-vscode-slds",
     "salesforce.salesforcedx-vscode-visualforce",
-    "salesforce.codegenie"
+    "salesforce.codegenie",
+    "ms-playwright.playwright"
   ]
 }

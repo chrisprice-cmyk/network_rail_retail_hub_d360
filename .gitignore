@@ -80,3 +80,6 @@ qbrix/.idea/workspace.xml
 #validation outputs
 validationresult.json
 *_results.xml
+/test-results/
+/playwright-report/
+/playwright/.cache/
