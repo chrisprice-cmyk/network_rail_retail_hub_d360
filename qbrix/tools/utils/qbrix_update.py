@@ -289,7 +289,8 @@ class QBrixUpdater(BaseTask, ABC):
 
         if not filecmp.cmp(".qbrix/qbrix_update.py", "qbrix/tools/utils/qbrix_update.py"):
             self.logger.info(" -> Update Task script has been changed, running update again...")
-            run_cci_task("update_qbrix")
+            self._remove_pycache()
+            subprocess.run("cci task run update_qbrix", shell=True, check=True)
 
         if os.path.exists("qbrix/qbrix_update.py"):
             os.remove("qbrix/qbrix_update.py")
