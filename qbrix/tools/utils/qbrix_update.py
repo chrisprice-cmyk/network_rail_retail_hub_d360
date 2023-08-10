@@ -177,6 +177,12 @@ class QBrixUpdater(BaseTask, ABC):
         update_path = os.path.join(update_dir, folder_path)
         shutil.copytree(src=update_path, dst=folder_path, dirs_exist_ok=True)
 
+    def _update_file(self, source_file_path, target_file_path):
+
+        """Updates an individual file"""
+
+        shutil.copy(source_file_path, target_file_path)
+
     def _update_folder_indirect_source(self, folder_path, update_dir, remove_existing):
 
         """Copies content from an different source root to target"""
@@ -261,6 +267,7 @@ class QBrixUpdater(BaseTask, ABC):
             # PARAM1 = The folder as if it was from the root path
             # PARAM2 = The location where the source files should be located
             # PARAM3 = If True, it will delete the whole directory in project before updating
+            self._update_file(".qbrix/Update/xDO-Template-main/playwright.config.ts", "./playwright.config.ts")
             self._update_folder("qbrix", ".qbrix/Update/xDO-Template-main", False)
             self._update_folder(".vscode", ".qbrix/Update/xDO-Template-main", False)
             self._update_folder(".github", ".qbrix/Update/xDO-Template-main", False)
