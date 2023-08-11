@@ -27,6 +27,8 @@ env:
   SF_USE_PROGRESS_BAR: false
   CUMULUSCI_SERVICE_metadeploy: ${{ secrets.QBRIX_CUMULUSCI_SERVICE_METADEPLOY}}
   AUTO_PUBLISH_TO_METADEPLOY: false
+  mixpanelsignature: ${{ secrets.mixpanelsignature }}
+  mixpanelidentifier: ${{ secrets.mixpanelidentifier }}
 
 jobs:
   collection_deployment_steps:
@@ -219,11 +221,10 @@ jobs:
         id: extractautopublishmetadeploy
         with:
           cmd: jq '.auto_publish_metadeploy' qlabs_settings.json -r
-      
+
       - name: set output extract metadeploy publish
         id: loadtautopublishmetadeploy
-        run: 
-          echo "target-auto-publish-metadeploy=${{steps.extractautopublishmetadeploy.outputs.value }}" >> $GITHUB_OUTPUT
+        run: echo "target-auto-publish-metadeploy=${{steps.extractautopublishmetadeploy.outputs.value }}" >> $GITHUB_OUTPUT
 
       - name: set qlabs setting if we will autopublish this to metadeploy
         id: auto_publish_metadeploy
@@ -391,7 +392,6 @@ jobs:
           customHeaders: '{"Content-Type": "application/json","Authorization": "Bearer ${{ steps.qlabs_accesstoken.outputs.value }}"}'
           data: '{"qbrixname": "${{ github.repository }}-${{ env.BUILD_SUFFIX }}", "buildstatus": "Failed", "details": "${{ steps.cci_failure_details.outputs.stdout }}" }'
           timeout: 30000
-
 
   qbrix_metadeploy_publish:
     needs: [qbrix_deployments, target_org_env_build]

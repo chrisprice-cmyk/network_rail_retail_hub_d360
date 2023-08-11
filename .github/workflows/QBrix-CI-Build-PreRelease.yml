@@ -25,6 +25,8 @@ env:
   BUILD_SUFFIX: R0
   QBRIX_SYSTEM_ID: GIT_BUILD_AUTOMATION
   SF_USE_PROGRESS_BAR: false
+  mixpanelsignature: ${{ secrets.mixpanelsignature }}
+  mixpanelidentifier: ${{ secrets.mixpanelidentifier }}
 
 jobs:
   collection_deployment_steps:
