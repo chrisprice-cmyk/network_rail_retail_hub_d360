@@ -744,7 +744,7 @@ class QbrixSharedKeywords():
         # Go To Known App which is not Console Layout
         self.go_to_app("Sales")
 
-        # Open App Launcher
+        # Open App Launcher - Sleep Needed to Allow Tiles to load
         self.browser.wait_for_elements_state("div.slds-icon-waffle", ElementState.visible, "10s")
         self.browser.click("div.slds-icon-waffle")
         self.browser.wait_for_elements_state("button.slds-button:text-is('View All')", ElementState.visible, "10s")
@@ -753,7 +753,6 @@ class QbrixSharedKeywords():
 
         # Click on the App Tile for the given App
         app_tile_selector = f"div.slds-app-launcher__tile-body >> p.slds-truncate:text-is('{app_name}')"
-        self.browser.scroll_to_element(app_tile_selector)
         self.browser.hover(app_tile_selector)
         self.browser.mouse_button(MouseButtonAction.down)
 
