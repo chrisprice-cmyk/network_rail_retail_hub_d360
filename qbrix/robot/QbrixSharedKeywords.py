@@ -737,18 +737,29 @@ class QbrixSharedKeywords():
 
         """Moves a given app to the start of the app menu"""
 
+        # Increase Browser Viewport Size
+        # We do this as playwright thinks all tiles are visible even when they are not
+        self.browser.set_viewport_size(1440, 2560)
+
+        # Go To Known App which is not Console Layout
         self.go_to_app("Sales")
-        sleep(4)
+
+        # Open App Launcher
+        self.browser.wait_for_elements_state("div.slds-icon-waffle", ElementState.visible, "10s")
         self.browser.click("div.slds-icon-waffle")
-        sleep(2)
+        self.browser.wait_for_elements_state("button.slds-button:text-is('View All')", ElementState.visible, "10s")
         self.browser.click("button.slds-button:text-is('View All')")
         sleep(3)
 
+        # Click on the App Tile for the given App
         app_tile_selector = f"div.slds-app-launcher__tile-body >> p.slds-truncate:text-is('{app_name}')"
-
         self.browser.scroll_to_element(app_tile_selector)
         self.browser.hover(app_tile_selector)
         self.browser.mouse_button(MouseButtonAction.down)
+
+        # Move to place of first tile
         self.browser.mouse_move_relative_to(":nth-match(div.slds-app-launcher__tile-body, 1)")
         self.browser.mouse_button(MouseButtonAction.up)
-        sleep(3)
+
+        # Reset Viewport size
+        self.browser.set_viewport_size(1920,1080)
