@@ -10,6 +10,7 @@ from os.path import exists
 from pathlib import Path
 
 import requests
+from cumulusci.core.config import UniversalConfig
 from cumulusci.cli.utils import (get_cci_upgrade_command,
                                  get_installed_version,
                                  get_latest_final_version, timestamp_file)
@@ -328,9 +329,12 @@ class QBrixUpdater(BaseTask, ABC):
         with timestamp_file() as stamp_file:
             timestamp = float(stamp_file.read() or 0)
         delta = time.time() - timestamp
-        check = delta > 604800
+        check = delta > 600000
 
         if check:
+
+            # Remove TimeStamp File
+            os.remove(os.path.join(UniversalConfig.default_cumulusci_dir(), "cumulus_timestamp"))
 
             # Run Dependency Updates
             self._run_cumulusci_update()
