@@ -141,24 +141,40 @@ class QbrixSalesCloudKeywords(QbrixRobotTask):
         """
         Enables Opportunity Splits
         """
+
+        # SELECTORS
+        setup_button_selector = f"{self.shared.iframe_handler()} input.btn[value='Set Up Opportunity Splits']"
+
+        # Open the Setup Page for Opportunity Splits
         self.shared.go_to_setup_admin_page("OpportunitySplitSetup/home")
-        self.browser.wait_for_elements_state(f"{self.shared.iframe_handler()} h1.splitSetupHeader:has-text('Opportunity Splits')", ElementState.visible, '30s')
-        sleep(5)
-        visible = "visible" in self.browser.get_element_states(f"{self.shared.iframe_handler()} input.button:text-is('Set Up Opportunity Splits')")
-        if visible:
-            button_to_click = self.browser.get_element(f"{self.shared.iframe_handler()} input.button:text-is('Set Up Opportunity Splits')")
-            self.browser.click(button_to_click)
-            self.browser.wait_for_elements_state(f"{self.shared.iframe_handler()} input.button:text-is('Save')", ElementState.visible, '30s')
-            sleep(2)
-            save_button_to_click = self.browser.get_element(f"{self.shared.iframe_handler()} input.button:text-is('Save')")
-            self.browser.click(save_button_to_click)
-            sleep(4)
-            self.browser.wait_for_elements_state(f"{self.shared.iframe_handler()} input.btn:text-is('Enable')", ElementState.visible, '30s')
-            sleep(2)
-            enable_button_to_click = self.browser.get_element(f"{self.shared.iframe_handler()} input.btn:text-is('Enable')")
-            self.browser.click(enable_button_to_click)
-            self.browser.wait_for_elements_state(f"{self.shared.iframe_handler()} input.btn:text-is('Save')", ElementState.visible, '30s')
-            sleep(3)
-            enable_button_to_click = self.browser.get_element(f"{self.shared.iframe_handler()} input.btn:text-is('Save')")
-            self.browser.click(enable_button_to_click)
-            sleep(10)
+
+        # Check if Enabled
+        count = 0
+        while count < 15:
+
+            # Opportunity Splits are Enabled
+
+            # Opportunity Splits are not enabled
+            if self.browser.get_element_count(setup_button_selector) == 1:
+                break
+
+            sleep(1)
+            count += 1
+
+        # Enable Opportunity Splits
+        button_to_click = self.browser.get_element(f"{self.shared.iframe_handler()} input.button:text-is('Set Up Opportunity Splits')")
+        self.browser.click(button_to_click)
+        self.browser.wait_for_elements_state(f"{self.shared.iframe_handler()} input.button:text-is('Save')", ElementState.visible, '30s')
+        sleep(2)
+        save_button_to_click = self.browser.get_element(f"{self.shared.iframe_handler()} input.button:text-is('Save')")
+        self.browser.click(save_button_to_click)
+        sleep(4)
+        self.browser.wait_for_elements_state(f"{self.shared.iframe_handler()} input.btn:text-is('Enable')", ElementState.visible, '30s')
+        sleep(2)
+        enable_button_to_click = self.browser.get_element(f"{self.shared.iframe_handler()} input.btn:text-is('Enable')")
+        self.browser.click(enable_button_to_click)
+        self.browser.wait_for_elements_state(f"{self.shared.iframe_handler()} input.btn:text-is('Save')", ElementState.visible, '30s')
+        sleep(3)
+        enable_button_to_click = self.browser.get_element(f"{self.shared.iframe_handler()} input.btn:text-is('Save')")
+        self.browser.click(enable_button_to_click)
+        sleep(10)
