@@ -79,10 +79,10 @@ class MassFileOps(BaseTask, ABC):
         if not new_api_version or not new_api_version.isnumeric or float(new_api_version) <= float(self.project_config.project__package__api_version):
             self.logger.error("Please provide an valid api number, an integer value that's larger than current project api version")
             return False
-        
+
         target_org_alias = input("Please enter the alias of the scratch org (Default: dev): ") or "dev"
         skip_deploy = input("If you already had a fully deploy to your scratch org previously, you can skip the deploy to save some time, default N (y/N): ") or "n"
-        
+
         self.logger.info(f"Updating Project API from {old_api_version} to {new_api_version}")
 
         update_project_api_versions(new_api_version, old_api_version, target_org_alias, skip_deploy)
