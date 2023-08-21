@@ -770,3 +770,33 @@ class QbrixCMS(QbrixRobotTask):
                     self.browser.click("a[id=cmcNodeItem-managedContentCollections]")
                     sleep(2)
 
+    def upload_featured_topic_image(self, file_path, topic_name, experience_cloud_site, reload_page=True):
+
+        """Uploads the related file image for a featured topic within an experience cloud site.
+
+        Args:
+            file_path (str): The relative file path to the image file.
+            topic_name (str): The name (label) of the Featured Topic
+            experience_cloud_site (str): The label for the Experience Cloud site where the Featured Topics are located.
+            reload_page (bool): Defaults to True and loads the Featured Topics page from the setup area. Set to false if uploading multiple images in the same test, after the first image."""
+
+        if reload_page:
+            self.open_experience_cloud_collections_page(experience_cloud_site)
+            self.browser.wait_for_elements_state("a[id='cmcNodeItem-topics']", ElementState.visible, "5s")
+            self.browser.click("a[id='cmcNodeItem-topics']")
+            self.browser.wait_for_elements_state("a[id='cmcNodeItem-featuredTopics']", ElementState.visible, "5s")
+            self.browser.click("a[id='cmcNodeItem-featuredTopics']")
+            sleep(5)
+
+        if self.browser.get_element_count(f"div.topicRowDefaultContent:has-text('{topic_name}')") == 1:
+            self.browser.click(f"div.topicRowDefaultContent:has-text('{topic_name}') >> a.communitySetupPencilButton")
+            sleep(3)
+            if self.browser.get_element_count("span.uploadImageTextBlock:text-is('Upload thumbnail image'):visible") == 1:
+                upload_promise = self.browser.promise_to_upload_file(file_path)
+                self.browser.click("input.topicFileInput:visible")
+                self.browser.wait_for(upload_promise)
+                sleep(10)
+                self.browser.click("button:has-text('Save')")
+                sleep(3)
+        else:
+            print(f"Featured Topic called {topic_name} not found on page, skipping...")
