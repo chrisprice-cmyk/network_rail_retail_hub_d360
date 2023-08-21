@@ -786,8 +786,8 @@ class QbrixCMS(QbrixRobotTask):
             self.browser.click("a[id='cmcNodeItem-topics']")
             self.browser.wait_for_elements_state("a[id='cmcNodeItem-featuredTopics']", ElementState.visible, "5s")
             self.browser.click("a[id='cmcNodeItem-featuredTopics']")
-            sleep(5)
 
+        sleep(5)
         if self.browser.get_element_count(f"div.topicRowDefaultContent:has-text('{topic_name}')") == 1:
             self.browser.click(f"div.topicRowDefaultContent:has-text('{topic_name}') >> a.communitySetupPencilButton")
             sleep(3)
