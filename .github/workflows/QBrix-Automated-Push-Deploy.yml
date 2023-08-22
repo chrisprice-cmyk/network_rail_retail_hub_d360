@@ -81,6 +81,7 @@ jobs:
     needs: [collection_deployment_steps]
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix: ${{ fromJSON(needs.collection_deployment_steps.outputs.matrix) }}
       max-parallel: 250 #run in parrallel
     steps:
