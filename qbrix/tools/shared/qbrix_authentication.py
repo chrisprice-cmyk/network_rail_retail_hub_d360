@@ -1,8 +1,11 @@
-import hmac
-import hashlib
 import base64
+import hashlib
+import hmac
 import struct
 import time
+
+import requests
+
 
 def generate_mfa_code(secret):
     # Convert the secret from base32 to bytes
@@ -40,5 +43,21 @@ def base32_to_bytes(base32_string):
 
     return bytes(result)
 
-print("Running")
-print(generate_mfa_code('2STM5SBBJ5GVM4IQUMKWOXWNF2AK57YU'))
+def get_secure_setting(secure_setting: str):
+    url = f"https://qbrix-runtime-service-8c3413c48d7f.herokuapp.com/QBrixQLabs?settingId={secure_setting}"
+
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # Raise an exception for bad responses (4xx, 5xx)
+        json_data = response.json()
+
+        if secure_setting in json_data:
+            encoded_value = json_data[secure_setting]
+            decoded_value = base64.b64decode(encoded_value).decode("utf-8")
+            return decoded_value
+        else:
+            return None  # No "goat" key in the response
+
+    except requests.exceptions.RequestException as e:
+        print(f"An error occurred: {e}")
+        return None
