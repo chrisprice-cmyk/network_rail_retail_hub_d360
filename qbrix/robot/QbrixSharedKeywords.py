@@ -346,6 +346,66 @@ class QbrixSharedKeywords():
         iframe_selector = ":nth-match(iframe,1) >>> " if uses_iframe else ""
         self.browser.wait_for_elements_state(f"{iframe_selector}{title_element_type}:text-is('{page_title}')", ElementState.visible, wait_time)
 
+    def wait_and_click(self, selector:str = None, timeout:str = "30", post_click_sleep: int = 1):
+
+        """Waits for an element to become visible and enabled. Then clicks the element.
+
+        Args:
+            selector (str): Playwright selector for the element
+            timeout (str): (Optional) Duration in seconds as a string. Defaults to 30 seconds
+            post_click_sleep (int): (Optional) The amount of time in seconds to wait after the element is clicked. The default is 1 second.
+        """
+
+        if not selector:
+            return
+
+        sleep(1)
+        self.browser.wait_for_elements_state(selector, ElementState.visible, f'{timeout}s')
+        self.browser.wait_for_elements_state(selector, ElementState.enabled, f'{timeout}s')
+        self.browser.click(selector)
+        sleep(post_click_sleep)
+
+    def check_state(self, selector:str = None, state:str = "visible"):
+
+        """Checks if an element state is equal to a given state within a certain timeout
+
+        Args:
+            selector (str): Playwright selector for the element
+            state (str): (Optional) Element state you are checking for. Defaults to 'visible'
+        Returns:
+            bool: True if given state is in element states, False if not or on error.
+        """
+
+        try:
+            return state in self.browser.get_element_states(selector)
+        except Exception as e:
+            print(e)
+            return False
+
+    def wait_on_element(self, selector: str = None, timeout: int = 15):
+
+        """Waits on a given element to be in the page
+        Args:
+            selector (str): Playwright selector for the element
+            timeout (int): (Optional) Total seconds until wait times out. Defaults to 15 seconds.
+        Returns:
+            bool: True when element is found on page, False when timeout is reached and element is not found.
+        """
+
+        count = 0
+        print(f"Waiting on element selector {selector}...")
+        while count <= timeout:
+            if self.browser.get_element_count(selector) >= 1:
+                print("Element Found!")
+                return True
+            if "visible" in self.browser.get_element_states(selector):
+                print("Element found via state 'visible'!")
+                return True
+            sleep(1)
+            count += 1
+        print("Element Was Not Found")
+        return False
+
     # ------------------
     # SHARED FUNCTIONS
     # ------------------
