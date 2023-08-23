@@ -8,6 +8,7 @@ from Browser import ElementState, SelectAttribute
 from Browser.utils.data_types import MouseButtonAction
 from cumulusci.robotframework.CumulusCI import CumulusCI
 from cumulusci.robotframework.SalesforceAPI import SalesforceAPI
+from qbrix.tools.shared.qbrix_authentication import get_secure_setting
 from robot.api.deco import library
 from robot.libraries.BuiltIn import BuiltIn
 
@@ -214,6 +215,12 @@ class QbrixSharedKeywords():
             self.browser.click(f"{self.iframe_handler()} div.duelingListBox >> img.leftArrowIcon")
         self.browser.click(f"{self.iframe_handler()} input.btn:has-text('Save')")
         sleep(1)
+
+    def get_secure_setting(self, secure_setting_name):
+
+        """Returns the value for a secure setting held in Q Labs, returns None if not found"""
+
+        return get_secure_setting(secure_setting_name)
 
     # ------------------
     # LEX FUNCTIONS

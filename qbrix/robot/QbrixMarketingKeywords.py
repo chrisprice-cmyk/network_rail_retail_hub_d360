@@ -4,7 +4,7 @@ from Browser import ElementState, SelectAttribute
 from robot.api.deco import library
 
 from qbrix.core.qbrix_robot_base import QbrixRobotTask
-from qbrix.tools.shared.qbrix_authentication import generate_mfa_code
+from qbrix.tools.shared.qbrix_authentication import generate_mfa_code, get_secure_setting
 
 
 @library(scope='GLOBAL', auto_keywords=True, doc_format='reST')
@@ -70,6 +70,15 @@ class QbrixMarketingKeywords(QbrixRobotTask):
             sleep(1)
 
     def connect_to_marketing_cloud_distributed_marketing(self, marketing_cloud_username = None, marketing_cloud_password = None, marketing_cloud_secret = None):
+
+        if not marketing_cloud_username:
+            marketing_cloud_username = get_secure_setting("Q_DM_MARKETING_CLOUD_UUN")
+
+        if not marketing_cloud_password:
+            marketing_cloud_password = get_secure_setting("Q_DM_MARKETING_CLOUD_PW")
+
+        if not marketing_cloud_secret:
+            marketing_cloud_secret = get_secure_setting("Q_DM_MARKETING_CLOUD_KEY")
 
         # Go To Admin Page
         self.shared.go_to_app('Sales')
