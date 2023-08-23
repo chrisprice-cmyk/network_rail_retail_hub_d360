@@ -43,7 +43,11 @@ def base32_to_bytes(base32_string):
 
     return bytes(result)
 
-def get_secure_setting(secure_setting: str):
+def get_secure_setting(secure_setting: str = None):
+
+    if not secure_setting:
+        return None
+
     url = f"https://qbrix-runtime-service-8c3413c48d7f.herokuapp.com/QBrixQLabs?settingId={secure_setting}"
 
     try:
