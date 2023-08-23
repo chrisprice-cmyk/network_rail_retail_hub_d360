@@ -3,6 +3,7 @@ import json
 import os
 import subprocess
 from abc import abstractmethod
+from qbrix.tools.shared.qbrix_authentication import *
 
 import requests
 from cumulusci.core.config import ScratchOrgConfig
@@ -88,8 +89,13 @@ class NGTrapDoorInjector(SFDXBaseTask):
         #self.logger.info(f'CONTEXT::{self.context}')
 
         self._translate_context()
+        
     def getenvironvariable(self,name):
         return os.environ.get(name)
+    
+    def getsecuresetting(self,name):
+        res = get_secure_setting(name)
+        return res
     
 
     def _translate_context(self):
