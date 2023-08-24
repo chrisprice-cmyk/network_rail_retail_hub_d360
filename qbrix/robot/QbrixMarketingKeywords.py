@@ -69,32 +69,58 @@ class QbrixMarketingKeywords(QbrixRobotTask):
             self.browser.click(button_to_click)
             sleep(1)
 
-    def connect_to_marketing_cloud_distributed_marketing(self, marketing_cloud_username = None, marketing_cloud_password = None, marketing_cloud_secret = None):
+    def connect_to_marketing_cloud_distributed_marketing(self, marketing_cloud_username = None, marketing_cloud_password = None, marketing_cloud_secret = None, business_unit_label = None):
 
+        """Configures the Distributed Marketing connection in a target Salesforce Org. This Assumes that the package has already been installed.
+
+        Args:
+            marketing_cloud_username (str): Name of Secure Setting from Q Labs for the username
+            marketing_cloud_password (str): Name of the Secure Settings from Q Labs for the Marketing Cloud Password
+            marketing_cloud_secret (str): Name of the secure setting from Q Labs for the MFA Seed Key
+            business_unit_label (str): Name you want to use for the Business Unit Connection Name. Defaults to Distributed Marketing.
+
+        All parameters will default to the Distributed Marketing Demo instance defaults if not overridden.
+        """
+
+        # Use Default Creds if None are supplied
         if not marketing_cloud_username:
             marketing_cloud_username = get_secure_setting("Q__DM_MARKETING_CLOUD_UUN")
+        else:
+            marketing_cloud_username = get_secure_setting(marketing_cloud_username)
 
         if not marketing_cloud_password:
             marketing_cloud_password = get_secure_setting("Q__DM_MARKETING_CLOUD_PASS")
+        else:
+            marketing_cloud_password = get_secure_setting(marketing_cloud_password)
 
         if not marketing_cloud_secret:
             marketing_cloud_secret = get_secure_setting("Q__DM_MARKETING_CLOUD_SEED")
+        else:
+            marketing_cloud_secret = get_secure_setting(marketing_cloud_secret)
+
+        if not business_unit_label:
+            business_unit_label = "Distributed Marketing"
 
         # Go To Admin Page
         self.shared.go_to_app('Sales')
         self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/n/mcdm_15__Distributed_Marketing_Administration", timeout='30s')
+        self.browser.wait_until_network_is_idle("15s")
 
-        # Create Distributed Marketing Business Unit
-        try:
-            self.browser.wait_for_elements_state("table", ElementState.visible, "10s")
-            if self.browser.get_element_count("table >> tr:has-text('Distributed Marketing')") >= 1:
+        # Check if Already Connected
+        count = 0
+        while count <= 20:
+            if self.browser.get_element_count("p:has-text('No connected business units'):visible") == 1:
+                break
+            if self.browser.get_element_count("table >> tr") >= 1 and self.browser.get_element_count(f"table >> tr:has-text('{business_unit_label}')") == 0:
+                break
+            if self.browser.get_element_count(f"table >> tr:has-text('{business_unit_label}')") >= 1:
                 print("Already Connected")
                 return
-        except Exception as e:
-            print(e)
-        create_business_unit_button = f"{self.shared.iframe_handler()} a.slds-button:text-is('Add Business Unit')"
-        self.browser.wait_for_elements_state(create_business_unit_button, ElementState.visible, "30s")
-        self.browser.click(create_business_unit_button)
+            count += 1
+            sleep(1)
+
+        # Create Distributed Marketing Business Unit
+        self.shared.wait_and_click(f"{self.shared.iframe_handler()} a.slds-button:text-is('Add Business Unit')")
 
         # Enter Name for Connection
         self.browser.wait_for_elements_state("iframe >>> div.step-container:has-text('Business Unit Display Name')", ElementState.visible, "20s")
