@@ -1,3 +1,5 @@
+import os
+import json
 from time import sleep
 
 from Browser import ElementState, SelectAttribute
@@ -172,4 +174,81 @@ class QbrixMarketingKeywords(QbrixRobotTask):
                 break
             retry_count += 1
 
+    def connect_campaigns_for_distributed_marketing(self, file_path):
 
+        """Connects a given list of Campaigns to the Related Journeys in Marketing Cloud"""
+
+        if not os.path.exists(file_path):
+            raise ValueError("File Path does not exist.")
+
+        with open(file_path, encoding="utf-8", mode="r") as config_file:
+            config_data = json.load(config_file)
+
+        campaigns = config_data["campaignsToLink"]
+
+        if len(campaigns) == 0:
+            raise Exception("No campaigns defined in config file.")
+
+        self.shared.go_to_app("Distributed Marketing")
+
+        campaign_ids = [campaign["campaignExId"] for campaign in campaigns]
+        campaigns_dict = {campaign["campaignExId"]: campaign["journeyName"] for campaign in campaigns}
+
+        # Get Campaign Record Information
+        campaign_ids_list = ", ".join([f"'{id_}'" for id_ in campaign_ids])
+        campaign_lookup = self.salesforceapi.soql_query(f"SELECT Id, Name, External_ID__c FROM Campaign WHERE External_ID__c IN ({campaign_ids_list})")
+        print(campaign_lookup)
+
+        # Loop Through Records
+        if campaign_lookup["totalSize"] > 0:
+
+            for campaign in campaign_lookup["records"]:
+
+                # Open The Campaign record Page
+                self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/r/Campaign/{campaign['Id']}/view", timeout="90s")
+                self.browser.wait_until_network_is_idle("30s")
+
+                journey = campaigns_dict.get(campaign['External_ID__c'], None)
+                print(journey)
+                if not journey:
+                    print("No journey found for External ID")
+                    continue
+
+                # Click The Connect Campaign Button if Present
+                self.browser.wait_for_elements_state("span:text-is('Campaign Messages')", ElementState.visible, "20s")
+                sleep(5)
+                if self.browser.get_element_count("button:text-is('Connect Campaign')") > 0:
+                    self.browser.click("button:text-is('Connect Campaign')")
+                    self.shared.wait_and_click("input.uiInputTextForAutocomplete[placeholder='Search for a journey']")
+                    self.browser.fill_text("input.uiInputTextForAutocomplete[placeholder='Search for a journey']", journey)
+                    sleep(5)
+                    self.shared.wait_and_click(f"div.listContent >> ul >> li.lookup__item >> :nth-match(a:has-text('{journey}'), 1)")
+                    sleep(3)
+                    self.shared.wait_and_click("div.modal-footer >> button:text-is('Save')")
+                    sleep(5)
+                    self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/r/Campaign/{campaign['Id']}/view", timeout="90s")
+                    self.browser.wait_until_network_is_idle("30s")
+
+    def go_to_quick_send_page(self):
+        """Enables Quick Sends for Distributed Marketing Demos"""
+
+        self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/n/mcdm_15__Distributed_Marketing_Administration", timeout='30s')
+        self.browser.wait_until_network_is_idle("30s")
+        self.shared.wait_and_click("a.slds-nav-vertical__action:text-is('Quick Send')")
+        self.browser.wait_until_network_is_idle("30s")
+        self.browser.wait_for_elements_state("button[title='Enable the selected journeys for Quick Send']", ElementState.visible, "30s")
+
+    def enable_option_for_quick_send(self, option=None):
+
+        """Assumes you are on the Quick Send Configuration page and have already connected Marketing Cloud. Add Options you want to select for Quick Send from the availiable journeys list."""
+
+        if option:
+
+            if option in self.browser.get_select_options(":nth-match(select.journey-select,2)"):
+                print("Already selected option")
+                return
+
+            self.browser.select_options_by(":nth-match(select.journey-select,1)", SelectAttribute.label, option)
+            self.shared.wait_and_click("button[title='Enable the selected journeys for Quick Send']")
+            self.shared.wait_and_click("button:text-is('Apply Changes')")
+            sleep(5)
