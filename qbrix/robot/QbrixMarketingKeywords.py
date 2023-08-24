@@ -72,13 +72,13 @@ class QbrixMarketingKeywords(QbrixRobotTask):
     def connect_to_marketing_cloud_distributed_marketing(self, marketing_cloud_username = None, marketing_cloud_password = None, marketing_cloud_secret = None):
 
         if not marketing_cloud_username:
-            marketing_cloud_username = get_secure_setting("Q_DM_MARKETING_CLOUD_UUN")
+            marketing_cloud_username = get_secure_setting("Q__DM_MARKETING_CLOUD_UUN")
 
         if not marketing_cloud_password:
-            marketing_cloud_password = get_secure_setting("Q_DM_MARKETING_CLOUD_PW")
+            marketing_cloud_password = get_secure_setting("Q__DM_MARKETING_CLOUD_PASS")
 
         if not marketing_cloud_secret:
-            marketing_cloud_secret = get_secure_setting("Q_DM_MARKETING_CLOUD_KEY")
+            marketing_cloud_secret = get_secure_setting("Q__DM_MARKETING_CLOUD_SEED")
 
         # Go To Admin Page
         self.shared.go_to_app('Sales')
