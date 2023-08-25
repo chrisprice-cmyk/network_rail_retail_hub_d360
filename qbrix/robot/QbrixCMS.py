@@ -29,6 +29,47 @@ class QbrixCMS(QbrixRobotTask):
         for workspace in results["records"]:
             self.download_cms_content(workspace["Name"])
 
+
+    def upload_cms_workspace_directories(self):
+
+        """Create a directory within ./datasets/cms_workspaces for each workspace you want to upload files into. The name of the sub-directory needs to match the workspace name and inside the directory you can store the export .zip files, which will be uploaded in order"""
+
+        directory_path = os.path.join("datasets", "cms_workspaces")
+
+        if not os.path.exists(directory_path):
+            print(f"No Directories Found to Upload. Sub-directories expected within {directory_path}")
+            return
+
+        subdirectories = []
+
+        # Get a list of all subdirectories in the given directory
+        for item in os.listdir(directory_path):
+            item_path = os.path.join(directory_path, item)
+            if os.path.isdir(item_path):
+                subdirectories.append(item)
+
+        # Sort subdirectories alphabetically
+        subdirectories.sort()
+
+        # Process each subdirectory
+        for subdirectory in subdirectories:
+            print(f"Workspace Subdirectory: {subdirectory}")
+
+            # Check Workspace
+            self.create_workspace(subdirectory, enhanced_workspace=False)
+
+            # Get a list of all files in the subdirectory
+            subdirectory_path = os.path.join(directory_path, subdirectory)
+            files = [f for f in os.listdir(subdirectory_path) if os.path.isfile(os.path.join(subdirectory_path, f))]
+            files.sort(key=lambda x: int(x.split('-')[0]))
+
+            # Print the list of files
+            for file_name in files:
+                print(f" -> Uploading  {os.path.join(subdirectory_path, file_name)}")
+                self.upload_cms_import_file(file_name, subdirectory)
+
+
+
     def upload_cms_import_file(self, file_path, workspace):
 
         """
