@@ -5,7 +5,7 @@ from time import sleep
 from typing import Optional
 
 from Browser import ElementState, SelectAttribute
-from Browser.utils.data_types import MouseButtonAction, SelectionStrategy
+from Browser.utils.data_types import MouseButtonAction
 from cumulusci.robotframework.CumulusCI import CumulusCI
 from cumulusci.robotframework.SalesforceAPI import SalesforceAPI
 from qbrix.tools.shared.qbrix_authentication import get_secure_setting
@@ -405,9 +405,6 @@ class QbrixSharedKeywords():
             count += 1
         print("Element Was Not Found")
         return False
-
-    def get_element_by_label(self, label):
-        return self.browser.get_element_by(locator_type=SelectionStrategy.label, text=label, exact=True)
 
     # ------------------
     # SHARED FUNCTIONS
