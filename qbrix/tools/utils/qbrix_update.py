@@ -19,7 +19,7 @@ from cumulusci.core.tasks import BaseTask
 
 from qbrix.tools.health.qbrix_project_checks import (
     check_and_update_nodejs, check_python_library_dependencies,
-    cumulusci_update_check, update_salesforce_cli)
+    cumulusci_update_check, update_salesforce_cli, check_scratch_org_files)
 from qbrix.tools.shared.qbrix_project_tasks import (download_and_unzip,
                                                     replace_file_text,
                                                     upsert_gitignore_entries)
@@ -348,8 +348,10 @@ class QBrixUpdater(BaseTask, ABC):
             self.logger.info(" -> Removing old update script")
             os.remove(os.path.join("scripts", "qbrix", "UpdateVSCodeTasks.sh"))
 
-        # Checking for Updates to CumulusCI and other tooling - no more than once every 7 days
+        self.logger.info(" -> Checking for Trialforce Templates in scratch org files:")
+        check_scratch_org_files()
 
+        # Checking for Updates to CumulusCI and other tooling - no more than once every 7 days
         if self._run_infrequent_checks():
 
             # Run Dependency Updates

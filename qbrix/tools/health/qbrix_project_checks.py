@@ -1,5 +1,7 @@
 import subprocess
 import requests
+import os
+import json
 from qbrix.tools.shared.qbrix_cci_tasks import run_cci_task
 from qbrix.tools.shared.qbrix_project_tasks import check_and_update_setting
 from qbrix.tools.shared.qbrix_console_utils import init_logger
@@ -106,3 +108,43 @@ def check_and_update_nodejs():
             log.info(" -> Node.js is already on the latest LTS version.")
     except (subprocess.CalledProcessError, FileNotFoundError):
         log.info(" -> Node.js is not installed or an error occurred while checking/updating.")
+
+def get_template_info(template_id):
+    base_url = "https://qbrix-runtime-service-8c3413c48d7f.herokuapp.com"
+    check_template_url = f"{base_url}/postspin/isknowntemplate/?templateid={template_id}"
+
+    response = requests.get(check_template_url)
+    response_json = response.json()
+
+    print(response_json)
+
+    if "result" in response_json and response_json["result"] == True:
+        template_info_url = f"{base_url}/postspin/latesttemplate/?templateid={template_id}"
+        template_info_response = requests.get(template_info_url)
+        template_info = template_info_response.json()
+        print(template_info)
+        if "TemplateId" in template_info and template_info["TemplateId"]:
+            return template_info["TemplateId"]
+        else:
+            return None
+
+    return None
+
+
+def check_scratch_org_files():
+    log = init_logger()
+    for root, _, files in os.walk("orgs"):
+        for file_name in files:
+            if file_name.endswith('.json'):
+                file_path = os.path.join(root, file_name)
+                with open(file_path, 'r+', encoding="utf-8") as file:
+                    data = json.load(file)
+                    if "template" in data and data["template"]:
+                        template_id = data["template"]
+                        template_info = get_template_info(template_id)
+                        if template_info:
+                            data["template"] = template_info
+                            file.seek(0)
+                            json.dump(data, file, indent=4)
+                            file.truncate()
+                            log.info(f" -> Updated template ID in {file_name}")
