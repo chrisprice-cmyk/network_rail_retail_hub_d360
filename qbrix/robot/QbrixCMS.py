@@ -574,8 +574,10 @@ class QbrixCMS(QbrixRobotTask):
                 listview_name = self.browser.get_property("li:has(p[title='List View']) >> :nth-match(p, 2)", "innerText")
             else:
                 collection_type = "CMS"
-                for table_row in self.browser.get_elements("table.slds-table >> tr:has(a)"):
-                    collection_content_name_list.append(self.browser.get_property(f"{table_row} >> a", "innerText"))
+                sleep(1)
+                if self.browser.get_element_count("table.slds-table >> tr:has(a)") > 0:
+                    for table_row in self.browser.get_elements("table.slds-table >> tr:has(a)"):
+                        collection_content_name_list.append(self.browser.get_property(f"{table_row} >> a", "innerText"))
 
             # Add Details to Dict
             collection_data_dict.update({
@@ -594,6 +596,9 @@ class QbrixCMS(QbrixRobotTask):
         if collection_data_dict and len(collection_data_dict):
             save_location = os.path.join("datasets", "cms_collection_data")
             os.makedirs(save_location, exist_ok=True)
+
+            if os.path.exists(os.path.join(save_location, "cms_collection_dataset.json")):
+                os.remove(os.path.join(save_location, "cms_collection_dataset.json"))
 
             with open(os.path.join(save_location, "cms_collection_dataset.json"), "w", encoding="utf-8") as save_file:
                 save_file.write(json.dumps(collection_data_dict, indent=4))
