@@ -598,6 +598,25 @@ class QbrixCMS(QbrixRobotTask):
             with open(os.path.join(save_location, "cms_collection_dataset.json"), "w", encoding="utf-8") as save_file:
                 save_file.write(json.dumps(collection_data_dict, indent=4))
 
+    def _get_create_collection_button(self):
+
+        """When Uploading CMS Collections, the 'create' button changes depending on number of existing collections. This returns the selector for the correct button"""
+
+        count = 0
+        while count <= 10:
+            table_button_count = self.browser.get_element_count("button.slds-button:text('New')")
+            no_table_button_count = self.browser.get_element_count("button.slds-button:has-text('Create Collection')")
+
+            if table_button_count > 0:
+                return "button.slds-button:text('New')"
+
+            if no_table_button_count > 0:
+                return "button.slds-button:has-text('Create Collection')"
+
+            count += 1
+            sleep(1)
+
+
     def upload_cms_collections(self, site_name, upload_file_location=os.path.join("datasets", "cms_collection_data", "cms_collection_dataset.json"), ):
 
         if not os.path.exists(upload_file_location):
@@ -651,6 +670,7 @@ class QbrixCMS(QbrixRobotTask):
 
                 # Check if Collection Exists
                 if no_collection_mode:
+                    print(f">>> Adding Create Collection Task for {collection}")
                     collections_to_add.add(collection)
                 else:
                     print(f">>> Checking Collection {collection}")
@@ -676,13 +696,14 @@ class QbrixCMS(QbrixRobotTask):
                         salesforce_objects.add(collection_detail.get("content_type"))
 
                 if len(salesforce_objects) > 0:
+
                     # Check Object is Approved
-                    self.browser.click("a[id=cmcNodeItem-content]")
-                    sleep(1)
-                    self.browser.click("a[id=cmcNodeItem-managedContentTypes]")
-                    sleep(2)
+                    self.shared.wait_and_click("a[id=cmcNodeItem-content]")
+                    self.shared.wait_and_click("a[id=cmcNodeItem-managedContentTypes]")
+                    sleep(3)
 
                     for obj in salesforce_objects:
+                        print(f"Checking Object: {obj}")
                         object_exists = False
                         if self.browser.get_element_count("table.slds-table:visible") > 0:
                             if self.browser.get_element_count(f"table.slds-table:visible >> tbody >> tr >> th:has-text('{obj}')") > 0:
@@ -690,36 +711,34 @@ class QbrixCMS(QbrixRobotTask):
 
                         if not object_exists:
                             # Add Object
-                            self.browser.click("button:has-text('Add CRM Connections')")
+                            self.shared.wait_and_click("button:has-text('Add CRM Connections')")
                             self.browser.fill_text("div.communitySetupManagedContentMultiSelectTable >> input.slds-input", obj)
                             sleep(5)
                             if self.browser.get_element_count(f"div.listContainer >> table >> tbody >> tr:has-text('{obj}')") < 1:
                                     print(f"Unable to find Object called '{obj}'. Skipping")
                                     continue
                             self.browser.click(f"div.listContainer >> table >> tbody >> :nth-match(tr:has-text('{obj}'), 1) >> th >> div.slds-truncate")
-                            self.browser.click("button.saveButton:visible")
+                            self.shared.wait_and_click("button.saveButton")
                             sleep(1)
 
-                    self.browser.click("a[id=cmcNodeItem-managedContentCollections]")
+                    self.shared.wait_and_click("a[id=cmcNodeItem-managedContentCollections]")
                     sleep(1)
 
                 for collection_add in collections_to_add:
 
                     # Create Collection
-                    if no_collection_mode:
-                        self.browser.click("button.slds-button:has-text('Create Collection')")
-                    else:
-                        self.browser.click("button.slds-button:text('New')")
-
-                    self.browser.wait_for_elements_state("div.stepContainer", ElementState.visible, "15s")
+                    self.shared.wait_and_click(self._get_create_collection_button())
 
                     # Add Collection Details
+                    self.browser.wait_for_elements_state("div.stepContainer", ElementState.visible, "15s")
                     collection_data = file_data.get(collection_add)
 
                     collection_type = collection_data.get("collection_type")
                     content_type = collection_data.get("content_type")
                     cms_collection_content = collection_data.get("related_cms_content")
                     sf_list_view = collection_data.get("listview")
+
+                    print(f"TYPE: {collection_type} - CONTENT_TYPE: {content_type} - LISTVIEW: {sf_list_view}")
 
                     # Set Name
                     self.browser.fill_text("div.stepContainer >> div.slds-form-element__control >> input.slds-input:visible", collection_add)
@@ -729,38 +748,45 @@ class QbrixCMS(QbrixRobotTask):
                     if collection_type == "SALESFORCE":
 
                         # Add Salesforce Details
-                        self.browser.click("div.stepContainer >> div.slds-visual-picker >> label.crm")
-                        self.browser.click(modal_next_button)
-                        sleep(1)
-                        self.browser.click("div.stepContainer >> button.slds-combobox__input:visible")
-                        sleep(1)
-                        self.browser.click(f"div.activeStep >> div.slds-listbox >> lightning-base-combobox-item:has-text('{content_type}')")
+                        print("Adding Salesforce CMS Collection")
+                        self.shared.wait_and_click("div.stepContainer >> div.slds-visual-picker >> label.crm")
+                        self.shared.wait_and_click(modal_next_button)
+                        self.shared.wait_and_click("div.stepContainer >> button.slds-combobox__input")
+                        self.shared.wait_and_click(f"div.activeStep >> div.slds-listbox >> lightning-base-combobox-item:has-text('{content_type}')")
                         sleep(5)
                         if self.browser.get_element_count(f"div.activeStep >> table >> tbody >> tr:has-text('{sf_list_view}')") < 1:
                             print(f"Unable to Find List View '{sf_list_view}'")
                             continue
-                        self.browser.click(f"div.activeStep >> table >> tbody >> tr:has-text('{sf_list_view}') >> span.slds-radio")
-                        self.browser.click(modal_next_button)
-                        sleep(2)
-
+                        self.shared.wait_and_click(f"div.activeStep >> table >> tbody >> tr:has-text('{sf_list_view}') >> span.slds-radio")
+                        self.shared.wait_and_click(modal_next_button)
 
                     elif collection_type == "CMS":
                         # Add CMS Content
-                        self.browser.click("div.stepContainer >> div.slds-visual-picker >> label.cms")
-                        self.browser.click(modal_next_button)
+                        print("Adding CMS Collection")
+                        self.shared.wait_and_click("div.stepContainer >> div.slds-visual-picker >> label.cms")
+                        self.shared.wait_and_click(modal_next_button)
+                        self.browser.wait_for_elements_state("div.slds-select_container >> select.slds-select", ElementState.visible, "20s")
                         sleep(1)
+                        if not any(entry.get("label") == content_type for entry in self.browser.get_select_options("div.slds-select_container >> select.slds-select")):
+                            print(f"{content_type} was not found. Check managed content types have been deployed")
+                            self.browser.click("button[title='Close this window']")
+                            sleep(1)
+                            continue
                         self.browser.select_options_by("div.slds-select_container >> select.slds-select", SelectAttribute.label, content_type)
                         self.browser.click("div.activeStep >> div.slds-visual-picker >> label.manual")
-                        self.browser.click(modal_next_button)
+                        self.shared.wait_and_click(modal_next_button)
                         sleep(2)
-                        for cms_content in cms_collection_content:
+                        for cms_content_item in cms_collection_content:
+
+                            cms_content = cms_content_item.replace("'", "\\'")
+
                             self.browser.fill_text("div.activeStep >> input.slds-input", cms_content)
                             sleep(3)
                             if self.browser.get_element_count(f"div.listContainer >> table >> tbody >> tr:has-text('{cms_content}')") < 1:
                                 print(f"Unable to find CMS Content called '{cms_content}'. Skipping")
                                 continue
                             self.browser.click(f"div.listContainer >> table >> tbody >> tr:has-text('{cms_content}') >> th >> div.slds-truncate")
-                        self.browser.click(modal_next_button)
+                        self.shared.wait_and_click(modal_next_button)
                         sleep(2)
 
                     else:
