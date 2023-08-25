@@ -61,6 +61,8 @@ def cumulusci_update_check():
 def update_salesforce_cli():
     log = init_logger()
     log.info(" -> Checking for salesforce CLI Updates")
+
+    subprocess.run(["npm", "install", "-g", "npm@latest"], check=True)
     try:
         # Check if @salesforce/cli is installed globally
         subprocess.run(["npm", "list", "-g", "@salesforce/cli"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
