@@ -14,9 +14,12 @@ from cumulusci.core.config import UniversalConfig
 from cumulusci.cli.utils import (get_cci_upgrade_command,
                                  get_installed_version,
                                  get_latest_final_version, timestamp_file)
+from cumulusci.core.config import UniversalConfig
 from cumulusci.core.tasks import BaseTask
 
-from qbrix.tools.shared.qbrix_cci_tasks import run_cci_task
+from qbrix.tools.health.qbrix_project_checks import (
+    check_and_update_nodejs, check_python_library_dependencies,
+    cumulusci_update_check, update_salesforce_cli)
 from qbrix.tools.shared.qbrix_project_tasks import (download_and_unzip,
                                                     replace_file_text,
                                                     upsert_gitignore_entries)
@@ -251,6 +254,28 @@ class QBrixUpdater(BaseTask, ABC):
                 shutil.rmtree(pycache_path)
                 self.logger.info('Removed %s', pycache_path)
 
+    def _run_infrequent_checks(self):
+        timestamp_file_path = os.path.join(UniversalConfig.default_cumulusci_dir(), "qbrix_update_timestamp")
+
+        if os.path.exists(timestamp_file_path):
+            # Read the timestamp from the file and convert it to a float
+            with open(timestamp_file_path, 'r', encoding='utf-8') as stamp_file:
+                timestamp = float(stamp_file.read() or 0)
+
+            # Calculate the time delta since the timestamp
+            delta = time.time() - timestamp
+
+            # Check if the delta is greater than 5 days (5 * 24 * 60 * 60 seconds)
+            if delta > 5 * 24 * 60 * 60:
+                os.remove(timestamp_file_path)
+                return True
+            else:
+                return False
+        else:
+            with open(timestamp_file_path, 'w', encoding='utf-8') as stamp_file:
+                stamp_file.write(str(time.time()))
+            return True
+
     def _run_task(self):
 
         """" Updates the Q brix Project with the latest files from xDO-Template main branch """
@@ -324,24 +349,17 @@ class QBrixUpdater(BaseTask, ABC):
             os.remove(os.path.join("scripts", "qbrix", "UpdateVSCodeTasks.sh"))
 
         # Checking for Updates to CumulusCI and other tooling - no more than once every 7 days
-        check = True
 
-        with timestamp_file() as stamp_file:
-            timestamp = float(stamp_file.read() or 0)
-        delta = time.time() - timestamp
-        check = delta > 600000
-
-        if check:
-
-            # Remove TimeStamp File
-            os.remove(os.path.join(UniversalConfig.default_cumulusci_dir(), "cumulus_timestamp"))
+        if self._run_infrequent_checks():
 
             # Run Dependency Updates
-            self._run_cumulusci_update()
-            self._run_salesforcedx_update()
+            self.logger.info(" -> Checking for required QBrix dependencies")
+            check_and_update_nodejs()
+            update_salesforce_cli()
+            cumulusci_update_check()
 
             # Checking for required py libraries for QBrix
             self.logger.info(" -> Checking for required QBrix libraries")
-            run_cci_task("command", org_name=None, command="pip install pandas pandasql")
+            check_python_library_dependencies()
 
         self.logger.info("Update Complete!")
