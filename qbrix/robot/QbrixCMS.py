@@ -662,8 +662,61 @@ class QbrixCMS(QbrixRobotTask):
             count += 1
             sleep(1)
 
+    def reset_cms_collections(self, site_name, upload_file_location=os.path.join("datasets", "cms_collection_data", "cms_collection_dataset.json")):
 
-    def upload_cms_collections(self, site_name, upload_file_location=os.path.join("datasets", "cms_collection_data", "cms_collection_dataset.json"), ):
+        """Deletes collections which match the collections we can upload. Then re-upload the collections"""
+
+        if not os.path.exists(upload_file_location):
+            raise Exception("No CMS Collection Data Found. Unable to run the reset.")
+
+        with open(upload_file_location, 'r', encoding="utf-8") as dataset_file:
+            file_data = json.load(dataset_file)
+
+        if file_data:
+
+            self.open_experience_cloud_collections_page(site_name)
+
+            # Loop Through Collections from the file
+            break_loop = False
+            for collection, _ in file_data.items():
+
+                print(f"Looking for Collection {collection}")
+
+                counter = 1
+                while counter < 1:
+                    sleep(1)
+                    create_button_count = self.browser.get_element_count("button.newcollection:has-text('Create Collection')")
+                    table_count = self.browser.get_element_count("table.slds-table")
+
+                    if create_button_count > 0:
+                        break_loop = True
+                        break
+
+                    if table_count > 0:
+                        break_loop = False
+                        break
+
+                if break_loop:
+                    break
+
+                sleep(1)
+                for table_row in self.browser.get_elements("table.slds-table >> tr:has(a)"):
+                    selection_text = self.browser.get_property(f"{table_row} >> a", "innerText")
+                    if selection_text == collection:
+                        print(" -> Found Collection... Deleting...")
+                        self.browser.click(f"{table_row} >> lightning-button-menu.slds-dropdown-trigger")
+                        self.shared.wait_and_click("span.slds-truncate:text-is('Delete')")
+                        self.shared.wait_and_click("div.modal-footer >> button.slds-button:text-is('Delete')")
+                        self.browser.reload()
+                        break
+
+            # Start New Upload
+            self.upload_cms_collections(site_name, upload_file_location)
+
+
+    def upload_cms_collections(self, site_name, upload_file_location=os.path.join("datasets", "cms_collection_data", "cms_collection_dataset.json") ):
+
+        """Uploads the CMS Collections based on the data held within the upload file. By default this is stored within datasets/cms_collection_data/cms_collection_dataset.json"""
 
         if not os.path.exists(upload_file_location):
             raise Exception("No CMS Collection Data Found. Unable to upload.")
@@ -831,7 +884,7 @@ class QbrixCMS(QbrixRobotTask):
                             if self.browser.get_element_count(f"div.listContainer >> table >> tbody >> tr:has-text('{cms_content}')") < 1:
                                 print(f"Unable to find CMS Content called '{cms_content}'. Skipping")
                                 continue
-                            self.browser.click(f"div.listContainer >> table >> tbody >> tr:has-text('{cms_content}') >> th >> div.slds-truncate")
+                            self.browser.click(f"div.listContainer >> table >> tbody >> :nth-match(tr:has-text('{cms_content}'), 1) >> th >> :nth-match(div.slds-truncate, 1)")
                         self.shared.wait_and_click(modal_next_button)
                         sleep(2)
 
