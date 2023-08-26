@@ -12,13 +12,15 @@ from qbrix.core.qbrix_robot_base import QbrixRobotTask
 @library(scope='GLOBAL', auto_keywords=True, doc_format='reST')
 class QbrixCMS(QbrixRobotTask):
 
-    """Qbrix CMS Library"""
+    """Qbrix Salesforce CMS and Digital Experiences Keywords Library"""
 
     def go_to_digital_experiences(self):
         """Go to the Digital Experiences App"""
         self.shared.go_to_app("Digital Experiences")
 
     def download_all_content(self):
+
+        """Triggers an Export of all Workspaces within the target Salesforce Org. Note that the export emails go to the admin user."""
 
         # Get Workspace Names
         results = self.salesforceapi.soql_query("SELECT Name FROM ManagedContentSpace WHERE IsDeleted=False")
@@ -877,7 +879,7 @@ class QbrixCMS(QbrixRobotTask):
                         sleep(2)
                         for cms_content_item in cms_collection_content:
 
-                            cms_content = cms_content_item.replace("'", "\\'")
+                            cms_content = cms_content_item.replace("'", "\\u2019")
 
                             self.browser.fill_text("div.activeStep >> input.slds-input", cms_content)
                             sleep(3)
