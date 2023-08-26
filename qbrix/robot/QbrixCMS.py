@@ -66,7 +66,7 @@ class QbrixCMS(QbrixRobotTask):
             # Print the list of files
             for file_name in files:
                 print(f" -> Uploading  {os.path.join(subdirectory_path, file_name)}")
-                self.upload_cms_import_file(file_name, subdirectory)
+                self.upload_cms_import_file(os.path.join(subdirectory_path, file_name), subdirectory)
 
 
 
