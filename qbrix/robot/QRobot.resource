@@ -17,6 +17,7 @@ Library     QbrixCMS.py
 Library     QbrixEinsteinKeywords.py
 Library     QbrixSchedulerKeywords.py
 Library     QbrixSurveysKeywords.py
+Library     QbrixSlack.py
 # PRODUCT - MARKETING
 Library     QbrixMarketingKeywords.py
 # PRODUCT - SALES CLOUD

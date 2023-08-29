@@ -111,6 +111,10 @@ class QBrixUpdater(BaseTask, ABC):
         "IgnoreOptionalUpdates": {
             "description": "When set to True, will ignore updates defined as 'Optional' from the Q Branch Updates. Default is False.",
             "required": False
+        },
+        "SkipDependencyChecks": {
+            "description": "When set to True, will ignore updates to cli and apps.",
+            "required": False
         }
     }
 
@@ -119,6 +123,7 @@ class QBrixUpdater(BaseTask, ABC):
         self.ArchivePassword = self.options["ArchivePassword"] if "ArchivePassword" in self.options else None
         self.UpdateLocation = self.options["UpdateLocation"] if "UpdateLocation" in self.options else None
         self.IgnoreOptionalUpdates = self.options["IgnoreOptionalUpdates"] if "IgnoreOptionalUpdates" in self.options else False
+        self.SkipDependencyChecks = self.options["SkipDependencyChecks"] if "SkipDependencyChecks" in self.options else False
 
     def _check_and_deploy_class(self):
 
@@ -352,7 +357,7 @@ class QBrixUpdater(BaseTask, ABC):
         check_scratch_org_files()
 
         # Checking for Updates to CumulusCI and other tooling - no more than once every 7 days
-        if self._run_infrequent_checks():
+        if not self.SkipDependencyChecks and self._run_infrequent_checks():
 
             # Run Dependency Updates
             self.logger.info(" -> Checking for required QBrix dependencies")
