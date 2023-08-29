@@ -11,9 +11,6 @@ env:
   CUMULUSCI_SERVICE_github: ${{ secrets.QBRIX_CUMULUSCI_SERVICE_github }}
   SFDX_CLIENT_ID: ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
   SFDX_HUB_KEY: ${{ secrets.QBRIX_DEVHUB_PRIVATE_KEY }}
-  TESTIM_KEY: ${{ secrets.QBRIX_TESTIM_KEY }}
-  TESTIM_GRID: ${{ secrets.QBRIX_TESTIM_GRID }}
-  TESTIM_PROJECT: ${{ secrets.QBRIX_TESTIM_PROJECT }}
   DEVHUBCONSUMERKEY: ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
   DEVHUBJWTKEYFILE: devhub.key
   GITHUB_PAT: ${{ secrets.QBRIX_GITHUB_PAT}}
@@ -80,7 +77,7 @@ jobs:
 
       # Install SFDX
       - name: Install SFDX
-        run: npm install --location=global sfdx-cli
+        run: npm install @salesforce/cli --global
 
       # We will use a common app with a common key -
       - name: Create SFDX Session for DEV HUB ACCESS
@@ -277,7 +274,7 @@ jobs:
 
       # Install SFDX
       - name: Install SFDX
-        run: npm install --location=global sfdx-cli
+        run: npm install @salesforce/cli --global
 
       - name: Import the target username via SFDX
         run: export SFDX_ACCESS_TOKEN='${{ needs.target_org_env_build.outputs.target-accesstoken }}' && sfdx force:auth:accesstoken:store --instanceurl ${{ needs.target_org_env_build.outputs.target-instanceurl }} -a ${{ needs.target_org_env_build.outputs.target-org }} --noprompt --json --loglevel DEBUG
@@ -341,17 +338,9 @@ jobs:
       - name: Install Vlocity
         run: npm install --location=global vlocity
 
-      # Install Testim
-      - name: Install Testim
-        run: npm install --location=global @testim/testim-cli
-
       # Install sfdmu
       - name: Install sfdmu
         run: sfdx plugins:install sfdmu
-
-      # Install Shane Plugin - use echo y to bypass prompt
-      - name: Install Shane Plugin
-        run: echo y | sfdx plugins:install shane-sfdx-plugins
 
       - name: Set CCI DevHub Username
         run: cci service connect devhub --username DEVHUB_ACCT
@@ -460,7 +449,7 @@ jobs:
 
       # Install SFDX
       - name: Install SFDX
-        run: npm install --location=global sfdx-cli
+        run: npm install @salesforce/cli --global
 
       - name: Import the target username via SFDX
         run: export SFDX_ACCESS_TOKEN='${{ needs.target_org_env_build.outputs.target-accesstoken }}' && sfdx force:auth:accesstoken:store --instanceurl ${{ needs.target_org_env_build.outputs.target-instanceurl }} -a ${{ needs.target_org_env_build.outputs.target-org }} --noprompt --json --loglevel DEBUG
@@ -524,17 +513,9 @@ jobs:
       - name: Install Vlocity
         run: npm install --location=global vlocity
 
-      # Install Testim
-      - name: Install Testim
-        run: npm install --location=global @testim/testim-cli
-
       # Install sfdmu
       - name: Install sfdmu
         run: sfdx plugins:install sfdmu
-
-      # Install Shane Plugin - use echo y to bypass prompt
-      - name: Install Shane Plugin
-        run: echo y | sfdx plugins:install shane-sfdx-plugins
 
       - name: Set CCI DevHub Username
         run: cci service connect devhub --username DEVHUB_ACCT

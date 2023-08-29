@@ -9,9 +9,6 @@ env:
   CUMULUSCI_SERVICE_github: ${{ secrets.QBRIX_CUMULUSCI_SERVICE_github }}
   SFDX_CLIENT_ID: ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
   SFDX_HUB_KEY: ${{ secrets.QBRIX_DEVHUB_PRIVATE_KEY }}
-  TESTIM_KEY: ${{ secrets.QBRIX_TESTIM_KEY }}
-  TESTIM_GRID: ${{ secrets.QBRIX_TESTIM_GRID }}
-  TESTIM_PROJECT: ${{ secrets.QBRIX_TESTIM_PROJECT }}
   DEVHUBCONSUMERKEY: ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
   DEVHUBJWTKEYFILE: devhub.key
   GITHUB_PAT: ${{ secrets.QBRIX_GITHUB_PAT}}
@@ -37,7 +34,7 @@ jobs:
 
       # Install SFDX
       - name: Install SFDX
-        run: npm install --location=global sfdx-cli
+        run: npm install @salesforce/cli --global
 
       # We will use a common app with a common key -
       - name: Create SFDX Session for QLABS Service Account
@@ -99,7 +96,7 @@ jobs:
       # Install SFDX
       - name: Install SFDX
         if: matrix.targetusername!=''
-        run: npm install --location=global sfdx-cli
+        run: npm install @salesforce/cli --global
 
       # We will use a common app with a common key -
       - name: Create SFDX Session for QLABS Service Account
@@ -178,20 +175,10 @@ jobs:
         if: matrix.targetusername!=''
         run: npm install --location=global vlocity
 
-      # Install Testim
-      - name: Install Testim
-        if: matrix.targetusername!=''
-        run: npm install --location=global @testim/testim-cli
-
       # Install sfdmu
       - name: Install sfdmu
         if: matrix.targetusername!=''
         run: sfdx plugins:install sfdmu
-
-      # Install Shane Plugin - use echo y to bypass prompt
-      - name: Install Shane Plugin
-        if: matrix.targetusername!=''
-        run: echo y | sfdx plugins:install shane-sfdx-plugins
 
       - name: Set CCI DevHub Username
         if: matrix.targetusername!=''
