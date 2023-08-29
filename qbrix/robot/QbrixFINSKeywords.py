@@ -82,10 +82,13 @@ class QbrixFINSKeywords(QbrixRobotTask):
         Enables Business Rules Engine for Financial Services
         """
         self.shared.go_to_setup_admin_page("ActionableSegmentationSettings/home")
-        self.browser.wait_for_elements_state("span:text-is('Actionable Segmentation Settings')", ElementState.visible, '30s')
-        checked = "checked" in self.browser.get_element_states("label:has-text('Disabled')")
-        if not checked:
-            self.browser.click("label:has-text('Disabled')")
-            sleep(5)
-            self.browser.click("button:has-text('Enable')")
-            sleep(5)
+        self.browser.wait_for_elements_state("span:text-is('Actionable Segmentation Settings')", ElementState.visible, '20s')
+        
+        toogle_button = f"label:has-text('Disabled')"
+        if self.shared.wait_on_element(toogle_button):
+            checked = "checked" in self.browser.get_element_states("label:has-text('Disabled')")
+            if not checked:
+                self.browser.click("label:has-text('Disabled')")
+                sleep(5)
+                self.browser.click("button:has-text('Enable')")
+                sleep(5)
