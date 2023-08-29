@@ -20,7 +20,7 @@ class QbrixCPQBilling(QbrixRobotTask):
         self.browser.click(f"{self.shared.iframe_handler()} td.rich-tab-header:text-is('{tab_name}')")
 
         # Return Setting if Found
-        setting_selector = f"{self.shared.iframe_handler()} table.detailList >> tr >> :nth-match(td.dataCol:right-of(th.labelCol:has-text('{setting_name}')), 1) >> {setting_element_type}"
+        setting_selector = f"{self.shared.iframe_handler()} table.detailList:visible >> tr >> :nth-match(td.dataCol:right-of(th.labelCol:has-text('{setting_name}')), 1) >> :nth-match({setting_element_type}, 1)"
         if self.browser.get_element_count(f"{self.shared.iframe_handler()} table.detailList:visible >> tr >> th.labelCol:has-text('{setting_name}')") > 0:
             return self.browser.get_element(setting_selector)
 
@@ -56,7 +56,7 @@ class QbrixCPQBilling(QbrixRobotTask):
     def save_cpq_settings_changes(self):
 
         """Clicks the save button on the CPQ settings page"""
-        self.browser.click(f"{self.shared.iframe_handler()} >> div.sbButtons >> button:text-is('Save')")
+        self.browser.click(f"{self.shared.iframe_handler()} div.sbButtons >> button:text-is('Save')")
 
     def go_to_billing_settings_page(self):
         """Navigate to the Billings settings page"""
