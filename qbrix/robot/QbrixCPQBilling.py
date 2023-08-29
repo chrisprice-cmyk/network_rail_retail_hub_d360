@@ -56,7 +56,7 @@ class QbrixCPQBilling(QbrixRobotTask):
     def save_cpq_settings_changes(self):
 
         """Clicks the save button on the CPQ settings page"""
-        self.browser.click(f"{self.shared.iframe_handler()} div.sbButtons >> button:text-is('Save')")
+        self.browser.click(f"{self.shared.iframe_handler()} div.sbButtons >> input.btn:text-is('Save')")
 
     def go_to_billing_settings_page(self):
         """Navigate to the Billings settings page"""
