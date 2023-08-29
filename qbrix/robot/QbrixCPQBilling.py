@@ -37,7 +37,7 @@ class QbrixCPQBilling(QbrixRobotTask):
 
         """Disables a toggle setting"""
         temp_setting = self.get_cpq_setting_element(tab_name, setting_label)
-        if not self.shared.check_state(temp_setting, "checked"):
+        if self.shared.check_state(temp_setting, "checked"):
             self.browser.click(temp_setting)
 
     def set_cpq_setting_select(self, tab_name, setting_label, setting_value):
