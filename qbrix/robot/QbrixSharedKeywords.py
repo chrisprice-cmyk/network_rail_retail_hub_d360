@@ -829,3 +829,30 @@ class QbrixSharedKeywords():
 
         # Reset Viewport size
         self.browser.set_viewport_size(1920,1080)
+
+    def click_link_for_installed_package(self, package_name, link_label):
+
+        """Loads the Installed Packages table for the connected Salesforce Org and then clicks the link next to the package name"""
+
+        self.go_to_setup_admin_page("ImportedPackage/home")
+        self.browser.wait_until_network_is_idle()
+        self.wait_on_element(f"{self.iframe_handler()} table.list", 30)
+
+        if self.browser.get_elements(f"{self.iframe_handler()} table.list >> tr.dataRow") == 0:
+            raise ValueError("No Packages Installed in the target Salesforce Org")
+
+        action_selector = f"{self.iframe_handler()} table.list >> :nth-match(tr.dataRow:has-text('{package_name}'), 1) >> td.actionColumn >> a:text-is('{link_label}')"
+
+        if self.browser.get_element_count(action_selector) == 0:
+            raise ValueError("Package and Action Combination not found")
+
+        self.browser.click(action_selector)
+
+    def is_option_selected(self, select_element, target_label):
+
+        """Returns True if the given target label for the selected option matches the label of the selected option"""
+
+        existing_list = self.browser.get_select_options(select_element)
+        if len(existing_list) == 0:
+            return False
+        return any(d['label'] == target_label and d["selected"] for d in existing_list)

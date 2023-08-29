@@ -22,6 +22,7 @@ Library     QbrixSlack.py
 Library     QbrixMarketingKeywords.py
 # PRODUCT - SALES CLOUD
 Library     QbrixSalesCloudKeywords.py
+Library     QbrixCPQBilling.py
 # PRODUCT - SERVICE CLOUD AND SFS
 Library     QbrixServiceKeywords.py
 Library     QbrixFieldServiceKeywords.py
