@@ -11,9 +11,6 @@ env:
   CUMULUSCI_SERVICE_github: ${{ secrets.QBRIX_CUMULUSCI_SERVICE_github }}
   SFDX_CLIENT_ID: ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
   SFDX_HUB_KEY: ${{ secrets.QBRIX_DEVHUB_PRIVATE_KEY }}
-  TESTIM_KEY: ${{ secrets.QBRIX_TESTIM_KEY }}
-  TESTIM_GRID: ${{ secrets.QBRIX_TESTIM_GRID }}
-  TESTIM_PROJECT: ${{ secrets.QBRIX_TESTIM_PROJECT }}
   DEVHUBCONSUMERKEY: ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
   DEVHUBJWTKEYFILE: devhub.key
   GITHUB_PAT: ${{ secrets.QBRIX_GITHUB_PAT}}
@@ -27,6 +24,8 @@ env:
   SF_USE_PROGRESS_BAR: false
   CUMULUSCI_SERVICE_metadeploy: ${{ secrets.QBRIX_CUMULUSCI_SERVICE_METADEPLOY}}
   AUTO_PUBLISH_TO_METADEPLOY: false
+  mixpanelsignature: ${{ secrets.mixpanelsignature }}
+  mixpanelidentifier: ${{ secrets.mixpanelidentifier }}
 
 jobs:
   collection_deployment_steps:
@@ -65,7 +64,7 @@ jobs:
       target-org: ${{ steps.extrattargetorg.outputs.value }}
       target-accesstoken: ${{ steps.extrattargetaccesstoken.outputs.value }}
       target-instanceurl: ${{ steps.extrattargetinstanceurl.outputs.value }}
-      target-auto-publish-metadeploy: ${{ steps.extrattargetinstanceurl.outputs.value }}
+      target-auto-publish-metadeploy: ${{ steps.extractautopublishmetadeploy.outputs.value }}
     steps:
       - uses: actions/checkout@v3
 
@@ -78,7 +77,7 @@ jobs:
 
       # Install SFDX
       - name: Install SFDX
-        run: npm install --location=global sfdx-cli
+        run: npm install @salesforce/cli --global
 
       # We will use a common app with a common key -
       - name: Create SFDX Session for DEV HUB ACCESS
@@ -120,6 +119,8 @@ jobs:
 
       - name: extract qlabs config setting
         run: |
+          echo '${{ steps.qlab_config_settings.outputs.response }}' > qlabs_settings.json
+          more qlabs_settings.json
           echo ${{ steps.qlab_config_settings.outputs.response }}
           echo ${{ fromJson(steps.qlab_config_settings.outputs.response).templateid }}
           echo "::set-env name=TEMPLATEID::${{ fromJson(steps.qlab_config_settings.outputs.response).templateid }}"
@@ -212,6 +213,16 @@ jobs:
         with:
           cmd: jq '.instance_url' targetorg.json -r
 
+      - name: extract the metadeploy publish qlabs setting if we will autopublish this to metadeploy
+        uses: sergeysova/jq-action@v2
+        id: extractautopublishmetadeploy
+        with:
+          cmd: jq '.auto_publish_metadeploy' qlabs_settings.json -r
+
+      - name: set output extract metadeploy publish
+        id: loadtautopublishmetadeploy
+        run: echo "target-auto-publish-metadeploy=${{steps.extractautopublishmetadeploy.outputs.value }}" >> $GITHUB_OUTPUT
+
       - name: set qlabs setting if we will autopublish this to metadeploy
         id: auto_publish_metadeploy
         run: echo "target-auto-publish-metadeploy=${AUTO_PUBLISH_TO_METADEPLOY}" >> $GITHUB_OUTPUT
@@ -263,7 +274,7 @@ jobs:
 
       # Install SFDX
       - name: Install SFDX
-        run: npm install --location=global sfdx-cli
+        run: npm install @salesforce/cli --global
 
       - name: Import the target username via SFDX
         run: export SFDX_ACCESS_TOKEN='${{ needs.target_org_env_build.outputs.target-accesstoken }}' && sfdx force:auth:accesstoken:store --instanceurl ${{ needs.target_org_env_build.outputs.target-instanceurl }} -a ${{ needs.target_org_env_build.outputs.target-org }} --noprompt --json --loglevel DEBUG
@@ -327,17 +338,9 @@ jobs:
       - name: Install Vlocity
         run: npm install --location=global vlocity
 
-      # Install Testim
-      - name: Install Testim
-        run: npm install --location=global @testim/testim-cli
-
       # Install sfdmu
       - name: Install sfdmu
         run: sfdx plugins:install sfdmu
-
-      # Install Shane Plugin - use echo y to bypass prompt
-      - name: Install Shane Plugin
-        run: echo y | sfdx plugins:install shane-sfdx-plugins
 
       - name: Set CCI DevHub Username
         run: cci service connect devhub --username DEVHUB_ACCT
@@ -379,7 +382,6 @@ jobs:
           data: '{"qbrixname": "${{ github.repository }}-${{ env.BUILD_SUFFIX }}", "buildstatus": "Failed", "details": "${{ steps.cci_failure_details.outputs.stdout }}" }'
           timeout: 30000
 
-
   qbrix_metadeploy_publish:
     needs: [qbrix_deployments, target_org_env_build]
     runs-on: ubuntu-latest
@@ -387,44 +389,44 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Disable TCP/UDP Offloading (Linux)
-        if: needs.target_org_env_build.outputs.target-auto-publish-metadeploy != 'false' && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        if: (needs.target_org_env_build.outputs.target-auto-publish-metadeploy == 'true' && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'))
         shell: bash
         run: sudo ethtool -K eth0 tx off rx off
 
         #install Python Test Resources
       - name: Install Python Test Resources
-        if: needs.target_org_env_build.outputs.target-auto-publish-metadeploy != 'false' && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        if: (needs.target_org_env_build.outputs.target-auto-publish-metadeploy == 'true' && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'))
         run: sudo apt install python3-testresources
 
       #Setup PyOpenSSL and keyrings.alt
       - name: Setup PyOpenSSL
-        if: needs.target_org_env_build.outputs.target-auto-publish-metadeploy != 'false' && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        if: (needs.target_org_env_build.outputs.target-auto-publish-metadeploy == 'true' && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'))
         run: |
           pip install pyopenssl --upgrade
           pip install keyrings.alt
 
       #install CumumulsCI
       - name: Install CumulusCI
-        if: needs.target_org_env_build.outputs.target-auto-publish-metadeploy != 'false' && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        if: (needs.target_org_env_build.outputs.target-auto-publish-metadeploy == 'true' && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'))
         run: pip install cumulusci
 
       #install playright via CCI
       - name: Install Playwright via CCI
-        if: needs.target_org_env_build.outputs.target-auto-publish-metadeploy != 'false' && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        if: (needs.target_org_env_build.outputs.target-auto-publish-metadeploy == 'true' && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'))
         run: cci robot install_playwright
 
       #display cci version
       - name: cci version
-        if: needs.target_org_env_build.outputs.target-auto-publish-metadeploy != 'false' && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        if: (needs.target_org_env_build.outputs.target-auto-publish-metadeploy == 'true' && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'))
         run: cci version
 
       #CCI Service List
       - name: cci service list
-        if: needs.target_org_env_build.outputs.target-auto-publish-metadeploy != 'false' && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        if: (needs.target_org_env_build.outputs.target-auto-publish-metadeploy == 'true' && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'))
         run: cci service list
 
       - name: metadeploy publish - if applicable
-        if: needs.target_org_env_build.outputs.target-auto-publish-metadeploy != 'false' && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        if: (needs.target_org_env_build.outputs.target-auto-publish-metadeploy == 'true' && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'))
         uses: nick-fields/retry@v2
         with:
           timeout_minutes: 1440
@@ -447,7 +449,7 @@ jobs:
 
       # Install SFDX
       - name: Install SFDX
-        run: npm install --location=global sfdx-cli
+        run: npm install @salesforce/cli --global
 
       - name: Import the target username via SFDX
         run: export SFDX_ACCESS_TOKEN='${{ needs.target_org_env_build.outputs.target-accesstoken }}' && sfdx force:auth:accesstoken:store --instanceurl ${{ needs.target_org_env_build.outputs.target-instanceurl }} -a ${{ needs.target_org_env_build.outputs.target-org }} --noprompt --json --loglevel DEBUG
@@ -511,17 +513,9 @@ jobs:
       - name: Install Vlocity
         run: npm install --location=global vlocity
 
-      # Install Testim
-      - name: Install Testim
-        run: npm install --location=global @testim/testim-cli
-
       # Install sfdmu
       - name: Install sfdmu
         run: sfdx plugins:install sfdmu
-
-      # Install Shane Plugin - use echo y to bypass prompt
-      - name: Install Shane Plugin
-        run: echo y | sfdx plugins:install shane-sfdx-plugins
 
       - name: Set CCI DevHub Username
         run: cci service connect devhub --username DEVHUB_ACCT

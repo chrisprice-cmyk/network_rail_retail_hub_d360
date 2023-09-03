@@ -331,7 +331,7 @@ class CreateUser(BaseSalesforceApiTask, NGOrgConfig, ABC):
             )
             submitted_dict.update({"Alias": generated_alias})
         else:
-            trimmed_alias = str(submitted_dict.get("Alias"))[0:7]
+            trimmed_alias = str(submitted_dict.get("Alias"))[0:8]
             submitted_dict.update({"Alias": trimmed_alias})
 
         if "DefaultGroupNotificationFrequency" not in submitted_dict.keys():

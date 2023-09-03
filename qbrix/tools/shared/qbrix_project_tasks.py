@@ -404,6 +404,28 @@ def update_file_api_versions(project_api_version) -> bool:
     return True
 
 
+def update_project_api_versions(new_api_version, old_api_version, target_org_alias, skip_deploy):
+
+    """Automates the update project process"""
+
+    if not new_api_version:
+        log.error("No new API version provided. Skipping task.")
+        return False
+
+    # deploy qbrix to scratch org, well if skip deploy is not "y"
+    if skip_deploy.lower() != "y":
+        log.info(f" ... deploying qbrix to org {target_org_alias}, please be patient, results will show when it's done, depends on how large your qbrix is, this process could take mintues to hours")
+        deploy_output, deploy_error = run_command(f"cci flow run deploy_qbrix --org {target_org_alias}")
+        log.info(deploy_output)
+
+    log.info(f" ... retrieving metadata in api version {new_api_version}, please be patient, results will show when it's done, this should be much quicker than the deploy command")
+    pull_output, pull_error = run_command(f"cci task run dx --command 'force:source:retrieve -p force-app -a {new_api_version}' --org {target_org_alias}")
+    log.info(pull_output)
+    replace_file_text("cumulusci.yml", f"api_version: \"{old_api_version}\"", f"api_version: \"{new_api_version}\"")
+
+    check_api_versions(new_api_version)
+
+
 def upsert_gitignore_entries(list_entries) -> bool:
     """
     Upserts a list of given gitignore patterns in the .gitignore file within the project. Each pattern is checked and if it is missing, it is added. If it exists but has been commented out, it will uncomment it.
@@ -1446,3 +1468,25 @@ def check_and_update_setting(xml_file, settings_name, setting_name, setting_valu
     xml_content = '<?xml version="1.0" encoding="UTF-8"?>\n' + ET.tostring(root, encoding="unicode")
     with open(xml_file, "w", encoding="utf-8") as file:
         file.write(xml_content)
+
+def convert_to_18_char(sf_id):
+
+    """Converts a 15 character salesforce ID to 18 Characters"""
+
+    if len(sf_id) == 18:
+        return sf_id
+    if len(sf_id) != 15:
+        raise ValueError("Salesforce ID must be either 15 or 18 characters in length.")
+
+    chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+    def calculate_position(segment):
+        position = 0
+        for idx, char in enumerate(segment):
+            if 'A' <= char <= 'Z':
+                position += 2 ** idx
+        return chars[position]
+
+    suffix = ''.join(calculate_position(sf_id[i:i+5]) for i in range(0, 15, 5))
+
+    return sf_id + suffix

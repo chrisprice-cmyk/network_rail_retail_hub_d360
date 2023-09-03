@@ -12,6 +12,7 @@ from qbrix.tools.shared.qbrix_project_tasks import (
     delete_standard_fields, get_qbrix_repo_url, org_feature_checker,
     remove_empty_translations, replace_file_text, source_org_feature_checker,
     update_file_api_versions, upsert_gitignore_entries)
+from qbrix.tools.health.qbrix_project_checks import update_salesforce_cli, check_python_library_dependencies, cumulusci_update_check, check_and_update_nodejs
 
 log = init_logger()
 
@@ -151,6 +152,15 @@ class HealthChecker(BaseTask, ABC):
 
         # Check Permission Set Group Files are set to Outdated
         check_permset_group_files()
+
+        self.logger.info(" -> Check Complete!")
+
+        self.logger.info("\nHealth Check: Checking local dependencies")
+
+        check_and_update_nodejs()
+        update_salesforce_cli()
+        cumulusci_update_check()
+        check_python_library_dependencies()
 
         self.logger.info(" -> Check Complete!")
 

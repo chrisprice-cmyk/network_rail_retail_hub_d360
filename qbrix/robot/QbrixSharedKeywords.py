@@ -5,8 +5,10 @@ from time import sleep
 from typing import Optional
 
 from Browser import ElementState, SelectAttribute
+from Browser.utils.data_types import MouseButtonAction
 from cumulusci.robotframework.CumulusCI import CumulusCI
 from cumulusci.robotframework.SalesforceAPI import SalesforceAPI
+from qbrix.tools.shared.qbrix_authentication import get_secure_setting
 from robot.api.deco import library
 from robot.libraries.BuiltIn import BuiltIn
 
@@ -214,6 +216,12 @@ class QbrixSharedKeywords():
         self.browser.click(f"{self.iframe_handler()} input.btn:has-text('Save')")
         sleep(1)
 
+    def get_secure_setting(self, secure_setting_name):
+
+        """Returns the value for a secure setting held in Q Labs, returns None if not found"""
+
+        return get_secure_setting(secure_setting_name)
+
     # ------------------
     # LEX FUNCTIONS
     # ------------------
@@ -337,6 +345,66 @@ class QbrixSharedKeywords():
 
         iframe_selector = ":nth-match(iframe,1) >>> " if uses_iframe else ""
         self.browser.wait_for_elements_state(f"{iframe_selector}{title_element_type}:text-is('{page_title}')", ElementState.visible, wait_time)
+
+    def wait_and_click(self, selector:str = None, timeout:str = "30", post_click_sleep: int = 1):
+
+        """Waits for an element to become visible and enabled. Then clicks the element.
+
+        Args:
+            selector (str): Playwright selector for the element
+            timeout (str): (Optional) Duration in seconds as a string. Defaults to 30 seconds
+            post_click_sleep (int): (Optional) The amount of time in seconds to wait after the element is clicked. The default is 1 second.
+        """
+
+        if not selector:
+            return
+
+        sleep(1)
+        self.browser.wait_for_elements_state(selector, ElementState.visible, f'{timeout}s')
+        self.browser.wait_for_elements_state(selector, ElementState.enabled, f'{timeout}s')
+        self.browser.click(selector)
+        sleep(post_click_sleep)
+
+    def check_state(self, selector:str = None, state:str = "visible"):
+
+        """Checks if an element state is equal to a given state within a certain timeout
+
+        Args:
+            selector (str): Playwright selector for the element
+            state (str): (Optional) Element state you are checking for. Defaults to 'visible'
+        Returns:
+            bool: True if given state is in element states, False if not or on error.
+        """
+
+        try:
+            return state in self.browser.get_element_states(selector)
+        except Exception as e:
+            print(e)
+            return False
+
+    def wait_on_element(self, selector: str = None, timeout: int = 15):
+
+        """Waits on a given element to be in the page
+        Args:
+            selector (str): Playwright selector for the element
+            timeout (int): (Optional) Total seconds until wait times out. Defaults to 15 seconds.
+        Returns:
+            bool: True when element is found on page, False when timeout is reached and element is not found.
+        """
+
+        count = 0
+        print(f"Waiting on element selector {selector}...")
+        while count <= timeout:
+            if self.browser.get_element_count(selector) >= 1:
+                print("Element Found!")
+                return True
+            if "visible" in self.browser.get_element_states(selector):
+                print("Element found via state 'visible'!")
+                return True
+            sleep(1)
+            count += 1
+        print("Element Was Not Found")
+        return False
 
     # ------------------
     # SHARED FUNCTIONS
@@ -731,3 +799,60 @@ class QbrixSharedKeywords():
         with open(f"temp.log", "a") as tmpFile:
             tmpFile.write(f"{dt_string}::{data}\n")
             tmpFile.close()
+
+    def move_app_to_start_of_app_menu(self, app_name):
+
+        """Moves a given app to the start of the app menu"""
+
+        # Increase Browser Viewport Size
+        # We do this as playwright thinks all tiles are visible even when they are not
+        self.browser.set_viewport_size(1440, 2560)
+
+        # Go To Known App which is not Console Layout
+        self.go_to_app("Sales")
+
+        # Open App Launcher - Sleep Needed to Allow Tiles to load
+        self.browser.wait_for_elements_state("div.slds-icon-waffle", ElementState.visible, "10s")
+        self.browser.click("div.slds-icon-waffle")
+        self.browser.wait_for_elements_state("button.slds-button:text-is('View All')", ElementState.visible, "10s")
+        self.browser.click("button.slds-button:text-is('View All')")
+        sleep(3)
+
+        # Click on the App Tile for the given App
+        app_tile_selector = f"div.slds-app-launcher__tile-body >> p.slds-truncate:text-is('{app_name}')"
+        self.browser.hover(app_tile_selector)
+        self.browser.mouse_button(MouseButtonAction.down)
+
+        # Move to place of first tile
+        self.browser.mouse_move_relative_to(":nth-match(div.slds-app-launcher__tile-body, 1)")
+        self.browser.mouse_button(MouseButtonAction.up)
+
+        # Reset Viewport size
+        self.browser.set_viewport_size(1920,1080)
+
+    def click_link_for_installed_package(self, package_name, link_label):
+
+        """Loads the Installed Packages table for the connected Salesforce Org and then clicks the link next to the package name"""
+
+        self.go_to_setup_admin_page("ImportedPackage/home")
+        self.browser.wait_until_network_is_idle()
+        self.wait_on_element(f"{self.iframe_handler()} table.list", 30)
+
+        if self.browser.get_elements(f"{self.iframe_handler()} table.list >> tr.dataRow") == 0:
+            raise ValueError("No Packages Installed in the target Salesforce Org")
+
+        action_selector = f"{self.iframe_handler()} table.list >> :nth-match(tr.dataRow:has-text('{package_name}'), 1) >> td.actionColumn >> a:text-is('{link_label}')"
+
+        if self.browser.get_element_count(action_selector) == 0:
+            raise ValueError("Package and Action Combination not found")
+
+        self.browser.click(action_selector)
+
+    def is_option_selected(self, select_element, target_label):
+
+        """Returns True if the given target label for the selected option matches the label of the selected option"""
+
+        existing_list = self.browser.get_select_options(select_element)
+        if len(existing_list) == 0:
+            return False
+        return any(d['label'] == target_label and d["selected"] for d in existing_list)

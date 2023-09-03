@@ -10,12 +10,16 @@ from os.path import exists
 from pathlib import Path
 
 import requests
+from cumulusci.core.config import UniversalConfig
 from cumulusci.cli.utils import (get_cci_upgrade_command,
                                  get_installed_version,
                                  get_latest_final_version, timestamp_file)
+from cumulusci.core.config import UniversalConfig
 from cumulusci.core.tasks import BaseTask
 
-from qbrix.tools.shared.qbrix_cci_tasks import run_cci_task
+from qbrix.tools.health.qbrix_project_checks import (
+    check_and_update_nodejs, check_python_library_dependencies,
+    cumulusci_update_check, update_salesforce_cli, check_scratch_org_files)
 from qbrix.tools.shared.qbrix_project_tasks import (download_and_unzip,
                                                     replace_file_text,
                                                     upsert_gitignore_entries)
@@ -48,7 +52,8 @@ Q_BRIX_CUSTOM_TASKS = {
     'list_qbrix': 'qbrix.salesforce.qbrix_salesforce_tasks.ListQBrix',
     'q_update_dependencies': 'qbrix.salesforce.qbrix_salesforce_tasks.QUpdateDependencies',
     'mass_qbrix_update': 'qbrix.tools.utils.qbrix_mass_ops.MassFileOps',
-    'precommit_check': 'qbrix.git.hooks_ext.pre_commit.PreCommit'
+    'precommit_check': 'qbrix.git.hooks_ext.pre_commit.PreCommit',
+    'qbrix_robot_test': 'qbrix.tools.utils.qbrix_launch_test_robot.QRobotTestCapture'
 }
 
 # Entires which are needed in .gitignore
@@ -106,6 +111,10 @@ class QBrixUpdater(BaseTask, ABC):
         "IgnoreOptionalUpdates": {
             "description": "When set to True, will ignore updates defined as 'Optional' from the Q Branch Updates. Default is False.",
             "required": False
+        },
+        "SkipDependencyChecks": {
+            "description": "When set to True, will ignore updates to cli and apps.",
+            "required": False
         }
     }
 
@@ -114,6 +123,7 @@ class QBrixUpdater(BaseTask, ABC):
         self.ArchivePassword = self.options["ArchivePassword"] if "ArchivePassword" in self.options else None
         self.UpdateLocation = self.options["UpdateLocation"] if "UpdateLocation" in self.options else None
         self.IgnoreOptionalUpdates = self.options["IgnoreOptionalUpdates"] if "IgnoreOptionalUpdates" in self.options else False
+        self.SkipDependencyChecks = self.options["SkipDependencyChecks"] if "SkipDependencyChecks" in self.options else False
 
     def _check_and_deploy_class(self):
 
@@ -176,6 +186,12 @@ class QBrixUpdater(BaseTask, ABC):
         update_path = os.path.join(update_dir, folder_path)
         shutil.copytree(src=update_path, dst=folder_path, dirs_exist_ok=True)
 
+    def _update_file(self, source_file_path, target_file_path):
+
+        """Updates an individual file"""
+
+        shutil.copy(source_file_path, target_file_path)
+
     def _update_folder_indirect_source(self, folder_path, update_dir, remove_existing):
 
         """Copies content from an different source root to target"""
@@ -236,6 +252,35 @@ class QBrixUpdater(BaseTask, ABC):
             error_output = update_error.stderr.strip()
             self.logger.error(" -X Error executing command to update SalesforceDX: %s", error_output)
 
+    def _remove_pycache(self, start_path:str = '.'):
+        for dirpath, dirnames, _ in os.walk(start_path):
+            if '__pycache__' in dirnames:
+                pycache_path = os.path.join(dirpath, '__pycache__')
+                shutil.rmtree(pycache_path)
+                self.logger.info('Removed %s', pycache_path)
+
+    def _run_infrequent_checks(self):
+        timestamp_file_path = os.path.join(UniversalConfig.default_cumulusci_dir(), "qbrix_update_timestamp")
+
+        if os.path.exists(timestamp_file_path):
+            # Read the timestamp from the file and convert it to a float
+            with open(timestamp_file_path, 'r', encoding='utf-8') as stamp_file:
+                timestamp = float(stamp_file.read() or 0)
+
+            # Calculate the time delta since the timestamp
+            delta = time.time() - timestamp
+
+            # Check if the delta is greater than 5 days (5 * 24 * 60 * 60 seconds)
+            if delta > 5 * 24 * 60 * 60:
+                os.remove(timestamp_file_path)
+                return True
+            else:
+                return False
+        else:
+            with open(timestamp_file_path, 'w', encoding='utf-8') as stamp_file:
+                stamp_file.write(str(time.time()))
+            return True
+
     def _run_task(self):
 
         """" Updates the Q brix Project with the latest files from xDO-Template main branch """
@@ -253,6 +298,7 @@ class QBrixUpdater(BaseTask, ABC):
             # PARAM1 = The folder as if it was from the root path
             # PARAM2 = The location where the source files should be located
             # PARAM3 = If True, it will delete the whole directory in project before updating
+            self._update_file(".qbrix/Update/xDO-Template-main/playwright.config.ts", "./playwright.config.ts")
             self._update_folder("qbrix", ".qbrix/Update/xDO-Template-main", False)
             self._update_folder(".vscode", ".qbrix/Update/xDO-Template-main", False)
             self._update_folder(".github", ".qbrix/Update/xDO-Template-main", False)
@@ -274,7 +320,8 @@ class QBrixUpdater(BaseTask, ABC):
 
         if not filecmp.cmp(".qbrix/qbrix_update.py", "qbrix/tools/utils/qbrix_update.py"):
             self.logger.info(" -> Update Task script has been changed, running update again...")
-            run_cci_task("update_qbrix")
+            self._remove_pycache()
+            subprocess.run("cci task run update_qbrix", shell=True, check=True)
 
         if os.path.exists("qbrix/qbrix_update.py"):
             os.remove("qbrix/qbrix_update.py")
@@ -298,22 +345,28 @@ class QBrixUpdater(BaseTask, ABC):
         self.logger.info(" -> Checking .gitignore file in repo")
         upsert_gitignore_entries(Q_BRIX_GITIGNORE_ENTRIES)
 
+        # Remove PyCache directories
+        self._remove_pycache()
+
+        # Remove Old Update Script if present
+        if os.path.exists(os.path.join("scripts", "qbrix", "UpdateVSCodeTasks.sh")):
+            self.logger.info(" -> Removing old update script")
+            os.remove(os.path.join("scripts", "qbrix", "UpdateVSCodeTasks.sh"))
+
+        self.logger.info(" -> Checking for Trialforce Templates in scratch org files:")
+        check_scratch_org_files()
+
         # Checking for Updates to CumulusCI and other tooling - no more than once every 7 days
-        check = True
-
-        with timestamp_file() as stamp_file:
-            timestamp = float(stamp_file.read() or 0)
-        delta = time.time() - timestamp
-        check = delta > 604800
-
-        if check:
+        if not self.SkipDependencyChecks and self._run_infrequent_checks():
 
             # Run Dependency Updates
-            self._run_cumulusci_update()
-            self._run_salesforcedx_update()
+            self.logger.info(" -> Checking for required QBrix dependencies")
+            check_and_update_nodejs()
+            update_salesforce_cli()
+            cumulusci_update_check()
 
             # Checking for required py libraries for QBrix
             self.logger.info(" -> Checking for required QBrix libraries")
-            run_cci_task("command", org_name=None, command="pip install pandas pandasql")
+            check_python_library_dependencies()
 
         self.logger.info("Update Complete!")

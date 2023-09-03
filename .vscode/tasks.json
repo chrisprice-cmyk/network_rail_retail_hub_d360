@@ -576,6 +576,21 @@
         "showReuseMessage": false,
         "panel": "shared"
       }
+    },
+    {
+      "label": "Q BRIX [ROBOT]: Launch Q Robot Sandbox",
+      "type": "shell",
+      "command": "cci task run qbrix_robot_test --org ${input:OrgAlias} --start_url ${input:RobotStartURL}",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "shared"
+      }
     }
   ],
   "inputs": [
@@ -661,6 +676,12 @@
       "id": "DependencyFlow",
       "description": "Enter the name of the cci flow you want to use to determine your depencencies:",
       "default": "deploy_qbrix",
+      "type": "promptString"
+    },
+    {
+      "id": "RobotStartURL",
+      "description": "Enter the relevent start url for the robot session. Default is setup home /lightning/setup/SetupOneHome/home:",
+      "default": "/lightning/setup/SetupOneHome/home",
       "type": "promptString"
     }
   ]

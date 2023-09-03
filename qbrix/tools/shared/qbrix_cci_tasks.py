@@ -99,6 +99,9 @@ def run_cci_task(task_name: str, org_name: str = None, **options) -> bool:
     run_cci_task('deploy', 'dev', path='force-app')
     """
 
+    _org = None
+    _project_config = None
+
     if not org_name:
         org_name = "dev"
 

@@ -1,8 +1,8 @@
 *** Settings ***
-Resource            qbrix/robot/QRobot.robot
+Resource            ../../../qbrix/robot/QRobot.resource
 
-Suite Setup         Run keyword    
-...                    QRobot.Open Q Browser
+Suite Setup         Run keyword
+...                     QRobot.Open Q Browser
 Suite Teardown      QRobot.Close Q Browser
 
 
@@ -13,4 +13,4 @@ Validate Qbrix
     ...    1
     ...    continueonfail=True
     ...    datatag=Simple Query validation of the Organization Object
-    #Validate With Testim    Validate_Hello_Login
+    # Validate With Testim    Validate_Hello_Login

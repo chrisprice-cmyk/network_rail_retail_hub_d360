@@ -14,7 +14,8 @@ from qbrix.tools.shared.qbrix_project_tasks import (assign_prefix_to_files,
                                                     delete_standard_fields,
                                                     generate_stack_view,
                                                     push_changes,
-                                                    update_file_api_versions)
+                                                    update_file_api_versions,
+                                                    update_project_api_versions)
 
 
 class MassFileOps(BaseTask, ABC):
@@ -39,6 +40,7 @@ class MassFileOps(BaseTask, ABC):
             [6]     Permission Set Generator : Generate Permission Set for Objects, Fields, Tabs and Classes in your project.\n
             [7]     Q Brix Stack Viewer (BETA): Generates a view of the metadata deployed by the whole stack of Q Brix.\n
             [8]     SAM CRM Analytics Migration Tool (v0.4.1 - BETA): Can be used to migrate CRMA Assets from one Salesforce Org to Another\n
+            [9]     Update Project API\n
             [r]     Reset Menu
             [e]     Exit
             """
@@ -54,6 +56,38 @@ class MassFileOps(BaseTask, ABC):
         )
         update_file_api_versions(self.project_config.project__package__api_version)
         self.logger.info("Update Complete. Please Check Your Code Deploys!")
+
+    def _run_update_project_api(self):
+        """Run Update Project API Utility"""
+        task_docs = """
+    Run Update Project API Utility
+    update api version of the whole project by doing these:
+     - deploy_qbrix to scratch org
+     - pull all force-app folder down with new api version
+     - update the api version in cumulusci.yml and sfdx-project.json
+    """
+        self.logger.info(task_docs)
+        old_api_version = self.project_config.project__package__api_version
+        new_api_version = input("Please enter the new api version, eg, 58 (Required): ")
+        try:
+            new_api_version = int(float(new_api_version))
+        except ValueError:
+            self.logger.error("Please provide an valid api number, an integer value that's larger than current project api version")
+            return False
+        new_api_version = f"{str(new_api_version)}.0"
+
+        if not new_api_version or not new_api_version.isnumeric or float(new_api_version) <= float(self.project_config.project__package__api_version):
+            self.logger.error("Please provide an valid api number, an integer value that's larger than current project api version")
+            return False
+
+        target_org_alias = input("Please enter the alias of the scratch org (Default: dev): ") or "dev"
+        skip_deploy = input("If you already had a fully deploy to your scratch org previously, you can skip the deploy to save some time, default N (y/N): ") or "n"
+
+        self.logger.info(f"Updating Project API from {old_api_version} to {new_api_version}")
+
+        update_project_api_versions(new_api_version, old_api_version, target_org_alias, skip_deploy)
+
+        self.logger.debug("Update Complete. PLEASE CHECK YOUR CODE CHANGES AND TEST DEPLOYS BEFORE COMMIT !!! \nthere will be a lot of changes that you want to discard\nespecially check record types and custom fields, the update pull will often add tons of picklist values in record types and sometimes pull extra custom fields to objects")
 
     def _run_remove_standard_fields_utility(self):
         """Run Core Field Removal Utility"""
@@ -220,6 +254,9 @@ class MassFileOps(BaseTask, ABC):
 
         elif option.lower() == "8":
             migrate()
+
+        elif option.lower() == "9":
+            self._run_update_project_api()
 
         elif option.lower() == "e":
             self.logger.info("Exiting Q Brix Mass Operations Utility")
