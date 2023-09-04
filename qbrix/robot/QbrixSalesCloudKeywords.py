@@ -42,7 +42,9 @@ class QbrixSalesCloudKeywords(QbrixRobotTask):
         """ Enables Sales Engagement """
 
         self.shared.go_to_setup_admin_page("SalesEngagement/home", 5)
-
+        sleep(5)
+        self.browser.click("li:has-text('Automate') >> a.slds-tabs_default__link")
+        sleep(1)
         button_selector = f"{self.shared.iframe_handler()} button.slds-button:has-text('Set Up and Enable Sales Engagement')"
 
         if "visible" in self.browser.get_element_states(button_selector):
