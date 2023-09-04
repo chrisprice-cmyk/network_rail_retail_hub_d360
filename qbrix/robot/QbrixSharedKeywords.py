@@ -492,7 +492,7 @@ class QbrixSharedKeywords():
                 self.browser.click(f"iframe >>> .custom-alert-button:has-text('Legacy chat')")
 
 
-
+        sleep(5)
         visible = "visible" in self.browser.get_element_states(
             f"iframe >>> .listRelatedObject:has-text('{buttonName}')")
         if not visible:
