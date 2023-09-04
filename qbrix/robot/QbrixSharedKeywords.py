@@ -490,6 +490,7 @@ class QbrixSharedKeywords():
                 self.browser.click(f"iframe >>> .custom-alert-checkbox-label:has-text('legacy chat')")
                 sleep(2)
                 self.browser.click(f"iframe >>> .custom-alert-button:has-text('Legacy chat')")
+                sleep(2)
 
 
         sleep(5)
