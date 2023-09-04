@@ -30,6 +30,7 @@ class QbrixMarketingKeywords(QbrixRobotTask):
 
     def enable_pardot_app(self):
         """ Enables Pardot Connected App Settings"""
+        iframe_selector = self.shared.iframe_handler()
         self.shared.go_to_setup_admin_page("ConnectedApplication/home")
         self.browser.click("iframe >>> a:text-is('b2bma_canvas')")
         sleep(5)
@@ -37,8 +38,8 @@ class QbrixMarketingKeywords(QbrixRobotTask):
         sleep(5)
         self.browser.select_options_by("iframe >>> #userpolicy", SelectAttribute.text,
                                        "Admin approved users are pre-authorized")
-        self.browser.wait_for_elements_state(f"{iframe_selector} .btn:has-text('Ok')", ElementState.visible, "15s")
-        self.browser.click(f"{iframe_selector} .btn:has-text('Ok')")
+        self.browser.wait_for_elements_state("iframe >>> .btn:has-text('Ok')", ElementState.visible, "20s")
+        self.browser.click("iframe >>> .btn:has-text('Ok')")
         sleep(4)
         self.browser.click("iframe >>> .btn:has-text('Save')")
         sleep(1)
