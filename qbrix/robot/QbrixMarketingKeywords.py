@@ -45,6 +45,7 @@ class QbrixMarketingKeywords(QbrixRobotTask):
 
     def create_pardot_template(self):
         """ Enables Pardot Connected App Settings"""
+        iframe_selector = self.shared.iframe_handler()
         self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/o/EmailTemplate/home")
         self.browser.wait_for_elements_state("a:has-text('New Email Template')", ElementState.visible, '30s')
         self.browser.click("a:has-text('All Email Templates')")
