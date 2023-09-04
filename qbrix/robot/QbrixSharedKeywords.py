@@ -482,6 +482,17 @@ class QbrixSharedKeywords():
         self.go_to_setup_admin_page("LiveChatButtonSettings/home")
         self.browser.wait_for_elements_state("iframe >>> h1:has-text('Chat Buttons')", ElementState.visible, '60s')
         sleep(10)
+
+        visible = "visible" in self.browser.get_element_states(f"iframe >>> .custom-alert-checkbox-label:has-text('legacy chat')")
+        if visible:
+            checked = "checked" in self.browser.get_element_states(f"iframe >>> .custom-alert-checkbox-label:has-text('legacy chat')")
+            if not checked:
+                self.browser.click(f"iframe >>> .custom-alert-checkbox-label:has-text('legacy chat')")
+                sleep(2)
+                self.browser.click(f"iframe >>> .custom-alert-button:has-text('Legacy chat')")
+
+
+
         visible = "visible" in self.browser.get_element_states(
             f"iframe >>> .listRelatedObject:has-text('{buttonName}')")
         if not visible:
