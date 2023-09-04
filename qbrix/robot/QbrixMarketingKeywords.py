@@ -38,8 +38,10 @@ class QbrixMarketingKeywords(QbrixRobotTask):
         sleep(5)
         self.browser.select_options_by("iframe >>> #userpolicy", SelectAttribute.text,
                                        "Admin approved users are pre-authorized")
-        self.browser.wait_for_elements_state("iframe >>> .btn:has-text('Ok')", ElementState.visible, "20s")
-        self.browser.click("iframe >>> .btn:has-text('Ok')")
+        sleep(3)
+        if "visible" in self.browser.get_element_states("iframe >>> .btn:has-text('Ok')"):
+            self.browser.click("iframe >>> .btn:has-text('Ok')")
+            
         sleep(4)
         self.browser.click("iframe >>> .btn:has-text('Save')")
         sleep(1)

@@ -42,8 +42,10 @@ class QbrixToolingKeywords(QbrixRobotTask):
                 self.browser.click(f"{iframe_selector} .btn:has-text('Edit Policies')")
                 self.browser.wait_for_elements_state(f"{iframe_selector} h2.mainTitle:text-is('Connected App Edit')", ElementState.visible, "15s")
                 self.browser.select_options_by(f"{iframe_selector} #userpolicy", SelectAttribute.text, "Admin approved users are pre-authorized")
-                self.browser.wait_for_elements_state(f"{iframe_selector} .btn:has-text('Ok')", ElementState.visible, "15s")
-                self.browser.click(f"{iframe_selector} .btn:has-text('Ok')")
+                sleep(4)
+                if "visible" in self.browser.get_element_states("iframe >>> .btn:has-text('Ok')"):
+                    self.browser.click("iframe >>> .btn:has-text('Ok')")
+                    sleep(2)
                 self.browser.wait_for_elements_state(f"{iframe_selector} .btn:has-text('Save')", ElementState.visible, "15s")
                 self.browser.click(f"{iframe_selector} .btn:has-text('Save')")
                 self.browser.wait_for_elements_state(f"{iframe_selector} h2.mainTitle:text-is('Connected App Detail')", ElementState.visible, "15s")
