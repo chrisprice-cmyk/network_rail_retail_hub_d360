@@ -485,6 +485,7 @@ class QbrixSharedKeywords():
         visible = "visible" in self.browser.get_element_states(
             f"iframe >>> .listRelatedObject:has-text('{buttonName}')")
         if not visible:
+            sleep(5)
             self.click_input_button_in_iframe_with_text('New')
             self.browser.wait_for_elements_state("iframe >>> h3:has-text('Basic Information')", ElementState.visible,
                                                  '45')
