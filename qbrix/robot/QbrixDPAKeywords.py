@@ -48,8 +48,13 @@ class QbrixDPAKeywords(QbrixRobotTask):
         # 2 = Standard OmniStudio Runtime - index 1
         # 3 = DataRaptor Versioning - index 2
 
-        js_var = self.build_toggle_on_js(0)
-        self.browser.evaluate_javascript(":nth-match(runtime_omnistudio-pref-toggle,1)",js_var)
+        checked = "checked" in self.browser.get_element_states(
+            ":nth-match(label:has-text('OmniStudio Metadata'), 1)")
+        if not checked:
+            toggle_switch = self.browser.get_element(
+                ":nth-match(label:has-text('OmniStudio Metadata'), 1)")
+            self.browser.click(toggle_switch)
+            sleep(1)
         sleep(15)
         try:
             self.shared.click_button_with_text("OK")
