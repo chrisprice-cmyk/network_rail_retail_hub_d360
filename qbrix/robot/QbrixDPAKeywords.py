@@ -83,9 +83,13 @@ class QbrixDPAKeywords(QbrixRobotTask):
         # 2 = Standard OmniStudio Runtime - index 1
         # 3 = DataRaptor Versioning - index 2
 
-        js_var = self.build_toggle_off_js(1)
-        self.shared.log_to_file(js_var)
-        self.browser.evaluate_javascript(":nth-match(runtime_omnistudio-pref-toggle,2)",js_var)
+        checked = "checked" in self.browser.get_element_states(
+            ":nth-match(label:has-text('Managed Package Runtime'), 1)")
+        if checked:
+            toggle_switch = self.browser.get_element(
+                ":nth-match(label:has-text('Managed Package Runtime'), 1)")
+            self.browser.click(toggle_switch)
+            sleep(1)
         sleep(15)
         self.go_to_lightning_setup_omnistudio_settings()
 
