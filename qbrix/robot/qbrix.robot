@@ -45,9 +45,11 @@ Run Automation to Check and Enable Einstein Insights
     Set Lightning Toggle    on
     Go To Account Insights Setup Page
     Set Lightning Toggle    on
-    Go To Key Account Insights Setup Page
-    Set Lightning Toggle    on
+    Enable Einstein Key Accounts Identification
 
+Run Automation to check and enable Einstein Key Accounts Identification
+    Enable Einstein Key Accounts Identification
+    
 Run Automation to check and enable Campaign Insights
     Go To Campaign Insights Setup Page
     Set Lightning Toggle    on

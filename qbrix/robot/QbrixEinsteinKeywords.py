@@ -112,6 +112,16 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
         sleep(2)
         self.shared.set_lightning_toggle("on")
 
+    def enable_einstein_key_accounts_identification(self):
+        """ Enable Einstein Prediction Builder """
+        self.shared.go_to_setup_admin_page("EKAI/home")
+        self.browser.wait_for_elements_state("h2:has-text('Turn On Einstein Key Accounts Identification')", ElementState.visible, '30s')
+        visible = "visible" in self.browser.get_element_states(".slds-checkbox_off:has-text('OFF')")
+        if visible:
+            toggle_switch = self.browser.get_element(".slds-checkbox_off:has-text('OFF')")
+            self.browser.click(toggle_switch)
+            sleep(1)
+
     def enable_einstein_activity_capture(self):
         self.shared.go_to_setup_admin_page("ActivitySyncEngineSettingsMain/home")
         self.browser.wait_for_elements_state(".einsteinTitle:has-text('Einstein Activity Capture')",
