@@ -586,10 +586,9 @@ class QbrixSharedKeywords():
         sleep(5)
         self.browser.click("iframe >>> a:has-text('Edit')")
         sleep(10)
-        self.browser.select_options_by(f"iframe >>> td.selectCell:has-text('{servicestatus}') >> select",
-                                       SelectAttribute.text, servicestatus)
-        self.browser.click("iframe >>> img.rightArrowIcon")
-        sleep(1)
+        if not "checked" in self.browser.get_element_states(f"iframe >>>  :nth-match(tr:has-text('{servicestatus}') > td > input, 1)"):
+            self.browser.click(f"iframe >>>  :nth-match(tr:has-text('{servicestatus}') > td > input, 1)")
+            sleep(1)
         self.browser.click("iframe >>> .btn:text-is('Save')")
 
     def enable_custom_help_in_user_engagement(self):
