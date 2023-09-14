@@ -31,7 +31,7 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Check file existence
         id: collection_run_present
@@ -63,7 +63,7 @@ jobs:
       target-accesstoken: ${{ steps.extrattargetaccesstoken.outputs.value }}
       target-instanceurl: ${{ steps.extrattargetinstanceurl.outputs.value }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Disable TCP/UDP Offloading (Linux)
         shell: bash
@@ -245,7 +245,7 @@ jobs:
       matrix: ${{ fromJSON(needs.collection_deployment_steps.outputs.matrix) }}
       max-parallel: 1 #run in sequence
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Disable TCP/UDP Offloading (Linux)
         shell: bash
         run: sudo ethtool -K eth0 tx off rx off
@@ -367,7 +367,7 @@ jobs:
     needs: [qbrix_deployments, target_org_env_build]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Disable TCP/UDP Offloading (Linux)
         shell: bash
         run: sudo ethtool -K eth0 tx off rx off

@@ -345,7 +345,7 @@ class Spin(SFDXBaseTask):
 
         self._createworkingarea()
         #result = subprocess.run([f"sfdx force:data:soql:query -u {self.devhubuser} -q \"SELECT ID FROM TrialTemplate Order By CreatedDate DESC LIMIT 1\" --json"], shell=True, capture_output=True, cwd=os.path.join('.qbrix', self.devhubuser), check=True)
-        result = subprocess.run([f"sf data query -o {self.devhubuser} -query \"SELECT ID FROM TrialTemplate Order By CreatedDate DESC LIMIT 1\" --json"], shell=True, capture_output=True, cwd=os.path.join('.qbrix', self.devhubuser), check=True)
+        result = subprocess.run([f"sf data query -o {self.devhubuser} --query \"SELECT ID FROM TrialTemplate Order By CreatedDate DESC LIMIT 1\" --json"], shell=True, capture_output=True, cwd=os.path.join('.qbrix', self.devhubuser), check=True)
 
         if result is None:
             return None
