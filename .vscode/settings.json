@@ -4,8 +4,6 @@
         "robotframework",
         "qbrix"
     ],
-    "python.linting.enabled": true,
-    "python.linting.pylintEnabled": true,
     "robot.pythonpath": [
         "${workspaceFolder}",
         "${workspaceFolder}/qbrix",

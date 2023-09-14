@@ -1,7 +1,8 @@
 *** Settings ***
 Resource            QRobot.resource
-Suite Setup         Run keyword    
-...                    QRobot.Open Q Browser
+
+Suite Setup         Run keyword
+...                     QRobot.Open Q Browser
 Suite Teardown      QRobot.Close Q Browser
 
 
@@ -49,7 +50,7 @@ Run Automation to Check and Enable Einstein Insights
 
 Run Automation to check and enable Einstein Key Accounts Identification
     Enable Einstein Key Accounts Identification
-    
+
 Run Automation to check and enable Campaign Insights
     Go To Campaign Insights Setup Page
     Set Lightning Toggle    on
@@ -98,14 +99,14 @@ Create Tracker Chat Button
     Create A Chat Button And Automated Invitations    SFS - Tracker Bot    SDO_SFS_Tracker_Bot
 
 Create Felix Chat Button
-    Create A Chat Button And Automated Invitations    HLS - Felix Bot      HLS_Felix_Bot
+    Create A Chat Button And Automated Invitations    HLS - Felix Bot    HLS_Felix_Bot
 
 Create Mackie Chat Button
-    Create A Chat Button And Automated Invitations    HLS - Mackie Bot      HLS_Mackie_Bot
+    Create A Chat Button And Automated Invitations    HLS - Mackie Bot    HLS_Mackie_Bot
 
 Create Heka Chat Button
-    Create A Chat Button And Automated Invitations    HLS - Heka Bot      HLS_Heka_Bot
-    
+    Create A Chat Button And Automated Invitations    HLS - Heka Bot    HLS_Heka_Bot
+
 Add Case Wrap Up Model
     Enable Einstein Classification
     Add Case Wrap Up Model
@@ -336,7 +337,7 @@ Enable Program Benefits
 Enable Referrals
     Enable Referrals
 
-Enable Care Plans Ngo   
+Enable Care Plans Ngo
     Enable Care Plans Ngo
 
 # -----------------------------------------------------------------------------------------------------------------------------------------
@@ -352,13 +353,13 @@ Enable Care Plans Grantmaking
 Enable Assessments
     Enable Assessments
 
-
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # OmniStudio Settings
 # -----------------------------------------------------------------------------------------------------------------------------------------
+
 OmniStudio Settings Activation
     Activate Omnistudio Metadata
-    
+
 Standard OmniStudio Runtime Activation
     Activate Standard OmniStudio Runtime
 
@@ -381,12 +382,14 @@ Enable Retail Execution
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # Document Generation Settings
 # -----------------------------------------------------------------------------------------------------------------------------------------
+
 DocGen Setup
-    #Docgen Client Side Setup
+    # Docgen Client Side Setup
 
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # Mulesoft Connected App
 # -----------------------------------------------------------------------------------------------------------------------------------------
+
 Mulesoft Connected App
     Enable Admin Auth For Connected App    connected_app_label=MuleSoft SE Technical Operations
     Enable Connected Mule Tool

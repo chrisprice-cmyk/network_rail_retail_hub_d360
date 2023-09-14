@@ -42,7 +42,7 @@ Library     QbrixHLSKeywords.py
 # INDUSTRY - OmniStudio
 Library     QbrixDPAKeywords.py
 # INDUSTRY - Consumer Goods Cloud
-Library     qbrix/robot/QbrixRCGKeywords.py
+Library     QbrixRCGKeywords.py
 # MULESOFT - Connected app
 Library     QbrixMulesoftToolingKeywords.py
 # GENERAL - OTHER

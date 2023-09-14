@@ -1,27 +1,20 @@
 import json
 import os
-import requests
-import pandas as pd
-import pandasql as ps
-import subprocess
-from time import sleep
-from datetime import datetime
-from typing import Optional
 import xml.etree.ElementTree as et
 
-#pip install pandas
-#pip install pandasql3
-
-from time import sleep
-
-from Browser import ElementState, SelectAttribute
+import pandas as pd
+import pandasql as ps
+import requests
 from robot.api.deco import library
 
 from qbrix.core.qbrix_robot_base import QbrixRobotTask
 
 
 @library(scope='GLOBAL', auto_keywords=True, doc_format='reST')
+
 class QbrixValidationKeywords(QbrixRobotTask):
+
+    """Validation Keywords for Robot"""
 
     def __init__(self):
         super().__init__()
@@ -39,16 +32,36 @@ class QbrixValidationKeywords(QbrixRobotTask):
 
         return self._validationresults
 
+    def __recordFailureResultException(self, resulttype:str = None, name:str = None, exceptionMessage:str = None, datatag=None):
 
-    def __recordFailureResultException(self,resulttype:str,name:str,exceptionMessage:str,datatag=None):
+        """Records a result exception"""
 
-        self.__recordFailureResult(resulttype,name,exceptionMessage,datatag=datatag)
+        if not resulttype:
+            resulttype = "NONE PROVIDED"
+
+        if not name:
+            name = "NO NAME PROVIDED"
+
+        if not exceptionMessage:
+            exceptionMessage = "NO EXCEPTION MESSAGE PROVIDED"
+
+        res={}
+        res['type']=resulttype
+        res['name']=name
+        res['status']="Result Exception"
+        res['details']=exceptionMessage
+        res['datatag']=datatag
+
+        self.__recordFailureResult(resulttype=resulttype, name=name, details=exceptionMessage, datatag=datatag)
         self.validationresults["results"].append((res))
         self.__writeresultstofile()
+
         raise Exception(exceptionMessage)
 
 
-    def __recordIgnoredResult(self,resulttype:str,name:str,details:str=None,datatag=None):
+    def __recordIgnoredResult(self, resulttype:str, name:str, details:str=None, datatag=None):
+
+        """Records an ignored validation result"""
 
         if(details is None):
             details=""
@@ -67,7 +80,7 @@ class QbrixValidationKeywords(QbrixRobotTask):
         self.__writeresultstofile()
 
 
-    def __recordFailureResult(self,resulttype:str,name:str,details:str=None,datatag=None):
+    def __recordFailureResult(self, resulttype:str, name:str, details:str=None, datatag=None):
 
         if(details is None):
             details=""
@@ -86,7 +99,7 @@ class QbrixValidationKeywords(QbrixRobotTask):
         self.__writeresultstofile()
 
 
-    def __recordPassingResult(self,resulttype:str,name:str,details:str=None,datatag=None):
+    def __recordPassingResult(self, resulttype:str, name:str, details:str=None, datatag=None):
 
         if(details is None):
             details=""
@@ -109,7 +122,7 @@ class QbrixValidationKeywords(QbrixRobotTask):
         if os.path.isfile("validationresult.json"):
             os.remove("validationresult.json")
 
-        with open(f"validationresult.json", "w+") as tmpFile:
+        with open(f"validationresult.json", "w+", encoding="utf-8") as tmpFile:
             jsondata = json.dumps(self.validationresults)
             tmpFile.write(jsondata)
             tmpFile.close()
@@ -145,7 +158,7 @@ class QbrixValidationKeywords(QbrixRobotTask):
 
         foundcnt = self.find_record_count(targetobject, filter, tooling, targetruntime, runasfilter)
 
-        if ((int(foundcnt) >= int(count))==False):
+        if ((int(foundcnt) >= int(count)) is False):
             if(continueonfail):
                 self.__recordFailureResult(resulttype,resultname,f"A minimal count not met. The expected minimal number of records was: {count} and the total found was: {foundcnt}",datatag=datatag)
                 return
@@ -260,13 +273,13 @@ class QbrixValidationKeywords(QbrixRobotTask):
              return
 
         if targetobject is None:
-            self.__recordFailureResultException("A target object must be specified",datatag=datatag)
+            self.__recordFailureResultException(resulttype=resulttype, name="A target object must be specified",datatag=datatag)
 
         if lowercount is None:
-            self.__recordFailureResultException("A lower count must be specified",datatag=datatag)
+            self.__recordFailureResultException(resulttype=resulttype, name="A lower count must be specified",datatag=datatag)
 
         if uppercount is None:
-            self.__recordFailureResultException("As upper count must be specified",datatag=datatag)
+            self.__recordFailureResultException(resulttype=resulttype, name="As upper count must be specified",datatag=datatag)
 
         foundcnt = self.find_record_count(targetobject, filter, tooling, targetruntime,runasfilter)
 
@@ -295,7 +308,7 @@ class QbrixValidationKeywords(QbrixRobotTask):
         """
 
         #Check the runtime to see if this validation should be run on the org type
-        if(self.__isapplicableruntime(targetruntime)==False):
+        if(self.__isapplicableruntime(targetruntime) is False):
              self.__recordIgnoredResult("Data","Data Query to Find Row Count",f"IGNORED::targetruntime {targetruntime} does not apply to this org")
              return
 
@@ -373,7 +386,7 @@ class QbrixValidationKeywords(QbrixRobotTask):
         resultname=f'Validate that {targetobjectlabel} has {layer}'
 
         #Check the runtime to see if this validation should be run on the org type
-        if(self.__isapplicableruntime(targetruntime)==False):
+        if(self.__isapplicableruntime(targetruntime) is False):
              self.__recordIgnoredResult(resulttype,resultname,f"IGNORED::targetruntime {targetruntime} does not apply to this org",datatag=datatag)
              return
 
@@ -424,21 +437,21 @@ class QbrixValidationKeywords(QbrixRobotTask):
                         if(not findfilter is None):
                             filter = f"SELECT count(*) datacount from df where {findfilter}"
                         else:
-                            filter = f"SELECT count(*) datacount"
+                            filter = "SELECT count(*) datacount"
 
                         dfqueryres=ps.sqldf(filter)
                         #self.shared.log_to_file(f"Query Result::{dfqueryres}")
 
 
                         if(not dfqueryres is None or (len(dfqueryres)==1 and dfqueryres[1]==0)):
-                            self.__recordPassingResult(resulttype,resultname,f"Metadata contains the specified",datatag=datatag)
+                            self.__recordPassingResult(resulttype,resultname,"Metadata contains the specified",datatag=datatag)
                             return
                     except:
-                        message=f'Unable to locate the metadata object to locate the layer'
+                        message='Unable to locate the metadata object to locate the layer'
                             #we hit an exception - fail closed
 
         # we did not locate the object to traverse the metadata
-        message=f'Unable to locate the metadata object to locate the layer'
+        message='Unable to locate the metadata object to locate the layer'
 
         if(continueonfail):
             self.__recordFailureResult(resulttype, resultname,message,datatag=datatag)
@@ -449,77 +462,9 @@ class QbrixValidationKeywords(QbrixRobotTask):
 
     def validate_with_testim(self,testimscriptname:str,continueonfail=True,datatag=None,targetruntime=None,runasfilter=None):
 
-        """Runs the specified Testim Script and determines if the script ran or failed.
-        :param testimscriptname: Testim Script to run
-        :param continueonfail(Optional): Boolean flag to continue testing or abort
-        :param datatag(Optional): Additional context added to the validation result
-        :param targetruntime(Optional): Identifier if the validation only should run in SCRATCHONLY or PRODONLY orgs. None applies to both org types.
-        :param runasfilter(Optional): To use a different user context, filter to query User by to locate the first user record.
-        """
+        """NO LONGER USED"""
 
-
-        resulttype="UI-Testim"
-        resultname=f'Validate via Testim Script {testimscriptname}'
-
-        #Check the runtime to see if this validation should be run on the org type
-        if(self.__isapplicableruntime(targetruntime)==False):
-             self.__recordIgnoredResult(resulttype,resultname,f"IGNORED::targetruntime {targetruntime} does not apply to this org",datatag=datatag)
-             return
-
-        #No script name no start
-        if(testimscriptname is None or testimscriptname == ""):
-            raise Exception("No Testim Script name provided.")
-
-        #get env variables:
-
-        testimproject = os.environ.get('TESTIM_PROJECT')
-        testimgrid = "Testim-Grid"
-        testimtoken = os.environ.get('TESTIM_KEY')
-        baseurl=""
-
-        if(runasfilter is None):
-            self.shared.log_to_file(f"RUN_CMD Result::{json.dumps(self.cumulusci.sf.session_id)}")
-            baseurl=f"{self.cumulusci.org.instance_url}/secur/frontdoor.jsp?sid={self.cumulusci.sf.session_id}"
-        else:
-
-            if(not runasfilter is None and runasfilter!=""):
-                runasusercontext=self.__getrunasuserid(runasfilter)
-
-                if(not runasusercontext is None):
-                    baseurl=f"{self.cumulusci.org.instance_url}/secur/frontdoor.jsp?sid={runasusercontext}"
-
-
-
-        RUN_CMD = f"testim --token '{testimtoken}' --project '{testimproject}' --grid '{testimgrid}' --name '{testimscriptname}' --base-url '{baseurl}' --report-file {testimscriptname}_results.xml"
-        self.shared.log_to_file(f"RUN_CMD Result::{RUN_CMD}")
-
-        process = subprocess.call([f"{RUN_CMD}"], shell=True)
-
-
-        #if the result file is there - peek and see if failures exist
-        if(os.path.isfile(f"{testimscriptname}_results.xml")):
-
-            #Occam's razor
-            resultfile = open(f"{testimscriptname}_results.xml", "r")
-            resultdata = resultfile.read()
-            if(resultdata.__contains__("failure=\"0\" ")):
-                self.__recordPassingResult(resulttype, resultname,f"Testim script {testimscriptname} reported no failures.",datatag=datatag)
-                return
-            else:
-                message=f"Testim script {testimscriptname} reported failures."
-
-        else:
-             message=f"Expected test results file {testimscriptname}_results.xml not found."
-
-
-        if(continueonfail):
-            self.__recordFailureResult(resulttype, resultname,message,datatag=datatag)
-            return
-        else:
-            self.__recordFailureResultException(resulttype, resultname,message,datatag=datatag)
-
-
-
+        raise Exception("TESTIM NO LONGER SUPPORTED. PLEASE UPDATE YOUR SCRIPT.")
 
     def find_xpath_in_xmlfile(self, sourcefile, xpathfilter):
         """Locates the xpath within the xml
@@ -533,16 +478,14 @@ class QbrixValidationKeywords(QbrixRobotTask):
         if sourcefile is None or sourcefile=="":
             raise Exception("A source file must be specified")
 
-        if(os.path.isfile(sourcefile)==False):
+        if(os.path.isfile(sourcefile) is False):
             raise Exception("The source file does not exist")
-
         else:
-            datafile = open(sourcefile, "r")
-            xmldata = datafile.read()
-            tree = etree.fromstring(bytes(xmldata, 'utf-8'))
+            with open(sourcefile, "r", encoding="utf-8") as datafile:
+                xmldata = datafile.read()
+            tree = et.fromstring(bytes(xmldata, 'utf-8'))
             foundata=tree.xpath(xpathfilter)
             return foundata
-
 
         return None
 
@@ -556,8 +499,9 @@ class QbrixValidationKeywords(QbrixRobotTask):
 
             return True
 
-        elif(targetruntime=='SCRATCHONLY' or targetruntime=='PRODONLY'):
-            results = self.cumulusci.sf.query_all(f"SELECT IsSandbox FROM Organization ")
+        elif targetruntime in ('SCRATCHONLY', 'PRODONLY'):
+
+            results = self.cumulusci.sf.query_all("SELECT IsSandbox FROM Organization")
             self.shared.log_to_file(f"RunTimeCheck::results::{results}")
             totalSize=results["totalSize"]
             self.shared.log_to_file(f"RunTimeCheck::results::totalSize:{totalSize}::{type(totalSize)}")
@@ -567,7 +511,7 @@ class QbrixValidationKeywords(QbrixRobotTask):
                 if(targetruntime=='SCRATCHONLY' and bool(results["records"][0]["IsSandbox"])):
                     return True
 
-                if(targetruntime=='PRODONLY' and bool(results["records"][0]["IsSandbox"])==False):
+                if(targetruntime=='PRODONLY' and bool(results["records"][0]["IsSandbox"]) is False):
                     return True
 
 
@@ -581,7 +525,7 @@ class QbrixValidationKeywords(QbrixRobotTask):
         #fail closed
         return False
 
-    def __getrunasuserid(self,userfilter:str):
+    def __getrunasuserid(self, userfilter:str):
 
         if(userfilter is None):
             raise Exception("Run As user filter cannot be None")
@@ -605,7 +549,7 @@ class QbrixValidationKeywords(QbrixRobotTask):
             payload = json.dumps({"username": f"{targetusername}"})
             self.shared.log_to_file(payload)
             headers = {'Content-Type': 'application/json'}
-            response = requests.request("POST", url, headers=headers, data=payload)
+            response = requests.request("POST", url, headers=headers, data=payload, timeout=30)
 
             self.shared.log_to_file(response.text)
             jsondata = json.loads(response.text)
