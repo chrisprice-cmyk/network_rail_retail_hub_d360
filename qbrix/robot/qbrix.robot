@@ -259,6 +259,9 @@ Add Service Presence Statuses to Profile
     Add Service Presence Statuses to Profile    System Administrator    Messaging - Available
     Add Service Presence Statuses to Profile    System Administrator    Phone - Available
 
+Add Service Presence Statuses to Profile for SCV Simulator
+    Add Service Presence Statuses to Profile    System Administrator    Voice Calls - Available
+
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # Chat Agent Configurations
 # -----------------------------------------------------------------------------------------------------------------------------------------
