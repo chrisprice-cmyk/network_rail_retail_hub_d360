@@ -1,25 +1,24 @@
 import json
 import os
 import random
-import re
 import shutil
 import subprocess
-import sys
 import time
 from abc import abstractmethod
 from time import sleep
 
 import yaml
-from cumulusci.core.config import ScratchOrgConfig
-from cumulusci.core.exceptions import CommandException, TaskOptionsError
+from cumulusci.core.exceptions import CommandException
 from cumulusci.core.keychain import BaseProjectKeychain
 from cumulusci.tasks.sfdx import SFDXBaseTask
-from genericpath import isfile
 
-LOAD_COMMAND = "sfdx force:apex:execute "
+LOAD_COMMAND = "sf apex run "
 
 
 class Spin(SFDXBaseTask):
+
+    """Create an org sign up request"""
+
     keychain_class = BaseProjectKeychain
     task_options = {
         "devhubuser": {
@@ -312,7 +311,7 @@ class Spin(SFDXBaseTask):
         else:
             self.deployqbrix = []
             try:
-                with open('cumulusci.yml', 'r') as f:
+                with open('cumulusci.yml', 'r', encoding="utf-8") as f:
                     data = yaml.safe_load(f)
 
                 required_qbrix = data.get('project', {}).get('custom', {}).get('required_qbrix', [])
@@ -328,22 +327,28 @@ class Spin(SFDXBaseTask):
                 self.logger.error('No Default Required QBrix Defined YML')
 
     def _createworkingarea(self):
-        if os.path.isdir('.qbrix') == False:
-            os.mkdir('.qbrix')
 
-        subprocess.run([f"sfdx force:project:create --projectname {self.devhubuser} --json"], shell=True,
-            capture_output=True, cwd=".qbrix")
-        subprocess.run([f"sfdx force:config:set defaultusername={self.devhubuser} --json"], shell=True,
-            capture_output=True,
-            cwd=os.path.join('.qbrix', self.devhubuser))
+        """Create working directory etc"""
+
+        # Ensure Local Directories
+        os.makedirs(".qbrix", exist_ok=True)
+
+        # Create Empty Project
+        #subprocess.run([f"sfdx force:project:create --projectname {self.devhubuser} --json"], shell=True, capture_output=True, cwd=".qbrix", check=True)
+        #subprocess.run([f"sfdx force:config:set defaultusername={self.devhubuser} --json"], shell=True, capture_output=True, cwd=os.path.join('.qbrix', self.devhubuser), check=True)
+        subprocess.run([f"sf project generate --name {self.devhubuser} --json"], shell=True, capture_output=True, cwd=".qbrix", check=True)
+        subprocess.run([f"sf config set --global target-org={self.devhubuser} --json"], shell=True, capture_output=True, cwd=os.path.join('.qbrix', self.devhubuser), check=True)
 
     def _getlatesttemplate(self):
-        self._createworkingarea()
-        result = subprocess.run([
-            f"sfdx force:data:soql:query -u {self.devhubuser} -q \"SELECT ID FROM TrialTemplate Order By CreatedDate DESC LIMIT 1\" --json"],
-            shell=True, capture_output=True, cwd=os.path.join('.qbrix', self.devhubuser))
 
-        if result is None: return None
+        """Get and assign Template ID"""
+
+        self._createworkingarea()
+        #result = subprocess.run([f"sfdx force:data:soql:query -u {self.devhubuser} -q \"SELECT ID FROM TrialTemplate Order By CreatedDate DESC LIMIT 1\" --json"], shell=True, capture_output=True, cwd=os.path.join('.qbrix', self.devhubuser), check=True)
+        result = subprocess.run([f"sf data query -o {self.devhubuser} -query \"SELECT ID FROM TrialTemplate Order By CreatedDate DESC LIMIT 1\" --json"], shell=True, capture_output=True, cwd=os.path.join('.qbrix', self.devhubuser), check=True)
+
+        if result is None:
+            return None
 
         jsonresult = json.loads(result.stdout)
 
@@ -355,6 +360,9 @@ class Spin(SFDXBaseTask):
         return None
 
     def _getrequestedqbrixfordeploy(self):
+
+        """Clone required q brix"""
+
         if self.deployqbrix is not None:
             for (x) in self.deployqbrix:
                 if os.path.isdir(os.path.join(".qbrix", x)):
@@ -362,11 +370,14 @@ class Spin(SFDXBaseTask):
                     shutil.rmtree(os.path.join(".qbrix", x), ignore_errors=True)
 
                 cmd = f"git clone https://{self.githubpat}:x-oauth-basic@github.com/{self.qbrixowner}/{x}"
-                result = subprocess.run([f"{cmd}"], shell=True, capture_output=True, cwd=".qbrix")
+                result = subprocess.run([f"{cmd}"], shell=True, capture_output=True, cwd=".qbrix", check=True)
 
                 print(result.stdout)
 
     def _deployqbrix(self):
+
+        """ Deploy Required Q Brix"""
+
         for (x) in self.deployqbrix:
             targetdir = os.path.join(".qbrix", x)
 
@@ -376,7 +387,7 @@ class Spin(SFDXBaseTask):
                 else:
                     cmd = f"cci org import {self.cciorg} {self.cciorg}"
 
-                result = subprocess.run([f"{cmd}"], shell=True, capture_output=True, cwd=targetdir)
+                result = subprocess.run([f"{cmd}"], shell=True, capture_output=True, cwd=targetdir, check=True)
                 stdoutres = result.stdout.splitlines()
                 [self.logger.info(i) for i in stdoutres]
 
@@ -396,15 +407,18 @@ class Spin(SFDXBaseTask):
                 self.logger.error(f"{targetdir} is not found")
 
     def _submittemplate(self):
+
+        """Submit Template"""
+
         if self.templateid == "LATEST":
             self._getlatesttemplate()
 
         self.signuprequestid = None
-        result = subprocess.run([
-            f"sfdx force:data:record:create -u {self.devhubuser} -s SignupRequest -v \"{self._buildsignupcommand()}\" --json"],
-            shell=True, capture_output=True, cwd=os.path.join('.qbrix', self.devhubuser))
+        #result = subprocess.run([f"sfdx force:data:record:create -u {self.devhubuser} -s SignupRequest -v \"{self._buildsignupcommand()}\" --json"], shell=True, capture_output=True, cwd=os.path.join('.qbrix', self.devhubuser), check=True)
+        result = subprocess.run([f"sf data create record -o {self.devhubuser} -s SignupRequest -v \"{self._buildsignupcommand()}\" --json"], shell=True, capture_output=True, cwd=os.path.join('.qbrix', self.devhubuser), check=True)
 
-        if result is None: return
+        if result is None:
+            return
 
         jsonresult = json.loads(result.stdout)
         self.logger.info(jsonresult)
@@ -414,9 +428,10 @@ class Spin(SFDXBaseTask):
         self.logger.info(f"Signup Request Id: {self.signuprequestid}")
 
     def _submitscratchorg(self, retrycount=0):
-        result = subprocess.run([
-            f"{self._buildscratchorgcommand()}"],
-            shell=True, capture_output=True, cwd=os.path.join('.qbrix', self.devhubuser))
+
+        """Submit Scratch Org build request"""
+
+        result = subprocess.run([f"{self._buildscratchorgcommand()}"],  shell=True, capture_output=True, cwd=os.path.join('.qbrix', self.devhubuser), check=True)
 
         print(result.stdout)
 
@@ -439,6 +454,9 @@ class Spin(SFDXBaseTask):
             self.spinusername = jsonresult["result"]["username"]
 
     def _buildsignupcommand(self):
+
+        """Build Signup Command"""
+
         cmd = f"trialdays={self.spinlength} company={self.company} lastname=Eng firstname=Demo username={self.spinusername} subdomain={self.subdomain} country={self.country} templateId={self.resolvedtemplateid}"
 
         if not self.instance is None:
@@ -455,18 +473,28 @@ class Spin(SFDXBaseTask):
         return cmd
 
     def _buildscratchorgcommand(self):
-        cmd = f"sfdx force:org:create --json  -f {self.scratch_config} -w 120 --targetdevhubusername {self.devhubuser} -n --durationdays {self.spinlength} --setalias {self.cciorg}  "
+
+        """Build Scratch Org Command"""
+
+        #cmd = f"sfdx force:org:create --json  -f {self.scratch_config} -w 120 --targetdevhubusername {self.devhubuser} -n --durationdays {self.spinlength} --setalias {self.cciorg}  "
+        cmd = f"sf org create scratch --json -f {self.scratch_config} -w 120 -v {self.devhubuser} -m -y {self.spinlength} -a {self.cciorg} "
 
         self.logger.info(cmd)
 
         return cmd
 
     def _generateusername(self):
+
+        """Generate Username"""
+
         t = time.time()
         ml = int(t * 1000)
         self.spinusername = f"demo.eng@.{ml}.qbrix"
 
     def _generatesubdomain(self):
+
+        """Generate Subdomain"""
+
         if (self.subdomain is None):
             t = time.time()
             ml = int(t * 1000)
@@ -475,6 +503,9 @@ class Spin(SFDXBaseTask):
         return self.subdomain
 
     def _monitorrequest(self):
+
+        """Request Monitor"""
+
         maxwait = self.maxwait
         if hasattr(self, "signuprequestid"):
             while not self._checktempaltestatuscomplete():
@@ -485,18 +516,20 @@ class Spin(SFDXBaseTask):
                     raise CommandException("Max Wait Time Met")
                 else:
                     self.logger.info(f"Polling in 60 seconds...{maxwait} wait cycles remain")
-
         else:
             raise CommandException("No signup request id found.")
 
     def _checktempaltestatuscomplete(self):
+
+        """Check if Sign Up Request is Complete"""
+
         if self.signuprequestid is not None:
-            result = subprocess.run([
-                f"sfdx force:data:record:get -u {self.devhubuser} -s SignupRequest -i \"{self.signuprequestid}\" --json"],
-                shell=True, capture_output=True, cwd=os.path.join('.qbrix', self.devhubuser))
+            #result = subprocess.run([f"sfdx force:data:record:get -u {self.devhubuser} -s SignupRequest -i \"{self.signuprequestid}\" --json"], shell=True, capture_output=True, cwd=os.path.join('.qbrix', self.devhubuser))
+            result = subprocess.run([f"sf data get record -o {self.devhubuser} -s SignupRequest -i \"{self.signuprequestid}\" --json"], shell=True, capture_output=True, cwd=os.path.join('.qbrix', self.devhubuser), check=True)
 
         if result is None:
-            CommandException("Signup Request Id not found.")
+            raise CommandException("Signup Request Id not found.")
+
         jsonresult = json.loads(result.stdout)
 
         self.logger.info(jsonresult)
@@ -506,7 +539,7 @@ class Spin(SFDXBaseTask):
                 errorcode = jsonresult["result"]["ErrorCode"]
                 if errorcode in self.retryonerrorcodes and self.retrycount > 0:
                     self.logger.error(f"The template spin failed for error code: {errorcode}. Attempting retry.")
-                    self._submittemplate(self)
+                    self._submittemplate()
                     self.retrycount = self.retrycount - 1
                 else:
                     raise CommandException(f"The template has failed for error code: {errorcode}")
@@ -551,20 +584,27 @@ class Spin(SFDXBaseTask):
         return False
 
     def _forcelogout(self, signupusername: str):
+
+        """Logout of target out without prompt"""
+
         try:
-            cmd = f"sfdx auth:logout -p -u {signupusername}"
-            subprocess.run([f"{cmd}"], shell=True, capture_output=True)
+            cmd = f"sf org logout --target-org {signupusername} -p"
+            subprocess.run([f"{cmd}"], shell=True, capture_output=True, check=True)
         except Exception as e:
             self.logger.error(e)
 
     def _connectspinviajwt(self, signupusername: str):
-        cmd = f"sfdx auth:jwt:grant --username {signupusername} --jwtkeyfile {self.devhubjwtkeyfile} --clientid \"{self.devhubconsumerkey}\" --json"
+
+        """Connect to Salesforce Org using JWT Auth"""
+
+        #cmd = f"sfdx auth:jwt:grant --username {signupusername} --jwtkeyfile {self.devhubjwtkeyfile} --clientid \"{self.devhubconsumerkey}\" --json"
+        cmd = f"sf org login jwt -o {signupusername} -f {self.devhubjwtkeyfile} -i \"{self.devhubconsumerkey}\" --json"
         self.logger.info(cmd)
 
         if (not self.cciorg is None):
-            cmd = f"{cmd} --setalias {self.cciorg}"
+            cmd = f"{cmd} -a {self.cciorg}"
 
-        result = subprocess.run([f"{cmd}"], shell=True, capture_output=True)
+        result = subprocess.run([f"{cmd}"], shell=True, capture_output=True, check=True)
         jsonresult = json.loads(result.stdout)
         self.logger.info(jsonresult)
         return jsonresult
@@ -573,7 +613,7 @@ class Spin(SFDXBaseTask):
         if self.cciorg is None:
             raise CommandException("Target CCI Org has not been set and cannot import a spin username.")
 
-        result = subprocess.run([f"cci org import {signupusername} {self.cciorg}"], shell=True, capture_output=True)
+        result = subprocess.run([f"cci org import {signupusername} {self.cciorg}"], shell=True, capture_output=True, check=True)
         self.logger.info(result.stdout)
 
     def _run_task(self):
