@@ -179,6 +179,9 @@ Create Manny Chat Button
 
 Create Stellar Chat Button
     Create A Chat Button And Automated Invitations    Media - Stellar Bot    MDA_Stellar_Bot
+
+Check and Enable Dialer
+    Enable Dialer
 #
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # Q BRANCH TOOLING TESTS

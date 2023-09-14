@@ -276,3 +276,11 @@ class QbrixServiceKeywords(QbrixRobotTask):
                         sleep(2)
                         self.browser.click("button:text-is('Accept'):visible")
                         sleep(1)
+
+    def enable_dialer(self):
+        """" Enables Dialer """
+        self.shared.go_to_setup_admin_page("TalkSettings/home")
+        self.browser.wait_for_elements_state("h3:text-is('Dialer')", ElementState.visible, '30s')
+        if not "checked" in self.browser.get_element_states("label:has-text('Disabled')"):
+            self.browser.click("label:has-text('Disabled')")
+            sleep(3)
