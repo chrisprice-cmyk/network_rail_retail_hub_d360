@@ -591,6 +591,37 @@ class QbrixSharedKeywords():
             sleep(1)
         self.browser.click("iframe >>> .btn:text-is('Save')")
 
+    def remove_service_presence_statuses_to_profile(self, profilename: str, servicestatus: str):
+
+        """ emoves a specified service presence to the specified profile
+        :param profilename: Name of Salesforce Profile
+        :param servicestatus: Service Status to be defined for the Profile
+        """
+        if profilename is None:
+            raise Exception("Profile Name must be specified")
+        if servicestatus is None:
+            raise Exception("Service Status must be specified")
+
+        self.go_to_setup_admin_page("EnhancedProfiles/home", 12)
+
+        profileid = self.find_profileid_by_name(profilename)
+        if profileid is None:
+            raise Exception(f"The Profile Name: {profilename} cannot be located.")
+
+        if (profileid is None):
+            raise Exception("Unable to locate the Profile ID by name")
+
+        profileediturl = f"EnhancedProfiles/page?address=%2F{profileid}%3Fs%3DServicePresenceStatusAccess"
+
+        self.go_to_setup_admin_page(profileediturl)
+        sleep(5)
+        self.browser.click("iframe >>> a:has-text('Edit')")
+        sleep(10)
+        if "checked" in self.browser.get_element_states(f"iframe >>>  :nth-match(tr:has-text('{servicestatus}') > td > input, 1)"):
+            self.browser.click(f"iframe >>>  :nth-match(tr:has-text('{servicestatus}') > td > input, 1)")
+            sleep(1)
+        self.browser.click("iframe >>> .btn:text-is('Save')")
+
     def enable_custom_help_in_user_engagement(self):
         """
         Enables the Customize Help Option under User Engagement Help Menu
