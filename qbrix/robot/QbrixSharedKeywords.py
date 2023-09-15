@@ -839,7 +839,7 @@ class QbrixSharedKeywords():
         """
         now = datetime.now()
         dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
-        with open(f"temp.log", "a") as tmpFile:
+        with open("temp.log", "a", encoding="utf-8") as tmpFile:
             tmpFile.write(f"{dt_string}::{data}\n")
             tmpFile.close()
 
@@ -899,3 +899,6 @@ class QbrixSharedKeywords():
         if len(existing_list) == 0:
             return False
         return any(d['label'] == target_label and d["selected"] for d in existing_list)
+
+    def enable_notification_delivery_setting_ios(self):
+        pass

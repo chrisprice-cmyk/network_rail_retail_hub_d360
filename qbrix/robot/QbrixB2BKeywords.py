@@ -1,6 +1,4 @@
 from time import sleep
-
-from Browser import ElementState
 from robot.api.deco import library
 
 from qbrix.core.qbrix_robot_base import QbrixRobotTask
@@ -10,7 +8,7 @@ from qbrix.core.qbrix_robot_base import QbrixRobotTask
 class QbrixB2BKeywords(QbrixRobotTask):
     """Commerce Cloud Keywords"""
 
-    def get_store_id(self, store_name: str):
+    def get_store_id(self, store_name: str = None):
         """
         Gets the Store Id for a given Store Name
             Args:
@@ -30,7 +28,7 @@ class QbrixB2BKeywords(QbrixRobotTask):
 
         return None
 
-    def start_reindex(self, store_name):
+    def start_reindex(self, store_name: str = None):
 
         """
         Starts the Reindex for a given store
@@ -39,20 +37,17 @@ class QbrixB2BKeywords(QbrixRobotTask):
             store_name (str): The name of the store
         """
 
-        index_button_selector = ":nth-match(button.slds-button:text-is('Rebuild Index'):visible, 1)"
-        index_confirmation_selector = ":nth-match(button.slds-button:text-is('Rebuild'):visible, 1)"
-
         # Go To Index Page
         store_id = self.get_store_id(store_name)
         if store_id:
-            self.browser.go_to(
-                f"{self.cumulusci.org.instance_url}/lightning/page/commerceSearch?lightning__webStoreId={store_id}&ws=%2Flightning%2Fr%2FWebStore%2F{store_id}%2Fview")
-            self.browser.wait_for_elements_state(index_button_selector, ElementState.visible, '15s')
-            if "enabled" in self.browser.get_element_states(index_button_selector):
-                self.browser.click(index_button_selector)
-                sleep(2)
-                self.browser.click(index_confirmation_selector)
-                sleep(2)
+            print(f"Found Store ID: {store_id}")
+            self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/page/commerceSearch?lightning__webStoreId={store_id}&ws=%2Flightning%2Fr%2FWebStore%2F{store_id}%2Fview")
+            self.browser.wait_until_network_is_idle()
+            self.shared.wait_and_click(":nth-match(button.slds-button:text-is('Rebuild Index'):visible, 1)")
+            self.shared.wait_and_click("div.slds-visual-picker >> span.slds-text-heading_medium:text-is('Full Reindex')")
+            self.shared.wait_and_click(selector=":nth-match(button.slds-button:text-is('Rebuild'):visible, 1)", post_click_sleep=3)
+        else:
+            print("No Store ID Found. Ensure that B2B Commerce is enabled within the Org")
 
     def enable_b2b2c_for_sdo(self, store_name):
 
@@ -63,7 +58,6 @@ class QbrixB2BKeywords(QbrixRobotTask):
             store_name (str): The name of the store.
         """
 
-        # Go To Tax Page and enable Tax Integration
         integration_button_selector = ":nth-match(button.slds-button:text-is('Link Integration'):visible, 1)"
         dialog_row_selector = "tr.slds-hint-parent:has-text('Standard Tax') >> label.slds-checkbox_faux"
         next_button_selector = "div.modal-footer >> button.nextButton:text-is('Next'):visible"
@@ -71,27 +65,25 @@ class QbrixB2BKeywords(QbrixRobotTask):
 
         store_id = self.get_store_id(store_name)
         if store_id:
-            self.browser.go_to(
-                f"{self.cumulusci.org.instance_url}/lightning/page/storeDetail?lightning__webStoreId={store_id}&ws=%2Flightning%2Fr%2FWebStore%2F{store_id}%2Fview&storeDetail__selectedTab=store_tax")
-            self.browser.wait_for_elements_state(integration_button_selector, ElementState.visible, '15s')
-            self.browser.click(integration_button_selector)
+
+            # Go To Tax Page and enable Tax Integration
+            self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/page/storeDetail?lightning__webStoreId={store_id}&ws=%2Flightning%2Fr%2FWebStore%2F{store_id}%2Fview&storeDetail__selectedTab=store_tax")
             sleep(2)
-            self.browser.click(dialog_row_selector)
-            self.browser.click(next_button_selector)
-            sleep(2)
-            self.browser.click(confirm_button_selector)
+            if self.shared.wait_on_element(selector=integration_button_selector, timeout=5):
+                self.shared.wait_and_click(selector=integration_button_selector, post_click_sleep=2)
+                self.shared.wait_and_click(dialog_row_selector)
+                self.shared.wait_and_click(selector=next_button_selector, post_click_sleep=2)
+                self.shared.wait_and_click(confirm_button_selector)
 
             # Go To Shipping Calculation Page and Apply Integration
-            self.browser.go_to(
-                f"{self.cumulusci.org.instance_url}/lightning/page/storeDetail?lightning__webStoreId={store_id}&ws=%2Flightning%2Fr%2FWebStore%2F{store_id}%2Fview&storeDetail__selectedTab=store_shipping")
-            self.browser.wait_for_elements_state(integration_button_selector, ElementState.visible, '15s')
-            self.browser.click(integration_button_selector)
+            self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/page/storeDetail?lightning__webStoreId={store_id}&ws=%2Flightning%2Fr%2FWebStore%2F{store_id}%2Fview&storeDetail__selectedTab=store_shipping")
             sleep(2)
+            if self.shared.wait_on_element(selector=integration_button_selector, timeout=5):
+                self.shared.wait_and_click(selector=integration_button_selector, post_click_sleep=2)
 
             # Go To Card Payment Gateway Page and Apply Integration
-            self.browser.go_to(
-                f"{self.cumulusci.org.instance_url}/lightning/page/storeDetail?lightning__webStoreId={store_id}&ws=%2Flightning%2Fr%2FWebStore%2F{store_id}%2Fview&storeDetail__selectedTab=store_payment")
-            self.browser.wait_for_elements_state(integration_button_selector, ElementState.visible, '15s')
-            self.browser.click(integration_button_selector)
+            self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/page/storeDetail?lightning__webStoreId={store_id}&ws=%2Flightning%2Fr%2FWebStore%2F{store_id}%2Fview&storeDetail__selectedTab=store_payment")
             sleep(2)
+            if self.shared.wait_on_element(selector=integration_button_selector, timeout=5):
+                self.shared.wait_and_click(selector=integration_button_selector, post_click_sleep=2)
 

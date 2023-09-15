@@ -149,7 +149,7 @@ class QbrixServiceKeywords(QbrixRobotTask):
         self.browser.click("label:has-text('API Name')")
         self.shared.wait_and_click(next_button_selector)
 
-        if self.browser.get_element_count(f"div.error:visible") > 0:
+        if self.browser.get_element_count("div.error:visible") > 0:
             print(f"{model_name} has already been created with the same api name. Skipping.")
             return
 
