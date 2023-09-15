@@ -34,10 +34,10 @@ jobs:
 
       # We will use a common app with a common key -
       - name: Create SFDX Session for QLABS Service Account
-        run: sfdx auth:jwt:grant -u ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
+        run: sf org login jwt -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
 
       - name: Extract the accesstoken
-        run: sfdx force:org:display -u ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} --json > qlab_tmp.json
+        run: sf org display -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} --json > qlab_tmp.json
 
       - name: extract the accesstoken for qlabs
         uses: sergeysova/jq-action@v2

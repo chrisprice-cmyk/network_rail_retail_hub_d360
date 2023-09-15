@@ -180,7 +180,7 @@ jobs:
       - name: The central QLabs Settings has specified dedicated org/user to run against.
         if: env.ORG_TARGET_USER!=''
         run: |
-          sfdx auth:jwt:grant -u ${{ env.ORG_TARGET_USER }} -a dev_target_username -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
+          sf org login jwt -o ${{ env.ORG_TARGET_USER }} -a dev_target_username -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
           cci org import ${{env.ORG_TARGET_USER}} dev
 
       - name: export cci session data

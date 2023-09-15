@@ -38,10 +38,10 @@ jobs:
 
       # We will use a common app with a common key -
       - name: Create SFDX Session for QLABS Service Account
-        run: sfdx auth:jwt:grant -u ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
+        run: sf org login jwt -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
 
       - name: Extract the accesstoken
-        run: sfdx force:org:display --target-org ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} --json > qlab_tmp.json
+        run: sf org display -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} --json > qlab_tmp.json
 
       - name: extract the accesstoken for qlabs
         uses: sergeysova/jq-action@v2
@@ -101,11 +101,11 @@ jobs:
       # We will use a common app with a common key -
       - name: Create SFDX Session for QLABS Service Account
         if: matrix.targetusername!=''
-        run: sfdx auth:jwt:grant -u ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
+        run: sf org login jwt -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
 
       - name: Extract the accesstoken
         if: matrix.targetusername!=''
-        run: sfdx force:org:display --target-org ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} --json > qlab_tmp.json
+        run: sf org display -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} --json > qlab_tmp.json
 
       - name: extract the accesstoken for qlabs
         if: matrix.targetusername!=''
@@ -116,12 +116,12 @@ jobs:
 
       - name: The automated deploy matrix json contains the list of target org usernames (TSOs Ideally) to deploy against.
         if: matrix.targetusername!=''
-        run: sfdx auth:jwt:grant -u ${{ matrix.targetusername }} -a dev_target_username -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
+        run: sf org login jwt -o ${{ matrix.targetusername }} -a dev_target_username -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
 
       # We will use a common app with a common key -
       #- name: Create SFDX Session for DEV HUB ACCESS
       #  if: matrix.targetusername!=''
-      #  run: sfdx auth:jwt:grant -u ${{ secrets.QBRIX_DEVHUB_USERACCOUNT }} -a DEVHUB_ACCT -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }} --setdefaultdevhubusername
+      #  run: sf org login jwt -o ${{ secrets.QBRIX_DEVHUB_USERACCOUNT }} -a DEVHUB_ACCT -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }} --setdefaultdevhubusername
 
       #install Python Test Resources
       - name: Install Python Test Resources
