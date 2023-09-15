@@ -8,45 +8,81 @@ from qbrix.core.qbrix_robot_base import QbrixRobotTask
 
 @library(scope='GLOBAL', auto_keywords=True, doc_format='reST')
 class QbrixServiceKeywords(QbrixRobotTask):
-    """Service Cloud Keywords"""
+
+    """Service Cloud Robot Keywords"""
 
     def enable_incident_management(self):
+
         """" Enables Incident Management """
+
+        # Go To Incident Management Setup Page
         self.shared.go_to_setup_admin_page("IncidentManagement/home")
-        sleep(8)
-        checked = "checked" in self.browser.get_element_states(
-            ":nth-match(label:has-text('Customer Service Incident Management'), 2)")
+
+        # Check if Incident Management is enabled and if not, click the toggle to enable
+        service_incident_management_toggle = ":nth-match(label:has-text('Customer Service Incident Management'), 2)"
+        self.shared.wait_on_element(service_incident_management_toggle)
+        checked = "checked" in self.browser.get_element_states(service_incident_management_toggle)
         if not checked:
-            toggle_switch = self.browser.get_element(
-                ":nth-match(label:has-text('Customer Service Incident Management'), 2)")
-            self.browser.click(toggle_switch)
+            self.browser.click(service_incident_management_toggle)
             sleep(1)
 
     def enable_slack_integration(self):
+
         """ Enables Slack Integration with the target org """
-        self.shared.go_to_setup_admin_page("SlackSetupAssistant/home")
-        sleep(2)
-        checked = "checked" in self.browser.get_element_states("label:has-text('Unaccepted')")
+
+        # Go To Slack Integration Page
+        self.shared.go_to_setup_admin_page("SlackSetupAssistant/home", 5)
+
+        # Check if already connected
+        timeout_counter = 0
+        while timeout_counter <= 15:
+            disconnected_status_count = self.browser.get_element_count("div.stage-description-toggle >> label:has-text('Unaccepted'):visible")
+            if disconnected_status_count > 0:
+                print("Slack Integration has not been enabled. Completing setup steps...")
+                break
+
+            connected_status_count = self.browser.get_element_count("div.stage-description-toggle >> label:has-text('Accepted'):visible")
+            if connected_status_count > 0:
+                print("Slack Integration Already Connected.")
+                return
+
+            sleep(1)
+            timeout_counter += 1
+
+        # If not already connected, click the option to connect and wait for the accepted label
+        checked = "checked" in self.browser.get_element_states("div.stage-description-toggle >> label:has-text('Unaccepted')")
         if not checked:
-            self.browser.click("label:has-text('Unaccepted')")
-            sleep(3)
-        self.browser.wait_for_elements_state("label:has-text('Accepted')", ElementState.visible, '15s')
+            self.browser.click("div.stage-description-toggle >> label:has-text('Unaccepted')")
+            self.browser.wait_for_elements_state("div.stage-description-toggle >> label:has-text('Accepted')", ElementState.visible, '20s')
 
     def enable_case_swarming(self):
+
         """Enables Case Swarming"""
+
+        # Ensure Slack Integration is enabled
         self.enable_slack_integration()
+
+        # Go To Service Cloud for Slack Setup Page
         self.shared.go_to_setup_admin_page("SlackServiceApp/home")
-        checked = "checked" in self.browser.get_element_states("span.slds-checkbox_faux")
+
+        # Check and enable Service Cloud for Slack
+        toggle_selector = "div.slds-media:has-text('Enable the Service Cloud for Slack App') >> lightning-input.slackServiceEnableToggle"
+        self.shared.wait_on_element(toggle_selector)
+        checked = "checked" in self.browser.get_element_states(toggle_selector)
         if not checked:
-            self.browser.click("span.slds-checkbox_faux")
-            sleep(1)
-        sleep(3)
+            self.browser.click(toggle_selector)
+            sleep(3)
+
+        # Go To Case Swarming Setup Page
         self.shared.go_to_setup_admin_page("CaseSwarming/home")
-        self.browser.wait_for_elements_state("h1:has-text('Swarming')", ElementState.visible, '30s')
-        checked = "checked" in self.browser.get_element_states("span.slds-checkbox_faux")
+
+        # Check and Enable Case Swarming
+        case_swarming_toggle = "div.slds-media:has-text('Turn On Swarming') >> label.slds-checkbox_toggle"
+        self.shared.wait_on_element(case_swarming_toggle)
+        checked = "checked" in self.browser.get_element_states(case_swarming_toggle)
         if not checked:
-            self.browser.click("span.slds-checkbox_faux")
-            sleep(1)
+            self.browser.click(case_swarming_toggle)
+            sleep(2)
 
     def create_chat_button(self):
         """Creates a new Chat Button"""
@@ -55,57 +91,94 @@ class QbrixServiceKeywords(QbrixRobotTask):
         self.browser.get_element_states(".button:has-text('New')")
         sleep(5)
 
+    def create_einstein_classification_model(self, model_name: str = None, model_type: str = None):
+
+        """Creates an Einstein Classification Model
+
+        Args:
+            model_name (str): The label which you want to give to the model
+            model_type (str): The type for the model. This should be either "Case Classification" or "Case Wrap-Up"
+        """
+
+        if not model_name:
+            raise ValueError("No model name was provided.")
+
+        if not model_type:
+            raise ValueError("No model type was provided.")
+
+        if model_type not in ("Case Wrap-Up", "Case Classification"):
+            raise ValueError(f"Model type was not one of the expected values (Note that this is case sensitive). You submitted {model_type} and the accepted values are 'Case Classification' or 'Case Wrap-Up'")
+
+        # Go To Einstein Classification Setup Page
+        self.shared.go_to_setup_admin_page("EinsteinCaseClassification/home", 5)
+
+        # Ensure that Einstein Classification is Enabled
+        classification_toggle = "div.case-classification-pref >> lightning-input >> label.slds-checkbox_toggle"
+        self.shared.wait_on_element(classification_toggle)
+        if "checked" not in self.browser.get_element_states(classification_toggle):
+            self.browser.click(classification_toggle)
+
+        # Identify Model Button
+        timeout_counter = 0
+        model_selector_button = ""
+        while timeout_counter <= 90:
+            get_started_count = self.browser.get_element_count("button.slds-button:text-is('Get Started'):visible")
+            new_model_count = self.browser.get_element_count("button.slds-button:text-is('New Model'):visible")
+
+            if get_started_count > 0:
+                model_selector_button = "button.slds-button:text-is('Get Started')"
+                break
+
+            if new_model_count > 0:
+                model_selector_button = "button.slds-button:text-is('New Model')"
+                break
+
+            sleep(1)
+            timeout_counter += 1
+
+        # Check if model has already been created
+        if self.browser.get_element_count(f"td.modelName >> button:has-text('{model_name}')") > 0:
+            print(f"{model_name} has already been defined")
+            return
+
+        # Specify App and Name for the Model
+        next_button_selector = "div.modal-footer >> button.slds-button:text-is('Next')"
+        self.shared.wait_and_click(model_selector_button)
+        self.shared.wait_and_click(f"div.slds-visual-picker >> label:has-text('{model_type}')")
+        self.browser.fill_text("label:has-text('Model Name')", model_name)
+        self.browser.click("label:has-text('API Name')")
+        self.shared.wait_and_click(next_button_selector)
+
+        if self.browser.get_element_count(f"div.error:visible") > 0:
+            print(f"{model_name} has already been created with the same api name. Skipping.")
+            return
+
+        self.shared.wait_and_click(next_button_selector)
+        self.shared.wait_and_click(next_button_selector)
+        self.shared.wait_and_click("tr:has-text('Case Reason') >> div.slds-checkbox_add-button")
+
+        # Additional Settings for Case Wrap Up
+        if model_type == "Case Wrap-Up":
+            self.browser.click("tr:has-text('Case Type') >> div.slds-checkbox_add-button")
+            self.browser.click("tr:has-text('Escalated') >> div.slds-checkbox_add-button")
+            self.browser.click("tr:has-text('Priority') >> div.slds-checkbox_add-button")
+
+        # Complete Setup
+        self.shared.wait_and_click(next_button_selector)
+        self.shared.wait_and_click("div.modal-footer >> button.slds-button:text-is('Finish')")
+        sleep(2)
+
     def add_case_wrap_up_model(self):
+
         """Add Case Wrap Up Model"""
-        self.shared.go_to_setup_admin_page("EinsteinCaseClassification/home")
-        sleep(2)
-        if "visible" in self.browser.get_element_states("button.slds-button:text-is('Get Started')"):
-            self.browser.click("button.slds-button:text-is('Get Started')")
-        else:
-            if "visible" in self.browser.get_element_states("button.slds-button:text-is('New Model')"):
-                self.browser.click("button.slds-button:text-is('New Model')")
-        self.browser.click("div.slds-visual-picker >> label:has-text('Case Wrap-Up')")
-        self.browser.fill_text("label:has-text('Model Name')", "Case Wrap-Up")
-        self.browser.click("label:has-text('Model Name')")
-        sleep(1)
-        self.browser.click("div.modal-footer >> button.slds-button:text-is('Next')")
-        sleep(2)
-        self.browser.click("div.modal-footer >> button.slds-button:text-is('Next')")
-        sleep(2)
-        self.browser.click("div.modal-footer >> button.slds-button:text-is('Next')")
-        sleep(3)
-        self.browser.click("tr:has-text('Case Reason') >> div.slds-checkbox_add-button")
-        self.browser.click("tr:has-text('Case Type') >> div.slds-checkbox_add-button")
-        self.browser.click("tr:has-text('Escalated') >> div.slds-checkbox_add-button")
-        self.browser.click("tr:has-text('Priority') >> div.slds-checkbox_add-button")
-        sleep(3)
-        self.browser.click("div.modal-footer >> button.slds-button:text-is('Next')")
-        self.browser.click("div.modal-footer >> button.slds-button:text-is('Finish')")
-        sleep(10)
+
+        self.create_einstein_classification_model(model_name="Case Wrap-Up", model_type="Case Wrap-Up")
 
     def create_case_classification_model(self):
-        """Create Case Classification"""
-        self.shared.go_to_setup_admin_page("EinsteinCaseClassification/home")
-        sleep(2)
-        if "visible" in self.browser.get_element_states("button.slds-button:text-is('Get Started')"):
-            self.browser.click("button.slds-button:text-is('Get Started')")
-        else:
-            if "visible" in self.browser.get_element_states("button.slds-button:text-is('New Model')"):
-                self.browser.click("button.slds-button:text-is('New Model')")
-        self.browser.fill_text("label:has-text('Model Name')", "SDO - Classification")
-        sleep(1)
-        self.browser.click("div.modal-footer >> button.slds-button:text-is('Next')")
-        sleep(2)
-        self.browser.click("div.modal-footer >> button.slds-button:text-is('Next')")
-        sleep(2)
-        self.browser.click("div.modal-footer >> button.slds-button:text-is('Next')")
-        sleep(3)
-        self.browser.click("tr:has-text('Case Reason') >> div.slds-checkbox_add-button")
-        sleep(3)
-        self.browser.click("div.modal-footer >> button.slds-button:text-is('Next')")
-        self.browser.click("div.modal-footer >> button.slds-button:text-is('Finish')")
-        sleep(10)
 
+        """Create Case Classification"""
+
+        self.create_einstein_classification_model(model_name="SDO - Classification", model_type="Case Classification")
 
     def messaging_components_setup(self):
         """
@@ -279,9 +352,29 @@ class QbrixServiceKeywords(QbrixRobotTask):
 
     def enable_dialer(self):
         """" Enables Dialer """
-        self.shared.go_to_setup_admin_page("DialerSetupPage/home")
-        sleep(10)
-        visible = "visible" in self.browser.get_element_states(".toggle:has-text('Disabled')")
-        if visible:
-            self.browser.click(".toggle:has-text('Disabled') > label")
+
+        # Go To Setup Page
+        self.shared.go_to_setup_admin_page("DialerSetupPage/home", 5)
+
+        # Check if Enabled and enable if not already
+        timeout_count = 0
+        timeout_reached = False
+        while timeout_count <= 30:
+            disable_count = self.browser.get_element_count("div.voiceSliderCheckBox:has-text('Dialer'):near(h2:has-text('Enable Dialer')) >> div.switchText:text-is('Disabled'):visible")
+            if disable_count == 1:
+                print("Dialer is not enabled. Continuing to enable Dialer.")
+                break
+
+            enabled_count = self.browser.get_element_count("div.voiceSliderCheckBox:has-text('Dialer'):near(h2:has-text('Enable Dialer')) >> div.switchText:text-is('Enabled'):visible")
+            if enabled_count == 1:
+                print("Dialer already enabled. Skipping task.")
+                return
+
+            timeout_count += 1
+            sleep(1)
+
+        if not timeout_reached:
+            self.browser.click(".toggle:has-text('Disabled'):near(h2:text-is('Enable Dialer')) >> label")
             sleep(3)
+        else:
+            raise Exception("Unable to locate Dialer elements on page. Please review script.")
