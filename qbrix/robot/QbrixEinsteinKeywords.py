@@ -146,6 +146,10 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
         self.browser.wait_for_elements_state("header:has-text('Conversation Insights Are Here!')", ElementState.visible,
                                              '30s')
         sleep(10)
+        if "visible" in self.browser.get_element_states("button:has-text('Enable ECI')"):
+            toggle_switch = self.browser.get_element("button:has-text('Enable ECI')")
+            self.browser.click(toggle_switch)
+            sleep(20)
 
     def enable_einstein_classification(self):
         self.shared.go_to_setup_admin_page("EinsteinCaseClassification/home")
