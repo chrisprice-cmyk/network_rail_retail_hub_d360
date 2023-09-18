@@ -140,7 +140,7 @@ class FixEinsteinVisionDatasets(BaseSalesforceApiTask, ABC):
             self.sf.restful(
                 method="PATCH", path="composite/sobjects", json=dict(records=records)
             )
-        except Exception as e:
+       except Exception as e:
             self.logger.error(e)
             return
 
