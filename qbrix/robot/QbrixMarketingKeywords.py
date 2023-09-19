@@ -254,7 +254,11 @@ class QbrixMarketingKeywords(QbrixRobotTask):
                 print("Already selected option")
                 return
 
-            self.browser.select_options_by(":nth-match(select.journey-select,1)", SelectAttribute.label, option)
-            self.shared.wait_and_click("button[title='Enable the selected journeys for Quick Send']")
-            self.shared.wait_and_click("button:text-is('Apply Changes')")
-            sleep(5)
+            if len(self.browser.select_options_by(":nth-match(select.journey-select,1)", SelectAttribute.label, option)) > 0:
+                self.shared.wait_and_click("button[title='Enable the selected journeys for Quick Send']")
+                self.shared.wait_and_click("button:text-is('Apply Changes')")
+                sleep(5)
+            else:
+                print(f"Option [{option}] was not found in the select. Skipping")
+        else:
+            print("No option was provided. Skipping")
