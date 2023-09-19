@@ -279,14 +279,87 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
         self.check_and_enable_key_accounts()
 
     def enable_einstein_activity_capture(self):
-        self.shared.go_to_setup_admin_page("ActivitySyncEngineSettingsMain/home")
-        self.browser.wait_for_elements_state(".einsteinTitle:has-text('Einstein Activity Capture')",
-                                             ElementState.visible, '30s')
-        sleep(2)
-        enabled = "enabled" in self.browser.get_element_states(".slds-button:has-text('Get Started')")
-        if enabled:
-            self.browser.click(".slds-button:has-text('Get Started')")
-            sleep(5)
+
+        """
+        Enables Einstein Activity Capture with Office 365 and oAuth 2.0
+        SE Setup Guide: https://salesforce.quip.com/JTI7AfkGt4DM
+        """
+
+        # Go To Setup Page
+        self.shared.go_to_setup_admin_page("ActivitySyncEngineSettingsMain/home", 3)
+
+        if self.browser.get_element_count("li.datasource-entry:has-text('Microsoft Office 365')") > 0:
+            print("Einstein EAC Enabled")
+            return
+
+        # Enable.. yep there 3 variations for the setup button
+
+        if self.shared.wait_on_element("button.slds-button:has-text('Turn On Einstein Activity Capture')", 3):
+            self.shared.wait_and_click("button.slds-button:has-text('Turn On Einstein Activity Capture')")
+            return
+
+        if self.shared.wait_on_element("button.slds-button:has-text('Get Started')", 3):
+            self.shared.wait_and_click("button.slds-button:has-text('Get Started')")
+
+        if self.shared.wait_on_element("button.slds-button:has-text('Add Contact and Event Sync')", 3):
+            self.shared.wait_and_click("button.slds-button:has-text('Add Contact and Event Sync')")
+
+        # Set Email and Calendar Service
+        self.shared.wait_and_click("div.slds-radio:has-text('Microsoft Office 365')")
+        self.shared.wait_and_click("footer >> button.slds-button:has-text('Next'):visible")
+
+        # Set Authentication Type
+        self.shared.wait_and_click("div.slds-visual-picker:has-text('User-Level OAuth 2.0') >> span.slds-visual-picker__figure")
+        self.shared.wait_and_click("footer >> button.slds-button:has-text('Next'):visible")
+
+        # Name Configuration
+        sleep(1)
+        self.browser.fill_text("lightning-input:has-text('Name') >> input", "Demo O365 EAC Configuration")
+        self.shared.wait_and_click("footer >> button.slds-button:has-text('Next'):visible")
+
+        # Sync Settings
+        self.shared.wait_and_click("footer >> button.slds-button:has-text('Next'):visible")
+
+        # Advanced Settings
+        self.shared.wait_and_click("footer >> button.slds-button:has-text('Next'):visible")
+
+        # Add All Users
+        sleep(1)
+        total_elements = len(self.browser.get_elements("div.slds-dueling-list__column:has-text('Available') >> li.slds-listbox__item"))
+        while total_elements > 0:
+            self.browser.click("div.slds-dueling-list__column:has-text('Available') >> :nth-match(li.slds-listbox__item, 1)")
+            self.browser.click("button[title='Add']")
+            total_elements -= 1
+
+        # Add System Admin Profile
+        self.browser.click("lightning-base-combobox:visible")
+        self.browser.click("lightning-base-combobox-item:has-text('Profiles')")
+        sleep(1)
+        self.browser.click("li.slds-listbox__item:has-text('System Administrator')")
+        self.browser.click("button[title='Add']")
+
+        self.shared.wait_and_click("footer >> button.slds-button:has-text('Next'):visible")
+
+        try:
+            # These Settings Only Come up for the first one. So we quietly fail on these if they are not there
+
+            # Exclude Addresses
+            self.shared.wait_and_click("footer >> button.slds-button:has-text('Next'):visible")
+
+            # Default Sharing
+            self.browser.click("div.emailStreamIconLabel:has-text('Share with Everyone')")
+            self.shared.wait_and_click("footer >> button.slds-button:has-text('Next'):visible")
+        except:
+            pass
+
+        # Finish
+        self.shared.wait_and_click("footer >> button.slds-button:has-text('Finish'):visible")
+
+        # Validate it Complete
+        if not self.shared.wait_on_element("li.datasource-entry:has-text('Microsoft Office 365')", 120):
+            raise Exception('Einstein Activity Capture Error - Could not confirm if EAC enabled correctly.')
+
+        print("Einstein EAC Enabled")
 
     def enable_einstein_forecasting(self):
         self.shared.go_to_setup_admin_page("ForecastingPrediction/home")
