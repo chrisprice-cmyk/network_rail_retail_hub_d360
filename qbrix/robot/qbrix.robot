@@ -40,20 +40,13 @@ Run Automation to check and Enable Einstein TCRM
     Enable Einstein Analytics CRM
 
 Run Automation to Check and Enable Einstein Insights
-    Go To Campaign Insights Setup Page
-    Set Lightning Toggle    on
-    Go To Opportunity Insights Setup Page
-    Set Lightning Toggle    on
-    Go To Account Insights Setup Page
-    Set Lightning Toggle    on
-    Enable Einstein Key Accounts Identification
+    Check And Enable All Insights
 
 Run Automation to check and enable Einstein Key Accounts Identification
-    Enable Einstein Key Accounts Identification
+    Check And Enable Key Accounts
 
 Run Automation to check and enable Campaign Insights
-    Go To Campaign Insights Setup Page
-    Set Lightning Toggle    on
+    Check And Enable Campaign Insights
 
 Check and Enable Prediction Builder
     Enable Einstein Prediction Builder

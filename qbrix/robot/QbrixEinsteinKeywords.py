@@ -15,49 +15,189 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
         """
         Enable Einstein Analytics CRM within Salesforce Org
         """
-        self.shared.go_to_setup_admin_page("InsightsSetupGettingStarted/home")
-        self.browser.wait_for_elements_state("h1:has-text('Getting Started')", ElementState.visible, '60s')
-        sleep(10)
-        if "visible" in self.browser.get_element_states("button:has-text('Enable CRM Analytics')"):
-            self.shared.click_button_with_text("Enable CRM Analytics")
-            sleep(30)
+
+        # Go To Setup Page
+        self.shared.go_to_setup_admin_page("InsightsSetupGettingStarted/home", 5)
+
+        # Check if already enabled
+        if self.browser.get_element_count("button.disable-analytics:visible") > 0:
+            print("Analytics Enabled!")
+            return
+
+        # Enable Analytics
+        self.shared.wait_and_click("button:has-text('Enable CRM Analytics')")
+
+        # Validate Analytics has enabled
+        if not self.shared.wait_on_element("button.disable-analytics:visible", 60):
+            raise Exception("Unable to validate that CRM Analytics has been enabled. Setting was clicked although did not get expected result.")
+            self.browser.take_screenshot()
+
+    def check_and_enable_campaign_insights(self):
+
+        """Checks and enabled Campaign Insights"""
+
+        # Go To Setup Page
+        self.go_to_campaign_insights_setup_page()
+        toggle_input_selector = f"{self.shared.iframe_handler()} div.box:has-text('Einstein Campaign Insights') >> input[type='checkbox']"
+        self.shared.wait_on_element(toggle_input_selector)
+
+        # Raise error if unable to confirm status
+        if "detached" in self.browser.get_element_states(toggle_input_selector):
+            raise Exception("Unable to check if Campaign Insights are enabled.")
+
+        if "checked" not in self.browser.get_element_states(toggle_input_selector):
+            self.browser.click(f"{self.shared.iframe_handler()} div.box:has-text('Einstein Campaign Insights') >> span.slds-checkbox_faux_container")
+            sleep(1)
+            if "checked" not in self.browser.get_element_states(toggle_input_selector):
+                raise Exception("Error enabling Campaign Insights. Toggle was found and clicked but is not showed as checked.")
+                self.browser.take_screenshot()
+        else:
+            print("Campaign Insights already enabled. Skipping.")
+
+    def check_and_enable_opportunity_insights(self):
+
+        """Checks and enables Opportunity Insights"""
+
+        # Go To Setup Page
+        self.go_to_opportunity_insights_setup_page()
+        toggle_input_selector = f"{self.shared.iframe_handler()} div.slds-box:has-text('Einstein Opportunity Insights') >> input[type='checkbox']"
+        self.shared.wait_on_element(toggle_input_selector)
+
+        # Raise error if unable to confirm status
+        if "detached" in self.browser.get_element_states(toggle_input_selector):
+            raise Exception("Unable to check if Opportunity Insights are enabled.")
+
+        # Enable toggle if not already enabled
+        if "checked" not in self.browser.get_element_states(toggle_input_selector):
+            self.browser.click(f"{self.shared.iframe_handler()} div.slds-box:has-text('Einstein Opportunity Insights') >> span.slds-checkbox--faux")
+            sleep(1)
+            if "checked" not in self.browser.get_element_states(toggle_input_selector):
+                raise Exception("Error enabling Opportunity Insights. Toggle was found and clicked but is not showed as checked.")
+                self.browser.take_screenshot()
+            print("Opportunity Insights Enabled")
+        else:
+            print("Opportunity Insights already enabled. Skipping.")
+
+    def check_and_enable_account_insights(self):
+
+        """Checks and enables Account Insights"""
+
+        # Go To Setup Page
+        self.go_to_account_insights_setup_page()
+        toggle_input_selector = f"{self.shared.iframe_handler()} div.box:has-text('Einstein Account Insights') >> input[type='checkbox']"
+        self.shared.wait_on_element(toggle_input_selector)
+
+        # Raise error if unable to confirm status
+        if "detached" in self.browser.get_element_states(toggle_input_selector):
+            raise Exception("Unable to check if Account Insights are enabled.")
+
+        # Enable toggle if not already enabled
+        if "checked" not in self.browser.get_element_states(toggle_input_selector):
+            self.browser.click(f"{self.shared.iframe_handler()} div.box:has-text('Einstein Account Insights') >> span.slds-checkbox--faux")
+            sleep(1)
+            if "checked" not in self.browser.get_element_states(toggle_input_selector):
+                raise Exception("Error enabling Account Insights. Toggle was found and clicked but is not showed as checked.")
+                self.browser.take_screenshot()
+            print("Account Insights Enabled")
+        else:
+            print("Account Insights already enabled. Skipping.")
+
+    def check_and_enable_relationship_insights(self):
+
+        """Checks and enables Relationship Insights"""
+
+        # Go To Setup Page
+        self.go_to_relationship_insights_setup_page()
+        toggle_input_selector = f"{self.shared.iframe_handler()} div.slds-card__body:has-text('Einstein Relationship Insights') >> input[type='checkbox']"
+        self.shared.wait_on_element(toggle_input_selector)
+
+        # Raise error if unable to confirm status
+        if "detached" in self.browser.get_element_states(toggle_input_selector):
+            raise Exception("Unable to check if Account Insights are enabled.")
+
+        # Enable toggle if not already enabled
+        if "checked" not in self.browser.get_element_states(toggle_input_selector):
+            self.browser.click(f"{self.shared.iframe_handler()} div.slds-card__body:has-text('Einstein Relationship Insights') >> span.slds-checkbox_faux_container")
+            sleep(1)
+            if "checked" not in self.browser.get_element_states(toggle_input_selector):
+                raise Exception("Error enabling Relationship Insights. Toggle was found and clicked but is not showed as checked.")
+            print("Relationship Insights Enabled")
+        else:
+            print("Relationship Insights already enabled. Skipping.")
+
+    def check_and_enable_key_accounts(self):
+
+        """Checks and enables Key Account Insights"""
+
+        # Go To Setup Page
+        self.go_to_key_account_insights_setup_page()
+        toggle_input_selector = f"{self.shared.iframe_handler()} div.slds-media:has-text('Turn On Einstein Key Accounts Identification') >> input[type='checkbox']"
+        self.shared.wait_on_element(toggle_input_selector)
+
+        # Raise error if unable to confirm status
+        if "detached" in self.browser.get_element_states(toggle_input_selector):
+            raise Exception("Unable to check if Key Account Insights are enabled.")
+
+        # Enable toggle if not already enabled
+        if "checked" not in self.browser.get_element_states(toggle_input_selector):
+            self.browser.click(f"{self.shared.iframe_handler()} div.slds-media:has-text('Turn On Einstein Key Accounts Identification') >> span.slds-checkbox_faux")
+            sleep(1)
+            if "checked" not in self.browser.get_element_states(toggle_input_selector):
+                raise Exception("Error enabling Key Account Insights. Toggle was found and clicked but is not showed as checked.")
+            print("Key Account Insights Enabled")
+        else:
+            print("Key Account Insights already enabled. Skipping.")
+
+    def check_and_enable_all_insights(self):
+
+        """Runs all Insights related keywords"""
+
+        self.check_and_enable_account_insights()
+        self.check_and_enable_campaign_insights()
+        self.check_and_enable_key_accounts()
+        self.check_and_enable_opportunity_insights()
+        self.check_and_enable_relationship_insights()
 
     def go_to_campaign_insights_setup_page(self):
         """
         Go directly to the Campaign Insights setup page
         """
-        self.shared.go_to_setup_admin_page("CampaignInsights/home")
-        sleep(10)
+        self.shared.go_to_setup_admin_page("CampaignInsights/home", 3)
+        self.browser.wait_until_network_is_idle()
 
     def go_to_opportunity_insights_setup_page(self):
         """
         Go directly to the Opportunity Insights setup page
         """
-        self.shared.go_to_setup_admin_page("OpportunityInsights/home")
+        self.shared.go_to_setup_admin_page("OpportunityInsights/home", 3)
+        self.browser.wait_until_network_is_idle()
 
     def go_to_account_insights_setup_page(self):
         """
         Go directly to the Account Insights setup page
         """
-        self.shared.go_to_setup_admin_page("AccountInsights/home")
+        self.shared.go_to_setup_admin_page("AccountInsights/home", 3)
+        self.browser.wait_until_network_is_idle()
 
     def go_to_relationship_insights_setup_page(self):
         """
         Go directly to the Relationships Insights setup page
         """
-        self.shared.go_to_setup_admin_page("EinsteinSmartTags/home")
+        self.shared.go_to_setup_admin_page("EinsteinSmartTags/home", 3)
+        self.browser.wait_until_network_is_idle()
 
     def go_to_key_account_insights_setup_page(self):
         """
         Go directly to the Key Accounts Insights setup page
         """
-        self.shared.go_to_setup_admin_page("EKAI/home")
+        self.shared.go_to_setup_admin_page("EKAI/home", 3)
+        self.browser.wait_until_network_is_idle()
 
     def go_to_lead_scoring_setup_page(self):
         """
         Go directly to the Lead Scoring setup page
         """
-        self.shared.go_to_setup_admin_page("LeadIQ/home")
+        self.shared.go_to_setup_admin_page("LeadIQ/home", 3)
         self.browser.wait_for_elements_state("h1:has-text('Einstein Lead Scoring')", ElementState.visible, '30s')
         sleep(5)
         checked = "checked" in self.browser.get_element_states("label:has-text('Off')")
@@ -76,20 +216,17 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
         self.shared.go_to_setup_admin_page("OpportunityIQSetupHome/home")
         self.browser.wait_for_elements_state("h1:has-text('Einstein Opportunity Scoring')", ElementState.visible, '30s')
         sleep(5)
-        enabled = "enabled" in self.browser.get_element_states(".slds-button:has-text('Set Up')")
-        if enabled:
+        if "enabled" in self.browser.get_element_states(".slds-button:has-text('Set Up')"):
             self.browser.click(".slds-button:has-text('Set Up')")
-            sleep(2)
-            self.browser.click(".slds-button:has-text('Next')")
-            sleep(2)
-            self.browser.click(".slds-button:has-text('Next')")
-            sleep(2)
-            self.browser.click(".slds-button:has-text('Next')")
-            sleep(2)
-            self.browser.click(".slds-button:has-text('Next')")
-            sleep(2)
-            self.browser.click(".slds-button:has-text('Start')")
-            sleep(4)
+            self.shared.wait_and_click(".slds-button:has-text('Next')")
+            self.shared.wait_and_click(".slds-button:has-text('Next')")
+            self.shared.wait_and_click(".slds-button:has-text('Next')")
+            self.shared.wait_and_click(".slds-button:has-text('Next')")
+            self.shared.wait_and_click(".slds-button:has-text('Start')")
+            sleep(5)
+            self.shared.go_to_setup_admin_page("OpportunityIQSetupHome/home")
+            if not self.shared.wait_on_element("button.slds-button:has-text('Review Settings')"):
+                raise Exception("Opportunity Scoring did not enable as expected.")
 
     def enable_automated_data_capture(self):
         """Go directly to the Opportunity Scoring setup page"""
@@ -107,20 +244,39 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
 
     def enable_einstein_prediction_builder(self):
         """ Enable Einstein Prediction Builder """
+
+        # Go To Setup Page
         self.shared.go_to_setup_admin_page("EinsteinBuilder/home")
-        self.shared.click_button_with_text("Get Started")
-        sleep(2)
-        self.shared.set_lightning_toggle("on")
+
+        # While There is a Get Started button, click it
+        attempt_counter = 0
+        while attempt_counter <= 10:
+            print("Attempting to enable Einstein Prediction Builder...")
+            print(f"Attempt: {attempt_counter}")
+
+            if self.browser.get_element_count("button:has-text('Get Started'):visible") > 0:
+                self.browser.click("button:has-text('Get Started')")
+                sleep(15)
+
+            if self.browser.get_element_count("li.statusColumn >> input[name='einsteinBuilderPrefSwitch']") > 0:
+
+                if "checked" in self.browser.get_element_states("li.statusColumn >> input[name='einsteinBuilderPrefSwitch']"):
+                    break
+                else:
+                    self.browser.click("li.statusColumn >> span.slds-checkbox_faux_container")
+                    sleep(3)
+                    if "checked" in self.browser.get_element_states("li.statusColumn >> input[name='einsteinBuilderPrefSwitch']"):
+                        break
+
+            self.shared.go_to_setup_admin_page("EinsteinBuilder/home")
+            attempt_counter += 1
+            sleep(1)
 
     def enable_einstein_key_accounts_identification(self):
-        """ Enable Einstein Prediction Builder """
-        self.shared.go_to_setup_admin_page("EKAI/home")
-        self.browser.wait_for_elements_state("h2:has-text('Turn On Einstein Key Accounts Identification')", ElementState.visible, '30s')
-        visible = "visible" in self.browser.get_element_states(".slds-checkbox_off:has-text('OFF')")
-        if visible:
-            toggle_switch = self.browser.get_element(".slds-checkbox_off:has-text('OFF')")
-            self.browser.click(toggle_switch)
-            sleep(1)
+        """ No Longer Used """
+
+        # Replacement Keyword added for legacy requests
+        self.check_and_enable_key_accounts()
 
     def enable_einstein_activity_capture(self):
         self.shared.go_to_setup_admin_page("ActivitySyncEngineSettingsMain/home")
@@ -380,89 +536,3 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
         sleep(2)
         self.browser.click(f":nth-match({iframe_handler} Button:text-is('Activate'),2)")
         sleep(4)
-
-
-    def einstein_article_recommendations_setup(self):
-        """
-        Runs the Einstein Article Recommendations Setup
-        """
-        iframe_handler = self.shared.iframe_handler()
-
-        # Make sure we are on Einstein Article Recommendations page
-        self.shared.go_to_setup_admin_page("EinsteinArticleRecommendations/home")
-        self.browser.wait_for_elements_state("h1:has-text('Einstein Article Recommendations')", ElementState.visible, '30s')
-        sleep(2)
-
-        # Make sure Einstein Article Recommendations is turned on
-        checked = "checked" in self.browser.get_element_states("label:has-text('Einstein Article Recommendations')")
-
-        if not checked:
-            self.browser.click("label:has-text('Off')")
-            sleep(3)
-
-        # Finish if Einstein Article Recommendations model is already active
-        if not "visible" in self.browser.get_element_states("button:has-text('Let\\'s go')"):
-            print('already done setup')
-            return
-
-        # If not, let's active the model
-        self.shared.click_button_with_text("Let\\'s go")
-        self.shared.click_button_with_text("Next")
-        self.shared.click_button_with_text("Next")
-
-        # Select primary field for Case
-        self.browser.click("lightning-combobox:has-text('Choose a primary field')")
-        self.browser.click("lightning-combobox:has-text('Choose a primary field') lightning-base-combobox-item >> span.slds-truncate:text-is('Subject')")
-        sleep(1)
-
-        # Choose supporting fields
-        if 1 == self.browser.get_element_count("div.slds-dueling-list__column_responsive:has-text('Available Fields') li span:text-is('Description')"):
-            self.browser.click("div.slds-dueling-list__column_responsive:has-text('Available Fields') li span:text-is('Description')")
-            self.browser.click("button[title='Move selection to Selected Fields']")
-            sleep(1)
-        else:
-            return
-
-        self.shared.click_button_with_text("Next")
-
-        # Select knowledge title field
-        self.browser.click("lightning-combobox:has-text('Knowledge Title Field')")
-        self.browser.click("lightning-combobox:has-text('Knowledge Title Field') lightning-base-combobox-item >> span.slds-truncate:text-is('Title')")
-        sleep(1)
-
-        # Select knowledge summary field
-        self.browser.click("lightning-combobox:has-text('Knowledge Summary Field')")
-        self.browser.click("lightning-combobox:has-text('Knowledge Summary Field') lightning-base-combobox-item >> span.slds-truncate:text-is('Summary')")
-        sleep(1)
-
-        # Choose additional fields
-        if 1 == self.browser.get_element_count("div.slds-dueling-list__column_responsive:has-text('Available Fields') li span:text-is('Details')"):
-            self.browser.click("div.slds-dueling-list__column_responsive:has-text('Available Fields') li span:text-is('Details')")
-            # somehow, the button[title='Move selection to Selected Fields'] came back with two results, the 2nd is the true button to click
-            self.browser.click(":nth-match(button[title='Move selection to Selected Fields'],2)")
-            sleep(1)
-        if 1 == self.browser.get_element_count("div.slds-dueling-list__column_responsive:has-text('Available Fields') li span:text-is('Question')"):
-            self.browser.click("div.slds-dueling-list__column_responsive:has-text('Available Fields') li span:text-is('Question')")
-            # somehow, the button[title='Move selection to Selected Fields'] came back with two results, the 2nd is the true button to click
-            self.browser.click(":nth-match(button[title='Move selection to Selected Fields'],2)")
-            sleep(1)
-
-        self.shared.click_button_with_text("Save")
-
-
-        # wait extra 3 seconds since the "save" could take a bit time
-        sleep(3)
-        self.browser.click(f"{iframe_handler} Button:text-is('Build')")
-        sleep(2)
-        self.browser.click(f":nth-match({iframe_handler} Button:text-is('Build Model'),2)")
-
-
-        # it will take sometime to do the model building, and it seems doesn't show us the "activate" button automatically after it's done, so let's refresh the page after 30 seconds and click the activate button.
-        sleep(30)
-        self.shared.go_to_setup_admin_page("EinsteinArticleRecommendations/home")
-        sleep(2)
-        self.browser.click(f"{iframe_handler} Button:text-is('Activate')")
-        sleep(2)
-        self.browser.click(f":nth-match({iframe_handler} Button:text-is('Activate'),2)")
-        sleep(4)
-

@@ -71,6 +71,7 @@ class QbrixSharedKeywords():
 
         if not str(self.browser.get_url()).endswith(SETUP_ADMIN_LOCATION):
             self.browser.go_to(f"{self.cumulusci.org.instance_url}{SETUP_ADMIN_LOCATION}", timeout="90s")
+            self.browser.wait_until_network_is_idle()
 
         start_time = time.time()
         timeout = 30
@@ -80,6 +81,7 @@ class QbrixSharedKeywords():
 
             try:
                 self.browser.go_to(f"{self.cumulusci.org.instance_url}{SETUP_ADMIN_LOCATION}", timeout="90s")
+                self.browser.wait_until_network_is_idle()
                 self.browser.wait_for_elements_state(f"h1:has-text('{wait_for_text}')", ElementState.visible, '10s')
                 break
             except Exception as e:
@@ -110,6 +112,7 @@ class QbrixSharedKeywords():
         application_id = self.find_id(object_api_name="AppDefinition", where_clause=f"Label = '{app_name}'", id_column_name="DurableId")
         if application_id:
             self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/app/{application_id}", timeout='30s')
+            self.browser.wait_until_network_is_idle()
 
     def go_to_setup_admin_page(self, setup_page_url: str, sleep_length: Optional[int] = 2):
         """
@@ -134,6 +137,7 @@ class QbrixSharedKeywords():
         try:
             if not str(self.browser.get_url()).endswith(f"/lightning/setup/{setup_page_url}"):
                 self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/setup/{setup_page_url}", timeout="90s")
+                self.browser.wait_until_network_is_idle()
 
             # Handlers for help messages and new feature modals
 
@@ -164,7 +168,7 @@ class QbrixSharedKeywords():
         Add to the start of selector statements to handle iframes within Lightning Pages. Note that it will return >>> at the end of the statement so account for that in your selector.
         """
 
-        sleep(2)
+        self.browser.wait_until_network_is_idle()
 
         # This is a double check to ensure that once the page has finished loading elements, no iframes have appeared.
         if self.browser.get_element_count("iframe") == 0:
@@ -214,7 +218,7 @@ class QbrixSharedKeywords():
             self.browser.select_options_by(f"{self.iframe_handler()} #duel_select_1", SelectAttribute.text, "Multi-Factor Authentication")
             self.browser.click(f"{self.iframe_handler()} div.duelingListBox >> img.leftArrowIcon")
         self.browser.click(f"{self.iframe_handler()} input.btn:has-text('Save')")
-        sleep(1)
+        self.browser.wait_until_network_is_idle()
 
     def get_secure_setting(self, secure_setting_name):
 
@@ -282,17 +286,13 @@ class QbrixSharedKeywords():
         """
 
         if not button_text:
-            raise Exception("Button Text must be specified")
+            raise ValueError("Button Text must be specified")
 
         button_selector = f"button:has-text('{button_text}')"
         if uses_iframe:
             button_selector = f":nth-match(iframe,1) >>> button:has-text('{button_text}')"
 
-        self.browser.wait_for_elements_state(button_selector, ElementState.visible, '30s')
-
-        if "visible" in self.browser.get_element_states(button_selector):
-            self.browser.click(button_selector)
-            sleep(sleep_length)
+        self.wait_and_click(button_selector)
 
     def click_button_in_frame_with_text(self, button_text: str):
         """
@@ -359,7 +359,7 @@ class QbrixSharedKeywords():
         if not selector:
             return
 
-        sleep(1)
+        self.browser.wait_until_network_is_idle()
         self.browser.wait_for_elements_state(selector, ElementState.visible, f'{timeout}s')
         self.browser.wait_for_elements_state(selector, ElementState.enabled, f'{timeout}s')
         self.browser.click(selector)
@@ -376,6 +376,7 @@ class QbrixSharedKeywords():
             bool: True if given state is in element states, False if not or on error.
         """
 
+        self.browser.wait_until_network_is_idle()
         try:
             return state in self.browser.get_element_states(selector)
         except Exception as e:
@@ -392,6 +393,7 @@ class QbrixSharedKeywords():
             bool: True when element is found on page, False when timeout is reached and element is not found.
         """
 
+        self.browser.wait_until_network_is_idle()
         count = 0
         print(f"Waiting on element selector {selector}...")
         while count <= timeout:

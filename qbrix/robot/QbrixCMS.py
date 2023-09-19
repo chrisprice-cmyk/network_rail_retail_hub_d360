@@ -17,6 +17,7 @@ class QbrixCMS(QbrixRobotTask):
     def go_to_digital_experiences(self):
         """Go to the Digital Experiences App"""
         self.shared.go_to_app("Digital Experiences")
+        sleep(5)
 
     def download_all_content(self):
 
@@ -70,77 +71,76 @@ class QbrixCMS(QbrixRobotTask):
                 print(f" -> Uploading  {os.path.join(subdirectory_path, file_name)}")
                 self.upload_cms_import_file(os.path.join(subdirectory_path, file_name), subdirectory)
 
+    def get_workspace_id(self, workspace_name: str = None):
 
+        """Returns the ID for a given workspace"""
+
+        results = self.salesforceapi.soql_query(f"SELECT Id FROM ManagedContentSpace where Name = '{workspace_name}' LIMIT 1")
+        if results["totalSize"] == 1:
+            return results["records"][0]["Id"]
+        return None
 
     def upload_cms_import_file(self, file_path, workspace):
 
         """
-        Uploads the Content from the CMS import .zip file
-        @return:
-        @param file_path: Relative path to the .zip file containing the export
-        @param workspace: Name of the workspace to upload the content to
+        Uploads the Content from the CMS import .zip file to a given workspace. If the workspace is not found, then one will be created.
+
+        Args:
+            file_path: Relative path to the .zip file containing the export
+            workspace: Name of the workspace to upload the content to
         """
 
+        if not file_path:
+            raise ValueError("A File Path Must be provided.")
+
+        if not os.path.exists(file_path):
+            raise ValueError("The file path provided does not exist")
+
+        if not workspace:
+            raise ValueError("No workspace name was provided")
+
+        if not self.get_workspace_id(workspace):
+            self.create_workspace(workspace_name=workspace, enhanced_workspace=False)
+
+        # Ensure we are using Digital Experiences App
         self.go_to_digital_experiences()
-        sleep(5)
 
         # Go To Workspace Page
-        if workspace:
+        workspace_id = self.get_workspace_id(workspace)
+        if workspace_id:
 
-            # Get the Application ID
-            results = self.salesforceapi.soql_query(
-                f"SELECT Id FROM ManagedContentSpace where Name = '{workspace}' LIMIT 1")
+            # Go To Workspace
+            self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/cms/spaces/{workspace_id}", timeout='30s')
+            self.browser.wait_until_network_is_idle()
 
-            if results["totalSize"] == 1:
-                app_id = results["records"][0]["Id"]
+            # Import File
+            iframe_handler = self.shared.iframe_handler()
+            self.shared.wait_and_click(f"{iframe_handler} div.slds-page-header__row >> button.slds-button:has-text('Show menu')")
+            self.browser.promise_to_upload_file(file_path)
+            self.shared.wait_and_click(f"{iframe_handler} div.slds-page-header__row >> lightning-menu-item.slds-dropdown__item:has-text('Import Content')")
+            self.browser.wait_for_all_promises()
 
-                # Go to the app
-                self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/cms/spaces/{app_id}", timeout='30s')
+            # Wait for Confirmation
+            wait_counter = 0
+            while wait_counter <= 60:
+                error_message_selector = "div.modal-body >> div.slds-p-around_medium:has-text('Error encountered during import')"
+                confirm_checkbox_selector = "div.modal-body >> span.slds-checkbox >> span.slds-checkbox_faux"
+                import_button_selector = "button.slds-button:has-text('Import')"
 
-                # Open Import Menu
-                iframe_handler = self.shared.iframe_handler()
-                drop_down_menu_selector = f"{iframe_handler} div.slds-page-header__row >> button.slds-button:has-text('Show menu')"
-                import_button_selector = f"{iframe_handler} div.slds-page-header__row >> lightning-menu-item.slds-dropdown__item:has-text('Import Content')"
+                if self.browser.get_element_count(error_message_selector) > 0:
+                    raise Exception("Error Occurred During File Upload. CMS Import Failed")
 
-                self.browser.click(drop_down_menu_selector)
+                if self.browser.get_element_count(confirm_checkbox_selector) > 0 or self.browser.get_element_count(import_button_selector) > 0:
+                    print(f"File {file_path} - Uploaded OK")
+                    break
+
+                wait_counter += 1
                 sleep(1)
 
-                # Upload CMS File
-                upload_promise = self.browser.promise_to_upload_file(file_path)
-                self.browser.click(import_button_selector)
-                self.browser.wait_for_all_promises()
-
-                start_time = time.time()
-                timeout = 30
-
-                while True:
-
-                    error_message_selector = "div.modal-body >> div.slds-p-around_medium:has-text('Error encountered during import')"
-                    confirm_checkbox_selector = "div.modal-body >> span.slds-checkbox >> span.slds-checkbox_faux"
-                    import_button_selector = "button.slds-button:has-text('Import')"
-
-                    if self.browser.get_element_count(error_message_selector) > 0:
-                        print("Error Occurred During File Upload. CMS Import Failed")
-                        return
-
-                    if self.browser.get_element_count(confirm_checkbox_selector) > 0 or self.browser.get_element_count(import_button_selector) > 0:
-                        print("File Imported OK!")
-                        break
-
-                    # Check if the timeout has been reached
-                    elapsed_time = time.time() - start_time
-                    if elapsed_time >= timeout:
-                        break
-
-                    time.sleep(1)
-
-                self.browser.click("div.modal-body >> span.slds-checkbox >> span.slds-checkbox_faux")
-                sleep(1)
-                self.browser.click("button.slds-button:has-text('Import')")
-                sleep(5)
-                self.browser.click("button.slds-button:text('ok')")
-                sleep(2)
-
+            # Complete Final Steps
+            self.shared.wait_and_click("div.modal-body >> span.slds-checkbox >> span.slds-checkbox_faux")
+            self.shared.wait_and_click("button.slds-button:has-text('Import')")
+            self.shared.wait_and_click("button.slds-button:text('ok')")
         else:
             print("Workspace cannot be None. Skipping")
             return
