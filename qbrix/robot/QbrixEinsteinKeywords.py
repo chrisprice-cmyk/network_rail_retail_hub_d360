@@ -195,28 +195,35 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
 
     def go_to_lead_scoring_setup_page(self):
         """
-        Go directly to the Lead Scoring setup page
+        Go directly to the Lead Scoring setup page and check its enabled
         """
         self.shared.go_to_setup_admin_page("LeadIQ/home", 3)
         self.browser.wait_for_elements_state("h1:has-text('Einstein Lead Scoring')", ElementState.visible, '30s')
-        sleep(5)
-        checked = "checked" in self.browser.get_element_states("label:has-text('Off')")
-        if not checked:
-            self.browser.click("label:has-text('Off')")
-            sleep(3)
-            self.browser.click("label:has-text('Default')")
-            sleep(3)
-            self.browser.click(".slds-button:has-text('Save')")
-            sleep(2)
+        self.builtin.log_to_console("\nLoaded Setup Page")
+
+        if self.browser.get_element_count("h3:text-is('Einstein Lead Scoring is off')") > 0:
+            self.builtin.log_to_console("\nEinstein Lead Scoring is not currently enabled.")
+            self.browser.click(":nth-match(span.slds-checkbox_faux, 1)")
+            self.shared.wait_and_click("label:has-text('Default')")
+            self.shared.wait_and_click(".slds-button:has-text('Save')")
+
+        if not self.shared.wait_on_element("h3:text-is('Einstein Lead Scoring is on')", 30):
+            raise Exception("Lead Scoring failed to enable. Checked script.")
+
+        self.builtin.log_to_console("\nLead Scoring Enabled")
 
     def go_to_oppty_scoring_setup_page(self):
         """
-        Go directly to the Opportunity Scoring setup page
+        Check and Enable Opportunity Scoring
         """
+
+        # Go To Setup Page
         self.shared.go_to_setup_admin_page("OpportunityIQSetupHome/home")
         self.browser.wait_for_elements_state("h1:has-text('Einstein Opportunity Scoring')", ElementState.visible, '30s')
-        sleep(5)
-        if "enabled" in self.browser.get_element_states(".slds-button:has-text('Set Up')"):
+        self.builtin.log_to_console("\nLoaded Setup Page")
+
+        if self.shared.wait_on_element(".slds-button:has-text('Set Up')", 3):
+            self.builtin.log_to_console("\nOpportunity Scoring is not yet enabled...")
             self.browser.click(".slds-button:has-text('Set Up')")
             self.shared.wait_and_click(".slds-button:has-text('Next')")
             self.shared.wait_and_click(".slds-button:has-text('Next')")
@@ -228,47 +235,79 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
             if not self.shared.wait_on_element("button.slds-button:has-text('Review Settings')"):
                 raise Exception("Opportunity Scoring did not enable as expected.")
 
+        self.builtin.log_to_console("\nOpportunity Scoring Enabled")
+
+
     def enable_automated_data_capture(self):
-        """Go directly to the Opportunity Scoring setup page"""
+
+        """Check and Enable Automated Data Capture"""
+
+        # Load Setup Page
         self.shared.go_to_setup_admin_page("AutomatedDataCapture/home")
         self.browser.wait_for_elements_state("h1:has-text('Einstein Automated Contacts')", ElementState.visible, '30s')
-        sleep(5)
-        checked = "checked" in self.browser.get_element_states(":nth-match(span.slds-checkbox--faux,1)")
-        if not checked:
-            self.browser.click(":nth-match(span.slds-checkbox--faux,1)")
-            sleep(1)
-        checked2 = "checked" in self.browser.get_element_states(":nth-match(span.slds-checkbox--faux,2)")
-        if not checked2:
-            self.browser.click(":nth-match(span.slds-checkbox--faux,2)")
-            sleep(5)
+        self.shared.wait_on_element(":nth-match(span.slds-checkbox--faux,1)")
+        self.builtin.log_to_console("\nLoaded Setup Page")
+
+        # Ensure All Toggles are On
+        self.builtin.log_to_console("\nChecking all toggles are on")
+        for toggle in self.browser.get_elements("span.slds-checkbox--faux"):
+            if "checked" not in self.browser.get_element_states(toggle):
+                self.browser.click(toggle)
+
+        sleep(1)
+
+        # Validate All Checkboxes are Toggled ON
+        for toggle in self.browser.get_elements("span.slds-checkbox--faux"):
+            if "checked" not in self.browser.get_element_states(toggle):
+                raise Exception("Not all settings were enabled when switching on Automated Data Capture. Please check configuration.")
+
+        self.builtin.log_to_console("\nAutomated Data Capture enabled!")
 
     def enable_einstein_prediction_builder(self):
         """ Enable Einstein Prediction Builder """
 
         # Go To Setup Page
         self.shared.go_to_setup_admin_page("EinsteinBuilder/home")
+        self.builtin.log_to_console("\nLoaded Setup Page ")
 
         # While There is a Get Started button, click it
-        attempt_counter = 0
+        attempt_counter = 1
         while attempt_counter <= 10:
-            print("Attempting to enable Einstein Prediction Builder...")
-            print(f"Attempt: {attempt_counter}")
+
+            self.builtin.log_to_console(f"\n Attempt {attempt_counter} to enable Einstein Prediction Builder")
 
             if self.browser.get_element_count("button:has-text('Get Started'):visible") > 0:
+                self.builtin.log_to_console("\nClicking Get Started ")
                 self.browser.click("button:has-text('Get Started')")
-                sleep(15)
+                if not self.shared.wait_on_element("li.statusColumn >> input[name='einsteinBuilderPrefSwitch']", 30):
+                    self.builtin.log_to_console("\nPrediction Builder has not yet loaded... waiting 10 seconds before trying again ")
+                    sleep(10)
+                else:
+                    if "checked" in self.browser.get_element_states("li.statusColumn >> input[name='einsteinBuilderPrefSwitch']"):
+                        self.builtin.log_to_console("\nPrediction Builder is now enabled!")
+                        break
+                    else:
+                        self.builtin.log_to_console("\nPrediction Builder is turned off... turning back on")
+                        self.browser.click("li.statusColumn >> span.slds-checkbox_faux_container")
+                        sleep(3)
+                        if "checked" in self.browser.get_element_states("li.statusColumn >> input[name='einsteinBuilderPrefSwitch']"):
+                            self.builtin.log_to_console("\nPrediction Builder is now enabled!")
+                            break
 
             if self.browser.get_element_count("li.statusColumn >> input[name='einsteinBuilderPrefSwitch']") > 0:
 
                 if "checked" in self.browser.get_element_states("li.statusColumn >> input[name='einsteinBuilderPrefSwitch']"):
+                    self.builtin.log_to_console("\nPrediction Builder is now enabled!")
                     break
                 else:
+                    self.builtin.log_to_console("\nPrediction Builder is turned off... turning back on")
                     self.browser.click("li.statusColumn >> span.slds-checkbox_faux_container")
                     sleep(3)
                     if "checked" in self.browser.get_element_states("li.statusColumn >> input[name='einsteinBuilderPrefSwitch']"):
+                        self.builtin.log_to_console("\nPrediction Builder is now enabled!")
                         break
 
-            self.shared.go_to_setup_admin_page("EinsteinBuilder/home")
+            self.shared.go_to_setup_admin_page(setup_page_url="EinsteinBuilder/home", force_reload=True)
             attempt_counter += 1
             sleep(1)
 
@@ -287,32 +326,37 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
 
         # Go To Setup Page
         self.shared.go_to_setup_admin_page("ActivitySyncEngineSettingsMain/home", 3)
+        self.builtin.log_to_console("\nLoaded Setup Page ")
 
         if self.browser.get_element_count("li.datasource-entry:has-text('Microsoft Office 365')") > 0:
-            print("Einstein EAC Enabled")
+            self.builtin.log_to_console("\nEAC Already Enabled for Microsoft Office 365")
             return
 
         # Enable.. yep there 3 variations for the setup button
 
-        if self.shared.wait_on_element("button.slds-button:has-text('Turn On Einstein Activity Capture')", 3):
+        if self.shared.wait_on_element("button.slds-button:has-text('Turn On Einstein Activity Capture')", 1):
             self.shared.wait_and_click("button.slds-button:has-text('Turn On Einstein Activity Capture')")
+            self.builtin.log_to_console("\n EAC was already setup but turned off. Turning back on.")
             return
 
-        if self.shared.wait_on_element("button.slds-button:has-text('Get Started')", 3):
+        if self.shared.wait_on_element("button.slds-button:has-text('Get Started')", 2):
             self.shared.wait_and_click("button.slds-button:has-text('Get Started')")
 
-        if self.shared.wait_on_element("button.slds-button:has-text('Add Contact and Event Sync')", 3):
+        if self.shared.wait_on_element("button.slds-button:has-text('Add Contact and Event Sync')", 2):
             self.shared.wait_and_click("button.slds-button:has-text('Add Contact and Event Sync')")
 
         # Set Email and Calendar Service
+        self.builtin.log_to_console("\nConnecting Email and Calendar Service ")
         self.shared.wait_and_click("div.slds-radio:has-text('Microsoft Office 365')")
         self.shared.wait_and_click("footer >> button.slds-button:has-text('Next'):visible")
 
         # Set Authentication Type
+        self.builtin.log_to_console("\n Configuring default authentication type")
         self.shared.wait_and_click("div.slds-visual-picker:has-text('User-Level OAuth 2.0') >> span.slds-visual-picker__figure")
         self.shared.wait_and_click("footer >> button.slds-button:has-text('Next'):visible")
 
         # Name Configuration
+        self.builtin.log_to_console("\n Finalizing addition settings")
         sleep(1)
         self.browser.fill_text("lightning-input:has-text('Name') >> input", "Demo O365 EAC Configuration")
         self.shared.wait_and_click("footer >> button.slds-button:has-text('Next'):visible")
@@ -324,6 +368,7 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
         self.shared.wait_and_click("footer >> button.slds-button:has-text('Next'):visible")
 
         # Add All Users
+        self.builtin.log_to_console("\nAdding all Users with an EAC licence ")
         sleep(1)
         total_elements = len(self.browser.get_elements("div.slds-dueling-list__column:has-text('Available') >> li.slds-listbox__item"))
         while total_elements > 0:
@@ -332,6 +377,7 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
             total_elements -= 1
 
         # Add System Admin Profile
+        self.builtin.log_to_console("\nAdding System Administrator Profile ")
         self.browser.click("lightning-base-combobox:visible")
         self.browser.click("lightning-base-combobox-item:has-text('Profiles')")
         sleep(1)
@@ -344,59 +390,102 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
             # These Settings Only Come up for the first one. So we quietly fail on these if they are not there
 
             # Exclude Addresses
-            self.shared.wait_and_click("footer >> button.slds-button:has-text('Next'):visible")
+            self.shared.wait_and_click("footer >> button.slds-button:has-text('Next'):visible", 1)
 
             # Default Sharing
-            self.browser.click("div.emailStreamIconLabel:has-text('Share with Everyone')")
-            self.shared.wait_and_click("footer >> button.slds-button:has-text('Next'):visible")
+            self.browser.click("div.emailStreamIconLabel:has-text('Share with Everyone')", 1)
+            self.shared.wait_and_click("footer >> button.slds-button:has-text('Next'):visible", 1)
         except:
             pass
 
         # Finish
+        self.builtin.log_to_console("\nCompleting Setup ")
         self.shared.wait_and_click("footer >> button.slds-button:has-text('Finish'):visible")
 
         # Validate it Complete
+        self.builtin.log_to_console("\nWaiting for confirmation that EAC is enabled... ")
         if not self.shared.wait_on_element("li.datasource-entry:has-text('Microsoft Office 365')", 120):
             raise Exception('Einstein Activity Capture Error - Could not confirm if EAC enabled correctly.')
 
-        print("Einstein EAC Enabled")
+        self.builtin.log_to_console("\nEAC is now enabled")
 
     def enable_einstein_forecasting(self):
-        self.shared.go_to_setup_admin_page("ForecastingPrediction/home")
+
+        """Checks and Enabled Einstein Forecasting in the target Salesforce Org"""
+
+        self.builtin.log_to_console("\nChecking Einstein Forecasting is enabled...")
+
+        # Loaded Forecasting Setup Page
+        self.shared.go_to_setup_admin_page(setup_page_url="ForecastingPrediction/home", force_reload=True)
         self.browser.wait_for_elements_state("h1:has-text('Einstein Forecasting')", ElementState.visible, '30s')
         sleep(2)
-        enabled = "enabled" in self.browser.get_element_states(".slds-button:has-text('Enable')")
-        if enabled:
-            self.browser.click(".slds-button:has-text('Enable')")
-            sleep(20)
+        self.builtin.log_to_console("\nLoaded Setup Page...")
 
-    def enable_call_coaching_eci(self):
-        self.shared.go_to_setup_admin_page("CallCoachingSettings/home")
-        self.browser.wait_for_elements_state("header:has-text('Conversation Insights Are Here!')", ElementState.visible,
-                                             '30s')
-        sleep(10)
-        if "visible" in self.browser.get_element_states("button:has-text('Enable ECI')"):
-            toggle_switch = self.browser.get_element("button:has-text('Enable ECI')")
-            self.browser.click(toggle_switch)
-            sleep(20)
-
-    def enable_einstein_classification(self):
-        self.shared.go_to_setup_admin_page("EinsteinCaseClassification/home")
-        self.browser.wait_for_elements_state("h1:has-text('Einstein Classification')", ElementState.visible, '15s')
-        sleep(5)
-
-        get_enabled_count = self.browser.get_element_count("div.case-classification-pref >> span.slds-checkbox_on:visible")
-
-        if get_enabled_count and get_enabled_count > 0:
-            sleep(3)
+        # Check if already enabled
+        if self.shared.wait_on_element(".slds-button:has-text('Disable')", 2):
+            self.builtin.log_to_console("\nEinstein Forecasting already enabled")
             return
 
-        self.browser.click("div.case-classification-pref >> label.slds-checkbox_toggle:has-text('Einstein Classification Apps')")
+        # Enable
+        if self.shared.wait_on_element(".slds-button:has-text('Enable')", 2):
+            self.builtin.log_to_console("\nEnabling Einstein Forecasting...")
+            self.shared.wait_and_click(".slds-button:has-text('Enable')")
+            if not self.shared.wait_on_element(".slds-button:has-text('Disable')", 60):
+                raise Exception("Attempted to enable Einstein Forecasting but unable to confirm.")
+            else:
+                self.builtin.log_to_console("\nEinstein Forecasting is now enabled.")
+
+
+    def enable_call_coaching_eci(self):
+
+        """Check and Enable Call Coaching"""
+
+        # Load Setup Page
+        self.shared.go_to_setup_admin_page("CallCoachingSettings/home")
+        if not self.shared.wait_on_element("header:has-text('Conversation Insights Are Here!')", 30):
+            raise Exception("Unexpected Page format. Unable to enable Call Coaching")
+
+        # Check if enabled
+        if not self.shared.wait_on_element("button:has-text('Enable ECI')", 3):
+            self.builtin.log_to_console("\nCall Coaching is already enabled.")
+        else:
+            self.builtin.log_to_console("\nCall Coaching is NOT enabled. Clicking button to enable.")
+            self.browser.click("button:has-text('Enable ECI')")
+
+            while self.browser.get_element_count("button:has-text('Enable ECI'):visible") > 0:
+                sleep(2)
+
+            self.builtin.log_to_console("\nCall Coaching is now enabled.")
+
+    def enable_einstein_classification(self):
+
+        """Enable Einstein Case Classification"""
+
+        self.shared.go_to_setup_admin_page(setup_page_url="EinsteinCaseClassification/home", force_reload=True)
+        self.browser.wait_for_elements_state("h1:has-text('Einstein Classification')", ElementState.visible, '15s')
+        self.shared.wait_on_element("div.case-classification-pref", 10)
+        self.builtin.log_to_console("\nEinstein Case Classification setup page loaded.")
+
+        if self.browser.get_element_count("div.case-classification-pref >> span.slds-checkbox_on:visible") > 0:
+            self.builtin.log_to_console("\nEinstein Case Classification is enabled.")
+            return
+
+        if self.browser.get_element_count("div.case-classification-pref >> span.slds-checkbox_off:visible") > 0:
+            self.builtin.log_to_console("\nEinstein Case Classification is NOT enabled.")
+            self.browser.click("div.case-classification-pref >> label.slds-checkbox_toggle:has-text('Einstein Classification Apps')")
+
         # Assign Permission Set to Admin User
         self.cumulusci.run_task(task_name="assign_permission_sets", api_names='EinsteinAgent')
+
+        if not self.shared.wait_on_element("div.case-classification-pref >> span.slds-checkbox_on:visible", 30):
+            raise Exception("Einstein Case Classification failed to enable.")
+
         sleep(3)
+        self.builtin.log_to_console("\nEinstein Case Classification is now enabled.")
 
     def einstein_case_classification_post_setup(self):
+
+        """Complete Additional Setup for Case Classification for SDO"""
 
         # Check that Classification is Enabled
         self.enable_einstein_classification()
@@ -410,28 +499,17 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
         rebuild_needed = False
         for model in models:
             model_status = self.browser.get_property(f"{model} >> td.modelStatus", "innerText")
-
-            print(model_status)
-
-            if model_status:
-                if model_status not in ("Ready to Activate", "Active"):
-                    rebuild_needed = True
-                    break
+            if model_status and model_status not in ("Ready to Activate", "Active"):
+                rebuild_needed = True
+                break
 
         if rebuild_needed:
             # Disable Classification - Yes I know, this is the way...
             self.browser.click("label.slds-checkbox_toggle:has-text('Einstein Classification Apps')")
-            sleep(2)
-            self.browser.click("button.slds-button:has-text('Turn Off')")
-            sleep(2)
-
-            # Refresh Page
-            self.shared.go_to_setup_admin_page("EinsteinCaseClassification/home")
-            sleep(2)
+            self.shared.wait_and_click("button.slds-button:has-text('Turn Off')")
 
             # Enable Classification... AGAIN (This is by design...)
-            self.browser.click("label.slds-checkbox_toggle:has-text('Einstein Classification Apps')")
-            sleep(5)
+            self.enable_einstein_classification()
 
             self.browser.wait_for_elements_state(f"{iframe_handle} :nth-match(#modelTable, 1)", ElementState.visible, '15s')
 
@@ -448,10 +526,8 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
                 sleep(1)
 
             # Return to main setup page
-            self.shared.go_to_setup_admin_page("EinsteinCaseClassification/home")
+            self.shared.go_to_setup_admin_page(setup_page_url="EinsteinCaseClassification/home", force_reload=True)
             sleep(1)
-
-
 
     def eac_enabled_enhanced_email_pane(self):
 
@@ -514,12 +590,18 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
         self.shared.go_to_setup_admin_page("EmailIqSetupPage/home")
         sleep(1)
 
+        iframe_handler = self.shared.iframe_handler()
+
         if "checked" not in self.browser.get_element_states(f"{iframe_handler} div.slds-card__header:has-text('Make Inbox Available to Users') >> input"):
-            self.browser.click(f"{iframe_handler} div.slds-card__header:has-text('Make Inbox Available to Users') >> input")
+            self.browser.click(f"{iframe_handler} div.slds-card__header:has-text('Make Inbox Available to Users') >> span.slds-checkbox--faux")
             sleep(1)
 
-        if "checked" not in self.browser.get_element_states(f"{iframe_handler} div.slds-media:has-text('Email Tracking') >> input"):
-            self.browser.click(f"{iframe_handler} div.slds-card__header:has-text('Email Tracking') >> input")
+        if "checked" not in self.browser.get_element_states(f"{iframe_handler} div.emailStreamEmailIqSetupRow:has-text('External Email Tracking') >> input"):
+            self.browser.click(f"{iframe_handler} div.emailStreamEmailIqSetupRow:has-text('External Email Tracking') >> span.slds-checkbox--faux")
+            sleep(1)
+        
+        if "checked" not in self.browser.get_element_states(f"{iframe_handler} div.emailStreamEmailIqSetupRow:has-text('Internal Email Tracking') >> input"):
+            self.browser.click(f"{iframe_handler} div.emailStreamEmailIqSetupRow:has-text('Internal Email Tracking') >> span.slds-checkbox--faux")
             sleep(1)
 
         # Assign Required Permissions to running user
@@ -538,11 +620,13 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
         sleep(2)
 
         # Make sure Einstein Article Recommendations is turned on
-        checked = "checked" in self.browser.get_element_states("label:has-text('Einstein Article Recommendations')")
-
-        if not checked:
+        if not "checked" in self.browser.get_element_states("label:has-text('Einstein Article Recommendations')"):
             self.browser.click("label:has-text('Off')")
             sleep(3)
+
+        if self.shared.wait_on_element("h2:has-text('Your model is active!')"):
+            print("Einstein Article Recommendations Activated")
+            return
 
         # Finish if Einstein Article Recommendations model is already active
         if not "visible" in self.browser.get_element_states("button:has-text('Let\\'s go')"):

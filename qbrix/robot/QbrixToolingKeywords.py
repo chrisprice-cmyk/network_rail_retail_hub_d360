@@ -20,9 +20,23 @@ class QbrixToolingKeywords(QbrixRobotTask):
         if connected_app_name:
             self.shared.go_to_setup_admin_page("ConnectedApplication/home")
             iframe_selector = self.shared.iframe_handler()
-            self.browser.wait_for_elements_state(f"{iframe_selector} h1:text-is('Connected Apps')", ElementState.visible, "15s")
+            self.browser.wait_for_elements_state(f"{iframe_selector} h1:text-is('Connected Apps')", ElementState.visible, "30s")
+
+            attempt_counter = 0
+            while attempt_counter < 6:
+
+                if not self.shared.wait_on_element(f"{iframe_selector} a:text-is('{connected_app_name}')", 2):
+                    if self.browser.get_element_count("img.moreArrow:visible") > 0:
+                        self.browser.click("img.moreArrow")
+                        sleep(1)
+                        self.shared.wait_on_element("img.fewerArrow")
+                else:
+                    break
+
+                attempt_counter += 1
+
             self.browser.click(f"{iframe_selector} a:text-is('{connected_app_name}')")
-            self.browser.wait_for_elements_state(f"{iframe_selector} h2.mainTitle:text-is('Connected App Detail')", ElementState.visible, "15s")
+            self.browser.wait_for_elements_state(f"{iframe_selector} h2.mainTitle:text-is('Connected App Detail')", ElementState.visible, "30s")
 
 
     def enable_admin_auth_for_connected_app(self, connected_app_name, browse_to_app_page: bool = True):

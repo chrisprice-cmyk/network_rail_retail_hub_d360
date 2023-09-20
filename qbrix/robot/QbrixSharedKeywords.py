@@ -114,7 +114,7 @@ class QbrixSharedKeywords():
             self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/app/{application_id}", timeout='30s')
             self.browser.wait_until_network_is_idle()
 
-    def go_to_setup_admin_page(self, setup_page_url: str, sleep_length: Optional[int] = 2):
+    def go_to_setup_admin_page(self, setup_page_url: str, sleep_length: Optional[int] = 2, force_reload = False):
         """
         Browses to a lightning setup URL, provide everything after lightning/setup/ in the URL
 
@@ -135,7 +135,7 @@ class QbrixSharedKeywords():
 
         # Go To Page
         try:
-            if not str(self.browser.get_url()).endswith(f"/lightning/setup/{setup_page_url}"):
+            if force_reload or  not str(self.browser.get_url()).endswith(f"/lightning/setup/{setup_page_url}"):
                 self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/setup/{setup_page_url}", timeout="90s")
                 self.browser.wait_until_network_is_idle()
 
