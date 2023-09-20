@@ -941,6 +941,9 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
         wave_xmd_files = glob.glob("force-app/main/default/wave/*.xmd-meta.xml", recursive=False)
         for xmd in wave_xmd_files:
             replace_file_text(file_location=xmd, search_string=f"{find_value}</field>", replacement_string=f"{replace_value}</field>", show_info=False)
+        wave_wcomp_files = glob.glob("force-app/main/default/wave/*.wcomp", recursive=False)
+        for wcomp in wave_wcomp_files:
+            replace_file_text(file_location=wcomp, search_string=find_value, replacement_string=replace_value, show_info=True)
 
     def get_date_format_string(self, input_string):
         if 'd' in input_string.lower():
