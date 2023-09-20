@@ -1,0 +1,28 @@
+name: Update SHA in Text File
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  update-sha:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get SHA
+        id: get-sha
+        run: echo "::set-output name=sha::$(git rev-parse HEAD)"
+
+      - name: Update Text File
+        run: echo "SHA: ${{ steps.get-sha.outputs.sha }}" > sha.txt
+        
+      - name: Commit and Push Changes
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add sha.txt
+          git commit -m "Update SHA"
+          git push
