@@ -172,6 +172,9 @@ tasks:
       exitonsoqlzero: "select count() soql to verify exit on 0 count"
       maxwaithchecks: 10
 
+  experience_manager:
+    class_path: qbrix.tools.utils.qbrix_experience_manager.ExperienceManager
+
   qbrix_installer_tracking:
     class_path: qbrix.tools.utils.qbrix_installtracking.InstallRecorder
 
@@ -434,6 +437,19 @@ flows:
         flow: post_qbrix_deploy
       90:
         task: None
+
+  test_flow:
+    steps:
+      1:
+        task: experience_manager
+        options:
+          experience_site_name: SDO - Consumer
+          topic_assignments:
+            Solar:
+              - Solar panel isn't producing much electricity
+              - Solar panel has cracked glass
+          collaboration_groups:
+            - Stewarts Group
 
 orgs:
   #------------------------------------#

@@ -53,7 +53,8 @@ Q_BRIX_CUSTOM_TASKS = {
     'q_update_dependencies': 'qbrix.salesforce.qbrix_salesforce_tasks.QUpdateDependencies',
     'mass_qbrix_update': 'qbrix.tools.utils.qbrix_mass_ops.MassFileOps',
     'precommit_check': 'qbrix.git.hooks_ext.pre_commit.PreCommit',
-    'qbrix_robot_test': 'qbrix.tools.utils.qbrix_launch_test_robot.QRobotTestCapture'
+    'qbrix_robot_test': 'qbrix.tools.utils.qbrix_launch_test_robot.QRobotTestCapture',
+    'experience_manager': 'qbrix.tools.utils.qbrix_experience_manager.ExperienceManager'
 }
 
 # Entires which are needed in .gitignore

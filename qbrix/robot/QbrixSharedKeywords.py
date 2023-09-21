@@ -59,6 +59,12 @@ class QbrixSharedKeywords():
     # BROWSING AND NAVIGATION FUNCTIONS
     # ---------------------------------
 
+    def get_signup_email(self):
+
+        """ Returns the email address for the user who created the org """
+
+        return self.cumulusci.get_org_info().get("userinfo").get("email")
+
     def go_to_lightning_setup_home(self, wait_for_text: str = "Home"):
         """
         Browses to the Lightning Setup Home Page.
