@@ -28,7 +28,7 @@ DEFAULT_UPDATE_LOCATION = "https://qbrix-core.herokuapp.com/qbrix/q_update_packa
 
 log = init_logger()
 
-def replace_file_text(file_location, search_string, replacement_string, show_info=False, number_of_replacements=-1):
+def replace_file_text(file_location, search_string, replacement_string, show_info=False, number_of_replacements=-1, search_regex=False):
     """ Replaces a string value within a given file
 
     Args:
@@ -37,6 +37,7 @@ def replace_file_text(file_location, search_string, replacement_string, show_inf
         replacement_string (str): The replacement String value
         show_info (bool): When True, this will output information about the string value being modified.
         number_of_replacements (int): The total number of replacements to process, for example 1 would only replace the first instance of the search string in the file. Default is -1 which means replace all.
+        search_regex (bool): When True, it will do regex replace instead of plain string replace, with this set to be True, the number_of_replacements will be a bit different, coz in re.sub, the count 0 (instead of -1) means replace all
     """
 
     if show_info:
@@ -45,13 +46,24 @@ def replace_file_text(file_location, search_string, replacement_string, show_inf
     file_task = QbrixFileTask(file_location=file_location)
     file_contents = file_task.get_file_contents()
 
-    if (not file_contents) or (search_string not in file_contents):
+    if not file_contents:
+        return
+
+    # only do the pre replace check if it's not regex search
+    if (not search_regex) and (search_string not in file_contents):
         return
 
     if show_info:
-        log.info(f" -> Searching for all references to '{search_string}' and replacing with '{replacement_string}'.")
+        log_info = f" -> Searching for all references to '{search_string}' and replacing with '{replacement_string}'."
+        if search_regex:
+            log_info = log_info[:-1] + ", using regex."
+        log.info(log_info)
 
-    updated_file_contents = file_contents.replace(search_string, replacement_string, number_of_replacements)
+    if search_regex:
+        # notice the last arg, re.sub use count 0 instead of -1 for "replace all", so we need to do a bit tweak here
+        updated_file_contents = re.sub(search_string, replacement_string, file_contents, number_of_replacements if number_of_replacements > 0 else 0)
+    else:
+        updated_file_contents = file_contents.replace(search_string, replacement_string, number_of_replacements)
 
     return file_task.update_file(updated_file_contents=updated_file_contents)
 

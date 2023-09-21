@@ -19,6 +19,8 @@ from cumulusci.core.exceptions import CommandException, TaskOptionsError
 from cumulusci.core.keychain import BaseProjectKeychain
 from cumulusci.tasks.sfdx import SFDXBaseTask
 from genericpath import isfile
+from qbrix.tools.shared.qbrix_project_tasks import run_command, replace_file_text
+from cumulusci.core.github import get_commit
 
 LOAD_COMMAND = "sfdx force:apex:execute "
 
@@ -214,6 +216,8 @@ class InstallRecorder(SFDXBaseTask):
             else:
                 self.trackingdata["maxapiversion"] = 0.0
 
+            # embeded _update_qbrix_version in the starting of installation tracking, return qbrix_commit_info so we can include these info in tracking too, in the future
+            qbrix_commit_info = self._update_qbrix_version()
 
             self.__writertrackingtofile()
 
@@ -348,6 +352,70 @@ class InstallRecorder(SFDXBaseTask):
                 self._recordtracking()
 
             self.logger.info('Exit Handler Exit')
+
+
+    def _update_qbrix_version(self):
+        # get the running folder, we will use that to determin if this is a direct call or a source dependency call
+        my_path = os.getcwd()
+
+        # get the obj of current github repo
+        my_repo = self.project_config.get_repo_from_url(self.project_config.project__git__repo_url)
+        
+        # if we see a ".cc/projects/", we should know it's a source dependency call, and that hash like folder is the full sha of the commit, and we will use the repo's default branch as my branch
+        if ".cci/projects/" in my_path:
+            my_sha = my_path.split("/")[-1]
+            my_branch = my_repo.default_branch
+        # other wise, it's a direct call, we don't have a sha folder ready to use, but we can get these (and even more) info from git log commands.
+        else:
+            try:
+                my_sha, sha_error = run_command(f"git log -1 --pretty=format:'%H'")
+                my_branch, branch_error = run_command(f"git branch --show-current")
+                if sha_error or branch_error:
+                    print(f"errors occurred when reading git info\n - sha_error: {sha_error}\n - branch_error: {branch_error}")
+                    return
+            except Exception as e:
+                print(f"failed getting git info: {e}")
+                return
+
+        # now we have the sha of this commit, let's get the obj of current commit, well, we are not using this commit time info yet, it's just for future, leave them here in case I forgot how to retreive them.
+        my_commit = None
+        commit_time = None
+        try:
+            my_commit = get_commit(my_repo, my_sha)
+            # with commit info, we can get the commit time
+            try:
+                commit_time = my_commit.commit.get('author').get('date')
+            except Exception as e:
+                print(f"failed getting git commit time info: {e}")
+        except Exception as e:
+            print(f"failed getting git commit info: {e}")
+
+        
+
+        # well, we will combine the branch name and sha together as version, and we wrap the info with ||| because there is some regex replace later, we use those to prevent annoying group capture errors, TO DO: there should be better way to do it.
+        # we also hope to add the "commit time" into the version for easier reading and comparing the versions, but it's a bit challenge to get that info from a source dependency call, another research TO DO for later
+        my_version = f"|||{my_sha}|||"
+
+        # now, let's find the QBrix Register custom metadata
+        meta_folder = "force-app/main/default/customMetadata"
+        qbrix_meta_file = None
+        for one_file in os.listdir(meta_folder):
+            if one_file.startswith("xDO_Base_QBrix_Register."):
+                qbrix_meta_file = one_file
+                break
+
+        if not qbrix_meta_file:
+            return
+
+        # and replace the version
+        replace_file_text(f"{meta_folder}/{qbrix_meta_file}", r"(<field>xDO_Version__c<\/field>\s*<value xsi:type=\"xsd:string\">)[^<]*(<\/value>)", rf"\1{my_version}\2", search_regex = True)
+        replace_file_text(f"{meta_folder}/{qbrix_meta_file}", r"\|\|\|", "", search_regex = True)
+
+        return {
+            "sha": my_sha,
+            "branch": my_branch,
+            "commit_time": commit_time,
+        }
 
 
 class ExitHooks(object):
