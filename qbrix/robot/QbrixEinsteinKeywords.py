@@ -16,12 +16,14 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
         Enable Einstein Analytics CRM within Salesforce Org
         """
 
+        self.builtin.log_to_console("\nChecking Einstein Analytics CRM is enabled")
+
         # Go To Setup Page
         self.shared.go_to_setup_admin_page("InsightsSetupGettingStarted/home", 5)
 
         # Check if already enabled
         if self.browser.get_element_count("button.disable-analytics:visible") > 0:
-            print("Analytics Enabled!")
+            self.builtin.log_to_console("\nEinstein Analytics CRM is already enabled")
             return
 
         # Enable Analytics
@@ -29,134 +31,169 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
 
         # Validate Analytics has enabled
         if not self.shared.wait_on_element("button.disable-analytics:visible", 60):
-            raise Exception("Unable to validate that CRM Analytics has been enabled. Setting was clicked although did not get expected result.")
             self.browser.take_screenshot()
+            raise Exception("Unable to validate that CRM Analytics has been enabled. Setting was clicked although did not get expected result.")
+
+        self.builtin.log_to_console("\nEinstein Analytics CRM is now enabled")
 
     def check_and_enable_campaign_insights(self):
 
         """Checks and enabled Campaign Insights"""
 
+        self.builtin.log_to_console("\nChecking Campaign Insights...")
+
         # Go To Setup Page
         self.go_to_campaign_insights_setup_page()
         toggle_input_selector = f"{self.shared.iframe_handler()} div.box:has-text('Einstein Campaign Insights') >> input[type='checkbox']"
-        self.shared.wait_on_element(toggle_input_selector)
 
         # Raise error if unable to confirm status
-        if "detached" in self.browser.get_element_states(toggle_input_selector):
-            raise Exception("Unable to check if Campaign Insights are enabled.")
+        if not self.shared.wait_on_element(toggle_input_selector, 30) and "enabled" not in self.browser.get_element_states(toggle_input_selector):
+            self.browser.take_screenshot()
+            raise Exception("Error enabling Campaign Insights. Unable to find expected toggle on page or toggle is not enabled.")
 
+        self.builtin.log_to_console("\nSetup page loaded")
+
+        # Enable toggle if not already enabled
         if "checked" not in self.browser.get_element_states(toggle_input_selector):
+            self.builtin.log_to_console("\nNot enabled yet. Clicking toggle...")
             self.browser.click(f"{self.shared.iframe_handler()} div.box:has-text('Einstein Campaign Insights') >> span.slds-checkbox_faux_container")
             sleep(1)
             if "checked" not in self.browser.get_element_states(toggle_input_selector):
                 raise Exception("Error enabling Campaign Insights. Toggle was found and clicked but is not showed as checked.")
                 self.browser.take_screenshot()
+            self.builtin.log_to_console("\nCampaign Insights are now enabled")
         else:
-            print("Campaign Insights already enabled. Skipping.")
+            self.builtin.log_to_console("\nCampaign Insights already enabled. Skipping.")
 
     def check_and_enable_opportunity_insights(self):
 
         """Checks and enables Opportunity Insights"""
 
+        self.builtin.log_to_console("\nChecking Opportunity Insights...")
+
         # Go To Setup Page
         self.go_to_opportunity_insights_setup_page()
         toggle_input_selector = f"{self.shared.iframe_handler()} div.slds-box:has-text('Einstein Opportunity Insights') >> input[type='checkbox']"
-        self.shared.wait_on_element(toggle_input_selector)
 
         # Raise error if unable to confirm status
-        if "detached" in self.browser.get_element_states(toggle_input_selector):
-            raise Exception("Unable to check if Opportunity Insights are enabled.")
+        if not self.shared.wait_on_element(toggle_input_selector, 30) and "enabled" not in self.browser.get_element_states(toggle_input_selector):
+            self.browser.take_screenshot()
+            raise Exception("Error enabling Opportunity Insights. Unable to find expected toggle on page or toggle is not enabled.")
+
+        self.builtin.log_to_console("\nSetup page loaded")
 
         # Enable toggle if not already enabled
         if "checked" not in self.browser.get_element_states(toggle_input_selector):
+            self.builtin.log_to_console("\nNot enabled yet. Clicking toggle...")
             self.browser.click(f"{self.shared.iframe_handler()} div.slds-box:has-text('Einstein Opportunity Insights') >> span.slds-checkbox--faux")
             sleep(1)
             if "checked" not in self.browser.get_element_states(toggle_input_selector):
-                raise Exception("Error enabling Opportunity Insights. Toggle was found and clicked but is not showed as checked.")
                 self.browser.take_screenshot()
-            print("Opportunity Insights Enabled")
+                raise Exception("Error enabling Opportunity Insights. Toggle was found and clicked but its not showing as enabled.")
+            self.builtin.log_to_console("\nOpportunity Insights Enabled")
         else:
-            print("Opportunity Insights already enabled. Skipping.")
+            self.builtin.log_to_console("\nOpportunity Insights already enabled. Skipping.")
 
     def check_and_enable_account_insights(self):
 
         """Checks and enables Account Insights"""
 
+        self.builtin.log_to_console("\nChecking Account Insights...")
+
         # Go To Setup Page
         self.go_to_account_insights_setup_page()
         toggle_input_selector = f"{self.shared.iframe_handler()} div.box:has-text('Einstein Account Insights') >> input[type='checkbox']"
-        self.shared.wait_on_element(toggle_input_selector)
 
         # Raise error if unable to confirm status
-        if "detached" in self.browser.get_element_states(toggle_input_selector):
-            raise Exception("Unable to check if Account Insights are enabled.")
+        if not self.shared.wait_on_element(toggle_input_selector, 30) and "enabled" not in self.browser.get_element_states(toggle_input_selector):
+            self.browser.take_screenshot()
+            raise Exception("Error enabling Account Insights. Unable to find expected toggle on page or toggle is not enabled.")
+
+        self.builtin.log_to_console("\nSetup page loaded")
 
         # Enable toggle if not already enabled
         if "checked" not in self.browser.get_element_states(toggle_input_selector):
+            self.builtin.log_to_console("\nNot enabled yet. Clicking toggle...")
             self.browser.click(f"{self.shared.iframe_handler()} div.box:has-text('Einstein Account Insights') >> span.slds-checkbox--faux")
             sleep(1)
             if "checked" not in self.browser.get_element_states(toggle_input_selector):
-                raise Exception("Error enabling Account Insights. Toggle was found and clicked but is not showed as checked.")
                 self.browser.take_screenshot()
-            print("Account Insights Enabled")
+                raise Exception("Error enabling Account Insights. Toggle was found and clicked but is not showed as checked.")
+            self.builtin.log_to_console("\nAccount Insights Enabled")
         else:
-            print("Account Insights already enabled. Skipping.")
+            self.builtin.log_to_console("\nAccount Insights already enabled. Skipping.")
 
     def check_and_enable_relationship_insights(self):
 
         """Checks and enables Relationship Insights"""
 
+        self.builtin.log_to_console("\nChecking Relationship Insights...")
+
         # Go To Setup Page
         self.go_to_relationship_insights_setup_page()
         toggle_input_selector = f"{self.shared.iframe_handler()} div.slds-card__body:has-text('Einstein Relationship Insights') >> input[type='checkbox']"
-        self.shared.wait_on_element(toggle_input_selector)
 
         # Raise error if unable to confirm status
-        if "detached" in self.browser.get_element_states(toggle_input_selector):
-            raise Exception("Unable to check if Account Insights are enabled.")
+        if not self.shared.wait_on_element(toggle_input_selector, 30) and "enabled" not in self.browser.get_element_states(toggle_input_selector):
+            self.browser.take_screenshot()
+            raise Exception("Error enabling Relationship Insights. Unable to find expected toggle on page or toggle is not enabled.")
+
+        self.builtin.log_to_console("\nSetup page loaded")
 
         # Enable toggle if not already enabled
         if "checked" not in self.browser.get_element_states(toggle_input_selector):
+            self.builtin.log_to_console("\nNot enabled yet. Clicking toggle...")
             self.browser.click(f"{self.shared.iframe_handler()} div.slds-card__body:has-text('Einstein Relationship Insights') >> span.slds-checkbox_faux_container")
             sleep(1)
             if "checked" not in self.browser.get_element_states(toggle_input_selector):
+                self.browser.take_screenshot()
                 raise Exception("Error enabling Relationship Insights. Toggle was found and clicked but is not showed as checked.")
-            print("Relationship Insights Enabled")
+            self.builtin.log_to_console("\nRelationship Insights Enabled")
         else:
-            print("Relationship Insights already enabled. Skipping.")
+            self.builtin.log_to_console("\nRelationship Insights already enabled. Skipping.")
 
     def check_and_enable_key_accounts(self):
 
         """Checks and enables Key Account Insights"""
 
+        self.builtin.log_to_console("\nChecking Key Account Insights...")
+
         # Go To Setup Page
         self.go_to_key_account_insights_setup_page()
         toggle_input_selector = f"{self.shared.iframe_handler()} div.slds-media:has-text('Turn On Einstein Key Accounts Identification') >> input[type='checkbox']"
-        self.shared.wait_on_element(toggle_input_selector)
 
         # Raise error if unable to confirm status
-        if "detached" in self.browser.get_element_states(toggle_input_selector):
-            raise Exception("Unable to check if Key Account Insights are enabled.")
+        if not self.shared.wait_on_element(toggle_input_selector, 30) and "enabled" not in self.browser.get_element_states(toggle_input_selector):
+            self.browser.take_screenshot()
+            raise Exception("Error enabling Key Account Insights. Unable to find expected toggle on page or toggle is not enabled.")
+
+        self.builtin.log_to_console("\nSetup page loaded")
 
         # Enable toggle if not already enabled
         if "checked" not in self.browser.get_element_states(toggle_input_selector):
+            self.builtin.log_to_console("\nNot enabled yet. Clicking toggle...")
             self.browser.click(f"{self.shared.iframe_handler()} div.slds-media:has-text('Turn On Einstein Key Accounts Identification') >> span.slds-checkbox_faux")
             sleep(1)
             if "checked" not in self.browser.get_element_states(toggle_input_selector):
+                self.browser.take_screenshot()
                 raise Exception("Error enabling Key Account Insights. Toggle was found and clicked but is not showed as checked.")
-            print("Key Account Insights Enabled")
+            self.builtin.log_to_console("\nKey Account Insights are now enabled.")
         else:
-            print("Key Account Insights already enabled. Skipping.")
+            self.builtin.log_to_console("\nKey Account Insights are already enabled.")
 
     def check_and_enable_all_insights(self):
 
         """Runs all Insights related keywords"""
+
+        self.builtin.log_to_console("\nEnabling all Insights...")
 
         self.check_and_enable_account_insights()
         self.check_and_enable_campaign_insights()
         self.check_and_enable_key_accounts()
         self.check_and_enable_opportunity_insights()
         self.check_and_enable_relationship_insights()
+
+        self.builtin.log_to_console("\nAll Insights enabled!")
 
     def go_to_campaign_insights_setup_page(self):
         """
@@ -190,7 +227,7 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
         """
         Go directly to the Key Accounts Insights setup page
         """
-        self.shared.go_to_setup_admin_page("EKAI/home", 3)
+        self.shared.go_to_setup_admin_page("EKAI/home", 5)
         self.browser.wait_until_network_is_idle()
 
     def go_to_lead_scoring_setup_page(self):
