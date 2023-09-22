@@ -18,8 +18,6 @@ Suite Teardown      QRobot.Close Q Browser
 # Note: The default timeout for this is 900 seconds but if you have a long running process, ensure you change the value above next to "Set browser timeout" to something more suitable for the overall timeout for everything you are running.
 #
 Run Automation
-    Enable Q Passport
-    Enable Demo Boost
-    Enable Demo Wizard
-    Enable Data Tool
-    Enable App Track
+    login_as_user    Lisa    Hartman
+    Sleep    5s
+    undo_login_as_user

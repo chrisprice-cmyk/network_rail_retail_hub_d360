@@ -236,6 +236,47 @@ class QbrixSharedKeywords():
 
         return get_secure_setting(secure_setting_name)
 
+    def login_as_user(self, first_name=None, last_name=None, external_id=None, user_id=None):
+
+        """Logs In as a given User. Provide the firstname and lastname or the External ID"""
+
+        if not user_id:
+            soql_query = "SELECT Id FROM USER WHERE "
+
+            if external_id:
+                soql_query += f" External_Id__c = '{external_id}' LIMIT 1"
+            else:
+                soql_query += f" Firstname = '{first_name}' and Lastname = '{last_name}' LIMIT 1"
+
+
+            user_lookup = self.salesforceapi.soql_query(soql_query)
+
+            if user_lookup.get("totalSize") > 0:
+                if user_lookup.get("records")[0].get('Id'):
+                    user_id = user_lookup.get("records")[0].get('Id')
+
+        if user_id:
+            self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/setup/ManageUsers/page?address=%2F{user_id}%3Fnoredirect%3D1%26isUserEntityOverride%3D1", timeout="90s")
+            self.browser.wait_until_network_is_idle()
+            self.wait_and_click(f"{self.iframe_handler()} td.pbButton >> input.btn:text-is('Login')")
+            sleep(2)
+            self.browser.wait_until_network_is_idle()
+
+            if self.wait_on_element("h2:has-text('Canvas - Q_Passport')", 2):
+                self.browser.click("button[title='Close this window']")
+
+        else:
+            self.builtin.log_to_console("\nNo User Found for that selection")
+
+    def undo_login_as_user(self):
+
+        """Reverts the login as user"""
+
+        if self.browser.get_element_count("a.action-link:has-text('Log out as')") > 0:
+            self.browser.click("a.action-link:has-text('Log out as')")
+            sleep(2)
+            self.browser.wait_until_network_is_idle()
+
     # ------------------
     # LEX FUNCTIONS
     # ------------------
