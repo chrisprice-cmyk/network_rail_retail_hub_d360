@@ -127,6 +127,7 @@ class QbrixSharedKeywords():
         Args:
             setup_page_url (str): Requires the section of the URL Path which comes after lightning/setup.
             sleep_length (str): (Optional) Set the length of time (in seconds) which the robot will wait for the page to load. Defaults to 2 seconds.
+            force_reload (bool): (Optional) Set to true to ensure that page is reloaded
         """
 
         # Handle empty URL
@@ -145,11 +146,11 @@ class QbrixSharedKeywords():
                 self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/setup/{setup_page_url}", timeout="90s")
                 self.browser.wait_until_network_is_idle()
 
-            # Handlers for help messages and new feature modals
-
+            # Handle Disabled Feature
             if self.browser.get_element_count("h2:has-text('Page not found'):visible") > 0:
                 raise Exception("Page not found. This could mean you are missing a feature licence.")
 
+            # Handlers for help messages and new feature modals
             if self.browser.get_element_count("button:has-text('Dismiss')") > 0:
                 for elem in self.browser.get_elements("button:has-text('Dismiss')"):
                     try:
