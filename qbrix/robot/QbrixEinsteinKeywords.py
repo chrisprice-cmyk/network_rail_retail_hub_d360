@@ -290,7 +290,8 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
             if "checked" not in self.browser.get_element_states(toggle):
                 self.browser.click(toggle)
 
-        sleep(1)
+        sleep(2)
+        self.shared.go_to_setup_admin_page(setup_page_url="AutomatedDataCapture/home", force_reload=True)
 
         # Validate All Checkboxes are Toggled ON
         for toggle in self.browser.get_elements("span.slds-checkbox--faux"):
