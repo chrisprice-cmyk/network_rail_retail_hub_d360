@@ -4,10 +4,12 @@ from abc import ABC
 from cumulusci.core.config import ScratchOrgConfig, TaskConfig
 from cumulusci.core.keychain import BaseProjectKeychain
 from cumulusci.core.tasks import BaseTask
+from cumulusci.tasks.salesforce import CreateCommunity
 
 from qbrix.salesforce.qbrix_salesforce_tasks import QbrixInstallCheck
 from qbrix.tools.shared.qbrix_cci_tasks import run_cci_flow, run_cci_task
 from qbrix.tools.utils.qbrix_orgconfig_hydrate import NGOrgConfig
+from qbrix.salesforce.qbrix_salesforce_experience_cloud import pre_deploy_all_project_communities
 
 
 class RunPreflight(BaseTask, ABC):
@@ -43,6 +45,10 @@ class RunPreflight(BaseTask, ABC):
         "org": {
             "description": "The alias for the connected target org within the CumulusCI Project. Ensure that either this is provided or the access token.",
             "required": False
+        },
+        "pre_deploy_communities": {
+            "description": "Set to True to pre-deploy all communities within the project, Default is False",
+            "required": False
         }
     }
 
@@ -60,6 +66,7 @@ class RunPreflight(BaseTask, ABC):
         self.only_base_config = self.options["only_base_config"] if "only_base_config" in self.options else False
         self.skip_settings_deployment = self.options["skip_settings_deployment"] if "skip_settings_deployment" in self.options else False
         self.skip_hydrate = self.options["skip_hydrate"] if "skip_hydrate" in self.options else False
+        self.pre_deploy_communities = self.options["pre_deploy_communities"] if "pre_deploy_communities" in self.options else False
 
     def _deploy_settings(self):
 
@@ -140,6 +147,13 @@ class RunPreflight(BaseTask, ABC):
 
         # Check and deploy Q Brix Register
         self.deploy_qbrix_register()
+
+        # Check for Experience Cloud sites
+        if self.pre_deploy_communities:
+            if os.path.exists(os.path.join("force-app", "main", "default", "experiences")) or os.path.exists(os.path.join("force-app", "main", "default", "digitalExperiences", "site")):
+                pre_deploy_all_project_communities(self.org_config.name)
+            else:
+                self.logger.info("No Experiences to pre-deploy.")
 
     def _run_task(self):
         self.logger.info("\nPREFLIGHT: Starting Q Brix Preflight Check")

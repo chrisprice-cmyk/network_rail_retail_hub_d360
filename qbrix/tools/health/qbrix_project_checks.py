@@ -40,11 +40,17 @@ def run_experience_cloud_checks():
 
 
 def run_crm_analytics_checks(org_name):
+
+    """Runs the Analytics Manager in download mode to download related datasets"""
+
     # Check that datasets are downloaded
     if org_name:
         run_cci_task("analytics_manager", org_name, mode="d", generate_metadata_desc=True)
 
 def cumulusci_update_check():
+
+    """Checks that CumulusCI is up to date and installed"""
+
     log = init_logger()
     log.info(" -> Checking for updates to CumulusCI")
     try:
@@ -61,6 +67,9 @@ def cumulusci_update_check():
             log.error(" -X Error executing command to update CumulusCI: %s", error_output)
 
 def update_salesforce_cli():
+
+    """Checks that the Salesforce CLi is up to date and installed"""
+
     log = init_logger()
     log.info(" -> Checking for salesforce CLI Updates")
 
@@ -81,11 +90,17 @@ def update_salesforce_cli():
         subprocess.run(["npm", "install", "@salesforce/cli", "--global"], check=True)
 
 def check_python_library_dependencies():
+
+    """Checks that all python libraries are up to date and installed"""
+
     log = init_logger()
     log.info(" -> Checking for required QBrix Python libraries")
-    run_cci_task("command", org_name=None, command="pip install --upgrade pandas pandasql robotframework-browser")
+    run_cci_task("command", org_name=None, command="pip install --upgrade pandas pandasql robotframework robotframework-browser")
 
 def check_and_update_nodejs():
+
+    """Checks that you are using the latest LTS version of NodeJS"""
+
     log = init_logger()
     try:
         # Check if Node.js is installed
@@ -110,19 +125,19 @@ def check_and_update_nodejs():
         log.info(" -> Node.js is not installed or an error occurred while checking/updating.")
 
 def get_template_info(template_id):
+
+    """Checks the given Trialforce Template ID against known templates and returns the latest template ID if known """
+
     base_url = "https://qbrix-runtime-service-8c3413c48d7f.herokuapp.com"
     check_template_url = f"{base_url}/postspin/isknowntemplate/?templateid={template_id}"
 
-    response = requests.get(check_template_url)
+    response = requests.get(check_template_url, timeout=60)
     response_json = response.json()
-
-    print(response_json)
 
     if "result" in response_json and response_json["result"] == True:
         template_info_url = f"{base_url}/postspin/latesttemplate/?templateid={template_id}"
-        template_info_response = requests.get(template_info_url)
+        template_info_response = requests.get(template_info_url, timeout=60)
         template_info = template_info_response.json()
-        print(template_info)
         if "TemplateId" in template_info and template_info["TemplateId"]:
             return template_info["TemplateId"]
         else:
@@ -132,6 +147,9 @@ def get_template_info(template_id):
 
 
 def check_scratch_org_files():
+
+    """Checks the scratch org definition files within the qbrix project for Trialforce template IDs. If found, it checks they are the latest"""
+
     log = init_logger()
     for root, _, files in os.walk("orgs"):
         for file_name in files:
@@ -142,9 +160,9 @@ def check_scratch_org_files():
                     if "template" in data and data["template"]:
                         template_id = data["template"]
                         template_info = get_template_info(template_id)
-                        if template_info:
+                        if template_info and template_id != template_info:
                             data["template"] = template_info
                             file.seek(0)
-                            json.dump(data, file, indent=4)
+                            json.dump(data, file, indent=2)
                             file.truncate()
                             log.info(f" -> Updated template ID in {file_name}")

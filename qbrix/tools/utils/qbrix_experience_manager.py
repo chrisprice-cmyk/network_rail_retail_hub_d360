@@ -1,6 +1,8 @@
 import os
+
 from cumulusci.core.utils import process_list_of_pairs_dict_arg
 from cumulusci.tasks.salesforce import BaseSalesforceApiTask
+
 from qbrix.tools.shared.qbrix_console_utils import run_command
 
 
@@ -57,8 +59,7 @@ class ExperienceManager(BaseSalesforceApiTask):
 
         if topic_lookup["totalSize"] > 0:
             return topic_lookup['records'][0]['Id']
-        else:
-            return None
+        return None
 
     def _lookup_article_id(self, article_title):
 
@@ -66,8 +67,7 @@ class ExperienceManager(BaseSalesforceApiTask):
 
         if knowledge_lookup["totalSize"] > 0:
             return knowledge_lookup['records'][0]['Id']
-        else:
-            return None
+        return None
 
     def _process_topic_assignments(self):
 
