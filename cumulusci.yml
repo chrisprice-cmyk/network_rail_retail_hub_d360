@@ -438,19 +438,6 @@ flows:
       90:
         task: None
 
-  test_flow:
-    steps:
-      1:
-        task: experience_manager
-        options:
-          experience_site_name: SDO - Consumer
-          topic_assignments:
-            Solar:
-              - Solar panel isn't producing much electricity
-              - Solar panel has cracked glass
-          collaboration_groups:
-            - Stewarts Group
-
 orgs:
   #------------------------------------#
   # SCRATCH ORG CONFIG                 #
