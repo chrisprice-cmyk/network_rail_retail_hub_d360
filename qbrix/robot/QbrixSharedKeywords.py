@@ -151,8 +151,8 @@ class QbrixSharedKeywords():
                 raise Exception("Page not found. This could mean you are missing a feature licence.")
 
             # Handlers for help messages and new feature modals
-            if self.browser.get_element_count("button:has-text('Dismiss')") > 0:
-                for elem in self.browser.get_elements("button:has-text('Dismiss')"):
+            if self.browser.get_element_count("button:has-text('Dismiss'):visible:enabled") > 0:
+                for elem in self.browser.get_elements("button:has-text('Dismiss'):visible:enabled"):
                     try:
                         self.browser.click(elem)
                     except:
