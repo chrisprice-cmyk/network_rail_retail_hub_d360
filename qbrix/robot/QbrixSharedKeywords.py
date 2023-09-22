@@ -154,16 +154,16 @@ class QbrixSharedKeywords():
             if self.browser.get_element_count("button:has-text('Dismiss')") > 0:
                 for elem in self.browser.get_elements("button:has-text('Dismiss')"):
                     try:
-                        self.browser.click(selector=elem, force=True, noWaitAfter=True)
+                        self.browser.click(elem)
                     except:
-                        continue
+                        pass
 
             if self.browser.get_element_count("div.modal-container:visible") > 0:
                 for elem in self.browser.get_elements("div.modal-container:visible >> button:has-text('Close this window')"):
                     try:
-                        self.browser.click(selector=elem, force=True, noWaitAfter=True)
+                        self.browser.click(elem)
                     except:
-                        continue
+                        pass
 
             # Allow time for page load to complete
             sleep(sleep_length)
