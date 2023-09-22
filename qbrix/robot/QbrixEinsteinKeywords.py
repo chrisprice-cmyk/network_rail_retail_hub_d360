@@ -183,15 +183,14 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
 
     def check_and_enable_all_insights(self):
 
-        """Runs all Insights related keywords"""
+        """Runs all core non-industry Insights related keywords"""
 
-        self.builtin.log_to_console("\nEnabling all Insights...")
+        self.builtin.log_to_console("\nEnabling all core Insights...")
 
         self.check_and_enable_account_insights()
         self.check_and_enable_campaign_insights()
         self.check_and_enable_key_accounts()
         self.check_and_enable_opportunity_insights()
-        self.check_and_enable_relationship_insights()
 
         self.builtin.log_to_console("\nAll Insights enabled!")
 

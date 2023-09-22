@@ -141,11 +141,14 @@ class QbrixSharedKeywords():
 
         # Go To Page
         try:
-            if force_reload or  not str(self.browser.get_url()).endswith(f"/lightning/setup/{setup_page_url}"):
+            if force_reload or not str(self.browser.get_url()).endswith(f"/lightning/setup/{setup_page_url}"):
                 self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/setup/{setup_page_url}", timeout="90s")
                 self.browser.wait_until_network_is_idle()
 
             # Handlers for help messages and new feature modals
+
+            if self.browser.get_element_count("h2:has-text('Page not found'):visible") > 0:
+                raise Exception("Page not found. This could mean you are missing a feature licence.")
 
             if self.browser.get_element_count("button:has-text('Dismiss')") > 0:
                 for elem in self.browser.get_elements("button:has-text('Dismiss')"):
