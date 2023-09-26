@@ -346,7 +346,7 @@ jobs:
         run: cci service connect devhub --username DEVHUB_ACCT
 
       - name: force an update 
-        run: cci task run qbrix_update
+        run: cci task run update_qbrix
 
       - name: rfbrowser init setup
         run: rfbrowser init

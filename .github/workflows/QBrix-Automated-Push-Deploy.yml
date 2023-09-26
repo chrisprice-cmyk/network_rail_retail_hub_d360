@@ -185,9 +185,11 @@ jobs:
         run: cci service connect devhub --username DEVHUB_ACCT
 
       - name: force an update
-        run: cci task run qbrix_update
+        if: matrix.targetusername!=''
+        run: cci task run update_qbrix
 
       - name: rfbrowser init setup
+        if: matrix.targetusername!=''
         run: rfbrowser init
 
       # CCI Service List - we should have all 3 connected now: persistant, github (via env var) and devhub
