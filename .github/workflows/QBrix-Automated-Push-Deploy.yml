@@ -184,6 +184,9 @@ jobs:
         if: matrix.targetusername!=''
         run: cci service connect devhub --username DEVHUB_ACCT
 
+      - name: force an update
+        run: cci task run qbrix_update
+
       - name: rfbrowser init setup
         run: rfbrowser init
 
