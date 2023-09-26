@@ -345,6 +345,9 @@ jobs:
       - name: Set CCI DevHub Username
         run: cci service connect devhub --username DEVHUB_ACCT
 
+      - name: rfbrowser init setup
+        run: rfbrowser init
+
       # CCI Service List - we should have all 3 connected now: persistant, github (via env var) and devhub
       - name: All connected services
         run: cci service list

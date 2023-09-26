@@ -184,6 +184,9 @@ jobs:
         if: matrix.targetusername!=''
         run: cci service connect devhub --username DEVHUB_ACCT
 
+      - name: rfbrowser init setup
+        run: rfbrowser init
+
       # CCI Service List - we should have all 3 connected now: persistant, github (via env var) and devhub
       - name: All connected services
         if: matrix.targetusername!=''
