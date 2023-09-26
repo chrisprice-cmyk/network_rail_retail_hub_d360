@@ -224,18 +224,23 @@ class QbrixServiceKeywords(QbrixRobotTask):
             if self.browser.get_element_count(f"tbody >> th[data-label='Name'] >> a:text-is('{one_msg['name']}')") == 0:
                 self.shared.click_button_with_text("New Component")
                 self.shared.click_button_with_text("Next")
-                sleep(1)
+                sleep(2)
                 self.browser.click("div.slds-visual-picker__figure:has-text('Auto-Response')")
-                sleep(1)
+                sleep(2)
                 self.shared.click_button_with_text("Next")
                 self.browser.fill_text(f"{iframe_handler} textarea[name='Title']",one_msg["msg"])
-                sleep(1)
+                sleep(2)
                 self.shared.click_button_with_text("Next")
                 self.browser.fill_text(f"{iframe_handler} input[name='label']",one_msg["name"])
                 self.browser.fill_text(f"{iframe_handler} input[name='fullName']",one_msg["developer_name"])
                 self.browser.fill_text(f"{iframe_handler} textarea[name='description']",one_msg["description"])
+                sleep(2)
                 self.shared.click_button_with_text("Done")
                 sleep(4)
+                
+                if self.browser.get_element_count(f"{iframe_handler} input[name='label']") > 0:
+                    print(f"Conversation '{one_msg['name']}' API Name Component Already Exists")
+                    self.shared.click_button_with_text("Close")
             else:
                 print(f"Conversation '{one_msg['name']}' Component Already Exists")
 
