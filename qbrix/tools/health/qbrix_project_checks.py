@@ -95,7 +95,7 @@ def check_python_library_dependencies():
 
     log = init_logger()
     log.info(" -> Checking for required QBrix Python libraries")
-    run_cci_task("command", org_name=None, command="pip install --upgrade pandas pandasql robotframework robotframework-browser")
+    run_cci_task("command", org_name=None, command="pip install --upgrade pandas pandasql robotframework-browser")
 
 def check_and_update_nodejs():
 
