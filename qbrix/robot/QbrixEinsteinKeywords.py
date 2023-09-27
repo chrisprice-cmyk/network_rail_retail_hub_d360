@@ -27,7 +27,7 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
             return
 
         # Enable Analytics
-        self.shared.wait_and_click("button:has-text('Enable CRM Analytics')")
+        self.shared.wait_and_click("button.enable-analytics:visible", 10, 2)
 
         # Validate Analytics has enabled
         if not self.shared.wait_on_element("button.disable-analytics:visible", 60):
