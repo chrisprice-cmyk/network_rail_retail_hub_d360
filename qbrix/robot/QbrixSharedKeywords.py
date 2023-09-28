@@ -230,6 +230,19 @@ class QbrixSharedKeywords():
         self.browser.click(f"{self.iframe_handler()} input.btn:has-text('Save')")
         self.browser.wait_until_network_is_idle()
 
+    def disable_browser_caching(self):
+
+        """
+        Uncheck "Enable secure and persistent browser caching to improve performance" in the target org
+        Somehow, this is the only checkbox in the caching section that is not in Security setting metadata file
+        """
+
+        self.go_to_setup_admin_page("SecuritySession/home")
+        my_iframe_handler = self.iframe_handler()
+        if "checked" in self.browser.get_element_states(f"{my_iframe_handler} td:has(label:text-is('Enable secure and persistent browser caching to improve performance')) >> input"):
+            self.browser.click(f"{my_iframe_handler} td:has(label:text-is('Enable secure and persistent browser caching to improve performance')) >> input")
+            self.wait_and_click(f"{self.iframe_handler()} input.btn:has-text('Save')")
+
     def get_secure_setting(self, secure_setting_name):
 
         """Returns the value for a secure setting held in Q Labs, returns None if not found"""
@@ -414,6 +427,25 @@ class QbrixSharedKeywords():
         self.browser.wait_for_elements_state(selector, ElementState.visible, f'{timeout}s')
         self.browser.wait_for_elements_state(selector, ElementState.enabled, f'{timeout}s')
         self.browser.click(selector)
+        sleep(post_click_sleep)
+
+    def wait_and_fill_text(self, selector:str = None, text: str = '', timeout:str = "30", post_click_sleep: int = 1):
+
+        """Waits for an element to become visible and enabled. Then fill text into the element, this is used for text box and textarea.
+
+        Args:
+            selector (str): Playwright selector for the element
+            timeout (str): (Optional) Duration in seconds as a string. Defaults to 30 seconds
+            post_click_sleep (int): (Optional) The amount of time in seconds to wait after the element is clicked. The default is 1 second.
+        """
+
+        if not selector:
+            return
+
+        self.browser.wait_until_network_is_idle()
+        self.browser.wait_for_elements_state(selector, ElementState.visible, f'{timeout}s')
+        self.browser.wait_for_elements_state(selector, ElementState.enabled, f'{timeout}s')
+        self.browser.fill_text(selector, text)
         sleep(post_click_sleep)
 
     def check_state(self, selector:str = None, state:str = "visible"):
