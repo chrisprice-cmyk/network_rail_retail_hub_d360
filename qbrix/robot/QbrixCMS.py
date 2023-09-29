@@ -719,6 +719,9 @@ class QbrixCMS(QbrixRobotTask):
     def upload_cms_collections(self, site_name, upload_file_location=os.path.join("datasets", "cms_collection_data", "cms_collection_dataset.json") ):
 
         """Uploads the CMS Collections based on the data held within the upload file. By default this is stored within datasets/cms_collection_data/cms_collection_dataset.json"""
+        
+        # it's possible that it takes a long time to upload if there are a lot of contents, let's increase the timeout time
+        self.browser.set_browser_timeout("1440s")
 
         if not os.path.exists(upload_file_location):
             raise Exception("No CMS Collection Data Found. Unable to upload.")
