@@ -58,6 +58,11 @@ jobs:
   target_org_env_build:
     needs: [collection_deployment_steps]
     runs-on: ubuntu-latest
+    container:
+      image: "ghcr.io/sfdc-qbranch/qbrix-base-container:latest"
+      credentials:
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.QBRIX_CONTAINER_PUBLISH_GITHUB_PAT}}
     outputs:
       target-org: ${{ steps.extrattargetorg.outputs.value }}
       target-accesstoken: ${{ steps.extrattargetaccesstoken.outputs.value }}
@@ -65,16 +70,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Disable TCP/UDP Offloading (Linux)
-        shell: bash
-        run: sudo ethtool -K eth0 tx off rx off
-
       - name: Core Setup - key for jwt auth
         run: echo "${{ secrets.QBRIX_DEVHUB_PRIVATE_KEY }}" > devhub.key
-
-      # Install SFDX
-      - name: Install SFDX
-        run: npm install @salesforce/cli --global
 
       # We will use a common app with a common key -
       - name: Create SFDX Session for DEV HUB ACCESS
@@ -127,24 +124,6 @@ jobs:
         uses: juliangruber/sleep-action@v1
         with:
           time: ${{env.GITHUB_API_SLEEP_TIME}}s
-
-      #Setup PyOpenSSL and keyrings.alt
-      - name: Setup PyOpenSSL
-        run: |
-          pip install pyopenssl --upgrade
-          pip install keyrings.alt
-
-      #install CumumulsCI
-      - name: Install CumulusCI
-        run: pip install cumulusci
-
-      #display cci version
-      - name: cci version
-        run: cci version
-
-      #CCI Service List
-      - name: cci service list
-        run: cci service list
 
       - name: Set CCI DevHub Username
         run: cci service connect devhub --username DEVHUB_ACCT
@@ -241,24 +220,22 @@ jobs:
   qbrix_deployments:
     needs: [collection_deployment_steps, target_org_env_build]
     runs-on: ubuntu-latest
+    container:
+      image: "ghcr.io/sfdc-qbranch/qbrix-base-container:latest"
+      credentials:
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.QBRIX_CONTAINER_PUBLISH_GITHUB_PAT}}
     strategy:
       matrix: ${{ fromJSON(needs.collection_deployment_steps.outputs.matrix) }}
       max-parallel: 1 #run in sequence
     steps:
       - uses: actions/checkout@v4
-      - name: Disable TCP/UDP Offloading (Linux)
-        shell: bash
-        run: sudo ethtool -K eth0 tx off rx off
-
+      
       - name: Core Setup - key for jwt auth
         run: echo "${{ secrets.QBRIX_DEVHUB_PRIVATE_KEY }}" > devhub.key
 
-      # Install SFDX
-      - name: Install SFDX
-        run: npm install @salesforce/cli --global
-
       - name: Import the target username via SFDX
-        run: export SFDX_ACCESS_TOKEN='${{ needs.target_org_env_build.outputs.target-accesstoken }}' && sfdx force:auth:accesstoken:store --instanceurl ${{ needs.target_org_env_build.outputs.target-instanceurl }} -a ${{ needs.target_org_env_build.outputs.target-org }} --noprompt --json --loglevel DEBUG
+        run: export SFDX_ACCESS_TOKEN='${{ needs.target_org_env_build.outputs.target-accesstoken }}' && sf org login access-token --instance-url ${{ needs.target_org_env_build.outputs.target-instanceurl }} -a ${{ needs.target_org_env_build.outputs.target-org }} --no-prompt --json
 
       # We will use a common app with a common key -
       - name: Create SFDX Session for DEV HUB ACCESS
@@ -269,59 +246,13 @@ jobs:
         run: sf org login jwt -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
 
       - name: Extract the accesstoken
-        run: sfdx force:org:display -u ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} --json > qlab_tmp.json
+        run: sf org display -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} --json > qlab_tmp.json
 
       - name: extract the accesstoken for qlabs
         uses: sergeysova/jq-action@v2
         id: qlabs_accesstoken
         with:
           cmd: jq '.result.accessToken' qlab_tmp.json -r
-
-        #install Python Test Resources
-      - name: Install Python Test Resources
-        run: sudo apt install python3-testresources
-
-      #Setup PyOpenSSL and keyrings.alt
-      - name: Setup PyOpenSSL
-        run: |
-          pip install pyopenssl --upgrade
-          pip install keyrings.alt
-
-      #install CumumulsCI
-      - name: Install CumulusCI
-        run: pip install cumulusci
-
-      #install playright via CCI
-      - name: Install Playwright via CCI
-        run: cci robot install_playwright
-
-      #display cci version
-      - name: cci version
-        run: cci version
-
-      #CCI Service List
-      - name: cci service list
-        run: cci service list
-
-      #install Behave
-      - name: Install Behave Feature Testing
-        run: pip install behave
-
-      #install Pandas
-      - name: Install Pandas
-        run: pip install pandas
-
-      #install Pandasql
-      - name: Install Pandasql
-        run: pip install pandasql
-
-      # Install Vlocity
-      - name: Install Vlocity
-        run: npm install --location=global vlocity
-
-      # Install sfdmu
-      - name: Install sfdmu
-        run: sfdx plugins:install sfdmu
 
       - name: Set CCI DevHub Username
         run: cci service connect devhub --username DEVHUB_ACCT
@@ -372,21 +303,19 @@ jobs:
   qbrix_build_validate:
     needs: [qbrix_deployments, target_org_env_build]
     runs-on: ubuntu-latest
+    container:
+      image: "ghcr.io/sfdc-qbranch/qbrix-base-container:latest"
+      credentials:
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.QBRIX_CONTAINER_PUBLISH_GITHUB_PAT}}
     steps:
       - uses: actions/checkout@v4
-      - name: Disable TCP/UDP Offloading (Linux)
-        shell: bash
-        run: sudo ethtool -K eth0 tx off rx off
-
+      
       - name: Core Setup - key for jwt auth
         run: echo "${{ secrets.QBRIX_DEVHUB_PRIVATE_KEY }}" > devhub.key
 
-      # Install SFDX
-      - name: Install SFDX
-        run: npm install @salesforce/cli --global
-
       - name: Import the target username via SFDX
-        run: export SFDX_ACCESS_TOKEN='${{ needs.target_org_env_build.outputs.target-accesstoken }}' && sfdx force:auth:accesstoken:store --instanceurl ${{ needs.target_org_env_build.outputs.target-instanceurl }} -a ${{ needs.target_org_env_build.outputs.target-org }} --noprompt --json --loglevel DEBUG
+        run: export SFDX_ACCESS_TOKEN='${{ needs.target_org_env_build.outputs.target-accesstoken }}' && sf org login access-token --instance-url ${{ needs.target_org_env_build.outputs.target-instanceurl }} -a ${{ needs.target_org_env_build.outputs.target-org }} --no-prompt --json
 
       # We will use a common app with a common key -
       - name: Create SFDX Session for DEV HUB ACCESS
@@ -397,59 +326,13 @@ jobs:
         run: sf org login jwt -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
 
       - name: Extract the accesstoken
-        run: sfdx force:org:display -u ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} --json > qlab_tmp.json
+        run: sf org display -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} --json > qlab_tmp.json
 
       - name: extract the accesstoken for qlabs
         uses: sergeysova/jq-action@v2
         id: qlabs_accesstoken
         with:
           cmd: jq '.result.accessToken' qlab_tmp.json -r
-
-        #install Python Test Resources
-      - name: Install Python Test Resources
-        run: sudo apt install python3-testresources
-
-      #Setup PyOpenSSL and keyrings.alt
-      - name: Setup PyOpenSSL
-        run: |
-          pip install pyopenssl --upgrade
-          pip install keyrings.alt
-
-      #install CumumulsCI
-      - name: Install CumulusCI
-        run: pip install cumulusci
-
-      #install playright via CCI
-      - name: Install Playwright via CCI
-        run: cci robot install_playwright
-
-      #display cci version
-      - name: cci version
-        run: cci version
-
-      #CCI Service List
-      - name: cci service list
-        run: cci service list
-
-      #install Behave
-      - name: Install Behave Feature Testing
-        run: pip install behave
-
-      #install Pandas
-      - name: Install Pandas
-        run: pip install pandas
-
-      #install Pandasql
-      - name: Install Pandasql
-        run: pip install pandasql
-
-      # Install Vlocity
-      - name: Install Vlocity
-        run: npm install --location=global vlocity
-
-      # Install sfdmu
-      - name: Install sfdmu
-        run: sfdx plugins:install sfdmu
 
       - name: Set CCI DevHub Username
         run: cci service connect devhub --username DEVHUB_ACCT
