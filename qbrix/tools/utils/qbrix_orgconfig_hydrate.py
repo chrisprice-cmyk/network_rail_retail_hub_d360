@@ -428,6 +428,9 @@ class NGOrgConfig(SFDXBaseTask):
 
         if self.org_config.is_scratch_org is None:
             self.org_config.is_scratch_org = self._is_scratch_org
+            
+        if self.org_config.get_secure_setting is None:
+            self.org_config.get_secure_setting = get_secure_setting
 
 
 
@@ -781,13 +784,8 @@ class NGCacheAdd(SFDXBaseTask):
         self._prepruntime()
 
         if(self.value.startswith("${{") and self.value.endswith("}}")):
-            try:
-                sub1="${{"
-                sub2="}}"
-                idx1 = self.value.find(sub1)
-                idx2 = self.value.find(sub2)
-                exp = self.value[idx1 + len(sub1) + 1: idx2]
-
+            try:                
+                exp = self.value[3:][:-2].strip()
                 #exit if inline import detected
                 if "__import__" in exp:
                     return
@@ -801,6 +799,4 @@ class NGCacheAdd(SFDXBaseTask):
             except Exception as inst:
                 self.logger.error(f"Unable to evaluate dynamic express::{inst}")
         else:
-             self.org_config.qbrix_cache_set(self.key,self.value)
-
-
+            self.org_config.qbrix_cache_set(self.key,self.value)

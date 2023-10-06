@@ -1,4 +1,7 @@
 import os
+import subprocess
+import json 
+import re
 from abc import ABC
 
 from cumulusci.core.config import ScratchOrgConfig, TaskConfig
@@ -168,6 +171,10 @@ class RunPreflight(BaseTask, ABC):
             )
             hydrate._run_task()
             self.logger.info(" -> Org Config Hydrated!")
+            
+        #check for a defined parameters set
+        if(os.path.isfile(os.path.join("qbrix_local","inputs","required.json"))):
+            self._validate_required_json()
 
         self.logger.info("\nPREFLIGHT: Running Shared Tasks, which apply to all Orgs")
         self.shared_tasks()
@@ -181,3 +188,132 @@ class RunPreflight(BaseTask, ABC):
             self.production_org_tasks()
 
         self.logger.info("\nPREFLIGHT: Preflight Complete")
+    
+    def _validate_required_json(self):
+        negative_results=[]
+        inputsfile =os.path.join("qbrix_local","inputs","required.json")
+        suppliedinputsfile =os.path.join(".qbrix","inputs","supplied_inputs.json")
+        
+        #termwidth >0 - we are running in a non-headless world
+        termwidth = self._get_terminal_width()
+        
+        #check for headless run with zero parameters supplied and parameters defined
+        if(termwidth == 0 and os.path.isfile(inputsfile) and not os.path.isfile(suppliedinputsfile)):
+            inputcontent = open(inputsfile, "r")
+            inputjson=inputcontent.read()
+            inputsdict = json.loads(inputjson)
+            
+            if(not "parameters" in inputsdict): return
+        
+            for reqin in inputsdict["parameters"]:
+                if("name" in reqin and len(reqin["name"].strip())>0):
+                    parametername=reqin["name"]
+                    negative_results.append(f"Required Parameter::{parametername} has not been supplied")
+                
+        #required parameter file defined and none or some parameters context supplied
+        elif(os.path.isfile(inputsfile)):
+            
+            inputcontent = open(inputsfile, "r")
+            inputjson=inputcontent.read()
+            inputsdict = json.loads(inputjson)
+            suppliedinputjson={}
+            
+            if(not "parameters" in inputsdict): return
+
+            if(os.path.isfile(suppliedinputsfile)):
+                suppliedinputcontent = open(suppliedinputsfile, "r")
+                suppliedinputjson=suppliedinputcontent.read()
+                suppliedinputsdict = json.loads(suppliedinputjson)
+            
+            for reqin in inputsdict["parameters"]:
+                #ignore any empty required names. Fail on them.
+                if("name" in reqin and len(reqin["name"].strip())>0):
+                    trgname=reqin["name"]
+                    trgvalue=None
+                    
+                    if(trgname in suppliedinputsdict):
+                        trgvalue =suppliedinputsdict[trgname].strip()
+                    
+                    if("default" in reqin and (trgvalue is None or len(trgvalue)==0)):
+                        trgvalue = self._get_default(reqin["default"])        
+            
+                    #if we are in a non-headless and no default preset it - prompt them
+                    if(termwidth > 0 and  (trgvalue is None or len(trgvalue)==0)):
+                        trgvalue=input(f"Please enter a value for::{trgname}->")
+                        trgvalue=trgvalue.strip() #kill leading and trailing whitespaces
+                    
+                    #check for regex irrespective if supplied
+                    if("regex" in reqin and len(reqin["regex"].strip())>0):
+                        #self.logger.info(f'{trgname}::{trgvalue}::{reqin["regex"].strip()}')
+                        if(self._value_is_regex_match(trgvalue,reqin["regex"].strip())==False):
+                            msg = f"Required Parameter::{trgname} does not match the required regex."
+                            #self.logger.error(msg)
+                            negative_results.append(msg)
+                    
+                    #we have gon through the Gauntlet
+                    if(trgvalue is None or len(trgvalue)==0):
+                        msg=(f"Required Parameter::{trgname} is missing.")
+                        #self.logger.error(msg)
+                        negative_results.append(msg)
+                    else: 
+                        #store it to the cache
+                        #self.logger.info(f"Storing::{trgname}::{trgvalue}")
+                        self.org_config.qbrix_cache_set(trgname,trgvalue)
+                        #self.logger.info(self.org_config.qbrix_cache_get(trgname))
+                        
+        if(len(negative_results)>0):
+            self.logger.error("****** MISSING REQUIRED PARAMETERS ******")
+            for parmmsg in negative_results:
+                self.logger.error(parmmsg)
+            raise Exception("****** MISSING REQUIRED PARAMETERS ******")
+        
+    
+    
+    def _get_default(self,exp=str):
+        #strip whitespace 
+        if(exp is None or len(exp.strip())==0):
+            return None
+        
+        if(exp.startswith("${{") and exp.endswith("}}")):
+            try:
+                parsedexp = exp[3:][:-2].strip()
+
+                #exit if inline import detected
+                if "__import__" in parsedexp:
+                    return None
+
+                #self.logger.info(parsedexp)
+                compliledcode = compile(parsedexp, "<string>", "eval")
+                #no builtins = no __import__ # DO NOT allow globals
+                #restrict scope to expression - no builtins and only locals self
+                res = eval(compliledcode,{},{"self":self})
+                #self.logger.info(f'EXPRESSION-VALUE::{str(res)}')
+                return str(res)
+                
+            except Exception as inst:
+                self.logger.error(f"Unable to evaluate dynamic express::{inst}")
+                #fail closed
+                return None
+        else:
+            return exp
+            
+    def _get_terminal_width(self):
+        # if we are running in a headless runner- tty will not be there.
+        try:
+            return int(subprocess.check_output(['stty', 'size']).split()[1])
+        except Exception as e:
+            print(e)
+        return 0
+    
+    def _value_is_regex_match(self,value=str,regex=str):
+        
+        if(value is None or regex is None):
+            return True
+        
+        if(not regex is None and len(regex)>0):
+            compiledregex = re.compile(regex)
+            return len(re.findall(compiledregex, value))>0
+        
+        #fall open
+        return True
+            
