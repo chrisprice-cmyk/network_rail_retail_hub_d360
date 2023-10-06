@@ -91,7 +91,7 @@ class QbrixB2BKeywords(QbrixRobotTask):
 
         """Checks that payments have been enabled, if not already"""
         self.shared.go_to_setup_admin_page("PaymentsSettings/home", 2)
-        self.browser.wait_for_elements_state("h3:has-text('Prerequisites')", ElementState.visible, '30s')
+        sleep(5)
         if "visible" in self.browser.get_element_states("button:text-is('Enable')"):
             select_button_locator = f"{self.shared.iframe_handler()} button:text-is('Enable')"
             self.browser.click(select_button_locator)
