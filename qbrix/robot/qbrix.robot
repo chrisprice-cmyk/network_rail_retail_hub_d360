@@ -395,3 +395,10 @@ DocGen Setup
 Mulesoft Connected App
     Enable Admin Auth For Connected App    connected_app_label=MuleSoft SE Technical Operations
     Enable Connected Mule Tool
+
+# -----------------------------------------------------------------------------------------------------------------------------------------
+# B2B Commerce
+# -----------------------------------------------------------------------------------------------------------------------------------------
+
+Enable Payments
+    enable_salesforce_payments
