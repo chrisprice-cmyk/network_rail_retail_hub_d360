@@ -217,6 +217,7 @@ class RunPreflight(BaseTask, ABC):
             inputjson=inputcontent.read()
             inputsdict = json.loads(inputjson)
             suppliedinputjson={}
+            suppliedinputsdict={}
             
             if(not "parameters" in inputsdict): return
 
