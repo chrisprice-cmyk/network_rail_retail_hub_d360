@@ -220,27 +220,33 @@ class QbrixCMS(QbrixRobotTask):
                 self.browser.click(f"{iframe_handler} button.slds-button:has-text('Export')")
                 sleep(5)
 
-    def create_workspace(self, workspace_name, channels=[], enhanced_workspace=True):
+    def create_workspace(self, workspace_name, channels=None, enhanced_workspace=True):
 
         """
-        Create a new workspace
-        @param workspace_name: Name of the workspace. This must be unique from other workspaces
-        @param channels: Optional channels you want to target. Defaults to all available channels
-        @param enhanced_workspace: Set to True if you are creating an Enhanced workspace, otherwise set to False. Defaults to True.
-        @return:
+        Creates a new Digital Experience workspace
+
+        Args:
+            workspace_name: Name of the workspace. This must be unique from other workspaces
+            channels: (Optional) Channels you want to target. Defaults to all available channels
+            enhanced_workspace: (Optional) Set to True if you are creating an Enhanced workspace, otherwise set to False. Defaults to True.
         """
+
+        # Default Channels
+        if not channels:
+            channels = []
 
         # Check for existing workspace
         results = self.salesforceapi.soql_query(f"SELECT Id FROM ManagedContentSpace where Name = '{workspace_name}' LIMIT 1")
-
         if results["totalSize"] == 1:
-            print("Workspace exists already, skipping.")
+            self.builtin.log_to_console(f"The workspace with name {workspace_name} already exists, skipping.")
             return
 
         # Go to Digital Experience Home and initiate Workspace creation
         self.go_to_digital_experiences()
+        self.browser.wait_until_network_is_idle()
         sleep(3)
         self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/cms/home/", timeout='30s')
+        self.browser.wait_until_network_is_idle()
         sleep(3)
         self.browser.click(f"{self.shared.iframe_handler()} span.label:text-is('Create a CMS Workspace'):visible")
 
@@ -296,14 +302,15 @@ class QbrixCMS(QbrixRobotTask):
 
         """
         Generates a Product Media Mapping File, which stores information about Product List Images, Product Detail Images and Attachments related to the products.
-        @return: .json file is created within the project and stored at this path: cms_data/product_images.json
+        
+        Returns:
+            .json file is created within the project and stored at this path: cms_data/product_images.json
         """
 
         # Get All Active Products which have attached ElectronicMedia
-        results = self.salesforceapi.soql_query(f"SELECT Id, External_ID__c, Name from Product2 WHERE Id IN (Select ProductId from ProductMedia)")
-
+        results = self.salesforceapi.soql_query("SELECT Id, External_ID__c, Name from Product2 WHERE Id IN (Select ProductId from ProductMedia)")
         if results["totalSize"] == 0:
-            print("No Products found with attached media")
+            self.builtin.log_to_console("No Products found with attached media")
             return
 
         result_dict = {}
@@ -372,7 +379,7 @@ class QbrixCMS(QbrixRobotTask):
         if not os.path.exists("cms_data"):
             os.makedirs("cms_data", exist_ok=True)
 
-        with open("cms_data/product_images.json", "w") as save_file:
+        with open("cms_data/product_images.json", "w", encoding="utf-8") as save_file:
             json.dump(result_dict, save_file, indent=2)
 
     def reassign_product_media_files(self):
@@ -383,11 +390,11 @@ class QbrixCMS(QbrixRobotTask):
 
         # Check for default file
         if not os.path.exists("cms_data/product_images.json"):
-            print("Missing CMS Definition File. Location: cms_data/product_images.json")
+            self.builtin.log_to_console("Missing CMS Definition File. Location: cms_data/product_images.json")
             raise Exception("Required file for robot is missing: cms_data/product_images.json. Please check the file and try again.")
 
         # Process Mapping File
-        with open("cms_data/product_images.json", "r") as cms_file:
+        with open("cms_data/product_images.json", "r", encoding="utf-8") as cms_file:
             product_dict = json.load(cms_file)
 
         if product_dict:
@@ -404,7 +411,7 @@ class QbrixCMS(QbrixRobotTask):
                 results = self.salesforceapi.soql_query(f"SELECT Id, External_ID__c, Name from Product2 WHERE External_ID__c = '{product[1]['External_ID__c']}' LIMIT 1")
 
                 if results["totalSize"] == 0:
-                    print(f"No Products found for the External ID Provided {product[1]['External_ID__c']}. Skipping...")
+                    self.builtin.log_to_console(f"No Products found for the External ID Provided {product[1]['External_ID__c']}. Skipping...")
                     continue
 
                 try:
@@ -420,26 +427,26 @@ class QbrixCMS(QbrixRobotTask):
                     raise e
 
                 # Process Product Detail Images
-                if "ProductDetailImages" in dict(product[1]).keys() and self.browser.get_element_count(f"article.slds-card:has-text('Product Detail Images'):visible >> img.fileCardImage:visible") < 8:
+                if "ProductDetailImages" in dict(product[1]).keys() and self.browser.get_element_count("article.slds-card:has-text('Product Detail Images'):visible >> img.fileCardImage:visible") < 8:
 
                     for product_detail_image in list(product[1]["ProductDetailImages"]):
 
                         # Check Max. Number of Product Detail Images has not been reached
-                        if self.browser.get_element_count(f"article.slds-card:has-text('Product Detail Images'):visible >> img.fileCardImage:visible") == 8:
-                            print("The maximum number of images have already been assigned to the Product. Skipping...")
+                        if self.browser.get_element_count("article.slds-card:has-text('Product Detail Images'):visible >> img.fileCardImage:visible") == 8:
+                            self.builtin.log_to_console("The maximum number of images have already been assigned to the Product. Skipping...")
                             continue
 
                         # Check that CMS content has not already been assigned
                         skip = False
-                        if self.browser.get_element_count(f"article.slds-card:has-text('Product Detail Images'):visible >> img.fileCardImage:visible") > 0:
-                            product_detail_images = self.browser.get_elements(f"article.slds-card:has-text('Product Detail Images'):visible >> img.fileCardImage:visible")
+                        if self.browser.get_element_count("article.slds-card:has-text('Product Detail Images'):visible >> img.fileCardImage:visible") > 0:
+                            product_detail_images = self.browser.get_elements("article.slds-card:has-text('Product Detail Images'):visible >> img.fileCardImage:visible")
                             if product_detail_images:
                                 for prod in product_detail_images:
                                     prod_property = self.browser.get_property(prod, "alt")
-                                    print(f"Found alt text: {prod_property}")
+                                    self.builtin.log_to_console(f"Found alt text: {prod_property}")
                                     if prod_property:
                                         if prod_property in list(product[1]["ProductDetailImages"]):
-                                            print("Skipping duplicate...")
+                                            self.builtin.log_to_console("Skipping duplicate...")
                                             skip = True
                         if skip:
                             continue
@@ -455,42 +462,42 @@ class QbrixCMS(QbrixRobotTask):
                             sleep(2)
                             search_results = self.browser.get_elements(f"tr.slds-hint-parent:has-text('{product_detail_image}'):visible")
                             if len(search_results) == 0:
-                                self.browser.click(f"button.slds-button:text-is('Cancel')")
+                                self.browser.click("button.slds-button:text-is('Cancel')")
                                 continue
                             if len(search_results) > 0:
                                 self.browser.click("tr:has(span:text-matches('^{}$')) >> th >> span.slds-checkbox_faux".format(product_detail_image))
-                                self.browser.click(f"button.slds-button:text-is('Save')")
+                                self.browser.click("button.slds-button:text-is('Save')")
                                 self.browser.wait_for_elements_state(media_tab_selector, ElementState.visible, timeout="15s")
                                 self.browser.click(media_tab_selector)
                         except TimeoutError:
                             print("Unable to find any matches for search results. Skipping...")
-                            self.browser.click(f"button.slds-button:text-is('Cancel')")
+                            self.browser.click("button.slds-button:text-is('Cancel')")
                             continue
                 else:
                     print("The maximum number of images have already been assigned to the Product or there are no Product Detail Images to process. Skipping...")
 
                 # Process Product List Image
 
-                if "ProductImages" in dict(product[1]).keys() and self.browser.get_element_count(f"article.slds-card:has-text('Product List Image'):visible >> img.fileCardImage:visible") < 1:
+                if "ProductImages" in dict(product[1]).keys() and self.browser.get_element_count("article.slds-card:has-text('Product List Image'):visible >> img.fileCardImage:visible") < 1:
 
                     for product_image in list(product[1]["ProductImages"]):
 
                         # Check Max. Number of Product List Images has not been reached
-                        if self.browser.get_element_count(f"article.slds-card:has-text('Product List Image'):visible >> img.fileCardImage:visible") == 1:
-                            print("The maximum number of images have already been assigned to the Product. Skipping...")
+                        if self.browser.get_element_count("article.slds-card:has-text('Product List Image'):visible >> img.fileCardImage:visible") == 1:
+                            self.builtin.log_to_console("The maximum number of images have already been assigned to the Product. Skipping...")
                             continue
 
                         # Check that CMS content has not already been assigned
                         skip = False
-                        if self.browser.get_element_count(f"article.slds-card:has-text('Product List Image'):visible >> img.fileCardImage:visible") > 0:
-                            product_images = self.browser.get_elements(f"article.slds-card:has-text('Product List Image'):visible >> img.fileCardImage:visible")
+                        if self.browser.get_element_count("article.slds-card:has-text('Product List Image'):visible >> img.fileCardImage:visible") > 0:
+                            product_images = self.browser.get_elements("article.slds-card:has-text('Product List Image'):visible >> img.fileCardImage:visible")
                             if product_images:
                                 for prod in product_images:
                                     prod_property = self.browser.get_property(prod, "alt")
-                                    print(f"Found alt text: {prod_property}")
+                                    self.builtin.log_to_console(f"Found alt text: {prod_property}")
                                     if prod_property:
                                         if prod_property in list(product[1]["ProductImages"]):
-                                            print("Skipping duplicate...")
+                                            self.builtin.log_to_console("Skipping duplicate...")
                                             skip = True
                         if skip:
                             continue
@@ -506,42 +513,42 @@ class QbrixCMS(QbrixRobotTask):
                             sleep(2)
                             search_results = self.browser.get_elements(f"tr.slds-hint-parent:has-text('{product_image}'):visible")
                             if len(search_results) == 0:
-                                self.browser.click(f"button.slds-button:text-is('Cancel')")
+                                self.browser.click("button.slds-button:text-is('Cancel')")
                                 continue
                             if len(search_results) > 0:
                                 self.browser.click("tr:has(span:text-matches('^{}$')) >> td >> span.slds-radio".format(product_image))
-                                self.browser.click(f"button.slds-button:text-is('Save')")
+                                self.browser.click("button.slds-button:text-is('Save')")
                                 self.browser.wait_for_elements_state(media_tab_selector, ElementState.visible, timeout="15s")
                                 self.browser.click(media_tab_selector)
                         except TimeoutError:
-                            print("Unable to find any matches for search results. Skipping...")
-                            self.browser.click(f"button.slds-button:text-is('Cancel')")
+                            self.builtin.log_to_console("Unable to find any matches for search results. Skipping...")
+                            self.browser.click("button.slds-button:text-is('Cancel')")
                             continue
                 else:
                     print("The maximum number of images have already been assigned to the Product or there are no Product List Images to process. Skipping...")
 
                 # Process Attachments
 
-                if "Attachments" in dict(product[1]).keys() and self.browser.get_element_count(f"article.slds-card:has-text('Attachments'):visible >> span.slds-file__text") < 5:
+                if "Attachments" in dict(product[1]).keys() and self.browser.get_element_count("article.slds-card:has-text('Attachments'):visible >> span.slds-file__text") < 5:
 
                     for product_attachment in list(product[1]["Attachments"]):
 
                         # Check Max. Number of Attachments has not been reached
-                        if self.browser.get_element_count(f"article.slds-card:has-text('Attachments'):visible >> span.slds-file__text") == 5:
-                            print("The maximum number of attachments have already been assigned to the Product. Skipping...")
+                        if self.browser.get_element_count("article.slds-card:has-text('Attachments'):visible >> span.slds-file__text") == 5:
+                            self.builtin.log_to_console("The maximum number of attachments have already been assigned to the Product. Skipping...")
                             continue
 
                         # Check that CMS content has not already been assigned
                         skip = False
-                        if self.browser.get_element_count(f"article.slds-card:has-text('Attachments'):visible >> span.slds-file__text") > 0:
-                            product_attachments = self.browser.get_elements(f"article.slds-card:has-text('Attachments'):visible >> span.slds-file__text")
+                        if self.browser.get_element_count("article.slds-card:has-text('Attachments'):visible >> span.slds-file__text") > 0:
+                            product_attachments = self.browser.get_elements("article.slds-card:has-text('Attachments'):visible >> span.slds-file__text")
                             if product_attachments:
                                 for prod in product_attachments:
                                     prod_property = self.browser.get_property(prod, "title")
-                                    print(f"Found title text: {prod_property}")
+                                    self.builtin.log_to_console(f"Found title text: {prod_property}")
                                     if prod_property:
                                         if prod_property in list(product[1]["Attachments"]):
-                                            print("Skipping duplicate...")
+                                            self.builtin.log_to_console("Skipping duplicate...")
                                             skip = True
                         if skip:
                             continue
@@ -557,16 +564,16 @@ class QbrixCMS(QbrixRobotTask):
                             sleep(2)
                             search_results = self.browser.get_elements(f"tr.slds-hint-parent:has-text('{product_attachment}'):visible")
                             if len(search_results) == 0:
-                                self.browser.click(f"button.slds-button:text-is('Cancel')")
+                                self.browser.click("button.slds-button:text-is('Cancel')")
                                 continue
                             if len(search_results) > 0:
                                 self.browser.click("tr:has(span:text-matches('^{}$')) >> th >> span.slds-checkbox_faux".format(product_attachment))
-                                self.browser.click(f"button.slds-button:text-is('Save')")
+                                self.browser.click("button.slds-button:text-is('Save')")
                                 self.browser.wait_for_elements_state(media_tab_selector, ElementState.visible, timeout="15s")
                                 self.browser.click(media_tab_selector)
                         except TimeoutError:
-                            print("Unable to find any matches for search results. Skipping...")
-                            self.browser.click(f"button.slds-button:text-is('Cancel')")
+                            self.builtin.log_to_console("Unable to find any matches for search results. Skipping...")
+                            self.browser.click("button.slds-button:text-is('Cancel')")
                             continue
                 else:
                     print("The maximum number of attachments have already been assigned to the Product or there are no Product Attachments to process. Skipping...")
@@ -895,7 +902,7 @@ class QbrixCMS(QbrixRobotTask):
                         sleep(2)
 
                     else:
-                        print("TYPE NOT FOUND")
+                        self.builtin.log_to_console("TYPE NOT FOUND")
 
                     self.browser.wait_for_elements_state("a[id=cmcNodeItem-managedContentCollections]", ElementState.visible, "15s")
                     self.browser.click("a[id=cmcNodeItem-managedContentCollections]")
@@ -930,4 +937,4 @@ class QbrixCMS(QbrixRobotTask):
                 self.browser.click("button:has-text('Save')")
                 sleep(3)
         else:
-            print(f"Featured Topic called {topic_name} not found on page, skipping...")
+            self.builtin.log_to_console(f"Featured Topic called {topic_name} not found on page, skipping...")
