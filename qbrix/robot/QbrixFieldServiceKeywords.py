@@ -239,20 +239,21 @@ class QbrixFieldServiceKeywords(QbrixRobotTask):
 
         #click on the label column to filter descending - reduce pages and pages
         self.browser.click(f"{iframe_selector} a:text-is('Master Label')")
-        sleep(10)
-        self.browser.click(f"{iframe_selector} a:text-is('{connected_app_label}')")
-        self.browser.wait_for_elements_state(f"{iframe_selector} h2.mainTitle:text-is('Connected App Detail')", ElementState.visible, "15s")
-        self.browser.click(f"{iframe_selector} .btn:has-text('Edit Policies')")
-        self.browser.wait_for_elements_state(f"{iframe_selector} h2.mainTitle:text-is('Connected App Edit')", ElementState.visible, "15s")
-        self.browser.select_options_by(f"{iframe_selector} #ippolicy", SelectAttribute.text, "Relax IP restrictions")
-        sleep(10)
-        self.browser.select_options_by(f"{iframe_selector} #MobileSessionTimeout", SelectAttribute.text, "--None--")
-        sleep(10)
-        self.browser.select_options_by(f"{iframe_selector} #PinLength", SelectAttribute.text, "--None--")
-        sleep(10)
-        self.browser.click(f"{iframe_selector} .btn:has-text('Save')")
-        self.browser.wait_for_elements_state(f"{iframe_selector} h2.mainTitle:text-is('Connected App Detail')", ElementState.visible, "15s")
-
+        if self.shared.wait_on_element(f"{iframe_selector} a:text-is('{connected_app_label}')", 15):
+            self.browser.click(f"{iframe_selector} a:text-is('{connected_app_label}')")
+            self.browser.wait_for_elements_state(f"{iframe_selector} h2.mainTitle:text-is('Connected App Detail')", ElementState.visible, "15s")
+            self.browser.click(f"{iframe_selector} .btn:has-text('Edit Policies')")
+            self.browser.wait_for_elements_state(f"{iframe_selector} h2.mainTitle:text-is('Connected App Edit')", ElementState.visible, "15s")
+            self.browser.select_options_by(f"{iframe_selector} #ippolicy", SelectAttribute.text, "Relax IP restrictions")
+            sleep(10)
+            self.browser.select_options_by(f"{iframe_selector} #MobileSessionTimeout", SelectAttribute.text, "--None--")
+            sleep(10)
+            self.browser.select_options_by(f"{iframe_selector} #PinLength", SelectAttribute.text, "--None--")
+            sleep(10)
+            self.browser.click(f"{iframe_selector} .btn:has-text('Save')")
+            self.browser.wait_for_elements_state(f"{iframe_selector} h2.mainTitle:text-is('Connected App Detail')", ElementState.visible, "15s")
+        else:
+            self.builtin.log_to_console("\nConnected App Not Found. Skipping")
 
     def relax_security_for_connected_apps(self):
         self.relax_security_on_fs_apps("Salesforce Field Service for iOS")
