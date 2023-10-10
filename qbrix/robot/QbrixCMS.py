@@ -116,8 +116,9 @@ class QbrixCMS(QbrixRobotTask):
             # Import File
             iframe_handler = self.shared.iframe_handler()
             self.shared.wait_and_click(f"{iframe_handler} div.slds-page-header__row >> button.slds-button:has-text('Show menu')")
+            sleep(2)
             self.browser.promise_to_upload_file(file_path)
-            self.shared.wait_and_click(f"{iframe_handler} div.slds-page-header__row >> lightning-menu-item.slds-dropdown__item:has-text('Import Content')")
+            self.browser.click(f"{iframe_handler} div.slds-page-header__row >> span.slds-truncate:text-is('Import content'):visible")
             self.browser.wait_for_all_promises()
 
             # Wait for Confirmation
