@@ -147,6 +147,10 @@ tasks:
   analytics_manager:
     class_path: qbrix.tools.data.qbrix_analytics.AnalyticsManager
 
+  analytics_timeshift:
+    description: timeshifts the specified dataset and fields based on a date
+    class_path: qbrix.tools.data.qbrix_analytics.TimeShift
+
   user_manager:
     class_path: qbrix.salesforce.qbrix_salesforce_tasks.CreateUser
 
