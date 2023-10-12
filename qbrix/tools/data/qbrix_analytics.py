@@ -8,14 +8,17 @@ import math
 import os
 import re
 import shlex
+import sys
+import datetime as dt
 from abc import ABC
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from time import sleep
 
 import requests
 from cumulusci.tasks.salesforce.BaseSalesforceApiTask import \
     BaseSalesforceApiTask
+from cumulusci.core.tasks import BaseTask
 from dateutil.parser import parse
 
 from qbrix.tools.shared.qbrix_console_utils import init_logger
@@ -985,9 +988,11 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
             raise Exception(f"No data was returned for dataset id {dataset_id}")
 
         # Capture Created Date for Time Shift
+        timeshift_file_data = {}
         if dataset_version.get("createdDate"):
             with open(os.path.join(target_folder, target_filename + ".txt"), 'w', encoding='utf-8') as qbrix_data_file:
-                qbrix_data_file.write(dataset_version["createdDate"])
+                timeshift_file_data['base_date'] = dataset_version["createdDate"]
+                qbrix_data_file.write(timeshift_file_data)
 
         # Get Fields from Org
         self.logger.info("\nGATHERING FIELD DATA")
@@ -1398,3 +1403,272 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
         self.logger.info("=================================================")
         self.logger.info("Q Brix Analytics Manager has completed all tasks!")
         self.logger.info("=================================================")
+
+
+
+class TimeShift(BaseTask, ABC):
+    task_docs = """
+    Q Brix Analytics Timeshift update date fields from the specified dataset file to adapt the dashboards to the usecase.
+    
+    The task is expecting 3 main variables that can be specified as following: \n
+    Dataset (or d): Which indicates the dataset to be used for the operation
+    Fields (or f): A comma separated attribute which indicated what are the fields that will be updated on the dataset specified\n
+    Base (or b): (optional) Represents the date that will be used as a Base Date to calculate the offset of days for the fields (if not indicated Today's date will be used as a Base)\n
+    """
+
+    task_options = {
+        "mode": {
+            "description": "(optional) Timeshift Options are Generate (g), Upload (u) (default)",
+            "required": False
+        },
+        "dataset_folder": {
+            "description": "(optional) Path to folder which contains your analytics datasets. Defaults to datasets/analytics",
+            "required": False
+        },
+        "datasets": {
+            "description": "(optional) if empty '' and all_datasets flag is False user will be prompted to select on the flight the datasets to generate the metadata for. Can also accept a Comma separate string of the dataset to be used for the operation",
+            "required": False
+        },
+        "all_fields": {
+            "description": "(optional) Indicates if all the date fields for the datasets selected will be timeshifted",
+            "required": False
+        },
+        "all_datasets": {
+            "description": "(optional) Indicates if all the datasets will be timeshifted",
+            "required": False
+        },
+        "target_date": {
+            "description": "(optional) Represents the date that will be used as a Base Date to calculate the offset of days for the fields (if not indicated Today's date will be used as a Base)",
+            "required": False
+        },
+    }
+
+    def _init_options(self, kwargs):
+        super(TimeShift, self)._init_options(kwargs)
+        self.dataset_folder = self.options["dataset_folder"] if "dataset_folder" in self.options else "datasets/analytics"
+        self.all_fields = (False if self.options["all_fields"] == 'False' or self.options["all_fields"] == 'false' else True) if "all_fields" in self.options else True
+        self.all_datasets = (False if self.options["all_datasets"] == 'False' or self.options["all_datasets"] == 'false' else True) if "all_datasets" in self.options else True
+        # self.all_datasets = self.options["all_datasets"] if "all_datasets" in self.options else True
+        self.mode = self.options["mode"] if "mode" in self.options else "upload"
+        if "datasets" in self.options:
+            self.datasets = self.options["datasets"]
+        else:
+            self.datasets = ''
+            if self.mode == 'u' or self.mode == 'upload':
+                self.all_datasets = True
+        # self.datasets = self.options["datasets"] if "datasets" in self.options else ''
+        self.target_date = self.options["target_date"] if "target_date" in self.options else datetime.today().date()
+        
+    def _run_task(self):
+        
+        self.logger.info("====================================")
+        self.logger.info("Starting QBrix Analytics Timeshifter")
+        self.logger.info("====================================")
+        
+        if not self.mode or self.mode.lower() == "upload" or self.mode.lower() == "u":
+            self.logger.info("Running in Upload Mode")
+            self.timeshift()
+
+        if self.mode.lower() == "generate" or self.mode.lower() == "g":
+            self.logger.info("Running in Generate Mode")
+            self.generate_metadata_file()
+
+        self.logger.info("================================================")
+        self.logger.info("Q Brix Analytics Timeshifter task has completed!")
+        self.logger.info("================================================")
+    
+ 
+    def load_date_format(self, column_name, dataset_file_path, str_format='yyyy-MM-dd'):
+        config_file_path = dataset_file_path.replace('.txt', '.json')
+        with open(config_file_path, 'r') as file:
+            data = json.load(file)
+            fields = data['objects'][0]['fields']
+            date_formats = {field['fullyQualifiedName']: field.get('format', 'M/d/yy') for field in fields if field['type'] == 'Date'}
+        return date_formats.get(column_name, str_format)
+
+    def preprocess_date_format(self, format_str):
+        # Define a mapping of format specifiers to their replacements
+        format_str = re.sub('dd', 'd', format_str)
+        format_str = re.sub('\'', '', format_str)
+        replacements = {
+            'yyyy': '%Y',
+            'yy': '%y',
+            'MM': '%m',
+            'M': '%m',
+            'd': '%d',
+            'HH': '%H',
+            'hh': '%I',
+            'mm': '%M',
+            'ss': '%S',
+            'a': '%p',
+            'SSS': '%f'
+            # Add more mappings as needed
+        }
+        
+        # Replace the format specifiers using a simple string replacement
+        for old, new in replacements.items():
+            format_str = re.sub(old, new, format_str)
+
+        return format_str
+
+    def parse_date(self, date_str, column_name, dataset_file_path, str_format='yyyy-MM-dd'):
+        if date_str is None or date_str == '':
+            return datetime.today().date()
+
+        if column_name:
+            date_format = self.load_date_format(column_name, dataset_file_path, str_format)
+            # date_format = date_formats.get(column_name, str_format)
+            processed_format = self.preprocess_date_format(date_format)
+            # print(f"Processed date format to use: {processed_format}")
+        else:
+            processed_format = self.preprocess_date_format(str_format)
+
+        try:
+            return datetime.strptime(date_str, processed_format)
+        except ValueError:
+            print(f"Error: Unable to parse date {date_str} for column {column_name}")
+            return datetime.today().date()
+        
+    def timeshift(self):
+        print("The Baseline Date used for the Timeshift will be the QBrix deployment date.")
+        mdataset_files = glob.glob(f"{self.dataset_folder}/*.txt", recursive=False)
+        
+        for mdataset in mdataset_files:
+            if self.all_datasets or mdataset[19:-4] in self.datasets:
+                try:
+                    with open(mdataset, 'r') as file:
+                        data = json.load(file)
+                except json.JSONDecodeError:
+                    print(f"Skipping file: \033[93m{mdataset}\033[0m as it is not in valid JSON format.")
+                    continue
+            
+                columns_to_update = data.get('fields', [])
+                base_date_str = data.get('base_date', None)
+                if base_date_str:
+                    base_date = self.parse_date(base_date_str, '', '', str_format='yyyy-MM-ddTHH:mm:ss.SSSZ')  # Assuming 'base_date' is the column name
+                else:
+                    print(f"Skipping file: \033[93m{mdataset}\033[0m No base date provided.")
+                    continue
+
+                print(f"Processing file: \033[92m{mdataset[19:-4]}\033[0m")
+                updated_rows = []  # Store updated rows
+                if isinstance(base_date, dt.datetime):
+                    self.target_date = dt.datetime.combine(self.target_date, dt.datetime.min.time())
+                date_difference = (self.target_date - base_date).days
+
+                with open(f"{self.dataset_folder}/{mdataset[19:-4]}.csv", 'r', newline='') as csvfile:
+                    reader = csv.DictReader(csvfile)
+                    for row in reader:
+                        for column in columns_to_update:
+                            if row[column]:
+                                original_date = self.parse_date(row[column], column, mdataset)
+                                if original_date:
+                                    updated_date = original_date + timedelta(days=date_difference)
+                                    row[column] = updated_date.strftime(self.preprocess_date_format(self.load_date_format(column, mdataset)))
+                                    if re.search(r'\.(\d{6})Z$',row[column]):
+                                        row[column] = row[column][:-4] + 'Z'
+                                    else:
+                                        row[column] = row[column]
+                                        
+                        updated_rows.append(row)
+
+                with open(f"{self.dataset_folder}/{mdataset[19:-4]}.csv", 'w', newline='') as csvfile:
+                    fieldnames = reader.fieldnames
+                    writer = csv.DictWriter(csvfile, fieldnames=fieldnames, quoting=csv.QUOTE_ALL)
+
+                    writer.writeheader()
+                    writer.writerows(updated_rows)
+                
+    def generate_metadata_file(self):
+        
+        print(f"The Baseline Date used for the Timeshift will be the QBrix deployment date. ")
+        dataset_files = glob.glob(f"{self.dataset_folder}/*.json", recursive=False)
+        if len(dataset_files) > 0:
+            for file in dataset_files:
+                # if file in self.datasets or self.all_datasets:
+                
+                with open(file, 'r') as json_file:
+                    file_data = json.load(json_file)
+                    
+                if file_data:
+                    containsDateField = False
+                    generateTimeShift = ''
+                    fieldsList = []
+                    headerMessage = False
+                    for field in file_data['objects'][0]['fields']:
+                        if field['type'] == 'Date' or field['type'] == 'DateTime':
+                            generateFieldTimeShift = ''
+                            
+                            if containsDateField == False:
+                                containsDateField = True
+                                if  not self.datasets and not self.all_datasets:
+                                    while generateTimeShift.lower() != 'y' and generateTimeShift.lower() != 'yes' and generateTimeShift.lower() != 'n' and generateTimeShift.lower() != 'no':
+                                        generateTimeShift = input(f"\nDo you want to generate a timeshift for \033[92m{file[19:-5]}\033[0m dataset fields? (Yes/No): ")
+                                        if generateTimeShift.lower() == 'y' or generateTimeShift.lower() == 'yes':
+                                            generateTimeShift = 'yes'
+                                        else:
+                                            generateTimeShift = 'no'
+                                            break
+                            if generateTimeShift == 'yes' or file[19:-5] in self.datasets or self.all_datasets:
+                                
+                                while generateFieldTimeShift.lower() != 'y' and generateFieldTimeShift.lower() != 'yes' and generateFieldTimeShift.lower() != 'n' and generateFieldTimeShift.lower() != 'no':
+                                    if self.all_fields == True:
+                                        generateFieldTimeShift = 'y'
+                                    else:
+                                        if headerMessage == False:
+                                            headerMessage = True
+                                            print(f"   Fields for dataset: \033[92m{file[19:-5]}\033[0m")
+                                            print("   --------------------------------------------------")
+                                        generateFieldTimeShift = input(f"   Do you want to timeshift \033[96m{field['name']}\033[0m fields? (Yes/No): ")
+                                    if generateFieldTimeShift.lower() == 'y' or generateFieldTimeShift.lower() == 'yes':
+                                        fieldsList.append(field['name'])
+                    
+                    if generateTimeShift == 'yes' or file[19:-5] in self.datasets or self.all_datasets:   
+                        # print(fieldsList)                           
+                        output = {}
+                        metadata_files = glob.glob(f"{self.dataset_folder}/{file[19:-5]}.txt", recursive=False)
+                        if metadata_files:
+                            metadata_file = metadata_files[0]
+                            try:
+                                with open(metadata_file, 'r+') as raw_file:
+                                    
+                                    try:
+                                        metadata = json.load(raw_file)
+                                    except json.JSONDecodeError:
+                                        # Assume the content is in plain date format, try to parse it
+                                        raw_file.seek(0)  # Move back to the beginning of the file
+                                        date_str = raw_file.read().strip()  # Read the content as a string
+                                        base_date = datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S.%fZ")
+                                    else:
+                                        base_date = metadata.get('base_date')
+                                        if base_date is not None:
+                                            base_date = datetime.strptime(base_date, "%Y-%m-%dT%H:%M:%S.%fZ")
+                                    
+                                    base_date =  base_date.strftime("%Y-%m-%dT%H:%M:%S.%fZ") if base_date else None
+                                    if re.search(r'\.(\d{6})Z$',base_date):
+                                        base_date = base_date[:-4] + 'Z'
+                                        
+                                    output = {
+                                        'base_date': base_date,
+                                        'fields': fieldsList
+                                    }
+
+                                    raw_file.seek(0)
+                                    json.dump(output, raw_file, indent=4)  # Add indent for a more readable format
+                                    raw_file.truncate()
+
+                            except FileNotFoundError:
+                                print("Error: File not found.")
+                if headerMessage == True: 
+                    print("   --------------------------------------------------")  
+
+        else:
+            if not os.path.exists(self.dataset_folder):
+                self.logger.info("Creating Dataset Directory")
+                os.makedirs(self.dataset_folder)
+                
+    # Define a custom function to serialize datetime objects 
+    def serialize_datetime(obj): 
+        if isinstance(obj, datetime.datetime): 
+            return obj.isoformat() 
+        raise TypeError("Type not serializable") 
