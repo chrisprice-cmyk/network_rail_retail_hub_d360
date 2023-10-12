@@ -11,6 +11,7 @@ from os.path import exists
 from pathlib import Path
 
 import requests
+from qbrix.tools.shared.qbrix_cci_tasks import rebuild_cci_cache
 from cumulusci.cli.utils import (get_cci_upgrade_command,
                                  get_installed_version,
                                  get_latest_final_version, timestamp_file)
@@ -277,109 +278,120 @@ class QBrixUpdater(BaseTask, ABC):
                     timestamp_str = stamp_file.read()
                     timestamp = datetime.fromisoformat(timestamp_str)
             except Exception as e:
-                self.logger.info(f"Unable to read timestamp file. Recreating. Error detail: {e}")
+                self.logger.info(f" -> Unable to read timestamp file. Recreating. Error detail: {e}")
                 self._rebuild_timestamp_file(timestamp_file_path)
-                return True
+                return False
 
             # Calculate the time delta since the timestamp
             delta = datetime.now() - timestamp
 
             # Check if the delta is greater than 5 days
             if delta > timedelta(days=5):
-                os.remove(timestamp_file_path)
+                self._rebuild_timestamp_file(timestamp_file_path)
                 return True
-            else:
-                return False
+            return False
         else:
             self._rebuild_timestamp_file(timestamp_file_path)
-            return True
+            return False
 
     def _run_task(self):
 
         """" Updates the Q brix Project with the latest files from xDO-Template main branch """
 
-        self.logger.info("Starting Q Brix Update")
+        self.logger.info("STARTING QBRIX UPDATE\n")
 
+        # UPDATE PREFLIGHT
+        self.logger.info("Update Preflight:")
+
+        self.logger.info(" -> Ensuring all required directories exist")
         self._ensure_required_dirs()
-
+        self.logger.info(" -> Creating backup copy of update class file")
         if os.path.exists("qbrix/tools/utils/qbrix_update.py"):
             shutil.copyfile("qbrix/tools/utils/qbrix_update.py", ".qbrix/qbrix_update.py")
-
-        self.logger.info(" -> Downloading Latest version...")
+        self.logger.info(" -> Downloading Latest version of Q Brix Extensions...")
         if download_and_unzip(Q_BRANCH_LOCATION, self.ArchivePassword, False, True):
             # ADD FOLDERS HERE WHICH YOU WANT TO UPDATE IN PROJECT DIRECTORIES
             # PARAM1 = The folder as if it was from the root path
             # PARAM2 = The location where the source files should be located
             # PARAM3 = If True, it will delete the whole directory in project before updating
+            self.logger.info(" -> Download Complete!")
+            self.logger.info(" -> Patching project")
             self._update_file(".qbrix/Update/xDO-Template-main/playwright.config.ts", "./playwright.config.ts")
             self._update_folder("qbrix", ".qbrix/Update/xDO-Template-main", False)
             self._update_folder(".vscode", ".qbrix/Update/xDO-Template-main", False)
             self._update_folder(".github", ".qbrix/Update/xDO-Template-main", False)
             self._update_folder_indirect_source(".git/hooks", ".qbrix/Update/xDO-Template-main/qbrix/git/hooks", False)
+            self.logger.info(" -> Patching Complete!")
 
             #we are injecting pre-commit to use our cci extension but we need to make executable
             commit_file = Path(".git/hooks/pre-commit")
             commit_file.chmod(commit_file.stat().st_mode | stat.S_IEXEC)
+        self.logger.info(" -> Update Preflight Complete!")
 
-            # Finally Clean Up Cached Folder
-            self.logger.info(" -> Cleaning up temp files...")
-            shutil.rmtree(".qbrix/Update")
-
-        self.logger.info(" -> Checking cumulusci.yml file...")
-
+        # FILE CHECKS
+        self.logger.info("\nStarting File Checks:\n")
+        self.logger.info(" -> Checking custom task classes in cumulusci.yml file")
         self._check_and_deploy_class()
+        self.logger.info(" -> Updating robot legacy references in CumulusCI.yml...")
+        replace_file_text("cumulusci.yml", "qbrix/robot/tests", "qbrix/robot", False)
+        self.logger.info(" -> cumulusci.yml file checks complete!")
+        if os.path.exists('robot'):
+            self.logger.info(" -> Updating robot legacy references in robot/*.robot files...")
+            self._replace_string_in_files("robot", "robot", "QRobot.robot", "QRobot.resource")
+        if os.path.exists('qbrix_local'):
+            self.logger.info(" -> Updating robot legacy references in qbrix_local/*.robot files...")
+            self._replace_string_in_files("qbrix_local", "robot", "QRobot.robot", "QRobot.resource")
+        self.logger.info(" -> Checking .gitignore file")
+        upsert_gitignore_entries(Q_BRIX_GITIGNORE_ENTRIES)
+        self.logger.info(" -> Checking Trialforce Template IDs in scratch org files:")
+        check_scratch_org_files()
+        self.logger.info(" -> File Checks Complete!")
 
-        self.logger.info(" -> Checking for additional tasks to run...")
-
-        if not filecmp.cmp(".qbrix/qbrix_update.py", "qbrix/tools/utils/qbrix_update.py"):
-            self.logger.info(" -> Update Task script has been changed, running update again...")
-            self._remove_pycache()
-            subprocess.run("cci task run update_qbrix", shell=True, check=True)
-
-        if os.path.exists("qbrix/qbrix_update.py"):
-            os.remove("qbrix/qbrix_update.py")
-
+        # CUSTOM UPDATE
+        self.logger.info("\nStarting Custom Update:\n")
         if self.UpdateLocation:
             self.logger.info(" -> Running custom update from %s...", self.UpdateLocation)
             download_and_unzip(
                 self.UpdateLocation,
                 self.ArchivePassword,
                 self.IgnoreOptionalUpdates)
-            self.logger.info(" -> Custom update complete")
+            self.logger.info(" -> Custom update complete!")
+        else:
+            self.logger.info(" -> No custom updates defined. Check Complete!")
 
-        # Fixes for CumulusCI.yml
-        self.logger.info(" -> Updating robot references in CumulusCI.yml...")
-        replace_file_text("cumulusci.yml", "qbrix/robot/tests", "qbrix/robot", False)
-        if os.path.exists('robot'):
-            self._replace_string_in_files("robot", "robot", "QRobot.robot", "QRobot.resource")
-            self._replace_string_in_files("qbrix_local", "robot", "QRobot.robot", "QRobot.resource")
 
-        # Fixes for GitIgnore
-        self.logger.info(" -> Checking .gitignore file in repo")
-        upsert_gitignore_entries(Q_BRIX_GITIGNORE_ENTRIES)
+        # CLEANUP
+        self.logger.info("\nStarting Cleanup:\n")
+        self.logger.info(" -> Cleaning Python Cache")
 
         # Remove PyCache directories
         self._remove_pycache()
 
-        # Remove Old Update Script if present
+        # Check and Remove any security issues
         if os.path.exists(os.path.join("scripts", "qbrix", "UpdateVSCodeTasks.sh")):
             self.logger.info(" -> Removing old update script")
             os.remove(os.path.join("scripts", "qbrix", "UpdateVSCodeTasks.sh"))
 
-        self.logger.info(" -> Checking for Trialforce Templates in scratch org files:")
-        check_scratch_org_files()
+        # Clear CCI Cache
+        if os.path.exists(".cci/projects"):
+            shutil.rmtree(".cci/projects")
 
         # Checking for Updates to CumulusCI and other tooling - no more than once every 7 days
         if not self.SkipDependencyChecks and self._run_infrequent_checks():
 
             # Run Dependency Updates
-            self.logger.info(" -> Checking for required QBrix dependencies")
+            self.logger.info(" -> Checking for required QBrix Project dependencies")
             check_and_update_nodejs()
             update_salesforce_cli()
             cumulusci_update_check()
 
             # Checking for required py libraries for QBrix
-            self.logger.info(" -> Checking for required QBrix libraries")
+            self.logger.info(" -> Checking for required QBrix Python libraries")
             check_python_library_dependencies()
+        self.logger.info(" -> Cleaning Complete!")
 
-        self.logger.info("Update Complete!")
+        self.logger.info("\nUpdate Complete!")
+
+        if not filecmp.cmp(".qbrix/qbrix_update.py", "qbrix/tools/utils/qbrix_update.py"):
+            self.logger.info("\n\n*** THE UPDATE TASK FILE HAS CHANGED - PLEASE RERUN THE UPDATE TASK ***")
+            os.remove(".qbrix/qbrix_update.py")
