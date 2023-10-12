@@ -4,17 +4,15 @@ import os
 import shutil
 import stat
 import subprocess
-import time
 from abc import ABC
 from datetime import datetime, timedelta
 from os.path import exists
 from pathlib import Path
 
 import requests
-from qbrix.tools.shared.qbrix_cci_tasks import rebuild_cci_cache
 from cumulusci.cli.utils import (get_cci_upgrade_command,
                                  get_installed_version,
-                                 get_latest_final_version, timestamp_file)
+                                 get_latest_final_version)
 from cumulusci.core.config import UniversalConfig
 from cumulusci.core.tasks import BaseTask
 
