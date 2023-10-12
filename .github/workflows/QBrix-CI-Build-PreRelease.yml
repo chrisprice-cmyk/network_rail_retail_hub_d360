@@ -98,7 +98,7 @@ jobs:
           url: "https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixBuildService"
           method: "POST"
           customHeaders: '{"Content-Type": "application/json","Authorization": "Bearer ${{ steps.qlabs_accesstoken.outputs.value }}"}'
-          data: '{"qbrixname": "${{ github.event.repository.name }}-${{ env.BUILD_SUFFIX }}", "buildstatus": "Running"}'
+          data: '{"github_repository_id": "${{ github.repository_id }}", "qbrixname": "${{ github.event.repository.name }}-${{ env.BUILD_SUFFIX }}", "buildstatus": "Running"}'
           timeout: 30000
 
       #determine if there is a template or instance override defined in qlabs for this build config
@@ -214,7 +214,7 @@ jobs:
           url: "https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixBuildService"
           method: "POST"
           customHeaders: '{"Content-Type": "application/json","Authorization": "Bearer ${{ steps.qlabs_accesstoken.outputs.value }}"}'
-          data: '{"qbrixname": "${{ github.repository }}-${{ env.BUILD_SUFFIX }}", "buildstatus": "Failed", "details": "${{ steps.cci_failure_details.outputs.stdout }}" }'
+          data: '{"github_repository_id": "${{ github.repository_id }}", "qbrixname": "${{ github.repository }}-${{ env.BUILD_SUFFIX }}", "buildstatus": "Failed", "details": "${{ steps.cci_failure_details.outputs.stdout }}" }'
           timeout: 30000
 
   qbrix_deployments:
@@ -297,7 +297,7 @@ jobs:
           url: "https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixBuildService"
           method: "POST"
           customHeaders: '{"Content-Type": "application/json","Authorization": "Bearer ${{ steps.qlabs_accesstoken.outputs.value }}"}'
-          data: '{"qbrixname": "${{ github.repository }}-${{ env.BUILD_SUFFIX }}", "buildstatus": "Failed", "details": "${{ steps.cci_failure_details.outputs.stdout }}" }'
+          data: '{"github_repository_id": "${{ github.repository_id }}", "qbrixname": "${{ github.repository }}-${{ env.BUILD_SUFFIX }}", "buildstatus": "Failed", "details": "${{ steps.cci_failure_details.outputs.stdout }}" }'
           timeout: 30000
 
   qbrix_build_validate:
@@ -410,7 +410,7 @@ jobs:
           url: "https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixBuildService"
           method: "POST"
           customHeaders: '{"Content-Type": "application/json","Authorization": "Bearer ${{ steps.qlabs_accesstoken.outputs.value }}"}'
-          data: '{"qbrixname": "${{ github.repository }}-${{ env.BUILD_SUFFIX }}", "buildstatus": "Failed", "details": "${{ steps.cci_failure_details.outputs.stdout }}" }'
+          data: '{"github_repository_id": "${{ github.repository_id }}", "qbrixname": "${{ github.repository }}-${{ env.BUILD_SUFFIX }}", "buildstatus": "Failed", "details": "${{ steps.cci_failure_details.outputs.stdout }}" }'
           timeout: 30000
 
       - name: success status
@@ -420,5 +420,5 @@ jobs:
           url: "https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixBuildService"
           method: "POST"
           customHeaders: '{"Content-Type": "application/json","Authorization": "Bearer ${{ steps.qlabs_accesstoken.outputs.value }}"}'
-          data: '{"qbrixname": "${{ github.repository }}-${{ env.BUILD_SUFFIX }}", "buildstatus": "Passed", "details": ""}'
+          data: '{"github_repository_id": "${{ github.repository_id }}", "qbrixname": "${{ github.repository }}-${{ env.BUILD_SUFFIX }}", "buildstatus": "Passed", "details": ""}'
           timeout: 30000
