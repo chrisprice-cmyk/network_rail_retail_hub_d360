@@ -229,29 +229,6 @@ class QBrixUpdater(BaseTask, ABC):
 
                     self.logger.info(" -> Replaced '%s' with '%s' in %s", search_string, replace_string, file_path)
 
-    def _run_cumulusci_update(self):
-        self.logger.info(" -> Checking for updates to CumulusCI")
-        try:
-            latest_version = get_latest_final_version()
-        except requests.exceptions.RequestException:
-            self.logger.error("There was an issue retrieving the latest CumulusCI version. Skipping task")
-
-        result = latest_version > get_installed_version()
-        if result:
-            try:
-                subprocess.run(get_cci_upgrade_command(), shell=True, check=True, capture_output=True, text=True)
-            except subprocess.CalledProcessError as update_error:
-                error_output = update_error.stderr.strip()
-                self.logger.error(" -X Error executing command to update CumulusCI: %s", error_output)
-
-    def _run_salesforcedx_update(self):
-        self.logger.info(" -> Checking for SalesforceDX Updates")
-        try:
-            subprocess.run("sfdx update", shell=True, check=True, capture_output=True, text=True)
-        except subprocess.CalledProcessError as update_error:
-            error_output = update_error.stderr.strip()
-            self.logger.error(" -X Error executing command to update SalesforceDX: %s", error_output)
-
     def _remove_pycache(self, start_path:str = '.'):
         for dirpath, dirnames, _ in os.walk(start_path):
             if '__pycache__' in dirnames:
@@ -276,7 +253,7 @@ class QBrixUpdater(BaseTask, ABC):
                     timestamp_str = stamp_file.read()
                     timestamp = datetime.fromisoformat(timestamp_str)
             except Exception as e:
-                self.logger.info(f" -> Unable to read timestamp file. Recreating. Error detail: {e}")
+                self.logger.info(" - [ERROR] Unable to read timestamp file. Recreating the time stamp file. Error detail: %s", e)
                 self._rebuild_timestamp_file(timestamp_file_path)
                 return False
 
@@ -288,9 +265,10 @@ class QBrixUpdater(BaseTask, ABC):
                 self._rebuild_timestamp_file(timestamp_file_path)
                 return True
             return False
-        else:
-            self._rebuild_timestamp_file(timestamp_file_path)
-            return False
+
+        self._rebuild_timestamp_file(timestamp_file_path)
+        return False
+
 
     def _run_task(self):
 
