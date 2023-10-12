@@ -230,7 +230,7 @@ jobs:
       max-parallel: 1 #run in sequence
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Core Setup - key for jwt auth
         run: echo "${{ secrets.QBRIX_DEVHUB_PRIVATE_KEY }}" > devhub.key
 
@@ -258,7 +258,7 @@ jobs:
         run: cci service connect devhub --username DEVHUB_ACCT
 
       - name: force an update
-        run: cci task run update_qbrix
+        run: cci task run update_qbrix --SkipDependencyChecks True
 
       - name: rfbrowser init setup
         run: rfbrowser init
@@ -310,7 +310,7 @@ jobs:
         password: ${{ secrets.QBRIX_CONTAINER_PUBLISH_GITHUB_PAT}}
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Core Setup - key for jwt auth
         run: echo "${{ secrets.QBRIX_DEVHUB_PRIVATE_KEY }}" > devhub.key
 

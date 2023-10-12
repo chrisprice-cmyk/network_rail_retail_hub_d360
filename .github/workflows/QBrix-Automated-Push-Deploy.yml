@@ -186,7 +186,7 @@ jobs:
 
       - name: force an update
         if: matrix.targetusername!=''
-        run: cci task run update_qbrix
+        run: cci task run update_qbrix --SkipDependencyChecks True
 
       - name: rfbrowser init setup
         if: matrix.targetusername!=''

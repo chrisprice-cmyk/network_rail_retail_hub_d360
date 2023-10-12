@@ -277,7 +277,7 @@ jobs:
         run: cci service connect devhub --username DEVHUB_ACCT
 
       - name: force an update
-        run: cci task run update_qbrix
+        run: cci task run update_qbrix --SkipDependencyChecks True
 
       - name: rfbrowser init setup
         run: rfbrowser init
