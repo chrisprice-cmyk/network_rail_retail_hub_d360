@@ -374,6 +374,9 @@ class QBrixUpdater(BaseTask, ABC):
         if os.path.exists(".cci/projects"):
             shutil.rmtree(".cci/projects")
 
+        if os.path.exists(".qbrix/Update"):
+            shutil.rmtree(".qbrix/Update")
+
         # Checking for Updates to CumulusCI and other tooling - no more than once every 7 days
         if not self.SkipDependencyChecks and self._run_infrequent_checks():
 
