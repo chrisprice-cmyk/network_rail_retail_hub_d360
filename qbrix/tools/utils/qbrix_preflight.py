@@ -198,20 +198,7 @@ class RunPreflight(BaseTask, ABC):
         termwidth = self._get_terminal_width()
         
         #check for headless run with zero parameters supplied and parameters defined
-        if(termwidth == 0 and os.path.isfile(inputsfile) and not os.path.isfile(suppliedinputsfile)):
-            inputcontent = open(inputsfile, "r")
-            inputjson=inputcontent.read()
-            inputsdict = json.loads(inputjson)
-            
-            if(not "parameters" in inputsdict): return
-        
-            for reqin in inputsdict["parameters"]:
-                if("name" in reqin and len(reqin["name"].strip())>0):
-                    parametername=reqin["name"]
-                    negative_results.append(f"Required Parameter::{parametername} has not been supplied")
-                
-        #required parameter file defined and none or some parameters context supplied
-        elif(os.path.isfile(inputsfile)):
+        if(os.path.isfile(inputsfile)):
             
             inputcontent = open(inputsfile, "r")
             inputjson=inputcontent.read()
@@ -231,44 +218,46 @@ class RunPreflight(BaseTask, ABC):
                 if("name" in reqin and len(reqin["name"].strip())>0):
                     trgname=reqin["name"]
                     trgvalue=None
+                    friendlyname=trgname
                     
+                    if("friendly_name" in reqin):
+                        friendlyname = reqin["friendly_name"]
+                        
                     if(trgname in suppliedinputsdict):
                         trgvalue =suppliedinputsdict[trgname].strip()
+                        
+                    self.logger.info(f'Current parameter::{trgname}::Current Value::{trgvalue}')
                     
+                    #nothing supplied via inputs - go for defaults - if defined
                     if("default" in reqin and (trgvalue is None or len(trgvalue)==0)):
                         trgvalue = self._get_default(reqin["default"])        
-            
-                    #if we are in a non-headless and no default preset it - prompt them
+                        
+                    #if we are in a non-headless and no value and no default preset - prompt them
                     if(termwidth > 0 and  (trgvalue is None or len(trgvalue)==0)):
-                        trgvalue=input(f"Please enter a value for::{trgname}->")
+                        trgvalue=input(f"Please enter a value for::{friendlyname}->")
                         trgvalue=trgvalue.strip() #kill leading and trailing whitespaces
                     
-                    #check for regex irrespective if supplied
+                    #check for regex irrespective if supplied or defaulted
                     if("regex" in reqin and len(reqin["regex"].strip())>0):
-                        #self.logger.info(f'{trgname}::{trgvalue}::{reqin["regex"].strip()}')
                         if(self._value_is_regex_match(trgvalue,reqin["regex"].strip())==False):
-                            msg = f"Required Parameter::{trgname} does not match the required regex."
-                            #self.logger.error(msg)
+                            msg = f"Required Parameter::{friendlyname} does not match the required regex."
                             negative_results.append(msg)
                     
-                    #we have gon through the Gauntlet
+                    #we have gone through the Gauntlet
                     if(trgvalue is None or len(trgvalue)==0):
-                        msg=(f"Required Parameter::{trgname} is missing.")
-                        #self.logger.error(msg)
+                        msg=(f"Required Parameter::{friendlyname} is missing.")
                         negative_results.append(msg)
                     else: 
                         #store it to the cache
-                        #self.logger.info(f"Storing::{trgname}::{trgvalue}")
                         self.org_config.qbrix_cache_set(trgname,trgvalue)
-                        #self.logger.info(self.org_config.qbrix_cache_get(trgname))
-                        
+                    
+                               
         if(len(negative_results)>0):
             self.logger.error("****** MISSING REQUIRED PARAMETERS ******")
             for parmmsg in negative_results:
                 self.logger.error(parmmsg)
             raise Exception("****** MISSING REQUIRED PARAMETERS ******")
         
-    
     
     def _get_default(self,exp=str):
         #strip whitespace 
@@ -283,12 +272,10 @@ class RunPreflight(BaseTask, ABC):
                 if "__import__" in parsedexp:
                     return None
 
-                #self.logger.info(parsedexp)
                 compliledcode = compile(parsedexp, "<string>", "eval")
                 #no builtins = no __import__ # DO NOT allow globals
                 #restrict scope to expression - no builtins and only locals self
                 res = eval(compliledcode,{},{"self":self})
-                #self.logger.info(f'EXPRESSION-VALUE::{str(res)}')
                 return str(res)
                 
             except Exception as inst:
@@ -303,7 +290,8 @@ class RunPreflight(BaseTask, ABC):
         try:
             return int(subprocess.check_output(['stty', 'size']).split()[1])
         except Exception as e:
-            print(e)
+            pass
+        
         return 0
     
     def _value_is_regex_match(self,value=str,regex=str):
