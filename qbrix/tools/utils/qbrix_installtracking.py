@@ -359,36 +359,36 @@ class InstallRecorder(SFDXBaseTask):
         my_path = os.getcwd()
 
         # get the obj of current github repo
-        my_repo = self.project_config.get_repo_from_url(self.project_config.project__git__repo_url)
+        # my_repo = self.project_config.get_repo_from_url(self.project_config.project__git__repo_url)
         
         # if we see a ".cc/projects/", we should know it's a source dependency call, and that hash like folder is the full sha of the commit, and we will use the repo's default branch as my branch
         if ".cci/projects/" in my_path:
             my_sha = my_path.split("/")[-1]
-            my_branch = my_repo.default_branch
+            # my_branch = my_repo.default_branch
         # other wise, it's a direct call, we don't have a sha folder ready to use, but we can get these (and even more) info from git log commands.
         else:
             try:
                 my_sha, sha_error = run_command(f"git log -1 --pretty=format:'%H'")
-                my_branch, branch_error = run_command(f"git branch --show-current")
-                if sha_error or branch_error:
-                    print(f"errors occurred when reading git info\n - sha_error: {sha_error}\n - branch_error: {branch_error}")
+                # my_branch, branch_error = run_command(f"git branch --show-current")
+                if sha_error: # or branch_error:
+                    print(f"errors occurred when reading git info\n - sha_error: {sha_error}") #\n - branch_error: {branch_error}")
                     return
             except Exception as e:
                 print(f"failed getting git info: {e}")
                 return
 
         # now we have the sha of this commit, let's get the obj of current commit, well, we are not using this commit time info yet, it's just for future, leave them here in case I forgot how to retreive them.
-        my_commit = None
-        commit_time = None
-        try:
-            my_commit = get_commit(my_repo, my_sha)
-            # with commit info, we can get the commit time
-            try:
-                commit_time = my_commit.commit.get('author').get('date')
-            except Exception as e:
-                print(f"failed getting git commit time info: {e}")
-        except Exception as e:
-            print(f"failed getting git commit info: {e}")
+        # my_commit = None
+        # commit_time = None
+        # try:
+        #     my_commit = get_commit(my_repo, my_sha)
+        #     # with commit info, we can get the commit time
+        #     try:
+        #         commit_time = my_commit.commit.get('author').get('date')
+        #     except Exception as e:
+        #         print(f"failed getting git commit time info: {e}")
+        # except Exception as e:
+        #     print(f"failed getting git commit info: {e}")
 
         
 
@@ -413,8 +413,8 @@ class InstallRecorder(SFDXBaseTask):
 
         return {
             "sha": my_sha,
-            "branch": my_branch,
-            "commit_time": commit_time,
+            # "branch": my_branch,
+            # "commit_time": commit_time,
         }
 
 
