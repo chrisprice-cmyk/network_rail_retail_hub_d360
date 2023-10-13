@@ -132,6 +132,7 @@ jobs:
           echo ${{ fromJson(steps.qlab_config_settings.outputs.response).templateid }}
           echo "::set-env name=TEMPLATEID::${{ fromJson(steps.qlab_config_settings.outputs.response).templateid }}"
           echo "::set-env name=TEMPLATE_INSTANCE::${{ fromJson(steps.qlab_config_settings.outputs.response).template_instance }}"
+          echo "::set-env name=ORG_TARGET_USER::${{ fromJson(steps.qlab_config_settings.outputs.response).org_target_user }}"
           echo "::set-env name=AUTO_PUBLISH_TO_METADEPLOY::${{ fromJson(steps.qlab_config_settings.outputs.response).auto_publish_metadeploy }}"
           echo "::set-env name=GITHUB_API_SLEEP_TIME::${{ fromJson(steps.qlab_config_settings.outputs.response).github_api_reset_seconds }}"
 
