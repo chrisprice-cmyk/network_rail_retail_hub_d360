@@ -163,7 +163,8 @@ class InstallRecorder(SFDXBaseTask):
             self._recordtracking()
 
         else:
-
+            # embeded _update_qbrix_version in the starting of installation tracking, return qbrix_commit_info so we can include these info in tracking too, in the future
+            qbrix_commit_info = self._update_qbrix_version()
 
             self.trackingdata["genesis_qbrixname"]=self.org_config.genesis_qbrixname
             self.trackingdata["ambient_tracking_id"]=self.org_config.qbrix_ambient_tracking_id
@@ -177,7 +178,7 @@ class InstallRecorder(SFDXBaseTask):
             self.trackingdata["hostname"]=socket.gethostname()
             self.trackingdata["starttimestamp"]=(datetime.utcnow() - datetime(1970, 1, 1)).total_seconds()
 
-            self.trackingdata["qbrix_sha"]=""
+            self.trackingdata["qbrix_sha"] = qbrix_commit_info["sha"] if qbrix_commit_info and "sha" in qbrix_commit_info else ""
             self.trackingdata["qbrix_image_id"]=""
 
 
@@ -215,9 +216,6 @@ class InstallRecorder(SFDXBaseTask):
                 self.trackingdata["maxapiversion"] = maxapiversion
             else:
                 self.trackingdata["maxapiversion"] = 0.0
-
-            # embeded _update_qbrix_version in the starting of installation tracking, return qbrix_commit_info so we can include these info in tracking too, in the future
-            qbrix_commit_info = self._update_qbrix_version()
 
             self.__writertrackingtofile()
 
