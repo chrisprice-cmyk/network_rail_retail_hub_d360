@@ -128,21 +128,25 @@ def get_template_info(template_id):
 
     """Checks the given Trialforce Template ID against known templates and returns the latest template ID if known """
 
-    base_url = "https://qbrix-runtime-service-8c3413c48d7f.herokuapp.com"
-    check_template_url = f"{base_url}/postspin/isknowntemplate/?templateid={template_id}"
+    try:
+        base_url = "https://qbrix-runtime-service-8c3413c48d7f.herokuapp.com"
+        check_template_url = f"{base_url}/postspin/isknowntemplate/?templateid={template_id}"
 
-    response = requests.get(check_template_url, timeout=60)
-    response_json = response.json()
+        response = requests.get(check_template_url, timeout=60)
+        response_json = response.json()
 
-    if "result" in response_json and response_json["result"] == True:
-        template_info_url = f"{base_url}/postspin/latesttemplate/?templateid={template_id}"
-        template_info_response = requests.get(template_info_url, timeout=60)
-        template_info = template_info_response.json()
-        if "TemplateId" in template_info and template_info["TemplateId"]:
-            return template_info["TemplateId"]
-        else:
-            return None
-
+        if "result" in response_json and response_json["result"] == True:
+            template_info_url = f"{base_url}/postspin/latesttemplate/?templateid={template_id}"
+            template_info_response = requests.get(template_info_url, timeout=60)
+            template_info = template_info_response.json()
+            if "TemplateId" in template_info and template_info["TemplateId"]:
+                return template_info["TemplateId"]
+            else:
+                return None
+    except Exception:
+        #fail open - don't impeded
+        pass 
+    
     return None
 
 
