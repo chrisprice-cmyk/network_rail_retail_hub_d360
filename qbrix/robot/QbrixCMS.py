@@ -166,8 +166,14 @@ class QbrixCMS(QbrixRobotTask):
             )
 
             if len(close_buttons) > 0:
-                for button in close_buttons:
-                    self.browser.click(button)
+                try:
+                    for button in close_buttons:
+                        self.shared.wait_and_click(button, "2")
+                except Exception as e:
+                    self.builtin.log_to_console(
+                        f"\nUnable to close tab. Not a road blocker to moving onto the next one...\nError Details: {e}"
+                    )
+                    continue
 
             sleep(1)
 
