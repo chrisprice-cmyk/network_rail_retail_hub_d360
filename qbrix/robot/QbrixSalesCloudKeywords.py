@@ -6,7 +6,7 @@ from robot.api.deco import library
 from qbrix.core.qbrix_robot_base import QbrixRobotTask
 
 
-@library(scope='GLOBAL', auto_keywords=True, doc_format='reST')
+@library(scope="GLOBAL", auto_keywords=True, doc_format="reST")
 class QbrixSalesCloudKeywords(QbrixRobotTask):
     """Sales Cloud Keywords"""
 
@@ -30,7 +30,7 @@ class QbrixSalesCloudKeywords(QbrixRobotTask):
         self.shared.go_to_setup_admin_page("AccountSettings/home")
         self.shared.wait_for_page_title("Account Settings")
         self.browser.click("iframe >>> :nth-match(input:has-text('Edit'),1)")
-        self.browser.wait_for_elements_state(ctma_selector, ElementState.visible, '10s')
+        self.browser.wait_for_elements_state(ctma_selector, ElementState.visible, "10s")
         checked = "checked" in self.browser.get_element_states(ctma_selector)
         if not checked:
             toggle_switch = self.browser.get_element(ctma_selector)
@@ -39,7 +39,7 @@ class QbrixSalesCloudKeywords(QbrixRobotTask):
             sleep(10)
 
     def enable_sales_engagement(self):
-        """ Enables Sales Engagement """
+        """Enables Sales Engagement"""
 
         self.shared.go_to_setup_admin_page("SalesEngagement/home", 5)
         sleep(5)
@@ -51,59 +51,76 @@ class QbrixSalesCloudKeywords(QbrixRobotTask):
             self.browser.click(button_selector)
             sleep(20)
 
-
     def enable_sales_agreements(self):
         """
         Enables Sales Agreement Setting in Salesforce Setup
         """
         self.shared.go_to_setup_admin_page("SalesAgreementSettings/home")
-        #self.browser.wait_for_elements_state("h1:text-is('Sales Agreements')", ElementState.visible, '30s')
+        # self.browser.wait_for_elements_state("h1:text-is('Sales Agreements')", ElementState.visible, '30s')
         sleep(5)
-        if not "checked" in self.browser.get_element_states("div.slds-grid:has-text('Enable Sales Agreements') >> label.slds-checkbox_toggle"):
-            self.browser.click("div.slds-grid:has-text('Enable Sales Agreements') >> label.slds-checkbox_toggle")
+        if not "checked" in self.browser.get_element_states(
+            "div.slds-grid:has-text('Enable Sales Agreements') >> label.slds-checkbox_toggle"
+        ):
+            self.browser.click(
+                "div.slds-grid:has-text('Enable Sales Agreements') >> label.slds-checkbox_toggle"
+            )
             sleep(1)
 
-
     def set_guest_on_channel_menu(self, channel_menu_api_name):
-
-        """ Sets the Channel Menu Guest API Setting. Expects the Channel Menu API Name (not the label)"""
+        """Sets the Channel Menu Guest API Setting. Expects the Channel Menu API Name (not the label)"""
 
         self.shared.go_to_setup_admin_page("ChannelMenuDeployments/home")
 
         self.browser.click(f"tr:has-text('{channel_menu_api_name}') >> a.slds-button")
         sleep(1)
-        self.browser.click(".branding-actions > .scrollable > .uiMenuItem:nth-child(2) > a")
+        self.browser.click(
+            ".branding-actions > .scrollable > .uiMenuItem:nth-child(2) > a"
+        )
         sleep(3)
-        visible = "visible" in self.browser.get_element_states("a.supportAPIButton:has-text('Enable on')")
+        visible = "visible" in self.browser.get_element_states(
+            "a.supportAPIButton:has-text('Enable on')"
+        )
         if visible:
             self.browser.click("a.supportAPIButton:has-text('Enable on')")
             sleep(5)
 
     def update_forecast_hierarchy_settings(self):
-        """ Sets the default SDO configuration for Forecasting """
+        """Sets the default SDO configuration for Forecasting"""
         self.shared.go_to_setup_admin_page("Forecasting3Role/home", 8)
 
         # Enable Admin User for the CEO Role
         visible = "visible" in self.browser.get_element_states(
-            "iframe >>> :nth-match(a:text-is('Enable Users'):right-of(span.label:text-is('CEO')),1)")
+            "iframe >>> :nth-match(a:text-is('Enable Users'):right-of(span.label:text-is('CEO')),1)"
+        )
         if visible:
-            self.browser.click("iframe >>> :nth-match(a:text-is('Enable Users'):right-of(span.label:text-is('CEO')),1)")
+            self.browser.click(
+                "iframe >>> :nth-match(a:text-is('Enable Users'):right-of(span.label:text-is('CEO')),1)"
+            )
             sleep(5)
             existing_list = self.browser.get_select_options("iframe >>> #duel_select_1")
 
-            results = self.salesforceapi.soql_query(f"SELECT FirstName, LastName FROM User WHERE IsActive=true and ProfileId IN (SELECT ID FROM Profile WHERE Name = 'System Administrator') AND UserRoleId IN (SELECT ID FROM UserRole WHERE Name = 'CEO') AND FirstName != '' AND LastName != 'Bot'")
+            results = self.salesforceapi.soql_query(
+                f"SELECT FirstName, LastName FROM User WHERE IsActive=true and ProfileId IN (SELECT ID FROM Profile WHERE Name = 'System Administrator') AND UserRoleId IN (SELECT ID FROM UserRole WHERE Name = 'CEO') AND FirstName != '' AND LastName != 'Bot'"
+            )
             if results and results["totalSize"] > 0:
                 for record in results["records"]:
-                    name = record["FirstName"] + ' ' + record["LastName"]
-                    existing_list = self.browser.get_select_options("iframe >>> #duel_select_1")
+                    name = record["FirstName"] + " " + record["LastName"]
+                    existing_list = self.browser.get_select_options(
+                        "iframe >>> #duel_select_1"
+                    )
 
-                    print(f"name: {name}")
+                    self.builtin.log_to_console(f"\nname: {name}")
                     print(existing_list)
 
-
                     changes_made = False
-                    if len(existing_list) > 0 and not any(d['label'] == name for d in existing_list):
-                        self.browser.select_options_by("iframe >>> td.selectCell:has-text('Available Users') >> select",SelectAttribute.text, name)
+                    if len(existing_list) > 0 and not any(
+                        d["label"] == name for d in existing_list
+                    ):
+                        self.browser.select_options_by(
+                            "iframe >>> td.selectCell:has-text('Available Users') >> select",
+                            SelectAttribute.text,
+                            name,
+                        )
                         self.browser.click("iframe >>> img.rightArrowIcon")
                         changes_made = True
 
@@ -112,30 +129,42 @@ class QbrixSalesCloudKeywords(QbrixRobotTask):
                 else:
                     self.browser.click("iframe >>> .btn:text-is('Cancel')")
 
-
             sleep(8)
 
         # Setup Elliot Executive for VP of Sales - User.007
-        results = self.salesforceapi.soql_query(f"SELECT id FROM User WHERE External_ID__c ='User.007'")
+        results = self.salesforceapi.soql_query(
+            f"SELECT id FROM User WHERE External_ID__c ='User.007'"
+        )
         if results and results["totalSize"] > 0:
             visible = "visible" in self.browser.get_element_states(
-                "iframe >>> :nth-match(img.plus:left-of(span.label:text-is('CEO')),1)")
+                "iframe >>> :nth-match(img.plus:left-of(span.label:text-is('CEO')),1)"
+            )
             if visible:
-                self.browser.click("iframe >>> :nth-match(img.plus:left-of(span.label:text-is('CEO')),1)")
+                self.browser.click(
+                    "iframe >>> :nth-match(img.plus:left-of(span.label:text-is('CEO')),1)"
+                )
                 sleep(3)
-                self.browser.click("iframe >>> span:has-text('VP of Sales') >> a:text-is('Enable Users')")
+                self.browser.click(
+                    "iframe >>> span:has-text('VP of Sales') >> a:text-is('Enable Users')"
+                )
                 sleep(5)
-                existing_list = self.browser.get_select_options("iframe >>> #duel_select_1")
-                if len(existing_list) > 0 and not any(d['label'] == 'Elliot Executive' for d in existing_list):
-                    self.browser.select_options_by("iframe >>> td.selectCell:has-text('Available Users') >> select",
-                                                SelectAttribute.text, "Elliot Executive")
+                existing_list = self.browser.get_select_options(
+                    "iframe >>> #duel_select_1"
+                )
+                if len(existing_list) > 0 and not any(
+                    d["label"] == "Elliot Executive" for d in existing_list
+                ):
+                    self.browser.select_options_by(
+                        "iframe >>> td.selectCell:has-text('Available Users') >> select",
+                        SelectAttribute.text,
+                        "Elliot Executive",
+                    )
                     self.browser.click("iframe >>> img.rightArrowIcon")
                     sleep(1)
                     self.browser.click("iframe >>> .btn:text-is('Save')")
                 else:
                     self.browser.click("iframe >>> .btn:text-is('Cancel')")
                 sleep(2)
-
 
         sleep(10)
 
@@ -149,10 +178,19 @@ class QbrixSalesCloudKeywords(QbrixRobotTask):
 
         setup_button_selector = f"{self.shared.iframe_handler()} input.button[value='Set Up Opportunity Splits']"
         if self.shared.wait_on_element(setup_button_selector):
-
             # Enable Opportunity Splits
-            self.shared.wait_and_click(selector=setup_button_selector, post_click_sleep=3)
-            self.shared.wait_and_click(selector=f"{self.shared.iframe_handler()} input.button:text-is('Save')", post_click_sleep=5)
-            self.shared.wait_and_click(selector=f"{self.shared.iframe_handler()} input.btn:text-is('Enable')", post_click_sleep=5)
-            self.shared.wait_and_click(selector=f"{self.shared.iframe_handler()} input.btn:text-is('Save')", post_click_sleep=10)
-
+            self.shared.wait_and_click(
+                selector=setup_button_selector, post_click_sleep=3
+            )
+            self.shared.wait_and_click(
+                selector=f"{self.shared.iframe_handler()} input.button:text-is('Save')",
+                post_click_sleep=5,
+            )
+            self.shared.wait_and_click(
+                selector=f"{self.shared.iframe_handler()} input.btn:text-is('Enable')",
+                post_click_sleep=5,
+            )
+            self.shared.wait_and_click(
+                selector=f"{self.shared.iframe_handler()} input.btn:text-is('Save')",
+                post_click_sleep=10,
+            )

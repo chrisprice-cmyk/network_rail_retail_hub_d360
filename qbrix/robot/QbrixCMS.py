@@ -15,9 +15,11 @@ class QbrixCMS(QbrixRobotTask):
     """Qbrix Salesforce CMS and Digital Experiences Keywords Library"""
 
     def go_to_digital_experiences(self):
+
         """Go to the Digital Experiences App"""
+
         self.shared.go_to_app("Digital Experiences")
-        sleep(5)
+        self.browser.wait_until_network_is_idle()
 
     def download_all_content(self):
 
@@ -40,7 +42,7 @@ class QbrixCMS(QbrixRobotTask):
         directory_path = os.path.join("datasets", "cms_workspaces")
 
         if not os.path.exists(directory_path):
-            print(f"No Directories Found to Upload. Sub-directories expected within {directory_path}")
+            self.builtin.log_to_console(f"No Directories Found to Upload. Sub-directories expected within {directory_path}")
             return
 
         subdirectories = []
@@ -56,7 +58,7 @@ class QbrixCMS(QbrixRobotTask):
 
         # Process each subdirectory
         for subdirectory in subdirectories:
-            print(f"Workspace Subdirectory: {subdirectory}")
+            self.builtin.log_to_console(f"Processing Workspace Subdirectory: {subdirectory}")
 
             # Check Workspace
             self.create_workspace(subdirectory, enhanced_workspace=False)
@@ -68,8 +70,98 @@ class QbrixCMS(QbrixRobotTask):
 
             # Print the list of files
             for file_name in files:
-                print(f" -> Uploading  {os.path.join(subdirectory_path, file_name)}")
+                self.builtin.log_to_console(f" -> Uploading  {os.path.join(subdirectory_path, file_name)}")
                 self.upload_cms_import_file(os.path.join(subdirectory_path, file_name), subdirectory)
+
+    def enable_all_channels_for_all_workspaces(self):
+        """Ensures that all channels have been applied for all workspaces"""
+
+        self.builtin.log_to_console(
+            "\nStarting Q Robot check to ensure that all workspaces have all channels enabled for content..."
+        )
+
+        # Get All Workspaces
+        results = self.salesforceapi.soql_query(
+            "SELECT Id, Name FROM ManagedContentSpace ORDER BY Name"
+        )
+        if results["totalSize"] == 0:
+            self.builtin.log_to_console(
+                "\nThere are no CMS Collections currently within the org. Skipping task."
+            )
+            return
+
+        self.go_to_digital_experiences()
+        sleep(5)
+        self.builtin.log_to_console("\nLoaded Digital Experiences App")
+
+        # Loop through Workspaces
+        for workspace in results["records"]:
+            self.builtin.log_to_console(
+                f"\nLoading Workspace with name [{workspace['Name']}] and Id [{workspace['Id']}]:"
+            )
+
+            # Go To Workspace Publishing Targets Page
+            self.browser.go_to(
+                f"{self.cumulusci.org.instance_url}/lightning/cms/spaces/{workspace['Id']}/publishingTargets?ws=%2Flightning%2Fcms%2Fspaces%2F{workspace['Id']}",
+                timeout="30s",
+            )
+            self.browser.wait_until_network_is_idle()
+
+            self.builtin.log_to_console("\n -> Checking Related Channels for Content")
+
+            # Check for Unselected Channels and Enable them
+
+            self.shared.wait_and_click(
+                f"{self.shared.iframe_handler()} button:has-text('Add Channel')"
+            )
+
+            sleep(2)
+
+            checkbox_elements = self.browser.get_elements(
+                "div.slds-checkbox_add-button"
+            )
+
+            final_element_list = [
+                x
+                for x in checkbox_elements
+                if not "disabled"
+                in self.browser.get_element_states(f"{x} >> input[type='checkbox']")
+            ]
+
+            if len(final_element_list) == 0:
+                self.builtin.log_to_console("\n -> No additional channels to add.")
+                self.browser.click("button.slds-button[title='Close this window']")
+            else:
+                self.builtin.log_to_console(
+                    f"\n -> Checking and enabling {len(final_element_list)} Channels..."
+                )
+
+                for check in self.browser.get_elements("div.slds-checkbox_add-button"):
+                    self.browser.click(check)
+
+                self.browser.click(
+                    f"{self.shared.iframe_handler()} div.modal-footer >> button:has-text('Add')"
+                )
+
+                self.shared.wait_and_click(
+                    "div.forceModalActionContainer >> button:has-text('Got It')"
+                )
+
+                self.builtin.log_to_console("\n -> Additional Channels Enabled!")
+
+                sleep(2)
+
+            close_buttons = self.browser.get_elements(
+                "li.tabItem >> div.close >> svg[data-key='close']:visible"
+            )
+
+            if len(close_buttons) > 0:
+                for button in close_buttons:
+                    self.browser.click(button)
+
+            sleep(1)
+
+        self.builtin.log_to_console("\nWorkspace Channel Check Complete!")ß
 
     def get_workspace_id(self, workspace_name: str = None):
 
@@ -132,7 +224,7 @@ class QbrixCMS(QbrixRobotTask):
                     raise Exception("Error Occurred During File Upload. CMS Import Failed")
 
                 if self.browser.get_element_count(confirm_checkbox_selector) > 0 or self.browser.get_element_count(import_button_selector) > 0:
-                    print(f"File {file_path} - Uploaded OK")
+                    self.builtin.log_to_console(f"\nFile {file_path} - Uploaded OK")
                     break
 
                 wait_counter += 1
@@ -143,7 +235,7 @@ class QbrixCMS(QbrixRobotTask):
             self.shared.wait_and_click("button.slds-button:has-text('Import')")
             self.shared.wait_and_click("button.slds-button:text('ok')")
         else:
-            print("Workspace cannot be None. Skipping")
+            self.builtin.log_to_console("\nWorkspace cannot be None. Skipping")
             return
 
     def download_cms_content(self, workspace):
@@ -302,7 +394,7 @@ class QbrixCMS(QbrixRobotTask):
 
         """
         Generates a Product Media Mapping File, which stores information about Product List Images, Product Detail Images and Attachments related to the products.
-        
+
         Returns:
             .json file is created within the project and stored at this path: cms_data/product_images.json
         """
@@ -421,7 +513,7 @@ class QbrixCMS(QbrixRobotTask):
                     self.browser.click(media_tab_selector)
                     sleep(8)
                 except TimeoutError:
-                    print(f"Unable to access the Media tab for the current Product record with Id ({results['records'][0]['Id']}). Skipping...")
+                    self.builtin.log_to_console(f"\nUnable to access the Media tab for the current Product record with Id ({results['records'][0]['Id']}). Skipping...")
                     continue
                 except Exception as e:
                     raise e
@@ -470,11 +562,11 @@ class QbrixCMS(QbrixRobotTask):
                                 self.browser.wait_for_elements_state(media_tab_selector, ElementState.visible, timeout="15s")
                                 self.browser.click(media_tab_selector)
                         except TimeoutError:
-                            print("Unable to find any matches for search results. Skipping...")
+                            self.builtin.log_to_console("\nUnable to find any matches for search results. Skipping...")
                             self.browser.click("button.slds-button:text-is('Cancel')")
                             continue
                 else:
-                    print("The maximum number of images have already been assigned to the Product or there are no Product Detail Images to process. Skipping...")
+                    self.builtin.log_to_console("\nThe maximum number of images have already been assigned to the Product or there are no Product Detail Images to process. Skipping...")
 
                 # Process Product List Image
 
@@ -525,7 +617,7 @@ class QbrixCMS(QbrixRobotTask):
                             self.browser.click("button.slds-button:text-is('Cancel')")
                             continue
                 else:
-                    print("The maximum number of images have already been assigned to the Product or there are no Product List Images to process. Skipping...")
+                    self.builtin.log_to_console("\nThe maximum number of images have already been assigned to the Product or there are no Product List Images to process. Skipping...")
 
                 # Process Attachments
 
@@ -576,7 +668,7 @@ class QbrixCMS(QbrixRobotTask):
                             self.browser.click("button.slds-button:text-is('Cancel')")
                             continue
                 else:
-                    print("The maximum number of attachments have already been assigned to the Product or there are no Product Attachments to process. Skipping...")
+                    self.builtin.log_to_console("\nThe maximum number of attachments have already been assigned to the Product or there are no Product Attachments to process. Skipping...")
 
                 # Close Tab
                 try:
@@ -690,7 +782,7 @@ class QbrixCMS(QbrixRobotTask):
             break_loop = False
             for collection, _ in file_data.items():
 
-                print(f"Looking for Collection {collection}")
+                self.builtin.log_to_console(f"\nLooking for Collection {collection}")
 
                 counter = 1
                 while counter < 1:
@@ -713,7 +805,7 @@ class QbrixCMS(QbrixRobotTask):
                 for table_row in self.browser.get_elements("table.slds-table >> tr:has(a)"):
                     selection_text = self.browser.get_property(f"{table_row} >> a", "innerText")
                     if selection_text == collection:
-                        print(" -> Found Collection... Deleting...")
+                        self.builtin.log_to_console("\n -> Found Collection... Deleting...")
                         self.browser.click(f"{table_row} >> lightning-button-menu.slds-dropdown-trigger")
                         self.shared.wait_and_click("span.slds-truncate:text-is('Delete')")
                         self.shared.wait_and_click("div.modal-footer >> button.slds-button:text-is('Delete')")
@@ -727,7 +819,7 @@ class QbrixCMS(QbrixRobotTask):
     def upload_cms_collections(self, site_name, upload_file_location=os.path.join("datasets", "cms_collection_data", "cms_collection_dataset.json") ):
 
         """Uploads the CMS Collections based on the data held within the upload file. By default this is stored within datasets/cms_collection_data/cms_collection_dataset.json"""
-        
+
         # it's possible that it takes a long time to upload if there are a lot of contents, let's increase the timeout time
         self.browser.set_browser_timeout("1440s")
 
@@ -753,19 +845,19 @@ class QbrixCMS(QbrixRobotTask):
                 if create_button_count > 0:
                     no_collection_mode = True
                     found_element = True
-                    print("Found Create Collection button...")
+                    self.builtin.log_to_console("\nFound Create Collection button...")
                     break
 
                 if table_count > 0:
                     no_collection_mode = False
                     found_element = True
-                    print("Found Table button...")
+                    self.builtin.log_to_console("\nFound Table button...")
                     break
 
                 counter += 1
 
             if not found_element:
-                print("No Supported Elements Found")
+                self.builtin.log_to_console("\nNo Supported Elements Found")
                 return
 
             # Set Defaults for Robot
@@ -776,16 +868,16 @@ class QbrixCMS(QbrixRobotTask):
             # Add Content
 
             if no_collection_mode:
-                print(">>> Adding All Collections")
+                self.builtin.log_to_console("\n>>> Adding All Collections")
 
             for collection, collection_details in file_data.items():
 
                 # Check if Collection Exists
                 if no_collection_mode:
-                    print(f">>> Adding Create Collection Task for {collection}")
+                    self.builtin.log_to_console(f"\n>>> Adding Create Collection Task for {collection}")
                     collections_to_add.add(collection)
                 else:
-                    print(f">>> Checking Collection {collection}")
+                    self.builtin.log_to_console(f"\n>>> Checking Collection {collection}")
                     collection_found = False
                     for table_row in self.browser.get_elements("table.slds-table >> tr:has(a)"):
                         selection_text = self.browser.get_property(f"{table_row} >> a", "innerText")
@@ -794,9 +886,9 @@ class QbrixCMS(QbrixRobotTask):
                             break
 
                     if collection_found:
-                        print(f">>> {collection} Found. Skipping")
+                        self.builtin.log_to_console(f"\n>>> {collection} Found. Skipping")
                     else:
-                        print(f">>> {collection} will be created")
+                        self.builtin.log_to_console(f"\n>>> {collection} will be created")
                         collections_to_add.add(collection)
 
             if len(collections_to_add) > 0:
@@ -815,7 +907,7 @@ class QbrixCMS(QbrixRobotTask):
                     sleep(3)
 
                     for obj in salesforce_objects:
-                        print(f"Checking Object: {obj}")
+                        self.builtin.log_to_console(f"\nChecking Object: {obj}")
                         object_exists = False
                         if self.browser.get_element_count("table.slds-table:visible") > 0:
                             if self.browser.get_element_count(f"table.slds-table:visible >> tbody >> tr >> th:has-text('{obj}')") > 0:
@@ -827,7 +919,7 @@ class QbrixCMS(QbrixRobotTask):
                             self.browser.fill_text("div.communitySetupManagedContentMultiSelectTable >> input.slds-input", obj)
                             sleep(5)
                             if self.browser.get_element_count(f"div.listContainer >> table >> tbody >> tr:has-text('{obj}')") < 1:
-                                    print(f"Unable to find Object called '{obj}'. Skipping")
+                                    self.builtin.log_to_console(f"\nUnable to find Object called '{obj}'. Skipping")
                                     continue
                             self.browser.click(f"div.listContainer >> table >> tbody >> :nth-match(tr:has-text('{obj}'), 1) >> th >> div.slds-truncate")
                             self.shared.wait_and_click("button.saveButton")
@@ -850,7 +942,7 @@ class QbrixCMS(QbrixRobotTask):
                     cms_collection_content = collection_data.get("related_cms_content")
                     sf_list_view = collection_data.get("listview")
 
-                    print(f"TYPE: {collection_type} - CONTENT_TYPE: {content_type} - LISTVIEW: {sf_list_view}")
+                    self.builtin.log_to_console(f"\nTYPE: {collection_type} - CONTENT_TYPE: {content_type} - LISTVIEW: {sf_list_view}")
 
                     # Set Name
                     self.browser.fill_text("div.stepContainer >> div.slds-form-element__control >> input.slds-input:visible", collection_add)
@@ -860,27 +952,27 @@ class QbrixCMS(QbrixRobotTask):
                     if collection_type == "SALESFORCE":
 
                         # Add Salesforce Details
-                        print("Adding Salesforce CMS Collection")
+                        self.builtin.log_to_console("\nAdding Salesforce CMS Collection")
                         self.shared.wait_and_click("div.stepContainer >> div.slds-visual-picker >> label.crm")
                         self.shared.wait_and_click(modal_next_button)
                         self.shared.wait_and_click("div.stepContainer >> button.slds-combobox__input")
                         self.shared.wait_and_click(f"div.activeStep >> div.slds-listbox >> lightning-base-combobox-item:has-text('{content_type}')")
                         sleep(5)
                         if self.browser.get_element_count(f"div.activeStep >> table >> tbody >> tr:has-text('{sf_list_view}')") < 1:
-                            print(f"Unable to Find List View '{sf_list_view}'")
+                            self.builtin.log_to_console(f"\nUnable to Find List View '{sf_list_view}'")
                             continue
                         self.shared.wait_and_click(f"div.activeStep >> table >> tbody >> tr:has-text('{sf_list_view}') >> span.slds-radio")
                         self.shared.wait_and_click(modal_next_button)
 
                     elif collection_type == "CMS":
                         # Add CMS Content
-                        print("Adding CMS Collection")
+                        self.builtin.log_to_console("\nAdding CMS Collection")
                         self.shared.wait_and_click("div.stepContainer >> div.slds-visual-picker >> label.cms")
                         self.shared.wait_and_click(modal_next_button)
                         self.browser.wait_for_elements_state("div.slds-select_container >> select.slds-select", ElementState.visible, "20s")
                         sleep(1)
                         if not any(entry.get("label") == content_type for entry in self.browser.get_select_options("div.slds-select_container >> select.slds-select")):
-                            print(f"{content_type} was not found. Check managed content types have been deployed")
+                            self.builtin.log_to_console(f"\n{content_type} was not found. Check managed content types have been deployed")
                             self.browser.click("button[title='Close this window']")
                             sleep(1)
                             continue
@@ -895,7 +987,7 @@ class QbrixCMS(QbrixRobotTask):
                             self.browser.fill_text("div.activeStep >> input.slds-input", cms_content)
                             sleep(3)
                             if self.browser.get_element_count(f"div.listContainer >> table >> tbody >> tr:has-text('{cms_content}')") < 1:
-                                print(f"Unable to find CMS Content called '{cms_content}'. Skipping")
+                                self.builtin.log_to_console(f"\nUnable to find CMS Content called '{cms_content}'. Skipping")
                                 continue
                             self.browser.click(f"div.listContainer >> table >> tbody >> :nth-match(tr:has-text('{cms_content}'), 1) >> th >> :nth-match(div.slds-truncate, 1)")
                         self.shared.wait_and_click(modal_next_button)
