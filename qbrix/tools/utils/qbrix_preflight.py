@@ -211,7 +211,14 @@ class RunPreflight(BaseTask, ABC):
             if(os.path.isfile(suppliedinputsfile)):
                 suppliedinputcontent = open(suppliedinputsfile, "r")
                 suppliedinputjson=suppliedinputcontent.read()
-                suppliedinputsdict = json.loads(suppliedinputjson)
+                
+                try:
+                    suppliedinputsdict = json.loads(suppliedinputjson)
+                except Exception as e:
+                    #bad file = default to empty dict
+                    suppliedinputsdict={}
+                    
+            
             
             for reqin in inputsdict["parameters"]:
                 #ignore any empty required names. Fail on them.
@@ -226,7 +233,7 @@ class RunPreflight(BaseTask, ABC):
                     if(trgname in suppliedinputsdict):
                         trgvalue =suppliedinputsdict[trgname].strip()
                         
-                    self.logger.info(f'Current parameter::{trgname}::Current Value::{trgvalue}')
+                    #self.logger.info(f'Current parameter::{trgname}::Current Value::{trgvalue}')
                     
                     #nothing supplied via inputs - go for defaults - if defined
                     if("default" in reqin and (trgvalue is None or len(trgvalue)==0)):
