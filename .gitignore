@@ -71,7 +71,6 @@ qbrix/tools/health/__pycache__
 qbrix/tools/testing/__pycache__
 qbrix/tools/shared/__pycache__/*
 *.pyc
-config/user/*
 
 #Extra
 .idea/*
