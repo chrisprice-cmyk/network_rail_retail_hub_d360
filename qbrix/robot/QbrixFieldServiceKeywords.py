@@ -19,6 +19,8 @@ class QbrixFieldServiceKeywords(QbrixRobotTask):
         # Go To Field Service Setup
         self.shared.go_to_setup_admin_page("FieldServiceSettings/home", 10)
 
+        self.builtin.log_to_console("\nLoaded Field Service Settings Page")
+
         # Enable Field Service Setting
         field_service_toggle_selector = (
             "span.slds-form-element__label:has-text('Field Service')"
@@ -26,6 +28,8 @@ class QbrixFieldServiceKeywords(QbrixRobotTask):
         self.browser.wait_for_elements_state(
             field_service_toggle_selector, ElementState.visible, "30s"
         )
+
+        self.builtin.log_to_console("\nChecking Field Service Setting")
 
         if (
             not "checked"
@@ -37,6 +41,11 @@ class QbrixFieldServiceKeywords(QbrixRobotTask):
         ):
             self.browser.click(field_service_toggle_selector)
             sleep(10)
+
+            if turn_off:
+                self.builtin.log_to_console("\n -> Disabled")
+            else:
+                self.builtin.log_to_console("\n -> Enabled")
 
     def go_to_field_service_admin_page(self):
         """Go directly to the Field Service admin page"""
@@ -52,15 +61,19 @@ class QbrixFieldServiceKeywords(QbrixRobotTask):
             ElementState.visible,
             "120s",
         )
+        self.builtin.log_to_console("\nLoaded Field Service App Settings Page")
 
     def field_service_sdo_config(self):
         """Go to Field Service Settings and configure additional settings for demo use"""
+
+        self.builtin.log_to_console("\nConfiguring SDO Configuration for Field Service")
 
         # Go to Field Service Settings
         self.go_to_field_service_admin_page()
         iframe_selector = self.shared.iframe_handler()
 
         # Enable Schedule Bundling
+        self.builtin.log_to_console("\n -> Enabling Schedule Bundling")
         self.builtin.log_to_console("\nEnabling Scheduling")
         menu_scheduling_selector = f"{iframe_selector} id=SettingsMenu >> div.menuItem >> span:text-is('Scheduling'):visible"
         tabs_bundling_selector = (
@@ -115,7 +128,7 @@ class QbrixFieldServiceKeywords(QbrixRobotTask):
             sleep(2)
 
         # Setup Dispatcher UI - Custom Actions
-        self.builtin.log_to_console("\nDispatcher UI")
+        self.builtin.log_to_console("\nEnabling Dispatcher UI > Custom Actions")
         menu_dispatcher_ui_selector = f"{iframe_selector} #SettingsMenu >> div.menuItem >> span:text-is('Dispatcher Console UI'):visible"
         drag_jumps_selector = f"{iframe_selector} div.setting-row-container:has-text('Drag jumps on gantt') >> div.select-container >> input.input-settings"
         gantt_settings_selector = (
@@ -136,11 +149,13 @@ class QbrixFieldServiceKeywords(QbrixRobotTask):
         self.browser.click(menu_dispatcher_ui_selector)
 
         # Configure Gantt Jumps
+        self.builtin.log_to_console("\nConfiguring Gantt Jumps")
         self.browser.fill_text(drag_jumps_selector, "15")
         self.browser.click(save_button_selector)
         sleep(5)
 
         # Gantt Updates
+        self.builtin.log_to_console("\nConfiguring Gantt Updates")
         self.browser.click(gantt_settings_selector)
         sleep(1)
         self.browser.fill_text(gantt_refresh_selector, "10")
@@ -148,6 +163,7 @@ class QbrixFieldServiceKeywords(QbrixRobotTask):
         sleep(5)
 
         # Check and Enable Custom Actions
+        self.builtin.log_to_console("\nConfiguring Custom Actions")
         self.browser.click(tabs_custom_actions_selector)
         sleep(15)
         self.browser.click(action_cat_selector)
@@ -156,6 +172,7 @@ class QbrixFieldServiceKeywords(QbrixRobotTask):
         custom_actions_added = False
 
         # Create Demo Bundle
+        self.builtin.log_to_console("\nConfiguring Demo Bundle Flow Integrations")
         if (
             self.browser.get_element_count(
                 f"{iframe_selector} #CA-ActionsList >> div.singleCustomAction:has-text('Create Demo Bundle')"
@@ -182,6 +199,7 @@ class QbrixFieldServiceKeywords(QbrixRobotTask):
             custom_actions_added = True
 
         # Create Sliding Demo Data
+        self.builtin.log_to_console("\nCreating sliding Demo Data")
         if "visible" not in self.browser.get_element_states(
             f"{iframe_selector} div.singleCustomAction:has-text('Create Sliding Demo Data')"
         ):
@@ -209,6 +227,7 @@ class QbrixFieldServiceKeywords(QbrixRobotTask):
             sleep(5)
 
         # Setup Optimization
+        self.builtin.log_to_console("\nConfiguring Optimization")
         menu_optimize_selector = f"{iframe_selector} id=SettingsMenu >> div.menuItem >> span:text-is('Optimization'):visible"
         optimization_checkbox_selector = f"{iframe_selector} div.slds-media:has-text('Optimization Insights') >> div.transitions-checkbox >> span.toggled-label:text-is('OFF')"
 
@@ -225,12 +244,16 @@ class QbrixFieldServiceKeywords(QbrixRobotTask):
         """
         Enables all Field Service Permission Sets and also updates Permissions Sets if there are updates waiting
         """
+
+        self.builtin.log_to_console("\nConfiguring Field Service Permissions")
+
         self.go_to_field_service_admin_page()
         iframe_selector = self.shared.iframe_handler()
         self.browser.click(
             f"{iframe_selector} div.settings-tab:has-text('Permission Sets')"
         )
         sleep(30)
+        self.builtin.log_to_console("\n -> Loading Permission Sets")
 
         create_permission_selector = (
             f"{iframe_selector} div:text-is('Create Permissions')"
@@ -239,8 +262,9 @@ class QbrixFieldServiceKeywords(QbrixRobotTask):
             f"{iframe_selector} div:text-is('Update Permissions')"
         )
 
+        current_selector = None
         for x in range(0, 4):
-            self.builtin.log_to_console(f"\nCheck {x}")
+            self.builtin.log_to_console(f"\n -> [DEBUGGING] Variable X = [{x}]")
 
             if x == 0 or x == 1:
                 current_selector = create_permission_selector
@@ -251,18 +275,27 @@ class QbrixFieldServiceKeywords(QbrixRobotTask):
             permission_button_elements = self.browser.get_elements(current_selector)
 
             if permission_button_elements is None:
+                self.builtin.log_to_console(
+                    "\n -> Current selector has not found any Permission Set buttons. Adjusting selector..."
+                )
                 continue
-            else:
-                for permission_button in permission_button_elements:
-                    if "visible" in self.browser.get_element_states(permission_button):
-                        self.browser.click(permission_button)
-                        sleep(30)
+
+            self.builtin.log_to_console("\n -> Applying Permissions")
+            for permission_button in permission_button_elements:
+                if "visible" in self.browser.get_element_states(permission_button):
+                    self.browser.click(permission_button)
+                    sleep(30)
+
+        self.builtin.log_to_console("\n -> Permissions Applied!")
 
     def disable_field_service_status_transitions(self):
         """
         Disables Field Service Status Transitions
         """
         self.go_to_field_service_admin_page()
+
+        self.builtin.log_to_console("\nDisabling Field Service Status Transistions...")
+
         iframe_selector = self.shared.iframe_handler()
         self.browser.click(
             f"{iframe_selector} span:text-is('Service Appointment Life Cycle')"
@@ -296,11 +329,15 @@ class QbrixFieldServiceKeywords(QbrixRobotTask):
                 ElementState.visible,
                 "10s",
             )
+        self.builtin.log_to_console(
+            "\nConfiguring Field Service Permissions -> Complete!"
+        )
 
     def disable_field_service_integration(self):
         """
         Disables Field Service Integration
         """
+        self.builtin.log_to_console("\nDisabling Field Service Integration...")
         self.shared.go_to_setup_admin_page("FieldServiceSettings/home", 5)
         checked = "checked" in self.browser.get_element_states(
             "label:has-text('Permissions to access data needed for optimization, automatic scheduling, and service appointment bundling.')"
@@ -313,11 +350,17 @@ class QbrixFieldServiceKeywords(QbrixRobotTask):
             sleep(5)
             self.browser.click("button:text-is('Save')")
             sleep(5)
+            self.builtin.log_to_console("\n -> Complete!")
 
     def relax_security_on_fs_apps(self, connected_app_label):
         """
         Relaxes Security Options on the Fields Service Mobile Apps. Should only be used for demo purposes.
         """
+
+        self.builtin.log_to_console(
+            f"\nConfiguring Security on Field Service Connected App with name [{connected_app_label}]..."
+        )
+
         self.shared.go_to_setup_admin_page("ConnectedApplication/home")
         iframe_selector = self.shared.iframe_handler()
         self.browser.wait_for_elements_state(
@@ -326,17 +369,24 @@ class QbrixFieldServiceKeywords(QbrixRobotTask):
             "15s",
         )
 
+        self.builtin.log_to_console("\n -> Loaded Connected Apps main page")
+
         # click on the label column to filter descending - reduce pages and pages
         self.browser.click(f"{iframe_selector} a:text-is('Master Label')")
         if self.shared.wait_on_element(
             f"{iframe_selector} a:text-is('{connected_app_label}')", 15
         ):
+            self.builtin.log_to_console(
+                "\n -> Found Connected app. Loading configuration..."
+            )
             self.browser.click(f"{iframe_selector} a:text-is('{connected_app_label}')")
             self.browser.wait_for_elements_state(
                 f"{iframe_selector} h2.mainTitle:text-is('Connected App Detail')",
                 ElementState.visible,
                 "15s",
             )
+
+            self.builtin.log_to_console("\n -> Applying policy changes...")
             self.browser.click(f"{iframe_selector} .btn:has-text('Edit Policies')")
             self.browser.wait_for_elements_state(
                 f"{iframe_selector} h2.mainTitle:text-is('Connected App Edit')",
@@ -360,13 +410,17 @@ class QbrixFieldServiceKeywords(QbrixRobotTask):
             )
             sleep(10)
             self.browser.click(f"{iframe_selector} .btn:has-text('Save')")
+            self.builtin.log_to_console("\n -> Saving...")
             self.browser.wait_for_elements_state(
                 f"{iframe_selector} h2.mainTitle:text-is('Connected App Detail')",
                 ElementState.visible,
                 "15s",
             )
+            self.builtin.log_to_console("\n -> Configuration Complete!")
         else:
-            self.builtin.log_to_console("\nConnected App Not Found. Skipping")
+            self.builtin.log_to_console(
+                f"\n -> The connected app with name [{connected_app_label}] was not found. Moving onto the next (if any)"
+            )
 
     def relax_security_for_connected_apps(self):
         self.relax_security_on_fs_apps("Salesforce Field Service for iOS")
@@ -377,19 +431,25 @@ class QbrixFieldServiceKeywords(QbrixRobotTask):
         Sets the Default Territory for the Field Service Dispatcher Console
         """
 
+        self.builtin.log_to_console("\nSetting Default Territory for Field Service")
+
         # Set to Default Territory if None passed
         if not territory:
             territory = "*San Francisco"
 
-        # Got to Field Service App and load Field Service Tab
+        self.builtin.log_to_console(f"\n -> Territory will be set to [{territory}]")
+
+        # Go to Field Service App and load Field Service Tab
         self.shared.go_to_app("Field Service")
         sleep(2)
         self.browser.go_to(
             f"{self.cumulusci.org.instance_url}/lightning/n/FSL__FieldService",
             timeout="90s",
         )
+        self.builtin.log_to_console("\n -> Loaded Field Service Configuration Page")
 
         # Ensure we are viewing territories
+        self.builtin.log_to_console("\n -> Checking current territory configuration...")
         self.browser.wait_for_elements_state(
             f"iframe >>> #LeftLocationFilteringButton", ElementState.visible, "120s"
         )
@@ -407,7 +467,7 @@ class QbrixFieldServiceKeywords(QbrixRobotTask):
         if not locations_count:
             locations_count = 0
 
-        self.builtin.log_to_console(f"\nFound {locations_count} locations on page.")
+        self.builtin.log_to_console(f"\n -> Found {locations_count} locations on page.")
 
         if locations_count > 0:
             # Select Location as Favorite and switch to it
@@ -428,15 +488,20 @@ class QbrixFieldServiceKeywords(QbrixRobotTask):
             )
 
             sleep(1)
+            self.builtin.log_to_console("\n -> Loaded new configuration!")
         else:
-            self.builtin.log_to_console("\nNo locations loaded. Skipping.")
+            self.builtin.log_to_console("\n -> No locations loaded. Skipping.")
 
     def go_to_field_service_mobile_settings_page(self):
+        """Goes to the Field Service Mobile Settings Page"""
+
         self.browser.go_to(
             f"{self.cumulusci.org.instance_url}/lightning/setup/FieldServiceMobileSettings/home",
             timeout="90s",
         )
         sleep(1)
+        self.builtin.log_to_console("\n -> Loaded Field Service Mobile Settings Page")
+
         self.browser.click(
             f"{self.shared.iframe_handler()} tr:has-text('Field Service Mobile Settings') >> lightning-button-menu"
         )
@@ -444,6 +509,7 @@ class QbrixFieldServiceKeywords(QbrixRobotTask):
         self.browser.click(
             f"{self.shared.iframe_handler()} lightning-menu-item.slds-dropdown__item:has-text('Show Details')"
         )
+        self.builtin.log_to_console("\n -> Loaded Details")
 
     def create_mobile_app_extension(
         self,
@@ -459,6 +525,10 @@ class QbrixFieldServiceKeywords(QbrixRobotTask):
         Creates a mobile app extension
         """
 
+        self.builtin.log_to_console(
+            f"\nRunning automation to create Mobile App Extension for Field Service.\nConfiguration:\n-> Label: {label}\n-> Type: {type}\n-> Name: {name}\n-> Launch Value: {launch_value}\n-> Object Scope: {object_scope}"
+        )
+
         # Handle Page Reloads (i.e. If the mobile settings page needs to be reopened)
         if pageReload:
             self.go_to_field_service_mobile_settings_page()
@@ -471,12 +541,17 @@ class QbrixFieldServiceKeywords(QbrixRobotTask):
         self.browser.scroll_to_element(new_button_selector)
 
         # Check for Existing Configuration
+        self.builtin.log_to_console("\n -> Checking for an existing configuration...")
         if (
             self.browser.get_element_count(
                 f"{self.shared.iframe_handler()} th >> div.slds-truncate >> lightning-base-formatted-text:text-is('{label}')"
             )
             == 0
         ):
+            self.builtin.log_to_console(
+                "\n -> No existing configuration found. Continuing to create a new one..."
+            )
+
             # Open New App Extension Modal
             self.browser.click(new_button_selector)
             sleep(1)
@@ -534,6 +609,7 @@ class QbrixFieldServiceKeywords(QbrixRobotTask):
             sleep(1)
             self.browser.click("button.slds-button:text-is('Save')")
             sleep(1)
+            self.builtin.log_to_console("\n -> Saving Changes...")
             if (
                 self.browser.get_element_count(
                     "div.slds-modal__footer >> lightning-helptext.slds-m-right_small >> button.slds-button_icon-error >> span.slds-assistive-text:has-text('Help')"
