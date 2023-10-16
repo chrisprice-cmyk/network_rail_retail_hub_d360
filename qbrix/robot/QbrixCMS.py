@@ -1094,6 +1094,7 @@ class QbrixCMS(QbrixRobotTask):
             file_data = json.load(dataset_file)
 
         if file_data:
+            self.enable_all_channels_for_all_workspaces()
             self.open_experience_cloud_collections_page(site_name)
 
             # Loop Through Collections from the file
