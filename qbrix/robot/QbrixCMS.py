@@ -19,18 +19,29 @@ class QbrixCMS(QbrixRobotTask):
 
         self.shared.go_to_app("Digital Experiences")
         self.browser.wait_until_network_is_idle()
+        self.builtin.log_to_console("\nDigital Experiences App Loaded")
 
     def download_all_content(self):
         """Triggers an Export of all Workspaces within the target Salesforce Org. Note that the export emails go to the admin user."""
+
+        self.builtin.log_to_console(
+            "\nRunning Automation to export content for ALL WORKSPACES in the org. Please ensure the System Administrator is aware as they will get the exported content emails with the download links."
+        )
 
         # Get Workspace Names
         results = self.salesforceapi.soql_query(
             "SELECT Name FROM ManagedContentSpace WHERE IsDeleted=False"
         )
         if results["totalSize"] == 0:
+            self.builtin.log_to_console(
+                "\nThere are no CMS Workspaces in the org. Skipping task."
+            )
             return
 
         # Download content from each workspace
+        self.builtin.log_to_console(
+            f"\n{len(results['records'])} CMS Workspaces in the org. Running export automation..."
+        )
         for workspace in results["records"]:
             self.download_cms_content(workspace["Name"])
 
@@ -41,7 +52,7 @@ class QbrixCMS(QbrixRobotTask):
 
         if not os.path.exists(directory_path):
             self.builtin.log_to_console(
-                f"No Directories Found to Upload. Sub-directories expected within {directory_path}"
+                f"\nNo Directories Found to Upload. Sub-directories expected within {directory_path}"
             )
             return
 
@@ -59,7 +70,7 @@ class QbrixCMS(QbrixRobotTask):
         # Process each subdirectory
         for subdirectory in subdirectories:
             self.builtin.log_to_console(
-                f"Processing Workspace Subdirectory: {subdirectory}"
+                f"\nProcessing Workspace Subdirectory: {subdirectory}"
             )
 
             # Check Workspace
@@ -77,11 +88,14 @@ class QbrixCMS(QbrixRobotTask):
             # Print the list of files
             for file_name in files:
                 self.builtin.log_to_console(
-                    f" -> Uploading  {os.path.join(subdirectory_path, file_name)}"
+                    f"\n -> Uploading  {os.path.join(subdirectory_path, file_name)}"
                 )
                 self.upload_cms_import_file(
                     os.path.join(subdirectory_path, file_name), subdirectory
                 )
+                self.builtin.log_to_console("\n -> File Upload Complete!")
+
+        self.builtin.log_to_console("\nAll directories processed!")
 
     def enable_all_channels_for_all_workspaces(self):
         """Ensures that all channels have been applied for all workspaces"""
@@ -101,8 +115,6 @@ class QbrixCMS(QbrixRobotTask):
             return
 
         self.go_to_digital_experiences()
-        sleep(5)
-        self.builtin.log_to_console("\nLoaded Digital Experiences App")
 
         # Loop through Workspaces
         for workspace in results["records"]:
@@ -170,23 +182,34 @@ class QbrixCMS(QbrixRobotTask):
                     for button in close_buttons:
                         self.shared.wait_and_click(button, "2")
                 except Exception as e:
-                    self.builtin.log_to_console(
-                        f"\nUnable to close tab. Not a road blocker to moving onto the next one...\nError Details: {e}"
-                    )
+                    # This will error as sub-tabs are also found but then get lost when parent tabs are closed. False positive in a way.
                     continue
 
             sleep(1)
 
         self.builtin.log_to_console("\nWorkspace Channel Check Complete!")
 
-    def get_workspace_id(self, workspace_name: str = None):
+    def get_workspace_id(self, workspace_name=None):
         """Returns the ID for a given workspace"""
+
+        if not workspace_name:
+            self.builtin.log_to_console(
+                "\nError: No workspace name was provided although Robot was requesting the ID. Please check your code."
+            )
+
+        self.builtin.log_to_console(
+            f"\nLooking up ID for Workspace called [{workspace_name}]"
+        )
 
         results = self.salesforceapi.soql_query(
             f"SELECT Id FROM ManagedContentSpace where Name = '{workspace_name}' LIMIT 1"
         )
         if results["totalSize"] == 1:
-            return results["records"][0]["Id"]
+            record_id = results["records"][0]["Id"]
+            self.builtin.log_to_console(f"\n -> ID Found [{record_id}]")
+            return record_id
+
+        self.builtin.log_to_console("\n -> No workspace found in the Salesforce Org")
         return None
 
     def upload_cms_import_file(self, file_path, workspace):
@@ -276,89 +299,116 @@ class QbrixCMS(QbrixRobotTask):
         @return:
         """
 
+        if not workspace:
+            self.builtin.log_to_console("\nWorkspace cannot be None. Skipping")
+            return
+
+        self.builtin.log_to_console(
+            f"\nRunning automation to export CMS Content from workspace called [{workspace}]...\n Ensure that Salesforce Admin is aware as they will receive the export file email with the download link."
+        )
+
         self.go_to_digital_experiences()
-        sleep(5)
 
         # Go To Workspace Page
         if workspace:
-            # Get the Application ID
-            results = self.salesforceapi.soql_query(
-                f"SELECT Id FROM ManagedContentSpace where Name = '{workspace}' LIMIT 1"
+            workspace_id = self.get_workspace_id(workspace_name=workspace)
+
+            if not workspace_id:
+                return
+
+            # Go to the Workspace Page
+            self.browser.go_to(
+                f"{self.cumulusci.org.instance_url}/lightning/cms/spaces/{workspace_id}",
+                timeout="30s",
+            )
+            self.builtin.log_to_console(
+                f"\n -> Loaded workspace called [{workspace}] with ID [{workspace_id}]..."
             )
 
-            if results["totalSize"] == 1:
-                app_id = results["records"][0]["Id"]
-
-                # Go to the app
-                self.browser.go_to(
-                    f"{self.cumulusci.org.instance_url}/lightning/cms/spaces/{app_id}",
-                    timeout="30s",
+            # Enhanced workspace handler
+            if (
+                self.browser.get_element_count(
+                    f"{self.shared.iframe_handler()} lightning-badge.slds-badge:has-text('Enhanced'):visible"
                 )
-                iframe_handler = self.shared.iframe_handler()
+                > 0
+            ):
+                self.builtin.log_to_console(
+                    "\n -> Enhanced Workspace Detected! These are not currently supported using this method. Skipping workspace export."
+                )
+                return
 
-                # Enhanced workspace handler
-                if (
-                    self.browser.get_element_count(
-                        f"{iframe_handler} lightning-badge.slds-badge:has-text('Enhanced'):visible"
+            # Check that the workspace has items
+            sleep(2)
+            total_cms_elements = self.browser.get_element(
+                f"{self.shared.iframe_handler()} p.slds-page-header__meta-text"
+            )
+            innertext_for_total = self.browser.get_property(
+                f"{self.shared.iframe_handler()} p.slds-page-header__meta-text",
+                "innerText",
+            )
+            if innertext_for_total == "0 item(s)":
+                self.builtin.log_to_console(
+                    "\n -> Workspace was loaded although no items were detected. Skipping this workspace export."
+                )
+                return
+
+            # Ensure that all items on the page are selected
+
+            self.builtin.log_to_console(
+                "\n -> Ensuring that all CMS items are loaded on the page..."
+            )
+            robot_checkbox_attempts = 0
+            iframe_handler = self.shared.iframe_handler()
+            while robot_checkbox_attempts <= 10:
+                robot_checkbox_attempts += 1
+
+                total_cms_elements = self.browser.get_element(
+                    f"{iframe_handler} p.slds-page-header__meta-text"
+                )
+
+                if total_cms_elements:
+                    innertext_for_total = self.browser.get_property(
+                        f"{iframe_handler} p.slds-page-header__meta-text",
+                        "innerText",
                     )
-                    > 0
-                ):
-                    return
 
-                # Select all checkboxes
-                no_items = False
-                while True:
-                    total_cms_elements = self.browser.get_element(
-                        f"{iframe_handler} p.slds-page-header__meta-text"
-                    )
-
-                    if total_cms_elements:
-                        innertext_for_total = self.browser.get_property(
-                            f"{iframe_handler} p.slds-page-header__meta-text",
-                            "innerText",
-                        )
-
-                        if innertext_for_total == "0 item(s)":
-                            no_items = True
-                            break
-
-                        if innertext_for_total and "+" not in str(innertext_for_total):
-                            break
-
-                        if innertext_for_total and "+" in str(innertext_for_total):
-                            elements = self.browser.get_elements(
-                                f"{iframe_handler} table.slds-table >> sfdc_cms-content-check-box-button"
-                            )
-                            for elem in elements:
-                                self.browser.scroll_to_element(elem)
-
-                    else:
+                    if innertext_for_total == "0 item(s)":
                         break
 
-                if no_items:
-                    return
+                    if innertext_for_total and "+" not in str(innertext_for_total):
+                        break
 
-                elements = self.browser.get_elements(
-                    f"{iframe_handler} table.slds-table >> sfdc_cms-content-check-box-button"
-                )
-                for elem in elements:
-                    self.browser.scroll_to_element(elem)
-                    self.browser.click(elem)
+                    if innertext_for_total and "+" in str(innertext_for_total):
+                        elements = self.browser.get_elements(
+                            f"{iframe_handler} table.slds-table >> sfdc_cms-content-check-box-button"
+                        )
+                        for elem in elements:
+                            self.browser.scroll_to_element(elem)
+                else:
+                    break
 
-                # Open Export Menu
+            self.builtin.log_to_console("\n -> Selecting all items on the page...")
+            elements = self.browser.get_elements(
+                f"{self.shared.iframe_handler()} table.slds-table >> sfdc_cms-content-check-box-button"
+            )
+            for elem in elements:
+                self.browser.scroll_to_element(elem)
+                self.browser.click(elem)
 
-                drop_down_menu_selector = f"{iframe_handler} div.slds-page-header__row >> button.slds-button:has-text('Show menu')"
-                import_button_selector = f"{iframe_handler} div.slds-page-header__row >> lightning-menu-item.slds-dropdown__item:has-text('Export Content')"
-
-                self.browser.click(drop_down_menu_selector)
-                sleep(1)
-
-                self.browser.click(import_button_selector)
-                sleep(2)
-                self.browser.click(
-                    f"{iframe_handler} button.slds-button:has-text('Export')"
-                )
-                sleep(5)
+            # Request Export
+            self.builtin.log_to_console("\n -> Requesting Export of CMS Content...")
+            self.browser.click(
+                f"{self.shared.iframe_handler()} div.slds-page-header__row >> button.slds-button:has-text('Show menu')"
+            )
+            self.shared.wait_and_click(
+                f"{self.shared.iframe_handler()} div.slds-page-header__row >> div.slds-dropdown__list >> span.slds-truncate:has-text('Export Content')"
+            )
+            self.shared.wait_and_click(
+                f"{self.shared.iframe_handler()} button.slds-button:has-text('Export')"
+            )
+            self.builtin.log_to_console(
+                "\n -> REQUEST SENT! Please check the Salesforce Admin emails for the export email with the download link for the file(s) which contain the content for this workspace."
+            )
 
     def create_workspace(self, workspace_name, channels=None, enhanced_workspace=True):
         """
@@ -375,10 +425,7 @@ class QbrixCMS(QbrixRobotTask):
             channels = []
 
         # Check for existing workspace
-        results = self.salesforceapi.soql_query(
-            f"SELECT Id FROM ManagedContentSpace where Name = '{workspace_name}' LIMIT 1"
-        )
-        if results["totalSize"] == 1:
+        if self.get_workspace_id(workspace_name=workspace_name):
             self.builtin.log_to_console(
                 f"The workspace with name {workspace_name} already exists, skipping."
             )
@@ -392,14 +439,15 @@ class QbrixCMS(QbrixRobotTask):
             f"{self.cumulusci.org.instance_url}/lightning/cms/home/", timeout="30s"
         )
         self.browser.wait_until_network_is_idle()
-        sleep(3)
-        self.browser.click(
+        self.shared.wait_and_click(
             f"{self.shared.iframe_handler()} span.label:text-is('Create a CMS Workspace'):visible"
         )
 
         # Enter initial information
         sleep(2)
-        self.browser.click("lightning-input:has-text('Name') >> input.slds-input")
+        self.shared.wait_and_click(
+            "lightning-input:has-text('Name') >> input.slds-input"
+        )
         self.browser.fill_text(
             "lightning-input:has-text('Name') >> input.slds-input", workspace_name
         )
@@ -1095,6 +1143,7 @@ class QbrixCMS(QbrixRobotTask):
 
         if file_data:
             self.enable_all_channels_for_all_workspaces()
+
             self.open_experience_cloud_collections_page(site_name)
 
             # Loop Through Collections from the file
