@@ -102,7 +102,6 @@ class Glooop(Command):
             }
             response=requests.request("POST", url, headers=headers, data=payload)
             data = json.loads(response.text)
-            type(data)
             return data
         except Exception as ex:
             self.logger.error(f"Unable to contact GLOOOP::{ex}")
@@ -111,7 +110,7 @@ class Glooop(Command):
         return None
         
     def _exchangeId(self,exchangePayload):
-        self.logger.info(exchangePayload)
+        #self.logger.info(exchangePayload)
         try:
             url = "https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixGlooopService"
             payload = json.dumps(exchangePayload)
@@ -133,16 +132,9 @@ class Glooop(Command):
             (out, err)=p.communicate()
             self.logger.info(out)
             self.logger.error(err)
-            
-            p= subprocess.Popen(f'cci org info {self.cci_target_org}',stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1,universal_newlines=True,shell=True)
-            (out, err)=p.communicate()
-            self.logger.info(out)
-            self.logger.error(err)
-        
+          
         except:
             self.logger.error("Unable to contact GLOOOP with Exchange Id")
-        
-        
         
     def _run_task(self):
         self._prepruntime()
