@@ -225,6 +225,9 @@ tasks:
   qbrix_upload_files:
     class_path: qbrix.salesforce.qbrix_salesforce_tasks.UploadFiles
 
+  qbrix_glooop:
+    class_path: qbrix.tools.utils.qbrix_glooop.Glooop
+    
   #------------------------------------#
   # DATA TOOL INTEGRATION              #
   #------------------------------------#
