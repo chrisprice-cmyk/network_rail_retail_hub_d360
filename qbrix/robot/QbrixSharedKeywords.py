@@ -208,11 +208,11 @@ class QbrixSharedKeywords:
             self.browser.take_screenshot()
             raise e
 
-    def wait_for_page_to_load(self):
+    def wait_for_page_to_load(self, timeout: str = "5"):
         """Waits for the network activity on the page to become idle or a timeout of 5s is reached"""
 
         try:
-            self.browser.wait_until_network_is_idle(timeout="5s")
+            self.browser.wait_until_network_is_idle(timeout=f"{timeout}s")
         except Exception as e:
             print(e)
             pass
