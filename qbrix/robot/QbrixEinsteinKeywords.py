@@ -241,35 +241,35 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
         Go directly to the Campaign Insights setup page
         """
         self.shared.go_to_setup_admin_page("CampaignInsights/home", 3)
-        self.browser.wait_until_network_is_idle()
+        self.shared.wait_for_page_to_load()
 
     def go_to_opportunity_insights_setup_page(self):
         """
         Go directly to the Opportunity Insights setup page
         """
         self.shared.go_to_setup_admin_page("OpportunityInsights/home", 3)
-        self.browser.wait_until_network_is_idle()
+        self.shared.wait_for_page_to_load()
 
     def go_to_account_insights_setup_page(self):
         """
         Go directly to the Account Insights setup page
         """
         self.shared.go_to_setup_admin_page("AccountInsights/home", 3)
-        self.browser.wait_until_network_is_idle()
+        self.shared.wait_for_page_to_load()
 
     def go_to_relationship_insights_setup_page(self):
         """
         Go directly to the Relationships Insights setup page
         """
         self.shared.go_to_setup_admin_page("EinsteinSmartTags/home", 3)
-        self.browser.wait_until_network_is_idle()
+        self.shared.wait_for_page_to_load()
 
     def go_to_key_account_insights_setup_page(self):
         """
         Go directly to the Key Accounts Insights setup page
         """
         self.shared.go_to_setup_admin_page("EKAI/home", 5)
-        self.browser.wait_until_network_is_idle()
+        self.shared.wait_for_page_to_load()
 
     def go_to_lead_scoring_setup_page(self):
         """

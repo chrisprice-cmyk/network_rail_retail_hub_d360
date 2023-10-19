@@ -55,7 +55,7 @@ class QbrixB2BKeywords(QbrixRobotTask):
             self.browser.go_to(
                 f"{self.cumulusci.org.instance_url}/lightning/page/commerceSearch?lightning__webStoreId={store_id}&ws=%2Flightning%2Fr%2FWebStore%2F{store_id}%2Fview"
             )
-            self.browser.wait_until_network_is_idle()
+            self.shared.wait_for_page_to_load()
             self.shared.wait_and_click(
                 ":nth-match(button.slds-button:text-is('Rebuild Index'):visible, 1)"
             )

@@ -78,7 +78,7 @@ class QbrixSharedKeywords:
                 f"{self.cumulusci.org.instance_url}{SETUP_ADMIN_LOCATION}",
                 timeout="90s",
             )
-            self.browser.wait_until_network_is_idle()
+            self.wait_for_page_to_load()
 
         start_time = time.time()
         timeout = 30
@@ -91,7 +91,7 @@ class QbrixSharedKeywords:
                     f"{self.cumulusci.org.instance_url}{SETUP_ADMIN_LOCATION}",
                     timeout="90s",
                 )
-                self.browser.wait_until_network_is_idle()
+                self.wait_for_page_to_load()
                 self.browser.wait_for_elements_state(
                     f"h1:has-text('{wait_for_text}')", ElementState.visible, "10s"
                 )
@@ -133,7 +133,7 @@ class QbrixSharedKeywords:
                 f"{self.cumulusci.org.instance_url}/lightning/app/{application_id}",
                 timeout="30s",
             )
-            self.browser.wait_until_network_is_idle()
+            self.wait_for_page_to_load()
 
     def go_to_setup_admin_page(
         self, setup_page_url: str, sleep_length: Optional[int] = 2, force_reload=False
@@ -143,7 +143,7 @@ class QbrixSharedKeywords:
 
         Args:
             setup_page_url (str): Requires the section of the URL Path which comes after lightning/setup.
-            sleep_length (str): (Optional) Set the length of time (in seconds) which the robot will wait for the page to load. Defaults to 2 seconds.
+            sleep_length (int): (Optional) Set the length of time (in seconds) which the robot will wait for the page to load. Defaults to 2 seconds.
             force_reload (bool): (Optional) Set to true to ensure that page is reloaded
         """
 
@@ -166,7 +166,7 @@ class QbrixSharedKeywords:
                     f"{self.cumulusci.org.instance_url}/lightning/setup/{setup_page_url}",
                     timeout="90s",
                 )
-                self.browser.wait_until_network_is_idle()
+                self.wait_for_page_to_load()
 
             # Handle Disabled Feature
             if (
@@ -208,12 +208,21 @@ class QbrixSharedKeywords:
             self.browser.take_screenshot()
             raise e
 
+    def wait_for_page_to_load(self):
+        """Waits for the network activity on the page to become idle or a timeout of 5s is reached"""
+
+        try:
+            self.browser.wait_until_network_is_idle(timeout="5s")
+        except Exception as e:
+            print(e)
+            pass
+
     def iframe_handler(self):
         """
         Add to the start of selector statements to handle iframes within Lightning Pages. Note that it will return >>> at the end of the statement so account for that in your selector.
         """
 
-        self.browser.wait_until_network_is_idle()
+        self.wait_for_page_to_load()
 
         # This is a double check to ensure that once the page has finished loading elements, no iframes have appeared.
         if self.browser.get_element_count("iframe") == 0:
@@ -281,7 +290,7 @@ class QbrixSharedKeywords:
                 f"{self.iframe_handler()} div.duelingListBox >> img.leftArrowIcon"
             )
         self.browser.click(f"{self.iframe_handler()} input.btn:has-text('Save')")
-        self.browser.wait_until_network_is_idle()
+        self.wait_for_page_to_load()
 
     def disable_browser_caching(self):
         """
@@ -330,12 +339,12 @@ class QbrixSharedKeywords:
                 f"{self.cumulusci.org.instance_url}/lightning/setup/ManageUsers/page?address=%2F{user_id}%3Fnoredirect%3D1%26isUserEntityOverride%3D1",
                 timeout="90s",
             )
-            self.browser.wait_until_network_is_idle()
+            self.wait_for_page_to_load()
             self.wait_and_click(
                 f"{self.iframe_handler()} td.pbButton >> input.btn:text-is('Login')"
             )
             sleep(2)
-            self.browser.wait_until_network_is_idle()
+            self.wait_for_page_to_load()
 
             if self.wait_on_element("h2:has-text('Canvas - Q_Passport')", 2):
                 self.browser.click("button[title='Close this window']")
@@ -349,7 +358,7 @@ class QbrixSharedKeywords:
         if self.browser.get_element_count("a.action-link:has-text('Log out as')") > 0:
             self.browser.click("a.action-link:has-text('Log out as')")
             sleep(2)
-            self.browser.wait_until_network_is_idle()
+            self.wait_for_page_to_load()
 
     # ------------------
     # LEX FUNCTIONS
@@ -543,7 +552,7 @@ class QbrixSharedKeywords:
         if not selector:
             return
 
-        self.browser.wait_until_network_is_idle()
+        self.wait_for_page_to_load()
         self.browser.wait_for_elements_state(
             selector, ElementState.visible, f"{timeout}s"
         )
@@ -571,7 +580,7 @@ class QbrixSharedKeywords:
         if not selector:
             return
 
-        self.browser.wait_until_network_is_idle()
+        self.wait_for_page_to_load()
         self.browser.wait_for_elements_state(
             selector, ElementState.visible, f"{timeout}s"
         )
@@ -591,7 +600,7 @@ class QbrixSharedKeywords:
             bool: True if given state is in element states, False if not or on error.
         """
 
-        self.browser.wait_until_network_is_idle()
+        self.wait_for_page_to_load()
         try:
             return state in self.browser.get_element_states(selector)
         except Exception as e:
@@ -607,7 +616,7 @@ class QbrixSharedKeywords:
             bool: True when element is found on page, False when timeout is reached and element is not found.
         """
 
-        self.browser.wait_until_network_is_idle()
+        self.wait_for_page_to_load()
         count = 0
         self.builtin.log_to_console(f"\nWaiting on element selector {selector}...")
         while count <= timeout:
@@ -1200,7 +1209,7 @@ class QbrixSharedKeywords:
         """Loads the Installed Packages table for the connected Salesforce Org and then clicks the link next to the package name"""
 
         self.go_to_setup_admin_page("ImportedPackage/home")
-        self.browser.wait_until_network_is_idle()
+        self.wait_for_page_to_load()
         self.wait_on_element(f"{self.iframe_handler()} table.list", 30)
 
         if (

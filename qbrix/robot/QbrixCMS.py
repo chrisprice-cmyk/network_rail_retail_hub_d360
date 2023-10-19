@@ -18,7 +18,7 @@ class QbrixCMS(QbrixRobotTask):
         """Go to the Digital Experiences App"""
 
         self.shared.go_to_app("Digital Experiences")
-        self.browser.wait_until_network_is_idle()
+        self.shared.wait_for_page_to_load()
         self.builtin.log_to_console("\nDigital Experiences App Loaded")
 
     def download_all_content(self):
@@ -127,7 +127,7 @@ class QbrixCMS(QbrixRobotTask):
                 f"{self.cumulusci.org.instance_url}/lightning/cms/spaces/{workspace['Id']}/publishingTargets?ws=%2Flightning%2Fcms%2Fspaces%2F{workspace['Id']}",
                 timeout="30s",
             )
-            self.browser.wait_until_network_is_idle()
+            self.shared.wait_for_page_to_load()
 
             self.builtin.log_to_console("\n -> Checking Related Channels for Content")
 
@@ -244,7 +244,7 @@ class QbrixCMS(QbrixRobotTask):
                 f"{self.cumulusci.org.instance_url}/lightning/cms/spaces/{workspace_id}",
                 timeout="30s",
             )
-            self.browser.wait_until_network_is_idle()
+            self.shared.wait_for_page_to_load()
 
             # Import File
             iframe_handler = self.shared.iframe_handler()
@@ -433,12 +433,12 @@ class QbrixCMS(QbrixRobotTask):
 
         # Go to Digital Experience Home and initiate Workspace creation
         self.go_to_digital_experiences()
-        self.browser.wait_until_network_is_idle()
+        self.shared.wait_for_page_to_load()
         sleep(3)
         self.browser.go_to(
             f"{self.cumulusci.org.instance_url}/lightning/cms/home/", timeout="30s"
         )
-        self.browser.wait_until_network_is_idle()
+        self.shared.wait_for_page_to_load()
         self.shared.wait_and_click(
             f"{self.shared.iframe_handler()} span.label:text-is('Create a CMS Workspace'):visible"
         )
