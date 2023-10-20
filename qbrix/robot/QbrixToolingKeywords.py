@@ -92,6 +92,12 @@ class QbrixToolingKeywords(QbrixRobotTask):
             raise e
 
 
+    def enable_vbt_passport(self):
+        """ Enables VBT (PostSpin) Connected App Settings"""
+        connected_app_name = "VBT Connected"
+        self.enable_admin_auth_for_connected_app(connected_app_name)
+        self.enable_system_admin_profile_for_connected_app(connected_app_name, False)
+        
     def enable_q_passport(self):
         """ Enables Q Passport Connected App Settings"""
         self.enable_admin_auth_for_connected_app("Q_Passport")
