@@ -33,6 +33,9 @@ project:
     qbrix_documentation_url: https://confluence.internal.salesforce.com/pages/viewpage.action?pageId=487362018
     qbrix_description: "SHORT DESCRIPTION OF QBRIX HERE"
 
+    # Github Additional Information
+    qbrix_repo_id: 0
+
     # GLOBAL EXCLUSION LIST
     # Used by retrieve_changes and list_changes builtin CCI tasks
     exclude: &exclude-list
@@ -227,7 +230,7 @@ tasks:
 
   qbrix_glooop:
     class_path: qbrix.tools.utils.qbrix_glooop.Glooop
-    
+
   #------------------------------------#
   # DATA TOOL INTEGRATION              #
   #------------------------------------#

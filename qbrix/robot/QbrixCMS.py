@@ -209,7 +209,9 @@ class QbrixCMS(QbrixRobotTask):
             self.builtin.log_to_console(f"\n -> ID Found [{record_id}]")
             return record_id
 
-        self.builtin.log_to_console("\n -> No workspace found in the Salesforce Org")
+        self.builtin.log_to_console(
+            f"\n -> No workspace found with name [{workspace_name}] in the Salesforce Org"
+        )
         return None
 
     def upload_cms_import_file(self, file_path, workspace):
@@ -244,7 +246,7 @@ class QbrixCMS(QbrixRobotTask):
                 f"{self.cumulusci.org.instance_url}/lightning/cms/spaces/{workspace_id}",
                 timeout="30s",
             )
-            self.shared.wait_for_page_to_load()
+            sleep(2)
 
             # Import File
             iframe_handler = self.shared.iframe_handler()
@@ -433,36 +435,45 @@ class QbrixCMS(QbrixRobotTask):
 
         # Go to Digital Experience Home and initiate Workspace creation
         self.go_to_digital_experiences()
-        self.shared.wait_for_page_to_load()
+
         sleep(3)
+        self.builtin.log_to_console("\nCreating New Workspace...")
         self.browser.go_to(
             f"{self.cumulusci.org.instance_url}/lightning/cms/home/", timeout="30s"
         )
-        self.shared.wait_for_page_to_load()
+        self.builtin.log_to_console("\n -> Loaded CMS Home Page")
         self.shared.wait_and_click(
             f"{self.shared.iframe_handler()} span.label:text-is('Create a CMS Workspace'):visible"
         )
+        self.builtin.log_to_console(
+            "\n -> Clicked new button to create new CMS Workspace"
+        )
 
         # Enter initial information
-        sleep(2)
         self.shared.wait_and_click(
             "lightning-input:has-text('Name') >> input.slds-input"
         )
         self.browser.fill_text(
             "lightning-input:has-text('Name') >> input.slds-input", workspace_name
         )
+        self.builtin.log_to_console(f"\n -> Set name to [{workspace_name}]")
 
         # Handle enhanced workspace option
         if enhanced_workspace:
+            self.builtin.log_to_console("\n -> Setting to Enhanced CMS Workspace")
             self.browser.click(
                 "span.slds-text-heading_medium:text-is('Enhanced CMS Workspace')"
             )
+        else:
+            self.builtin.log_to_console("\n -> Setting to legacy CMS Workspace")
+        self.browser.click("button.nextButton:visible")
 
         # Handle Channel Selection
-        self.browser.click("button.nextButton:visible")
-        sleep(2)
+        self.builtin.log_to_console("\n -> Assigning Channels")
+        sleep(3)
         if len(channels) > 0:
             for channel in channels:
+                self.builtin.log_to_console(f"\n -> Assigning channel [{channel}]")
                 if self.browser.get_element_count(
                     f"tr.slds-hint-parent:has-text('{channel}')"
                 ):
@@ -470,48 +481,51 @@ class QbrixCMS(QbrixRobotTask):
                         f"tr.slds-hint-parent:has-text('{channel}') >> div.slds-checkbox_add-button"
                     )
         else:
+            self.builtin.log_to_console("\n -> Assigning ALL Channels")
+            channel_count = 0
             for checkbox_add_button in self.browser.get_elements(
                 "div.slds-checkbox_add-button"
             ):
                 self.browser.click(checkbox_add_button)
+                channel_count += 1
+            self.builtin.log_to_console(f"\n -> Assigned to {channel_count} channel(s)")
+        self.browser.click("button.nextButton:visible")
 
         # Handle Contributors
-        self.browser.click("button.nextButton:visible")
-        sleep(2)
-        for checkbox_add_button in self.browser.get_elements(
-            "div.forceSelectableListViewSelectionColumn"
-        ):
-            self.browser.click(checkbox_add_button)
+        # self.builtin.log_to_console("\n -> Assigning Contributors")
+        # sleep(2)
+        # for checkbox_add_button in self.browser.get_elements(
+        #     "div.forceSelectableListViewSelectionColumn"
+        # ):
+        #     self.browser.click(checkbox_add_button)
 
-        # Handle Contributor Access Levels
-        self.browser.click("button.nextButton:visible")
-        sleep(2)
-        for combo_box in self.browser.get_elements("lightning-picklist:visible"):
-            self.browser.click(combo_box)
-            sleep(1)
-            self.browser.click(
-                "span.slds-listbox__option-text:has-text('Content Admin'):visible"
-            )
+        # # Handle Contributor Access Levels
+        # self.browser.click("button.nextButton:visible")
+        # sleep(2)
+        # for combo_box in self.browser.get_elements("lightning-picklist:visible"):
+        #     self.browser.click(combo_box)
+        #     sleep(1)
+        #     self.browser.click(
+        #         "span.slds-listbox__option-text:has-text('Content Admin'):visible"
+        #     )
+        # self.browser.click("button.nextButton:visible")
 
         # Handle Language
-        self.browser.click("button.nextButton:visible")
         sleep(2)
-
-        if not enhanced_workspace:
-            self.browser.click(
-                "button.slds-button:has-text('Move selection to Selected'):visible"
-            )
-            self.browser.click(
-                "lightning-combobox.slds-form-element:has-text('Default Language'):visible"
-            )
-            self.browser.click(
-                "lightning-base-combobox-item:has-text('English (United States)'):visible"
-            )
+        self.builtin.log_to_console(
+            "\n -> Setting Default Language to English (United States)"
+        )
+        self.browser.click(
+            "lightning-combobox.slds-form-element:has-text('Default Language'):visible"
+        )
+        sleep(1)
+        self.browser.click(
+            "lightning-base-combobox-item:has-text('English (United States)'):visible"
+        )
 
         # Complete Screen
         self.browser.click("button.nextButton:visible")
         sleep(1)
-        self.browser.click("button.nextButton:visible")
 
     def generate_product_media_file(self):
         """
