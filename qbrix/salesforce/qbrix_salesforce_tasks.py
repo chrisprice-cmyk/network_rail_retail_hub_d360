@@ -2,6 +2,7 @@ import base64
 import json
 import os
 import pathlib
+import re
 import tempfile
 from abc import ABC
 from datetime import datetime, timedelta
@@ -11,24 +12,26 @@ import requests
 import yaml
 from cumulusci.core.tasks import BaseTask
 from cumulusci.core.utils import process_list_of_pairs_dict_arg
+from cumulusci.robotframework.CumulusCI import CumulusCI
 from cumulusci.tasks.salesforce import BaseSalesforceApiTask
 from cumulusci.tasks.salesforce.sourcetracking import RetrieveChanges
 from cumulusci.tasks.salesforce.update_dependencies import UpdateDependencies
 from cumulusci.tasks.sfdx import SFDXOrgTask
 
 from qbrix.tools.health.qbrix_project_checks import (
-    run_crm_analytics_checks, run_einstein_checks, run_experience_cloud_checks)
-from qbrix.tools.shared.qbrix_cci_tasks import run_cci_task, run_cci_flow
+    run_crm_analytics_checks,
+    run_einstein_checks,
+    run_experience_cloud_checks,
+)
+from qbrix.tools.shared.qbrix_cci_tasks import run_cci_flow, run_cci_task
 from qbrix.tools.shared.qbrix_console_utils import init_logger
 from qbrix.tools.utils.qbrix_orgconfig_hydrate import NGOrgConfig
-from cumulusci.robotframework.CumulusCI import CumulusCI
 
 log = init_logger()
 now = datetime.now()
 
 
 def salesforce_query(soql_select_statement, org_alias, raw_return=False):
-
     """
     Runs a Salesforce Query and returns the results
 
@@ -44,7 +47,9 @@ def salesforce_query(soql_select_statement, org_alias, raw_return=False):
     """
 
     if not str(soql_select_statement).lower().startswith("select"):
-        raise ValueError(f"The provided SOQL Statement is not recognized as a SELECT statement. Please review your statement ({soql_select_statement})and try again.")
+        raise ValueError(
+            f"The provided SOQL Statement is not recognized as a SELECT statement. Please review your statement ({soql_select_statement})and try again."
+        )
 
     query_result = CumulusCI(org_name=org_alias).sf.query_all(soql_select_statement)
 
@@ -61,7 +66,6 @@ def salesforce_query(soql_select_statement, org_alias, raw_return=False):
 
 
 def QbrixInstallCheck(qbrix_name, org_alias):
-
     """
     Check if a QBrix is installed in the target org
 
@@ -75,7 +79,11 @@ def QbrixInstallCheck(qbrix_name, org_alias):
 
     log.info("Checking for Qbrix: %s in org", qbrix_name)
     try:
-        check_result = salesforce_query(f"SELECT Id from xDO_Base_QBrix_Register__mdt WHERE xDO_Repository_URL__c LIKE '%{qbrix_name}%'", org_alias, True)
+        check_result = salesforce_query(
+            f"SELECT Id from xDO_Base_QBrix_Register__mdt WHERE xDO_Repository_URL__c LIKE '%{qbrix_name}%'",
+            org_alias,
+            True,
+        )
     except Exception as e:
         return False
     return bool(check_result and check_result.get("totalSize") > 0)
@@ -502,13 +510,18 @@ class CreateUser(BaseSalesforceApiTask, NGOrgConfig, ABC):
         """
         Uploads and assigns a user profile image
         """
-        if (not os.path.exists(path_to_image) and not str(path_to_image).upper() == "AUTO"):
-            self.logger.error("Image file path (%s) does not exist. Please check file path and try again.", path_to_image)
+        if (
+            not os.path.exists(path_to_image)
+            and not str(path_to_image).upper() == "AUTO"
+        ):
+            self.logger.error(
+                "Image file path (%s) does not exist. Please check file path and try again.",
+                path_to_image,
+            )
 
         api = self.sf
 
         if str(path_to_image).upper() == "AUTO":
-
             # Generate a random image using randomuser.me
             api_endpoint_url = "https://randomuser.me/api/?inc=picture"
             if gender:
@@ -516,13 +529,13 @@ class CreateUser(BaseSalesforceApiTask, NGOrgConfig, ABC):
             if nationality:
                 api_endpoint_url += f"&nat={nationality}"
 
-            response = requests.get(api_endpoint_url, timeout = (5, 15))
+            response = requests.get(api_endpoint_url, timeout=(5, 15))
             data = response.json()
             picture_url = data["results"][0]["picture"]["large"]
 
             # Download the image and save it locally
             with tempfile.NamedTemporaryFile(suffix=".jpg") as temp_file:
-                image_response = requests.get(picture_url, timeout = (5, 15))
+                image_response = requests.get(picture_url, timeout=(5, 15))
                 temp_file.write(image_response.content)
                 temp_file.seek(0)
 
@@ -549,7 +562,9 @@ class CreateUser(BaseSalesforceApiTask, NGOrgConfig, ABC):
             )
 
         content_version_id = photo_id["id"]
-        content_document_id = api.query(f"SELECT Id, ContentDocumentId FROM ContentVersion WHERE Id = '{content_version_id}'")["records"][0]["ContentDocumentId"]
+        content_document_id = api.query(
+            f"SELECT Id, ContentDocumentId FROM ContentVersion WHERE Id = '{content_version_id}'"
+        )["records"][0]["ContentDocumentId"]
 
         api.restful(
             f"connect/user-profiles/{user_id}/photo",
@@ -557,7 +572,9 @@ class CreateUser(BaseSalesforceApiTask, NGOrgConfig, ABC):
             method="POST",
         )
 
-    def _assign_permission(self, mode: str, user_id: str, api_names, ignore_failures: bool=False):
+    def _assign_permission(
+        self, mode: str, user_id: str, api_names, ignore_failures: bool = False
+    ):
         """
         Assigns Permission Sets or Permission Set Groups or Permission Set Licenses based on the mode.
 
@@ -569,8 +586,14 @@ class CreateUser(BaseSalesforceApiTask, NGOrgConfig, ABC):
         """
 
         # Catch for Invalid Assignments
-        if not mode or mode.upper() not in ('PERMISSIONSET', 'PERMISSIONSETGROUP', 'PERMISSIONSETLICENSE'):
-            self.logger.error("Invalid permission type requested. Permission assignment skipped.")
+        if not mode or mode.upper() not in (
+            "PERMISSIONSET",
+            "PERMISSIONSETGROUP",
+            "PERMISSIONSETLICENSE",
+        ):
+            self.logger.error(
+                "Invalid permission type requested. Permission assignment skipped."
+            )
             return False
 
         # Set Mode
@@ -607,7 +630,10 @@ class CreateUser(BaseSalesforceApiTask, NGOrgConfig, ABC):
 
                 # Check for labels and non api names
                 if " " in perm:
-                    self.logger.error("Warning: An invalid API name was passed '%s'. This will be skipped.", perm)
+                    self.logger.error(
+                        "Warning: An invalid API name was passed '%s'. This will be skipped.",
+                        perm,
+                    )
                     continue
 
                 # Check Permission Set Exists
@@ -615,7 +641,10 @@ class CreateUser(BaseSalesforceApiTask, NGOrgConfig, ABC):
                     f"SELECT Id FROM {object_name} WHERE {lookup_field} = '{perm}' LIMIT 1"
                 )
                 if permission_set_query["totalSize"] == 0:
-                    self.logger.info("The requested permission '%s' was not found in the target salesforce org. Skipping.", perm)
+                    self.logger.info(
+                        "The requested permission '%s' was not found in the target salesforce org. Skipping.",
+                        perm,
+                    )
                     permission_set_id = None
                     continue
                 else:
@@ -626,7 +655,9 @@ class CreateUser(BaseSalesforceApiTask, NGOrgConfig, ABC):
                     f"SELECT Id FROM {assignment_object} WHERE AssigneeId = '{user_id}' AND {assignment_field} = '{permission_set_id}' LIMIT 1"
                 )
                 if permission_set_assignment_query["totalSize"] == 1:
-                    self.logger.info("Permission '%s' already assigned to user. Skipping.", perm)
+                    self.logger.info(
+                        "Permission '%s' already assigned to user. Skipping.", perm
+                    )
                     continue
 
                 permset_creation_result = None
@@ -647,10 +678,20 @@ class CreateUser(BaseSalesforceApiTask, NGOrgConfig, ABC):
                         }
                     )
 
-                if (permset_creation_result and permset_creation_result.get("id")):
-                    self.logger.info("%s (With API Name: %s) has been assigned (ID: {permset_creation_result['id']})!", message_name, perm)
+                if permset_creation_result and permset_creation_result.get("id"):
+                    self.logger.info(
+                        "%s (With API Name: %s) has been assigned (ID: {permset_creation_result['id']})!",
+                        message_name,
+                        perm,
+                    )
                 else:
-                    self.logger.error("%s (With API Name: %s) failed to assign. Moving onto next %s (if any). Details: %s", message_name, perm, message_name, permset_creation_result)
+                    self.logger.error(
+                        "%s (With API Name: %s) failed to assign. Moving onto next %s (if any). Details: %s",
+                        message_name,
+                        perm,
+                        message_name,
+                        permset_creation_result,
+                    )
 
                     if ignore_failures:
                         continue
@@ -658,9 +699,12 @@ class CreateUser(BaseSalesforceApiTask, NGOrgConfig, ABC):
                         return False
 
             except Exception as permission_assingment_error:
-                self.logger.error("Permission Assignment to user failed. Error details: %s", permission_assingment_error)
+                self.logger.error(
+                    "Permission Assignment to user failed. Error details: %s",
+                    permission_assingment_error,
+                )
                 if ignore_failures:
-                        continue
+                    continue
                 else:
                     return False
         return True
@@ -1000,7 +1044,9 @@ class QbrixDeployer(BaseSalesforceApiTask, ABC):
 
     def _init_options(self, kwargs):
         super(QbrixDeployer, self)._init_options(kwargs)
-        self.qbrix_name = self.options["qbrix_name"] if "qbrix_name" in self.options else None
+        self.qbrix_name = (
+            self.options["qbrix_name"] if "qbrix_name" in self.options else None
+        )
 
     def _run_task(self):
         if not self.project_config.sources:
@@ -1061,6 +1107,139 @@ class PopulateRecentlyViewed(BaseSalesforceApiTask, ABC):
                     self.logger.error(
                         f"Error updating Recently Viewed List for {obj}: {e}"
                     )
+
+
+class DownloadFiles(BaseSalesforceApiTask, ABC):
+    task_docs = """
+    Download asset files from the target org to a given directory
+    """
+
+    task_options = {
+        "org": {"description": "Org Alias for the target org", "required": False},
+        "filenames": {
+            "description": "Developer name of the asset files",
+            "required": True,
+        },
+        "path": {
+            "description": "Relative path of a directory you want to download files to. Defaults to datasets/files",
+            "required": False,
+        },
+    }
+
+    def _init_options(self, kwargs):
+        super(DownloadFiles, self)._init_options(kwargs)
+        self.filenames = (
+            self.options["filenames"] if "filenames" in self.options else None
+        )
+        self.path = (
+            self.options["path"]
+            if "path" in self.options
+            else os.path.join("datasets", "files")
+        )
+
+    def format_filenames_soql(self, names):
+        """
+        Format the list of file asset names for SOQL IN clause
+        """
+        return ",".join(list(map(lambda f: f"'{f}'", names)))
+
+    def retrieve_content_documents(self, filenames):
+        """
+        Query ContentDocument with the file asset names.
+        """
+
+        formatted_filenames = self.format_filenames_soql(filenames)
+
+        # Need to use ContentAsset.DeveloperName - there can be multiple ContentDocument with the same name
+        content_documents_lookup = self.sf.query(
+            f"SELECT Id, ContentAsset.DeveloperName, LatestPublishedVersionId FROM ContentDocument WHERE ContentAsset.DeveloperName IN ({formatted_filenames}) AND PublishStatus = 'P'"
+        )
+
+        if content_documents_lookup["totalSize"] > 0:
+            return content_documents_lookup["records"]
+
+        return None
+
+    def retrieve_content_versions(self, version_ids):
+        """
+        Query ContentVersion with the ContentVerion Ids.
+        """
+
+        formatted_content_version_ids = self.format_filenames_soql(version_ids)
+        content_versions_lookup = self.sf.query(
+            f"SELECT Id, VersionData, FileExtension, PathOnClient FROM ContentVersion WHERE Id IN ({formatted_content_version_ids})"
+        )
+
+        if content_versions_lookup["totalSize"] > 0:
+            return content_versions_lookup["records"]
+
+        return None
+
+    def download_file(self, version_data, headers, file_name):
+        """
+        Download a single file asset to the specified directory
+        """
+
+        endpoint = self.org_config.instance_url + version_data
+
+        response = requests.get(endpoint, headers=headers, timeout=30)
+        if response.ok:
+            file_path = os.path.join(self.path, file_name)
+            with open(file_path, "wb") as file:
+                file.write(response.content)
+                file.flush()
+                os.fsync(file.fileno())
+                self.logger.info(f'Downloading "{file_name}" to "{self.path}"')
+        else:
+            self.logger.error(
+                f'Download failed: "{file_name}" - status code {response.status_code}\n{response.text}'
+            )
+
+    def download_files(self):
+        """
+        Download file assets to the specified directory
+        """
+        filename_list = re.split(r"[\s\n,]", self.filenames)
+
+        content_documents = self.retrieve_content_documents(filename_list)
+
+        if content_documents is None:
+            return
+
+        # Map ContentVersion Id to the developer name of the file asset
+        # The developer name is used when downloading the file, instead of ContentVerion.PathOnClient
+        file_map = {}
+        for cd in content_documents:
+            file_map[cd["LatestPublishedVersionId"]] = cd["ContentAsset"][
+                "DeveloperName"
+            ]
+
+        content_version_ids = list(
+            map(lambda d: d["LatestPublishedVersionId"], content_documents)
+        )
+        content_versions = self.retrieve_content_versions(content_version_ids)
+
+        if content_versions is None:
+            return
+
+        if not os.path.exists(self.path):
+            os.makedirs(self.path)
+
+        headers = {
+            "Content-Type": "application/octet-stream",
+            "Authorization": f"Bearer {self.org_config.access_token}",
+        }
+
+        for cv in content_versions:
+            file_name = file_map[cv["Id"]] + "." + cv["FileExtension"]
+            self.download_file(cv["VersionData"], headers, file_name)
+
+    def _run_task(self):
+        if not self.filenames:
+            self.logger.error("You must specify the names of files assets to download.")
+            return
+
+        self.download_files()
 
 
 class UploadFiles(BaseSalesforceApiTask, ABC):
@@ -1192,7 +1371,7 @@ class UploadFiles(BaseSalesforceApiTask, ABC):
                     "Title": title,
                     "VersionData": base64_file_contents,
                     "PathOnClient": filename,
-                    "IsAssetEnabled": True
+                    "IsAssetEnabled": True,
                 }
 
                 content_version = self.sf.ContentVersion.create(content_version_data)
@@ -1432,6 +1611,7 @@ class RunPerfectDateWizard(BaseSalesforceApiTask, ABC):
                     self.logger.info("Request error: %i", response.status_code)
             except Exception as pdw_exception:
                 self.logger.info(pdw_exception)
+
 
 class UserActionRunner(BaseSalesforceApiTask, ABC):
     task_docs = """

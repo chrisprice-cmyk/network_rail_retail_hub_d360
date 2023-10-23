@@ -55,6 +55,8 @@ Q_BRIX_CUSTOM_TASKS = {
     "precommit_check": "qbrix.git.hooks_ext.pre_commit.PreCommit",
     "qbrix_robot_test": "qbrix.tools.utils.qbrix_launch_test_robot.QRobotTestCapture",
     "experience_manager": "qbrix.tools.utils.qbrix_experience_manager.ExperienceManager",
+    "experience_file_asset_manager": "qbrix.tools.utils.qbrix_experience_manager.ExperienceFileAssetManager",
+    "qbrix_download_files": "qbrix.salesforce.qbrix_salesforce_tasks.DownloadFiles",
 }
 
 # Entires which are needed in .gitignore

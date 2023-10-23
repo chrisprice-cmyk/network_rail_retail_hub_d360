@@ -182,6 +182,9 @@ tasks:
   experience_manager:
     class_path: qbrix.tools.utils.qbrix_experience_manager.ExperienceManager
 
+  experience_file_asset_manager:
+    class_path: qbrix.tools.utils.qbrix_experience_manager.ExperienceFileAssetManager
+
   qbrix_installer_tracking:
     class_path: qbrix.tools.utils.qbrix_installtracking.InstallRecorder
 
@@ -227,6 +230,9 @@ tasks:
 
   qbrix_upload_files:
     class_path: qbrix.salesforce.qbrix_salesforce_tasks.UploadFiles
+
+  qbrix_download_files:
+    class_path: qbrix.salesforce.qbrix_salesforce_tasks.DownloadFiles
 
   qbrix_glooop:
     class_path: qbrix.tools.utils.qbrix_glooop.Glooop
