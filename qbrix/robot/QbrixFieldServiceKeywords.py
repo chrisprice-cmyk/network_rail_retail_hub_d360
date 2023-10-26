@@ -507,7 +507,7 @@ class QbrixFieldServiceKeywords(QbrixRobotTask):
         )
         sleep(1)
         self.browser.click(
-            f"{self.shared.iframe_handler()} lightning-menu-item.slds-dropdown__item:has-text('Show Details')"
+            f"{self.shared.iframe_handler()} lightning-menu-item .slds-dropdown__item:has-text('Show Details')"
         )
         self.builtin.log_to_console("\n -> Loaded Details")
 
