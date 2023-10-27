@@ -988,12 +988,16 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
             raise Exception(f"No data was returned for dataset id {dataset_id}")
 
         # Capture Created Date for Time Shift
-        timeshift_file_data = {}
+        # timeshift_file_data = {}
+        # if dataset_version.get("createdDate"):
+        #     with open(os.path.join(target_folder, target_filename + ".txt"), 'w', encoding='utf-8') as qbrix_data_file:
+        #         timeshift_file_data['base_date'] = dataset_version["createdDate"]
+        #         qbrix_data_file.write(timeshift_file_data)
+        
+        # Capture Created Date for Time Shift
         if dataset_version.get("createdDate"):
             with open(os.path.join(target_folder, target_filename + ".txt"), 'w', encoding='utf-8') as qbrix_data_file:
-                timeshift_file_data['base_date'] = dataset_version["createdDate"]
-                qbrix_data_file.write(timeshift_file_data)
-
+                qbrix_data_file.write(dataset_version["createdDate"])
         # Get Fields from Org
         self.logger.info("\nGATHERING FIELD DATA")
         fields = []
