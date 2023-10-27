@@ -1,14 +1,13 @@
 from time import sleep
 
 from Browser import ElementState, SelectAttribute
-from robot.api.deco import library
-
 from cumulusci.robotframework.utils import capture_screenshot_on_error
+from robot.api.deco import library
 
 from qbrix.core.qbrix_robot_base import QbrixRobotTask
 
 
-@library(scope='GLOBAL', auto_keywords=True, doc_format='reST')
+@library(scope="GLOBAL", auto_keywords=True, doc_format="reST")
 class QbrixSurveysKeywords(QbrixRobotTask):
     """Robot Keywords for Surveys"""
 
@@ -19,11 +18,14 @@ class QbrixSurveysKeywords(QbrixRobotTask):
         """
         sleep(5)
         try:
+            self.builtin.log_to_console("\nLoading Survey Settings Page!")
             self.shared.go_to_setup_admin_page("SurveySettings/home", 12)
-            survey_toggle = "[class=\"toggle slds-p-left_medium\"]"
+            survey_toggle = '[class="toggle slds-p-left_medium"]'
 
             if self.browser.get_element_count(survey_toggle) == 1:
-                self.browser.wait_for_elements_state(survey_toggle, ElementState.visible, '30s')
+                self.browser.wait_for_elements_state(
+                    survey_toggle, ElementState.visible, "30s"
+                )
                 toggle_switch = self.browser.get_element(survey_toggle)
 
                 # use hover and click for aura toggle to behave
@@ -49,5 +51,7 @@ class QbrixSurveysKeywords(QbrixRobotTask):
         sleep(5)
 
         # Routing Type
-        self.browser.select_options_by("[class=\"slds-select\"]", SelectAttribute.text, community_name)
+        self.browser.select_options_by(
+            '[class="slds-select"]', SelectAttribute.text, community_name
+        )
         sleep(2)
