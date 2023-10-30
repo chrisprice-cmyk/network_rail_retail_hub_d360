@@ -1,5 +1,6 @@
 from time import sleep
 
+from Browser import ElementState
 from robot.api.deco import library
 
 from qbrix.core.qbrix_robot_base import QbrixRobotTask
@@ -12,6 +13,7 @@ class QbrixMulesoftToolingKeywords(QbrixRobotTask):
 
     def enable_connected_mule_tool(self):
         """ Enables Data Tool Connected App Settings"""
+        self.builtin.log_to_console("\nLoading Connected App Configuration for Mulesoft Data Tool")
         iframe_selector = self.shared.iframe_handler()
         self.browser.wait_for_elements_state(f"{iframe_selector} .btn:has-text('Manage Profiles')", ElementState.visible, "15s")
         self.browser.click(f"{iframe_selector} .btn:has-text('Manage Profiles')")
@@ -20,3 +22,4 @@ class QbrixMulesoftToolingKeywords(QbrixRobotTask):
             self.browser.click(f"{iframe_selector} tr:has-text('System Administrator') >> input")
             self.browser.click(f"{iframe_selector} .btn:has-text('Save')")
             sleep(2)
+        self.builtin.log_to_console("\n -> Complete!")

@@ -51,10 +51,10 @@ class QbrixSlack(QbrixRobotTask):
 
     def slack_raw_message(
         self,
-        webhook: str,
+        webhook_url: str,
         message: Union[str, dict],
         channel: str = None,
-        use_secure_setting=True,
+        use_secure_setting=True
     ):
         """Send Slack message by custom JSON content.
 
@@ -79,6 +79,6 @@ class QbrixSlack(QbrixRobotTask):
 
         data_for_message = message if isinstance(message, str) else json.dumps(message)
         response = requests.post(
-            webhook, headers=headers, data=data_for_message, timeout=60
+            webhook_url, headers=headers, data=data_for_message, timeout=60
         )
         print(response.status_code)

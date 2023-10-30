@@ -10,6 +10,7 @@ from qbrix.tools.shared.qbrix_authentication import (
     generate_mfa_code,
     get_secure_setting,
 )
+from qbrix.robot.QbrixToolingKeywords import QbrixToolingKeywords
 
 
 @library(scope="GLOBAL", auto_keywords=True, doc_format="reST")
@@ -17,12 +18,28 @@ class QbrixMarketingKeywords(QbrixRobotTask):
 
     """Marketing Cloud Keywords for Robot"""
 
+    def __init__(self):
+        super().__init__()
+        self._toolinglibrary = None
+
+    @property
+    def toolinglibrary(self):
+
+        """Loads Q Robot Shared Keywords and Methods"""
+
+        if self._toolinglibrary is None:
+            self._toolinglibrary = QbrixToolingKeywords()
+        return self._toolinglibrary
+
     def enable_pardot_setting(self):
         """Enables Pardot Setting"""
+        self.builtin.log_to_console("\nEnable Pardot Setting")
         self.shared.go_to_setup_admin_page("PardotSetupAssistant/home")
         self.browser.wait_for_elements_state(
             "div:text-is('B2B Marketing Setup Assistant')", ElementState.visible, "15s"
         )
+        self.builtin.log_to_console("\n -> Loaded Pardot Setup Page")
+        self.builtin.log_to_console("\n -> Checking setting...")
         self.browser.click(".slds-button:has-text('Send Your First Email')")
         self.browser.wait_for_elements_state(
             "span:text-is('Complete the required steps to send your first Account Engagement email.')",
@@ -33,47 +50,35 @@ class QbrixMarketingKeywords(QbrixRobotTask):
             ":nth-match(span.slds-checkbox_faux,1)"
         )
         if not checked:
+            self.builtin.log_to_console("\n -> Setting not enabled. Clicking toggle now...")
             self.browser.click(":nth-match(span.slds-checkbox_faux,1)")
             sleep(1)
+        self.builtin.log_to_console("\n -> Setting Enabled!")
 
     def enable_pardot_app(self):
         """Enables Pardot Connected App Settings"""
-        iframe_selector = self.shared.iframe_handler()
-        self.shared.go_to_setup_admin_page("ConnectedApplication/home")
-        self.browser.click("iframe >>> a:text-is('b2bma_canvas')")
-        sleep(5)
-        self.browser.click("iframe >>> .btn:has-text('Edit Policies')")
-        sleep(5)
-        self.browser.select_options_by(
-            "iframe >>> #userpolicy",
-            SelectAttribute.text,
-            "Admin approved users are pre-authorized",
-        )
-        sleep(3)
-        if "visible" in self.browser.get_element_states(
-            "iframe >>> .btn:has-text('Ok')"
-        ):
-            self.browser.click("iframe >>> .btn:has-text('Ok')")
-
-        sleep(4)
-        self.browser.click("iframe >>> .btn:has-text('Save')")
-        sleep(1)
+        self.builtin.log_to_console("\nEnable admin permissions for the Pardot Connected App...")
+        self.toolinglibrary.enable_admin_auth_for_connected_app("b2bma_canvas")
 
     def create_pardot_template(self):
-        """Enables Pardot Connected App Settings"""
-        iframe_selector = self.shared.iframe_handler()
+        """Enables Demo Configuration of Pardot Email Templates"""
+        self.builtin.log_to_console("\nCreating Demo Configuration of Pardot Email Templates")
         self.browser.go_to(
             f"{self.cumulusci.org.instance_url}/lightning/o/EmailTemplate/home"
         )
         self.browser.wait_for_elements_state(
             "a:has-text('New Email Template')", ElementState.visible, "30s"
         )
+        self.builtin.log_to_console("\n -> Loaded Email Templates Page")
         self.browser.click("a:has-text('All Email Templates')")
         sleep(5)
+
+        self.builtin.log_to_console("\n -> Checking for demo Email Template...")
         visible = "visible" in self.browser.get_element_states(
             ".slds-table:has-text('Annual Customer Conference Invitation')"
         )
         if not visible:
+            self.builtin.log_to_console("\n -> Template not found. Creating...")
             self.browser.click("a:has-text('New Email Template')")
             self.browser.wait_for_elements_state(
                 "h2:has-text('New Email Template')", ElementState.visible, "30s"
@@ -92,20 +97,25 @@ class QbrixMarketingKeywords(QbrixRobotTask):
             )
             self.browser.click("button[title='Save']")
             sleep(5)
+        self.builtin.log_to_console("\n -> Template Configured!")
 
     def enable_territory_management(self):
         """Enables Maps Territory Planning Settings"""
+        self.builtin.log_to_console("\nEnabling Maps Territory Planning...")
         self.shared.go_to_setup_admin_page("Territory2Settings/home")
         sleep(5)
+        self.builtin.log_to_console("\n -> Territory Settings Page Loaded. Checking to see if setting is enabled...")
         visible = "visible" in self.browser.get_element_states(
             ":nth-match(iframe,1) >>> button:has-text('Enable Enterprise Territory Management')"
         )
         if visible:
+            self.builtin.log_to_console("\n -> Setting not enabled. Enabling setting now...")
             button_to_click = self.browser.get_element(
                 ":nth-match(iframe,1) >>> button:has-text('Enable Enterprise Territory Management')"
             )
             self.browser.click(button_to_click)
             sleep(1)
+        self.builtin.log_to_console("\n -> Setting Enabled!")
 
     def connect_to_marketing_cloud_distributed_marketing(
         self,
@@ -124,6 +134,8 @@ class QbrixMarketingKeywords(QbrixRobotTask):
 
         All parameters will default to the Distributed Marketing Demo instance defaults if not overridden.
         """
+
+        self.builtin.log_to_console("\nConnecting Marketing Cloud -> Distributed Marketing...")
 
         # Use Default Creds if None are supplied
         if not marketing_cloud_username:
@@ -144,6 +156,11 @@ class QbrixMarketingKeywords(QbrixRobotTask):
         if not business_unit_label:
             business_unit_label = "Distributed Marketing"
 
+        self.builtin.log_to_console("\n -> Running with these parameters:")
+        self.builtin.log_to_console(f"\n -> Username: {marketing_cloud_username}")
+        self.builtin.log_to_console(f"\n -> Business Unit: {business_unit_label}")
+        self.builtin.log_to_console("\n -> Note: Password and secret remain hidden.")
+
         # Go To Admin Page
         self.shared.go_to_app("Sales")
         self.browser.go_to(
@@ -151,8 +168,10 @@ class QbrixMarketingKeywords(QbrixRobotTask):
             timeout="30s",
         )
         self.browser.wait_until_network_is_idle("15s")
+        self.builtin.log_to_console("\n -> Loaded Sales Configuration Page")
 
         # Check if Already Connected
+        self.builtin.log_to_console("\n -> Checking if already connected and enabled...")
         count = 0
         while count <= 20:
             if (
@@ -182,6 +201,7 @@ class QbrixMarketingKeywords(QbrixRobotTask):
             sleep(1)
 
         # Create Distributed Marketing Business Unit
+        self.builtin.log_to_console("\n -> Creating Business Unit...")
         self.shared.wait_and_click(
             f"{self.shared.iframe_handler()} a.slds-button:text-is('Add Business Unit')"
         )
@@ -223,6 +243,7 @@ class QbrixMarketingKeywords(QbrixRobotTask):
         )
 
         # Login To Marketing Cloud
+        self.builtin.log_to_console("\n -> Logging into Marketing Cloud...")
         self.browser.click("iframe >>> a:text-is('Log In')")
         sleep(1)
         original_page = self.browser.switch_page("NEW")
@@ -255,6 +276,7 @@ class QbrixMarketingKeywords(QbrixRobotTask):
             raise Exception("No input found for MFA code.")
 
         # Switch Back to Setup
+        self.builtin.log_to_console("\n -> Finalising Configuration")
         sleep(3)
         self.browser.switch_page(original_page)
         self.browser.go_to(
@@ -268,6 +290,7 @@ class QbrixMarketingKeywords(QbrixRobotTask):
         )
 
         # Wait for Connected Status
+        self.builtin.log_to_console("\n -> Waiting for connection to complete...")
         retry_count = 0
         while retry_count <= 5:
             self.browser.click(
@@ -280,6 +303,7 @@ class QbrixMarketingKeywords(QbrixRobotTask):
                 )
                 == 1
             ):
+                self.builtin.log_to_console("\n -> Connected!")
                 break
             retry_count += 1
 
@@ -289,22 +313,28 @@ class QbrixMarketingKeywords(QbrixRobotTask):
         if not os.path.exists(file_path):
             raise ValueError("File Path does not exist.")
 
+        self.builtin.log_to_console("\nConnecting Campaigns for Distributed Marketing")
+
         with open(file_path, encoding="utf-8", mode="r") as config_file:
             config_data = json.load(config_file)
 
         campaigns = config_data["campaignsToLink"]
 
+        self.builtin.log_to_console("\n -> Campaigns to link:")
+        self.builtin.log_to_console(f"\n -> {campaigns}")
+
         if len(campaigns) == 0:
             raise Exception("No campaigns defined in config file.")
 
         self.shared.go_to_app("Distributed Marketing")
-
+        self.builtin.log_to_console("\n -> Opened Distributed Marketing App")
         campaign_ids = [campaign["campaignExId"] for campaign in campaigns]
         campaigns_dict = {
             campaign["campaignExId"]: campaign["journeyName"] for campaign in campaigns
         }
 
         # Get Campaign Record Information
+        self.builtin.log_to_console("\n -> Getting Campaign Information")
         campaign_ids_list = ", ".join([f"'{id_}'" for id_ in campaign_ids])
         campaign_lookup = self.salesforceapi.soql_query(
             f"SELECT Id, Name, External_ID__c FROM Campaign WHERE External_ID__c IN ({campaign_ids_list})"
@@ -312,8 +342,11 @@ class QbrixMarketingKeywords(QbrixRobotTask):
         print(campaign_lookup)
 
         # Loop Through Records
+        self.builtin.log_to_console("\n -> Configuring Campaigns...")
         if campaign_lookup["totalSize"] > 0:
             for campaign in campaign_lookup["records"]:
+                self.builtin.log_to_console(f"\n -> Configuring Campaign with ID: {campaign['Id']}...")
+
                 # Open The Campaign record Page
                 self.browser.go_to(
                     f"{self.cumulusci.org.instance_url}/lightning/r/Campaign/{campaign['Id']}/view",
@@ -336,6 +369,7 @@ class QbrixMarketingKeywords(QbrixRobotTask):
                     self.browser.get_element_count("button:text-is('Connect Campaign')")
                     > 0
                 ):
+                    self.builtin.log_to_console("\n -> Connecting Campaign...")
                     self.browser.click("button:text-is('Connect Campaign')")
                     self.shared.wait_and_click(
                         "input.uiInputTextForAutocomplete[placeholder='Search for a journey']"
@@ -358,6 +392,7 @@ class QbrixMarketingKeywords(QbrixRobotTask):
                         timeout="90s",
                     )
                     self.browser.wait_until_network_is_idle("30s")
+                self.builtin.log_to_console("\n -> Campaign Configured")
 
     def go_to_quick_send_page(self):
         """Enables Quick Sends for Distributed Marketing Demos"""
@@ -375,8 +410,12 @@ class QbrixMarketingKeywords(QbrixRobotTask):
             "30s",
         )
 
+        self.builtin.log_to_console("\n -> Loaded Quick Send Configuration Page")
+
     def enable_option_for_quick_send(self, option=None):
         """Assumes you are on the Quick Send Configuration page and have already connected Marketing Cloud. Add Options you want to select for Quick Send from the availiable journeys list."""
+
+        self.builtin.log_to_console(f"\nEnabling Option [{option}] for Quick Send")
 
         if option:
             if option in self.browser.get_select_options(
@@ -400,6 +439,7 @@ class QbrixMarketingKeywords(QbrixRobotTask):
                 )
                 self.shared.wait_and_click("button:text-is('Apply Changes')")
                 sleep(5)
+                self.builtin.log_to_console("\n -> Enabled")
             else:
                 self.builtin.log_to_console(
                     f"\nOption [{option}] was not found in the select. Skipping"
