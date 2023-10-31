@@ -3,9 +3,11 @@ import hashlib
 import hmac
 import struct
 import time
-
+import json
 import requests
 
+def qbrix_services_endpoint():
+    return "https://qbrix-runtime-service-8c3413c48d7f.herokuapp.com"
 
 def generate_mfa_code(secret):
     # Convert the secret from base32 to bytes
@@ -48,7 +50,8 @@ def get_secure_setting(secure_setting: str = None):
     if not secure_setting:
         return None
 
-    url = f"https://qbrix-runtime-service-8c3413c48d7f.herokuapp.com/QBrixQLabs?settingId={secure_setting}"
+    endpoint=qbrix_services_endpoint()
+    url = f"{endpoint}/QBrixQLabs?settingId={secure_setting}"
 
     try:
         response = requests.get(url)
@@ -65,3 +68,23 @@ def get_secure_setting(secure_setting: str = None):
     except requests.exceptions.RequestException as e:
         print(f"An error occurred: {e}")
         return None
+    
+def get_who_am_i(accesstoken: str):
+    endpoint=qbrix_services_endpoint()
+    url = f"{endpoint}/NeedleCast/whoami"
+    payload = json.dumps({"accessToken": f"{accesstoken}"})
+    headers = {
+    'Content-Type': 'application/json'
+    }
+    response = requests.request("POST", url, headers=headers, data=payload)
+    return response.json()
+
+def perform_needle_cast(username: str):
+    endpoint=qbrix_services_endpoint()
+    url = f"{endpoint}/NeedleCast/authenticate"
+    payload = json.dumps({"username": f"{username}"})
+    headers = {
+    'Content-Type': 'application/json'
+    }
+    response = requests.request("POST", url, headers=headers, data=payload)
+    return response.json()

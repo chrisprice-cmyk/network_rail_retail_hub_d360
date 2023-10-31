@@ -13,7 +13,7 @@ from cumulusci.core.config import ScratchOrgConfig
 from cumulusci.core.exceptions import CommandException
 from cumulusci.tasks.sfdx import SFDXBaseTask
 from cumulusci.cli.runtime import CliRuntime
-
+from qbrix.tools.shared.qbrix_authentication import * 
 from qbrix.tools.shared.qbrix_project_tasks import replace_file_text, run_command
 
 LOAD_COMMAND = "sfdx force:apex:execute "
@@ -62,7 +62,7 @@ class InstallRecorder(SFDXBaseTask):
                 and self.org_config.genesis_qbrixname is None
                 and not self.project_config.project__name is None
             ):
-                self.org_config.genesis_qbrixname = self.project_config.project__name
+                self.org_config.genesis_qbrixname = self._get_qbrixname()
                 self.logger.info(
                     f"Setting Genesis QBrix::{self.org_config.genesis_qbrixname}"
                 )
@@ -181,7 +181,7 @@ class InstallRecorder(SFDXBaseTask):
             self.trackingdata[
                 "ambient_tracking_id"
             ] = self.org_config.qbrix_ambient_tracking_id
-            self.trackingdata["qbrixname"] = self.project_config.project__name
+            self.trackingdata["qbrixname"] = self._get_qbrixname()
             self.trackingdata["trackingid"] = str(uuid.uuid4())
             self.trackingdata["status"] = "Started"
             self.trackingdata["username"] = self.org_config.username
@@ -224,13 +224,18 @@ class InstallRecorder(SFDXBaseTask):
                 self.trackingdata["organizationtype"] = ""
                 self.trackingdata["instancename"] = ""
 
-            currentuserdata = self._salesforce_query(
-                f"select Email from User where username='{self.org_config.username}'"
-            )
+            currentuserdata = get_who_am_i(self.accesstoken)
+            
+            #self._salesforce_query(
+            #    f"select Email from User where username='{self.org_config.username}'"
+            #)
             if not currentuserdata is None:
-                self.trackingdata["installuseremail"] = currentuserdata["result"][
-                    "records"
-                ][0]["Email"]
+                
+                try:
+                    self.trackingdata["installuseremail"] = currentuserdata["email"]
+                except:
+                    self.trackingdata["installuseremail"] = ""
+        
             else:
                 self.trackingdata["installuseremail"] = ""
 
@@ -398,6 +403,15 @@ class InstallRecorder(SFDXBaseTask):
 
             self.logger.info("Exit Handler Exit")
 
+    def _get_qbrixname(self):
+        #we are in a qbrix def that project name has not updated - fall back to the git remote name parsed. last slice is it
+        if(self.project_config.project__name =="xDO-Template"):
+            qbrixDirName,qbrixDirNameError= run_command("basename -s .git `git config --get remote.origin.url`")
+            #trim carriage return - slice off last
+            return qbrixDirName[:-1]
+        
+        return self.project_config.project__name
+            
     def _update_qbrix_version(self):
         # get the running folder, we will use that to determin if this is a direct call or a source dependency call
         my_path = os.getcwd()

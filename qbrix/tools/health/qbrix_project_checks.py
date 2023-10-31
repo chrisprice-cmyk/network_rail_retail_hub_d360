@@ -9,6 +9,7 @@ from cumulusci.cli.utils import (get_cci_upgrade_command,
                                  get_installed_version,
                                  get_latest_final_version, timestamp_file)
 from qbrix.tools.shared.qbrix_cci_tasks import run_cci_task
+from qbrix.tools.shared.qbrix_authentication import *
 
 
 # Einstein Checks
@@ -129,7 +130,7 @@ def get_template_info(template_id):
     """Checks the given Trialforce Template ID against known templates and returns the latest template ID if known """
 
     try:
-        base_url = "https://qbrix-runtime-service-8c3413c48d7f.herokuapp.com"
+        base_url = qbrix_services_endpoint()
         check_template_url = f"{base_url}/postspin/isknowntemplate/?templateid={template_id}"
 
         response = requests.get(check_template_url, timeout=60)
