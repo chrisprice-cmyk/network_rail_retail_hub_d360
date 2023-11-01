@@ -566,11 +566,18 @@ class CreateUser(BaseSalesforceApiTask, NGOrgConfig, ABC):
             f"SELECT Id, ContentDocumentId FROM ContentVersion WHERE Id = '{content_version_id}'"
         )["records"][0]["ContentDocumentId"]
 
-        api.restful(
+        response = api.restful(
             f"connect/user-profiles/{user_id}/photo",
             data=json.dumps({"fileId": content_document_id}),
             method="POST",
         )
+
+        # Clean up ContentDocument after uploading user profile photo
+        self.logger.info(
+            "Cleaning up the Content Document created for user profile photo: %s",
+            path.name
+        )
+        api.ContentDocument.delete(content_document_id)
 
     def _assign_permission(
         self, mode: str, user_id: str, api_names, ignore_failures: bool = False
