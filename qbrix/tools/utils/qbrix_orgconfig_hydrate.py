@@ -556,11 +556,14 @@ class NGOrgConfig(SFDXBaseTask):
         }
         response = requests.request("GET", url, headers=headers)
 
-        data = json.loads(response.text)
-        #self.logger.info(data)
-        self.logger.info(data["totalSize"])
-        return data["totalSize"] > 0
-
+        try:
+            data = json.loads(response.text)
+            #self.logger.info(data)
+            self.logger.info(data["totalSize"])
+            return data["totalSize"] > 0
+        except:
+            #fail closed
+            return False
 
         #fail closed
         return False
