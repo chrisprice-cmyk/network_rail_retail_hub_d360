@@ -173,11 +173,11 @@ jobs:
       - name: export cci session data
         run: cci org info dev --json > targetdev.json
 
-      - name: trim line 1 and 2
-        run: tail -n +3 targetdev.json
+      - name: trim line 1
+        run: tail -n +1 targetdev.json
 
-      - name: trim line 1 and 2
-        run: tail -n +3 targetdev.json > targetorg.json
+      - name: trim line 1
+        run: tail -n +1 targetdev.json > targetorg.json
 
       - name: extract the target user
         uses: sergeysova/jq-action@v2
