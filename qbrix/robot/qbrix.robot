@@ -149,6 +149,10 @@ Enable Sales Agreements
 
 Messaging Components Setup
     Messaging Components Setup
+
+Check and Enable Inbox
+    Enable Sales Inbox 
+    
 #
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # SERVICE CLOUD TESTS

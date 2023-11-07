@@ -194,3 +194,11 @@ class QbrixSalesCloudKeywords(QbrixRobotTask):
                 selector=f"{self.shared.iframe_handler()} input.btn:text-is('Save')",
                 post_click_sleep=10,
             )
+
+    def enable_sales_inbox(self):
+        """Go directly to the Sales Engagement Inbox page"""
+        self.shared.go_to_setup_admin_page("EmailIqSetupPage/home")
+        sleep(3)
+        toggle_input_selector = ":nth-match(span.slds-checkbox--faux,1)"
+        if "checked" not in self.browser.get_element_states(toggle_input_selector):
+            self.browser.click(toggle_input_selector)
