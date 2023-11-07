@@ -1,15 +1,16 @@
 import logging
-import shlex
 import os
+import shlex
 import subprocess
+import sys
 import textwrap
 from abc import ABC
 
-from cumulusci.tasks.command import Command
 from cumulusci.cli.logger import init_logger as cci_init_logger
+from cumulusci.tasks.command import Command
+
 
 def init_logger():
-
     """
     Initiates cumulusci logger for static methods
 
@@ -23,15 +24,17 @@ def init_logger():
     """
 
     cci_init_logger(False)
-    logger = logging.getLogger('cumulusci')
+    logger = logging.getLogger("cumulusci")
     return logger
+
+
 class CreateBanner(Command, ABC):
     task_docs = """Creates a full width banner in the console with the provided text"""
 
     task_options = {
         "text": {
             "description": "Text you want to show in a banner. If you leave this blank it will show the current Q Brix details.",
-            "required": False
+            "required": False,
         }
     }
 
@@ -46,7 +49,7 @@ class CreateBanner(Command, ABC):
         self.width = None
         self.text_box = None
         self.max_width = None
-        self.border_char = '*'
+        self.border_char = "*"
         self.min_width = None
         self.env = self._get_env()
 
@@ -57,12 +60,13 @@ class CreateBanner(Command, ABC):
 
         output_string = self.border_char * self.width + "\n"
         for text_line in self.text_box:
-            output_string += self.border_char + " " + text_line + " " + self.border_char + "\n"
+            output_string += (
+                self.border_char + " " + text_line + " " + self.border_char + "\n"
+            )
         output_string += self.border_char * self.width
         return output_string
 
     def _generate_list(self):
-
         # if we are running in a headless runner- tty will not be there.
         if self.width == 0:
             return []
@@ -72,7 +76,9 @@ class CreateBanner(Command, ABC):
         paragraph_list = self.text.split("\n")
         text_list = []
         for paragraph in paragraph_list:
-            text_list += textwrap.fill(paragraph, box_width, replace_whitespace=False).split("\n")
+            text_list += textwrap.fill(
+                paragraph, box_width, replace_whitespace=False
+            ).split("\n")
         text_list = [line.ljust(box_width) for line in text_list]
         return text_list
 
@@ -85,13 +91,13 @@ class CreateBanner(Command, ABC):
 def get_terminal_width():
     # if we are running in a headless runner- tty will not be there.
     try:
-        return int(subprocess.check_output(['stty', 'size']).split()[1])
+        return int(subprocess.check_output(["stty", "size"]).split()[1])
     except Exception as e:
         print(e)
     return 0
 
 
-def run_command(command: str, cwd=None) -> int:
+def run_command(cmd: str, cwd=None) -> int:
     """
     Runs a command as a subprocess and returns the result code
 
@@ -106,45 +112,53 @@ def run_command(command: str, cwd=None) -> int:
     log = init_logger()
 
     # Check Command
-    if command:
-
+    if cmd:
         # Blacklisted Command Keywords
         blacklisted_keywords = {
-            'rm', 'shutdown', 'reboot', 'dd', 'mkfs', 'fdisk',  # Linux/Unix commands
-            'del', 'format', 'rmdir', 'rd', 'sfc', 'chkdsk', 'move', 'attrib',  # Windows commands
-            'mv', 'chmod', 'chown', 'sudo', 'kill', 'killall', 'iptables'  # More Linux/Unix commands
+            "rm",
+            "shutdown",
+            "reboot",
+            "dd",
+            "mkfs",
+            "fdisk",  # Linux/Unix commands
+            "del",
+            "format",
+            "rmdir",
+            "rd",
+            "sfc",
+            "chkdsk",
+            "move",
+            "attrib",  # Windows commands
+            "mv",
+            "chmod",
+            "chown",
+            "sudo",
+            "kill",
+            "killall",
+            "iptables",  # More Linux/Unix commands
         }
 
         # Check if any blacklisted keyword is in the command
-        if any(keyword in command.split() for keyword in blacklisted_keywords):
-            raise ValueError(f"Dangerous command detected: {command}")
+        if any(keyword in cmd.split() for keyword in blacklisted_keywords):
+            raise ValueError(f"Dangerous command detected: {cmd}")
 
     else:
-        raise ValueError("No command was passed to the run_command function. Stopping script.")
+        raise ValueError(
+            "No command was passed to the run_command function. Stopping script."
+        )
 
     # Check Current Working Directory
     if not cwd:
         cwd = "."
     cwd = os.path.normpath(cwd)
 
-    log.info("Running Command: '%s' in directory '%s'...", command, cwd)
-
+    log.info("Running Command: [%s] in directory [%s]...", cmd, cwd)
     try:
-        with subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8', text=True) as proc:
-            errs = []
-            for line in proc.stdout:
-                if line:
-                    log.info(line)
-            for line in proc.stderr:
-                if line:
-                    errs.append(line)
-            stdout, _ = proc.communicate()
-        result = subprocess.CompletedProcess(command, proc.returncode, stdout, "\n".join(errs))
-    except subprocess.TimeoutExpired:
-        proc.kill()
-        log.error(" -X Subprocess Timeout. Killing Process")
-    except Exception as e:
-        proc.kill()
-        log.error(" -X Subprocess Failed. Error details: %s", e)
+        process_result = subprocess.check_call(cmd, shell=True, cwd=cwd)
+        print("command '%s' succeeded, returned: %s" % (cmd, str(process_result)))
+    except subprocess.CalledProcessError as e:
+        sys.exit("'%s' failed, returned code %d" % (cmd, e.returncode))
+    except OSError as e:
+        sys.exit("failed to run shell: '%s'" % (str(e)))
 
-    return result.returncode
+    return process_result
