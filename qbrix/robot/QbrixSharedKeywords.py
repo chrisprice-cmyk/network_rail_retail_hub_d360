@@ -1237,3 +1237,104 @@ class QbrixSharedKeywords:
 
     def enable_notification_delivery_setting_ios(self):
         pass
+
+    def sort_list_view(self, obj, list_view, column, order):
+        """Sorts a list view by the specified column"""
+
+        # Go To Known App which is not Console Layout
+        self.go_to_app("Sales")
+
+        # Open App Launcher - Sleep Needed to Allow Tiles to load
+        self.browser.wait_for_elements_state(
+            "div.slds-icon-waffle", ElementState.visible, "10s"
+        )
+        self.browser.click("div.slds-icon-waffle")
+        self.browser.wait_for_elements_state(
+            "button.slds-button:text-is('View All')", ElementState.visible, "10s"
+        )
+
+        self.browser.fill_text("div.appLauncherMenu:visible >> input.slds-input", obj)
+
+        # Handle Search Results
+        try:
+            sleep(2)
+            search_results = self.browser.get_element_count(
+                f"one-app-launcher-menu-item >> p.slds-truncate:has-text('{obj}'):visible"
+            )
+            if search_results == 0:
+                self.builtin.log_to_console(
+                    f"\nObject, '{obj}' could not be found. Aborting..."
+                )
+                return
+            self.builtin.log_to_console(f"\nNaivgating to '{obj}'")
+            self.browser.click(
+                f"one-app-launcher-menu-item >> p.slds-truncate:has-text('{obj}')"
+            )
+        except TimeoutError:
+            self.builtin.log_to_console(
+                f"\nObject, '{obj}' could not be found. Aborting..."
+            )
+            return
+
+        # Handle List View Selection
+        try:
+            self.browser.wait_for_elements_state(
+                "div.firstHeaderRow >> .triggerLink", ElementState.visible, "10s"
+            )
+            self.browser.click("div.firstHeaderRow >> .triggerLink")
+            sleep(2)
+            listview_count = self.browser.get_element_count(
+                f"div.listViewPickerPanel >> div.forceVirtualAutocompleteMenuList >> span.virtualAutocompleteOptionText:has-text('{list_view}'):visible"
+            )
+            if listview_count == 0:
+                self.builtin.log_to_console(
+                    f"\nList View, '{list_view}' could not be found. Aborting..."
+                )
+                return
+            self.builtin.log_to_console(f"\nSelecting list view '{list_view}'")
+            self.browser.click(
+                f"div.listViewPickerPanel >> div.forceVirtualAutocompleteMenuList >> span.virtualAutocompleteOptionText:has-text('{list_view}')"
+            )
+            sleep(2)
+        except TimeoutError:
+            self.builtin.log_to_console(
+                f"\nList View, '{list_view}' could not be found. Aborting..."
+            )
+            return
+
+        # Handle Column Sorting
+        try:
+            self.browser.wait_for_elements_state(
+                f"table.forceRecordLayout[aria-label='{list_view}']",
+                ElementState.visible,
+                "10s",
+            )
+            self.builtin.log_to_console(
+                f"\n'{list_view}' table loaded. Finding column to sort"
+            )
+
+            column_count = self.browser.get_element_count(
+                f"table.forceRecordLayout >> thead >> th.slds-is-sortable >> span:has-text('{column}'):visible"
+            )
+            if column_count == 0:
+                self.builtin.log_to_console(
+                    f"\n'{column}' not displayed in List View. Aborting..."
+                )
+                return
+
+            if order == "asc" or order == "ascending":
+                column_selector = f"table.forceRecordLayout >> thead >> th.slds-is-sortable.descending >> span:has-text('{column}')"
+            else:
+                column_selector = f"table.forceRecordLayout >> thead >> th.slds-is-sortable.ascending >> span:has-text('{column}')"
+
+            if self.browser.get_element_count(f"{column_selector}:visible"):
+                self.browser.click(f"{column_selector}")
+                self.builtin.log_to_console(f"{column} sorted by {order}")
+            else:
+                self.builtin.log_to_console(f"{column} is already sorted by {order}")
+            sleep(2)
+        except TimeoutError:
+            self.builtin.log_to_console(
+                f"\n'{column}' not displayed in List View. Aborting..."
+            )
+            return
