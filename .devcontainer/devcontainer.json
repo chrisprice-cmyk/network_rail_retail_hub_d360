@@ -1,0 +1,30 @@
+{
+  "image": "ghcr.io/sfdc-qbranch/qbrix-base-container:latest",
+  "forwardPorts": [7788, 1717],
+  "portsAttributes": {
+    "7788": {
+      "label": "cci-auth-callback"
+    },
+    "1717": {
+      "label": "sfdx-web-auth"
+    }
+  },
+  "customizations": {
+    // Configure properties specific to VS Code.
+    "vscode": {
+      // Set *default* container specific settings.json values on container create.
+      "settings": {
+        "salesforcedx-vscode-apex.java.home": "/usr/lib/jvm/java-11-openjdk-amd64"
+      },
+
+      // Add the IDs of extensions you want installed when the container is created.
+      "extensions": [
+        "salesforce.salesforcedx-vscode",
+        "redhat.vscode-xml",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode"
+      ]
+    }
+  },
+  "features": {}
+}
