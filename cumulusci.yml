@@ -236,6 +236,9 @@ tasks:
 
   qbrix_glooop:
     class_path: qbrix.tools.utils.qbrix_glooop.Glooop
+  
+  qbrix_fart:
+    class_path: qbrix.tools.utils.qbrix_fart.FART
 
   #------------------------------------#
   # DATA TOOL INTEGRATION              #
