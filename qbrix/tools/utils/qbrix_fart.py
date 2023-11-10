@@ -6,7 +6,7 @@ from abc import abstractmethod
 from cumulusci.core.exceptions import CommandException
 from cumulusci.core.keychain import BaseProjectKeychain
 from cumulusci.tasks.command import Command
-
+from qbrix.tools.shared.qbrix_authentication import *
 
 class FART(Command):
     keychain_class = BaseProjectKeychain
@@ -130,7 +130,7 @@ class FART(Command):
         else:
             self.tooling = bool(self.options["tooling"])
 
-        if self.fartmode == "Between" or self.fartmode == "SOQL-Between" or self.fartmode == "Cache-Between":
+        if self.fartmode == "Between" or self.fartmode == "SOQL-Between" or self.fartmode == "Cache-Between" or self.fartmode == "SecureCache-Between":
             if "findleft" not in self.options or not self.options["findleft"]:
                 self.fartfindleft = None
             else:
@@ -161,6 +161,12 @@ class FART(Command):
         if self.fartmode == "Between":
             self.runtextbetween()
         
+        if self.fartmode == "SecureCache":
+            self.runwithsecurecache()
+            
+        if self.fartmode == "SecureCache-Between":
+            self.runwithsecurecachebetween()
+            
         if self.fartmode == "Cache":
             self.runwithcache()
 
@@ -173,42 +179,83 @@ class FART(Command):
         if self.fartmode == "SOQL-Between":
             self.runwithsoqlbetween()
 
+    def getsecuresetting(self,name):
+        res = get_secure_setting(name)
+        return res
+    
+    def runwithsecurecache(self):
+        """
+        Realtime pull from secure settings
+        """
+        cacheval = self.getsecuresetting(self.fartreplacewith)
+
+        if(not cacheval is None):
+            self.fart(self.fartpath, self.fartfind, cacheval, self.formatval)
+
+    
+    def runwithsecurecachebetween(self):
+        """
+        Realtime pull from secure settings
+        """
+        cacheval = self.getsecuresetting(self.fartreplacewith)
+        
+        if(not cacheval is None):
+            self.fartbetween(self.fartpath, self.fartfindleft, self.fartfindright, cacheval, self.formatval)
+
     def runwithcache(self):
+        """
+        Use the internal runtime cache as is as the source
+        """
         cacheval = self.org_config.qbrix_cache_get(self.fartreplacewith)
 
         if(not cacheval is None):
             self.fart(self.fartpath, self.fartfind, cacheval, self.formatval)
 
-
     def runwithcachebetween(self):
+        """
+        Use the internal runtime cache as is as the source
+        """
         cacheval = self.org_config.qbrix_cache_get(self.fartreplacewith)
         
         if(not cacheval is None):
             self.fartbetween(self.fartpath, self.fartfindleft, self.fartfindright, cacheval, self.formatval)
         
     def runwithtext(self):
+        """
+        Use the supplied find value to locate and replace
+        """
         self.fart(self.fartpath, self.fartfind, self.fartreplacewith, self.formatval)
 
     def runtextbetween(self):
+        """
+        Use the supplied begin and end values to locate between section to replace with the supplied text
+        """
         self.fartbetween(self.fartpath, self.fartfindleft, self.fartfindright, self.fartreplacewith, self.formatval)
 
     def runwithsoql(self):
+        """
+        Use the supplied soql to locate a value to be used in the replace
+        """
         if self.soql is None or self.soql == "":
             return
 
-        subprocess.run([f"sfdx config:set instanceUrl={self.instanceurl}"], shell=True, capture_output=True)
+        subprocess.run([f"sf config set instanceUrl={self.instanceurl}"], shell=True, capture_output=True)
 
         self.fartsoql(self.fartpath, self.fartfind, self.accesstoken, self.soql, self.formatval, self.tooling)
 
     def runwithsoqlbetween(self):
 
+        """
+        Use the supplied begin and end values to locate between section to replace with the result from the soql
+        """
+        
         if self.soql is None or self.soql == "":
             return
 
         if self.fartfindleft is None or self.fartfindright is None:
             return
 
-        subprocess.run([f"sfdx config:set instanceUrl={self.instanceurl}"], shell=True, capture_output=True)
+        subprocess.run([f"sf config set instanceUrl={self.instanceurl}"], shell=True, capture_output=True)
 
         self.fartsoqlbetween(self.fartpath, self.fartfindleft, self.fartfindright, self.accesstoken, self.soql,
                              self.formatval, self.tooling)
@@ -278,17 +325,19 @@ class FART(Command):
         if sfdxuser is None or soql is None:
             return None
 
-        cmd = f"sfdx force:data:soql:query -u {sfdxuser} -q \"{soql}\" --json"
+        cmd = f"sf data query --target-org '{sfdxuser}' -q \"{soql}\" --json"
 
         if tooling:
             cmd = f"{cmd} -t"
 
+        self.logger.info(cmd)
         result = subprocess.run([cmd], shell=True, capture_output=True)
 
         if result is None:
             return None
 
         jsonresult = json.loads(result.stdout)
+        self.logger.info(result.stdout)
 
         if jsonresult["result"]["totalSize"] >= 1:
             print(jsonresult["result"]["records"][0][list(jsonresult["result"]["records"][0].keys())[1]])
