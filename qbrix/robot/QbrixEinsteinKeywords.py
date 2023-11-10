@@ -344,6 +344,7 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
         for toggle in self.browser.get_elements("span.slds-checkbox--faux"):
             if "checked" not in self.browser.get_element_states(toggle):
                 self.browser.click(toggle)
+                sleep(2)
 
         sleep(2)
         self.shared.go_to_setup_admin_page(
