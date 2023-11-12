@@ -24,14 +24,15 @@ class Glooop(Command):
     """
 
     task_options = {
-        "qlabs_username": {
-            "description": "Username or Alias of the SFDX Sesssion to QLabs",
-            "required": True,
-        },
-        "qlabs_token": {
-            "description": "Access token for Q Labs user if already known",
-            "required": True,
-        },
+        
+        #"qlabs_username": {
+        #    "description": "Username or Alias of the SFDX Sesssion to QLabs",
+        #    "required": False,
+        #},
+        #"qlabs_token": {
+        #    "description": "Access token for Q Labs user if already known",
+        #    "required": False,
+        #},
         "org_pool_name": {
             "description": "QLabs Org Pool name to tap into for an existing org to checkout.",
             "required": True,
@@ -44,15 +45,17 @@ class Glooop(Command):
 
     def _init_options(self, kwargs):
         super(Command, self)._init_options(kwargs)
-        self.qlabsAccessToken = (
-            self.options["qlabs_token"] if "qlabs_token" in self.options else None
-        )
+        #self.qlabsAccessToken = (
+        #    self.options["qlabs_token"] if "qlabs_token" in self.options else None
+        #)
 
     def _prepruntime(self):
-        if "qlabs_username" not in self.options or not self.options["qlabs_username"]:
-            raise ValueError("Missing QLabs sfdx username.")
-        else:
-            self.qlabs_username = self.options["qlabs_username"]
+        
+        
+        #if "qlabs_username" not in self.options or not self.options["qlabs_username"]:
+        #    raise ValueError("Missing QLabs sfdx username.")
+        #else:
+        #    self.qlabs_username = self.options["qlabs_username"]
 
         if "org_pool_name" not in self.options or not self.options["org_pool_name"]:
             raise ValueError("Missing Org Pool Name.")
@@ -65,14 +68,57 @@ class Glooop(Command):
             self.cci_target_org = self.options["cci_target_org"]
 
     def run(self):
-        self._getQlabsAccessToken()
-        exchangePayload = self._getExchangeId()
-        if not exchangePayload is None:
-            self.logger.info("Exchange Id located")
-            self._exchangeId(exchangePayload)
-        else:
-            self.logger.error("No Exchange Id found.")
+        
+        self._getGlooopOrgFromRuntimeService()
+        
+        #self._getQlabsAccessToken()
+        #exchangePayload = self._getExchangeId()
+        #if not exchangePayload is None:
+        #    self.logger.info("Exchange Id located")
+        #    self._exchangeId(exchangePayload)
+        #else:
+        #    self.logger.error("No Exchange Id found.")
 
+    def _getGlooopOrgFromRuntimeService(self):
+        try:
+            url = "https://qbrix-runtime-service-8c3413c48d7f.herokuapp.com/GLOOOP/checkout"
+
+            payload = json.dumps(
+                {
+                    "poolname": f"{self.org_pool_name}",
+                    "context": f"{socket.gethostname()}",
+            })
+            headers = {
+            'Content-Type': 'application/json'
+            }
+
+            response = requests.request("POST", url, headers=headers, data=payload)
+            glooopResult = json.loads(response.text)
+            glooopAccessToken = glooopResult["accessToken"]
+            glooopInstanceUrl = glooopResult["instanceUrl"]
+            glooopUsername = glooopResult["pooledUserName"]
+
+            importSFDXCmd = f"export SFDX_ACCESS_TOKEN='{glooopAccessToken}' && sf org login access-token --instance-url {glooopInstanceUrl} -a {glooopUsername} --no-prompt --json"
+            importCCICmd = f"cci org import {glooopUsername} {self.cci_target_org}"
+            subprocess.run([importSFDXCmd], shell=True, capture_output=True)
+
+            p = subprocess.Popen(
+                importCCICmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                bufsize=1,
+                universal_newlines=True,
+                shell=True,
+            )
+            (out, err) = p.communicate()
+            self.logger.info(out)
+            self.logger.error(err)
+
+            
+        except:
+            self.logger.error("Unable to contact GLOOOP via Runtime Service")
+        
+    @DeprecationWarning    
     def _getQlabsAccessToken(self):
         if not self.qlabsAccessToken is None:
             return self.qlabsAccessToken
@@ -94,6 +140,7 @@ class Glooop(Command):
 
         self.logger.error("Unable to get access token to QLabs")
 
+    @DeprecationWarning
     def _getExchangeId(self):
         try:
             url = "https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixGlooopService"
@@ -117,6 +164,7 @@ class Glooop(Command):
         # fail closed sine the object or access to the object is not present
         return None
 
+    @DeprecationWarning
     def _exchangeId(self, exchangePayload):
         # self.logger.info(exchangePayload)
         try:
