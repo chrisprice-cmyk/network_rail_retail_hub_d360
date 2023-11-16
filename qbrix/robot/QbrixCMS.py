@@ -1541,3 +1541,66 @@ class QbrixCMS(QbrixRobotTask):
             self.builtin.log_to_console(
                 f"Featured Topic called {topic_name} not found on page, skipping..."
             )
+
+    def add_site_guest_user_action(self, site_name, action_name):
+        """Adds a Quick Action so it's available for the Guest User via the Support API"""
+
+        changes_made = False
+
+        results = self.salesforceapi.soql_query(
+            f"SELECT Id FROM Site WHERE SiteType='ChatterNetwork' AND Status='Active' AND MasterLabel = '{site_name}'"
+        )
+
+        if results["totalSize"] == 0:
+            self.builtin.log_to_console(f"\nNo results for {site_name} was found. Skipping...")
+        elif results["totalSize"] == 1: 
+            siteId = results["records"][0]["Id"]
+            self.builtin.log_to_console(f"\n{site_name} site was found. Navigating to Site details with {siteId}")
+            self.browser.go_to(f"{self.cumulusci.org.instance_url}/{siteId}")
+            self.shared.wait_for_page_to_load()
+
+            # Handle Edit Click
+            self.builtin.log_to_console("Editing Details")
+            self.browser.click("div.bDetailBlock >> div.pbHeader >> input[value='Edit']")
+
+            # Check if Guest Access to Support API is enabled
+            toggle_input_selector = "div.bEditBlock >> tr:has-text('Guest Access to the Support API') >> input"
+            if "checked" not in self.browser.get_element_states(toggle_input_selector):
+                self.builtin.log_to_console("Enabling Guest Access to the Support API")
+                self.browser.click(toggle_input_selector)
+                changes_made = True
+            else:
+                self.builtin.log_to_console("Guest Access to the Support API is already enabled")
+
+            # Handle Adding Quick Action
+            self.builtin.log_to_console(f"Finding the {action_name} Quick Action to add")
+            self.browser.wait_for_elements_state(
+                f"table.detailList >> td.selectCell:has-text('Available Quick Actions')", ElementState.visible, "15s"
+            )
+
+            action = f"table.detailList >> td.selectCell:has-text('Available Quick Actions') >> option:has-text('{action_name}')"
+            action_count = self.browser.get_element_count(
+                f"{action}"
+            )
+            if action_count > 0:
+                self.builtin.log_to_console(f"Found {action_name}. Now adding it")
+                # Select Action
+                self.builtin.log_to_console("Selecting Action")
+                self.browser.click(f"{action}")
+                # Click Add
+                self.builtin.log_to_console("Adding Action to Selected Quick Actions")
+                self.browser.click("table.detailList >> td.buttonCell:has-text('Add') >> :nth-match(a, 1)")
+                changes_made = True
+            else:
+                self.builtin.log_to_console(f"Could not find {action_name} in available actions. It does not exist or may have been added already")
+
+            if changes_made:
+                # Save Changes
+                self.builtin.log_to_console("Saving Changes")
+                self.browser.click("div.pbBottomButtons >> input[value='Save']")
+                sleep(2)
+            else:
+                self.builtin.log_to_console("No changes made. Exiting...")
+            
+        else:
+            self.builtin.log_to_console(f"\nMore than 1 result for {site_name} was found. Aborting...")

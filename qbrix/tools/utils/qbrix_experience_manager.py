@@ -55,8 +55,9 @@ class ExperienceManager(BaseSalesforceApiTask):
 
     def _process_collaboration_groups(self):
         for collaboration_group in self.collaboration_groups:
+            escaped_collaboration_group = collaboration_group.replace("'", "\\'")
             cg_lookup = self.sf.query(
-                f"select id from CollaborationGroup Where Name = '{collaboration_group}' and NetworkId = '{self.network_id}' LIMIT 1"
+                f"select id from CollaborationGroup Where Name = '{escaped_collaboration_group}' and NetworkId = '{self.network_id}' LIMIT 1"
             )
 
             if cg_lookup["totalSize"] == 0:
