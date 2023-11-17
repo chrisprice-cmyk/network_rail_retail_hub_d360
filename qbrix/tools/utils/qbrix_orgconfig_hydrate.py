@@ -803,5 +803,3 @@ class NGCacheAdd(SFDXBaseTask):
                 self.logger.error(f"Unable to evaluate dynamic express::{inst}")
         else:
             self.org_config.qbrix_cache_set(self.key,self.value)
-        
-        self.return_values = self.org_config.qbrix_cache
