@@ -229,7 +229,8 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
 
         self.builtin.log_to_console("\nEnabling all core Insights...")
 
-        self.check_and_enable_account_insights()
+        # Removed - https://help.salesforce.com/s/articleView?id=000394818&type=1
+        # self.check_and_enable_account_insights()
         self.check_and_enable_campaign_insights()
         self.check_and_enable_key_accounts()
         self.check_and_enable_opportunity_insights()
