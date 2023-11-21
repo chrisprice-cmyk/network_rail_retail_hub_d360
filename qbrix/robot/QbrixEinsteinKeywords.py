@@ -83,36 +83,6 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
 
         # Go To Setup Page
         self.go_to_opportunity_insights_setup_page()
-        toggle_input_selector = f"{self.shared.iframe_handler()} div.slds-box:has-text('Einstein Opportunity Insights') >> input[type='checkbox']"
-
-        # Raise error if unable to confirm status
-        if not self.shared.wait_on_element(
-            toggle_input_selector, 30
-        ) and "enabled" not in self.browser.get_element_states(toggle_input_selector):
-            self.browser.take_screenshot()
-            raise Exception(
-                "Error enabling Opportunity Insights. Unable to find expected toggle on page or toggle is not enabled."
-            )
-
-        self.builtin.log_to_console("\nSetup page loaded")
-
-        # Enable toggle if not already enabled
-        if "checked" not in self.browser.get_element_states(toggle_input_selector):
-            self.builtin.log_to_console("\nNot enabled yet. Clicking toggle...")
-            self.browser.click(
-                f"{self.shared.iframe_handler()} div.slds-box:has-text('Einstein Opportunity Insights') >> span.slds-checkbox--faux"
-            )
-            sleep(1)
-            if "checked" not in self.browser.get_element_states(toggle_input_selector):
-                self.browser.take_screenshot()
-                raise Exception(
-                    "Error enabling Opportunity Insights. Toggle was found and clicked but its not showing as enabled."
-                )
-            self.builtin.log_to_console("\nOpportunity Insights Enabled")
-        else:
-            self.builtin.log_to_console(
-                "\nOpportunity Insights already enabled. Skipping."
-            )
 
     def check_and_enable_account_insights(self):
         """Checks and enables Account Insights"""
@@ -121,34 +91,6 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
 
         # Go To Setup Page
         self.go_to_account_insights_setup_page()
-        toggle_input_selector = f"{self.shared.iframe_handler()} div.box:has-text('Einstein Account Insights') >> input[type='checkbox']"
-
-        # Raise error if unable to confirm status
-        if not self.shared.wait_on_element(
-            toggle_input_selector, 30
-        ) and "enabled" not in self.browser.get_element_states(toggle_input_selector):
-            self.browser.take_screenshot()
-            raise Exception(
-                "Error enabling Account Insights. Unable to find expected toggle on page or toggle is not enabled."
-            )
-
-        self.builtin.log_to_console("\nSetup page loaded")
-
-        # Enable toggle if not already enabled
-        if "checked" not in self.browser.get_element_states(toggle_input_selector):
-            self.builtin.log_to_console("\nNot enabled yet. Clicking toggle...")
-            self.browser.click(
-                f"{self.shared.iframe_handler()} div.box:has-text('Einstein Account Insights') >> span.slds-checkbox--faux"
-            )
-            sleep(1)
-            if "checked" not in self.browser.get_element_states(toggle_input_selector):
-                self.browser.take_screenshot()
-                raise Exception(
-                    "Error enabling Account Insights. Toggle was found and clicked but is not showed as checked."
-                )
-            self.builtin.log_to_console("\nAccount Insights Enabled")
-        else:
-            self.builtin.log_to_console("\nAccount Insights already enabled. Skipping.")
 
     def check_and_enable_relationship_insights(self):
         """Checks and enables Relationship Insights"""
@@ -229,11 +171,15 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
 
         self.builtin.log_to_console("\nEnabling all core Insights...")
 
-        # Removed - https://help.salesforce.com/s/articleView?id=000394818&type=1
-        # self.check_and_enable_account_insights()
-        self.check_and_enable_campaign_insights()
-        self.check_and_enable_key_accounts()
-        self.check_and_enable_opportunity_insights()
+        try:
+            self.check_and_enable_campaign_insights()
+        except Exception as e:
+            self.builtin.log_to_console(f"\nCampaign Insights failed to enable. {e}")
+
+        try:
+            self.check_and_enable_key_accounts()
+        except Exception as e:
+            self.builtin.log_to_console(f"\nKey Account Insights failed to enable. {e}")
 
         self.builtin.log_to_console("\nAll Insights enabled!")
 
@@ -248,15 +194,21 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
         """
         Go directly to the Opportunity Insights setup page
         """
-        self.shared.go_to_setup_admin_page("OpportunityInsights/home", 3)
-        self.shared.wait_for_page_to_load()
+        # self.shared.go_to_setup_admin_page("OpportunityInsights/home", 3)
+        # self.shared.wait_for_page_to_load()
+        self.builtin.log_to_console(
+            "\nOpportunity Insights cannot be enabled as it has been deprecated. More information: https://help.salesforce.com/s/articleView?id=000394817&type=1"
+        )
 
     def go_to_account_insights_setup_page(self):
         """
         Go directly to the Account Insights setup page
         """
-        self.shared.go_to_setup_admin_page("AccountInsights/home", 3)
-        self.shared.wait_for_page_to_load()
+        # self.shared.go_to_setup_admin_page("AccountInsights/home", 3)
+        # self.shared.wait_for_page_to_load()
+        self.builtin.log_to_console(
+            "\Account Insights cannot be enabled as it has been deprecated. More information: https://help.salesforce.com/s/articleView?id=000394818&type=1"
+        )
 
     def go_to_relationship_insights_setup_page(self):
         """

@@ -595,7 +595,7 @@
     {
       "label": "Q BRIX [CODESPACES]: Initiate Codespace and Connect to DevHub",
       "type": "shell",
-      "command": "export GITHUB_TOKEN=$GH_TOKEN && sf org device login --instance-url https://nextgendevhubee.my.salesforce.com -a DevHub && cci service connect devhub default",
+      "command": "export GITHUB_TOKEN=$GH_TOKEN && sf org login device --instance-url https://nextgendevhubee.my.salesforce.com --alias DevHub && cci service connect devhub default",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
