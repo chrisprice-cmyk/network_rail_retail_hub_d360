@@ -338,6 +338,9 @@ class QBrixUpdater(BaseTask, ABC):
             self._update_folder("qbrix", ".qbrix/Update/xDO-Template-main", False)
             self._update_folder(".vscode", ".qbrix/Update/xDO-Template-main", False)
             self._update_folder(".github", ".qbrix/Update/xDO-Template-main", False)
+            self._update_folder(
+                ".devcontainer", ".qbrix/Update/xDO-Template-main", False
+            )
             self._update_folder_indirect_source(
                 ".git/hooks", ".qbrix/Update/xDO-Template-main/qbrix/git/hooks", False
             )
