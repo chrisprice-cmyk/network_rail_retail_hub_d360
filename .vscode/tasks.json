@@ -591,9 +591,51 @@
         "showReuseMessage": false,
         "panel": "shared"
       }
+    },
+    {
+      "label": "Q BRIX [CODESPACES]: Initiate Codespace and Connect to DevHub",
+      "type": "shell",
+      "command": "export GITHUB_TOKEN=$GH_TOKEN && sf org device login --instance-url https://nextgendevhubee.my.salesforce.com -a DevHub && cci service connect devhub default",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Q BRIX [CODESPACES]: Import Local Salesforce Org",
+      "type": "shell",
+      "command": "sf org login access-token --instance-url ${input:ScratchOrgDomain} && cci org import ${input:ScratchOrgUsername} --org ${input:OrgAlias}",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "shared"
+      }
     }
   ],
   "inputs": [
+    {
+      "id": "ScratchOrgUsername",
+      "description": "Please enter the username for the org",
+      "default": "",
+      "type": "promptString"
+    },
+    {
+      "id": "ScratchOrgDomain",
+      "description": "Please enter the domain for the org",
+      "default": "",
+      "type": "promptString"
+    },
     {
       "id": "OrgAlias",
       "description": "Please enter the org alias for the TSO",
