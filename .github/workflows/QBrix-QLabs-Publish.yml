@@ -18,6 +18,9 @@ env:
   SFDX_DISABLE_DNS_CHECK: true
   ACTIONS_ALLOW_UNSECURE_COMMANDS: true
   BUILD_SUFFIX: SDO
+  QSR_ENDPOINT: ${{ secrets.QSR_ENDPOINT }}
+  QSR_JWT_SIGNING_SECRET: ${{ secrets.QSR_JWT_SIGNING_SECRET }}
+  USER: ${{github.actor}}
 
 jobs:
   qlabs_publish:
@@ -57,7 +60,26 @@ jobs:
             import yaml
             import os
             import requests
+            import jwt
             import json
+            def getAuth(user:str):
+              QSR_JWT_SIGNING_SECRET = os.environ.get('QSR_JWT_SIGNING_SECRET')
+              encoded_jwt = jwt.encode({"sub": f"{user}", "external_id": f"{user}", "aud": f"{user}"},QSR_JWT_SIGNING_SECRET, algorithm="HS256")
+              return encoded_jwt
+
+            def refreshQBrix(qbrix:str):
+              url = os.environ.get('QSR_ENDPOINT')
+              payload = json.dumps({
+                  "qbrix": f"{qbrix}"
+              })
+              print(payload)
+              headers = {
+                  'Content-Type': 'application/json',
+                  'Authorization': f'Bearer {getAuth(os.environ.get("USER"))}'
+              }
+              response = requests.request("PUT", url, headers=headers, data=payload)
+
+            refreshQBrix('${{ github.event.repository.name }}')
             filepath='${{ github.workspace }}/cumulusci.yml'
             inputsfile = '${{ github.workspace }}/qbrix_local/inputs/required.json'
             if(os.path.isfile(filepath)):

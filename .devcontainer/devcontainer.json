@@ -1,5 +1,5 @@
 {
-  "image": "ghcr.io/sfdc-qbranch/qbrix-base-container:latest",
+  "image": "ghcr.io/sfdc-qbranch/qbrix-base-container-quasar:latest",
   "forwardPorts": [7788, 1717],
   "portsAttributes": {
     "7788": {

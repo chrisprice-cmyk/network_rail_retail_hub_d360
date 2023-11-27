@@ -22,8 +22,9 @@ env:
   BUILD_SUFFIX: R0-ProdOrg
   QBRIX_SYSTEM_ID: GIT_BUILD_AUTOMATION
   SF_USE_PROGRESS_BAR: false
-  mixpanelsignature: ${{ secrets.mixpanelsignature }}
-  mixpanelidentifier: ${{ secrets.mixpanelidentifier }}
+  QSR_ENDPOINT: ${{ secrets.QSR_ENDPOINT }}
+  QSR_JWT_SIGNING_SECRET: ${{ secrets.QSR_JWT_SIGNING_SECRET }}
+  USER: ${{github.actor}}
 
 jobs:
   collection_deployment_steps:
@@ -64,7 +65,7 @@ jobs:
     needs: [collection_deployment_steps]
     runs-on: ubuntu-latest
     container:
-      image: "ghcr.io/sfdc-qbranch/qbrix-base-container:latest"
+      image: "ghcr.io/sfdc-qbranch/qbrix-base-container-quasar:latest"
       credentials:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.QBRIX_CONTAINER_PUBLISH_GITHUB_PAT}}
@@ -231,7 +232,7 @@ jobs:
     needs: [collection_deployment_steps, target_org_env_build]
     runs-on: ubuntu-latest
     container:
-      image: "ghcr.io/sfdc-qbranch/qbrix-base-container:latest"
+      image: "ghcr.io/sfdc-qbranch/qbrix-base-container-quasar:latest"
       credentials:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.QBRIX_CONTAINER_PUBLISH_GITHUB_PAT}}
@@ -319,7 +320,7 @@ jobs:
     needs: [qbrix_deployments, target_org_env_build]
     runs-on: ubuntu-latest
     container:
-      image: "ghcr.io/sfdc-qbranch/qbrix-base-container:latest"
+      image: "ghcr.io/sfdc-qbranch/qbrix-base-container-quasar:latest"
       credentials:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.QBRIX_CONTAINER_PUBLISH_GITHUB_PAT}}
