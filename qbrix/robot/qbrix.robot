@@ -151,8 +151,8 @@ Messaging Components Setup
     Messaging Components Setup
 
 Check and Enable Inbox
-    Enable Sales Inbox 
-    
+    Enable Sales Inbox
+
 #
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # SERVICE CLOUD TESTS
@@ -359,6 +359,15 @@ Enable Care Plans Grantmaking
 Enable Assessments
     Enable Assessments
 
+Enable Advanced Scheduling
+    Enable Advanced Scheduling
+
+Generate Decision Tables
+    Generate Decision Tables
+
+Enable Care Gaps
+    Enable Care Gaps
+
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # OmniStudio Settings
 # -----------------------------------------------------------------------------------------------------------------------------------------
@@ -410,5 +419,6 @@ Enable Payments
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # NextGen PostSpin
 # -----------------------------------------------------------------------------------------------------------------------------------------
+
 Enable PostSpin Connected App
     enable_vbt_passport
