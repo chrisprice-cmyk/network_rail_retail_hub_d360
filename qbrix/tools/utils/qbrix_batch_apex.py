@@ -10,8 +10,9 @@ from cumulusci.core.exceptions import CommandException
 from cumulusci.core.keychain import BaseProjectKeychain
 from cumulusci.tasks.sfdx import SFDXBaseTask
 from genericpath import isfile
+from qbrix.tools.shared.qbrix_authentication import perform_needle_cast
 
-LOAD_COMMAND = "sfdx apex run "
+LOAD_COMMAND = "sf apex run "
 
 
 class BatchAnonymousApex(SFDXBaseTask):
@@ -29,6 +30,10 @@ class BatchAnonymousApex(SFDXBaseTask):
         },
         "org": {
             "description": "Value to replace every instance of the find value in the source file.",
+            "required": False
+        },
+        "runas": {
+            "description": "SOQL WHERE statement to identify a SINGLE user to run the anonymous apex scripts as.\n The generated SOQL will look like: SELECT Username FROM USER WHERE (YOUR CRITERIA) LIMIT 1",
             "required": False
         }
     }
@@ -105,16 +110,50 @@ class BatchAnonymousApex(SFDXBaseTask):
         else:
             self.filepaths = []
             self.logger.info("No File Paths provided")
+            
+            
+        # where clause for runas
+        if "runas" in self.options and not self.options["runas"] is None:
+
+            # cast to a dictionary
+            self.runas = self.options["runas"]
+        else:
+            self.runas = None
+            self.logger.info("No Run As Where clause provided")
 
     def _run_task(self):
 
         self._prepruntime(self)
         self._setprojectdefaults(self.instanceurl)
+        runasaccesstoken = self.accesstoken
 
         if hasattr(self, "filepaths") and self.filepaths is not None:
+            
+            if(not self.runas is None):
+                self.logger.info('Run As Filter Detected!')
+                runasusername =self._get_runas_username()
+                if(not runasusername is None):
+                    self.logger.info(f'Run As: Target User->{runasusername}')
+                    needlecastdata = perform_needle_cast(runasusername)
+                    if not needlecastdata is None:
+                        
+                        #self.logger.info(needlecastdata)                        
+                        runasaccesstoken = needlecastdata["accessToken"]
+                        runasinstanceurl = needlecastdata["instanceUrl"]
+                        runasusername = needlecastdata["details"]["userName"]
+                        injectcmd =f"export SFDX_ACCESS_TOKEN='{runasaccesstoken}' && sf org login access-token --instance-url  {runasinstanceurl}  -a {runasusername} --no-prompt --json"
+                        #self.logger.info(needlecastdata)
+                        resp = subprocess.run([injectcmd], shell=True, capture_output=True, cwd=self.options.get("dir"))
+                        #self.logger.info(resp.stdout)
+                        runasaccesstoken = runasusername
+                        
+                    else:
+                        self.logger.info(f'Run As: Unable to NeedleCase Target User->{runasusername}')
+                    
             for i, v in enumerate(self.filepaths):
                 if os.path.isfile(v):
-                    runthiscmd = f"{LOAD_COMMAND} -f {v} -u {self.accesstoken} --json"
+                    runthiscmd = f"{LOAD_COMMAND} -f {v} -o {runasaccesstoken} --json"
+                    #self.logger.info(runthiscmd)
                     self.logger.info(f'Running Apex Script in {v}')
                     resp = subprocess.run([runthiscmd], shell=True, capture_output=True, cwd=self.options.get("dir"))
                     self.logger.info(resp.stdout)
@@ -128,6 +167,27 @@ class BatchAnonymousApex(SFDXBaseTask):
                 message += "\nstderr: {}".format(stderr.read().decode("utf-8"))
             self.logger.error(message)
             raise CommandException(message)
+        
+    def _get_runas_username(self):
+        
+        if(self.runas is None):
+            return None
+        
+        try:
+            runasoql=f"select Username from User where ({self.runas}) LIMIT 1".replace(" ","+")
+            url = f"{self.instanceurl}/services/data/v56.0/query/?q={runasoql}"
+            headers = {
+                'Authorization': f'Bearer {self.accesstoken}',
+                'Content-Type': 'application/json'
+            }
+            response = requests.request("GET", url, headers=headers)
+            data = json.loads(response.text)
+            #self.logger.info(data)
+            return data["records"][0]["Username"]
+        except Exception as ex:
+            self.logger.error(ex)
+            
+        return None
 
 
 class RunAnonymousApexAndWait(SFDXBaseTask):
@@ -300,6 +360,8 @@ class RunAnonymousApexAndWait(SFDXBaseTask):
                 self.logger.error(f"File path {self.filepath} is not a valid file")
 
 
+    
+            
     def _is_zero_count(self,soql):
         modsoql=soql.replace(" ","+")
         url = f"{self.instanceurl}/services/data/v56.0/query/?q={modsoql}"
