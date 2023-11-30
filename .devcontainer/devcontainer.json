@@ -26,5 +26,6 @@
       ]
     }
   },
-  "features": {}
+  "features": {},
+  "postStartCommand": "qx setup init-codespace"
 }
