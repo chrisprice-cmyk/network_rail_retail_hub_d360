@@ -179,6 +179,10 @@ Create Stellar Chat Button
 
 Check and Enable Dialer
     Enable Dialer
+
+Check and Enable Dialer Call Recordings
+    Enable Dialer Call Recordings
+    
 #
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # Q BRANCH TOOLING TESTS

@@ -527,3 +527,42 @@ class QbrixServiceKeywords(QbrixRobotTask):
             raise Exception(
                 "Unable to locate Dialer elements on page. Please review script."
             )
+
+    def enable_dialer_call_recordings(self):
+        """ " Enables Dialer Call Recordings"""
+
+        # Go To Setup Page
+        self.shared.go_to_setup_admin_page("DialerSetupPage/home", 5)
+        
+         # Check if Enabled and enable if not already
+        timeout_count = 0
+        timeout_reached = False
+        while timeout_count <= 30:
+            disable_count = self.browser.get_element_count(
+                "div.voiceSliderCheckBox:has-text('Call Recording'):near(h3:has-text('Call Recording')) >> div.switchText:text-is('Disabled'):visible"
+            )
+            if disable_count == 1:
+                self.builtin.log_to_console(
+                    "\nCall Recordings is not enabled. Continuing to enable Call Recordings."
+                )
+                break
+
+            enabled_count = self.browser.get_element_count(
+                "div.voiceSliderCheckBox:has-text('Call Recording'):near(h3:has-text('Call Recording')) >> div.switchText:text-is('Enabled'):visible"
+            )
+            if enabled_count == 1:
+                self.builtin.log_to_console("\nCall Recordings already enabled. Skipping task.")
+                return
+
+            timeout_count += 1
+            sleep(1)
+
+        if not timeout_reached:
+            self.browser.click(
+                "div.voiceSliderCheckBox:has-text('Call Recording'):near(h3:has-text('Call Recording')) >> label"
+            )
+            sleep(3)
+        else:
+            raise Exception(
+                "Unable to locate Call Recordings elements on page. Please review script."
+            )
