@@ -212,15 +212,17 @@ class QbrixCMS(QbrixRobotTask):
         self.builtin.log_to_console(
             f"\n -> No workspace found with name [{workspace_name}] in the Salesforce Org"
         )
-        return None
+        return None      
 
-    def upload_cms_import_file(self, file_path, workspace):
+    def upload_cms_import_file(self, file_path, workspace, enhanced_workspace, publish_all=True):
         """
         Uploads the Content from the CMS import .zip file to a given workspace. If the workspace is not found, then one will be created.
 
         Args:
             file_path: Relative path to the .zip file containing the export
             workspace: Name of the workspace to upload the content to
+            enhanced_workspace: True if the workspace is an Enhanced CMS Workspace
+            publish_all: True if all the contents need to be published after import
         """
 
         if not file_path:
@@ -232,14 +234,21 @@ class QbrixCMS(QbrixRobotTask):
         if not workspace:
             raise ValueError("No workspace name was provided")
 
+        if enhanced_workspace is None:
+            raise ValueError("enhanced_workspace has to be set to either True or False")
+
+        workspace_id = None
+        
         if not self.get_workspace_id(workspace):
-            self.create_workspace(workspace_name=workspace, enhanced_workspace=False)
+            self.create_workspace(workspace_name=workspace, enhanced_workspace=enhanced_workspace)
 
         # Ensure we are using Digital Experiences App
         self.go_to_digital_experiences()
 
-        # Go To Workspace Page
-        workspace_id = self.get_workspace_id(workspace)
+        # If the workspace is just created, retrieve the new workspace Id
+        if not workspace_id:
+            workspace_id = self.get_workspace_id(workspace)
+
         if workspace_id:
             # Go To Workspace
             self.browser.go_to(
@@ -248,51 +257,128 @@ class QbrixCMS(QbrixRobotTask):
             )
             sleep(2)
 
-            # Import File
-            iframe_handler = self.shared.iframe_handler()
-            self.shared.wait_and_click(
-                f"{iframe_handler} div.slds-page-header__row >> button.slds-button:has-text('Show menu')"
-            )
-            sleep(2)
-            self.browser.promise_to_upload_file(file_path)
-            self.browser.click(
-                f"{iframe_handler} div.slds-page-header__row >> span.slds-truncate:text-is('Import content'):visible"
-            )
-            self.browser.wait_for_all_promises()
+            # Check if this workspace is an Enhanced CMS Workspace
+            enhanced = self.browser.get_element_count(
+                f"{self.shared.iframe_handler()} lightning-badge.slds-badge:has-text('Enhanced'):visible"
+            ) > 0
 
-            # Wait for Confirmation
-            wait_counter = 0
-            while wait_counter <= 60:
-                error_message_selector = "div.modal-body >> div.slds-p-around_medium:has-text('Error encountered during import')"
-                confirm_checkbox_selector = (
-                    "div.modal-body >> span.slds-checkbox >> span.slds-checkbox_faux"
+            if enhanced_workspace.lower() == "true" and enhanced is False:
+                raise ValueError(
+                    f"The existing workspace [{workspace}] is NOT an Enhanced CMS workspace. Please set enhanced_workspace flag to False\n"
                 )
-                import_button_selector = "button.slds-button:has-text('Import')"
+            
+            if enhanced_workspace.lower() == "false" and enhanced is True:
+                raise ValueError(
+                    f"The existing workspace [{workspace}] is an Enhanced Workspace. Please set enhanced_workspace flag to True\n"
+                )
 
-                if self.browser.get_element_count(error_message_selector) > 0:
-                    raise Exception(
-                        "Error Occurred During File Upload. CMS Import Failed"
-                    )
+            if enhanced:
+                self.builtin.log_to_console(
+                    f" -> [{workspace}] is an Enhanced CMS Workspace."
+                )
+                self.__import_enhanced_cms_content(file_path, publish_all)
+            else:
+                self.__import_cms_content(file_path, publish_all)
+        else:
+            raise Warning(
+                "\nWorkspace cannot be None. Skipping"
+            )
 
-                if (
-                    self.browser.get_element_count(confirm_checkbox_selector) > 0
-                    or self.browser.get_element_count(import_button_selector) > 0
-                ):
-                    self.builtin.log_to_console(f"\nFile {file_path} - Uploaded OK")
-                    break
+    def __import_enhanced_cms_content(self, file_path, publish_all=True):
+        """
+        Uploads the Content from the CMS import .zip file to a given Enhanced CMS workspace.
 
-                wait_counter += 1
-                sleep(1)
+        Args:
+            file_path: Relative path to the .zip file containing the export
+            publish_all: True if all the contents need to be published after import
+        """
 
-            # Complete Final Steps
+        # Import File
+        iframe_handler = self.shared.iframe_handler()
+        self.shared.wait_and_click(
+            f"{iframe_handler} div.slds-page-header__row >> button.slds-button:has-text('Manage')"
+        )
+        self.shared.wait_and_click(
+            f"{iframe_handler} lightning-menu-item[data-action-name='IMPORT_CONTENT'] >> a"
+        )
+        if publish_all:
+            self.shared.wait_and_click(
+                f"{iframe_handler} lightning-input.publish >> span.slds-checkbox >> span.slds-checkbox_faux"
+            )
+
+        # Upload File
+        self.browser.promise_to_upload_file(file_path)
+        self.shared.wait_and_click(
+            f"{iframe_handler} mcontent_content_translate-file-upload >> label.slds-file-selector__button"
+        )
+        self.browser.wait_for_all_promises()
+
+        # Confirm Upload File
+        self.browser.click(
+            f"{iframe_handler} .footerCmps >> button.slds-button"
+        )
+        self.builtin.log_to_console(
+            f" -> File ${file_path} - Uploaded OK"
+        )
+
+        # Complete Final Steps
+        self.shared.wait_and_click("button.slds-button:has-text('Import')")
+        self.builtin.log_to_console(
+            " -> The content import has started. Please check the Salesforce Admin emails for the result.\n"
+        )
+
+    def __import_cms_content(self, file_path, publish_all=True):
+        """
+        Uploads the Content from the CMS import .zip file to a given CMS workspace.
+
+        Args:
+            file_path: Relative path to the .zip file containing the export
+            publish_all: True if all the contents need to be published after import
+        """
+
+        # Import File
+        iframe_handler = self.shared.iframe_handler()
+        self.shared.wait_and_click(
+            f"{iframe_handler} div.slds-page-header__row >> button.slds-button:has-text('Show menu')"
+        )
+        sleep(2)
+        self.browser.promise_to_upload_file(file_path)
+        self.browser.click(
+            f"{iframe_handler} div.slds-page-header__row >> span.slds-truncate:text-is('Import content'):visible"
+        )
+        self.browser.wait_for_all_promises()
+
+        # Wait for Confirmation
+        wait_counter = 0
+        while wait_counter <= 60:
+            error_message_selector = "div.modal-body >> div.slds-p-around_medium:has-text('Error encountered during import')"
+            confirm_checkbox_selector = (
+                "div.modal-body >> span.slds-checkbox >> span.slds-checkbox_faux"
+            )
+            import_button_selector = "button.slds-button:has-text('Import')"
+
+            if self.browser.get_element_count(error_message_selector) > 0:
+                raise Exception(
+                    "Error Occurred During File Upload. CMS Import Failed"
+                )
+
+            if (
+                self.browser.get_element_count(confirm_checkbox_selector) > 0
+                or self.browser.get_element_count(import_button_selector) > 0
+            ):
+                self.builtin.log_to_console(f"\nFile {file_path} - Uploaded OK")
+                break
+
+            wait_counter += 1
+            sleep(1)
+
+        # Complete Final Steps
+        if publish_all:
             self.shared.wait_and_click(
                 "div.modal-body >> span.slds-checkbox >> span.slds-checkbox_faux"
             )
-            self.shared.wait_and_click("button.slds-button:has-text('Import')")
-            self.shared.wait_and_click("button.slds-button:text('ok')")
-        else:
-            self.builtin.log_to_console("\nWorkspace cannot be None. Skipping")
-            return
+        self.shared.wait_and_click("button.slds-button:has-text('Import')")
+        self.shared.wait_and_click("button.slds-button:text('ok')")
 
     def download_cms_content(self, workspace):
         """
@@ -306,7 +392,7 @@ class QbrixCMS(QbrixRobotTask):
             return
 
         self.builtin.log_to_console(
-            f"\nRunning automation to export CMS Content from workspace called [{workspace}]...\n Ensure that Salesforce Admin is aware as they will receive the export file email with the download link."
+            f"\nRunning automation to export CMS Content from workspace called [{workspace}]...\nEnsure that Salesforce Admin is aware as they will receive the export file email with the download link."
         )
 
         self.go_to_digital_experiences()
@@ -326,18 +412,6 @@ class QbrixCMS(QbrixRobotTask):
             self.builtin.log_to_console(
                 f"\n -> Loaded workspace called [{workspace}] with ID [{workspace_id}]..."
             )
-
-            # Enhanced workspace handler
-            if (
-                self.browser.get_element_count(
-                    f"{self.shared.iframe_handler()} lightning-badge.slds-badge:has-text('Enhanced'):visible"
-                )
-                > 0
-            ):
-                self.builtin.log_to_console(
-                    "\n -> Enhanced Workspace Detected! These are not currently supported using this method. Skipping workspace export."
-                )
-                return
 
             # Check that the workspace has items
             sleep(2)
@@ -389,28 +463,77 @@ class QbrixCMS(QbrixRobotTask):
                 else:
                     break
 
-            self.builtin.log_to_console("\n -> Selecting all items on the page...")
-            elements = self.browser.get_elements(
-                f"{self.shared.iframe_handler()} table.slds-table >> sfdc_cms-content-check-box-button"
-            )
-            for elem in elements:
-                self.browser.scroll_to_element(elem)
-                self.browser.click(elem)
+            # Check if this workspace is an Enhanced CMS Workspace
+            enhanced = self.browser.get_element_count(
+                f"{self.shared.iframe_handler()} lightning-badge.slds-badge:has-text('Enhanced'):visible"
+            ) > 0
+            if enhanced:
+                self.builtin.log_to_console(
+                    f"\n -> [{workspace}] is an Enhanced CMS Workspace."
+                )
 
-            # Request Export
-            self.builtin.log_to_console("\n -> Requesting Export of CMS Content...")
-            self.browser.click(
-                f"{self.shared.iframe_handler()} div.slds-page-header__row >> button.slds-button:has-text('Show menu')"
-            )
-            self.shared.wait_and_click(
-                f"{self.shared.iframe_handler()} div.slds-page-header__row >> div.slds-dropdown__list >> span.slds-truncate:has-text('Export Content')"
-            )
-            self.shared.wait_and_click(
-                f"{self.shared.iframe_handler()} button.slds-button:has-text('Export')"
-            )
-            self.builtin.log_to_console(
-                "\n -> REQUEST SENT! Please check the Salesforce Admin emails for the export email with the download link for the file(s) which contain the content for this workspace."
-            )
+            if enhanced:
+                self.__export_enhanced_cms_workspace()
+            else:
+                self.__export_cms_workspace()
+
+    def __export_cms_workspace(self):
+
+        """
+        Select all the items on a CMS workspace page, then initiate the export of the managed contents
+        """
+
+        self.builtin.log_to_console("\n -> Selecting all items on the page...")
+        elements = self.browser.get_elements(
+            f"{self.shared.iframe_handler()} table.slds-table >> sfdc_cms-content-check-box-button"
+        )
+        for elem in elements:
+            self.browser.scroll_to_element(elem)
+            self.browser.click(elem)
+
+        # Request Export
+        self.builtin.log_to_console("\n -> Requesting Export of CMS Content...")
+        self.browser.click(
+            f"{self.shared.iframe_handler()} div.slds-page-header__row >> button.slds-button:has-text('Show menu')"
+        )
+        self.shared.wait_and_click(
+            f"{self.shared.iframe_handler()} div.slds-page-header__row >> div.slds-dropdown__list >> span.slds-truncate:has-text('Export Content')"
+        )
+        self.shared.wait_and_click(
+            f"{self.shared.iframe_handler()} button.slds-button:has-text('Export')"
+        )
+        self.builtin.log_to_console(
+            "\n -> REQUEST SENT! Please check the Salesforce Admin emails for the export email with the download link for the file(s) which contain the content for this workspace."
+        )
+
+    def __export_enhanced_cms_workspace(self):
+
+        """
+        Select all the items on an Enhanced CMS workspace page, then initiate the export of the managed contents, folders and CMS collections
+        """
+
+        self.builtin.log_to_console("\n -> Selecting all items on the page...")
+        elements = self.browser.get_elements(
+            f"{self.shared.iframe_handler()} table.slds-table >> mcontent_content_picker-check-box-button-wrapper >> lightning-input"
+        )
+        for elem in elements:
+            self.browser.scroll_to_element(elem)
+            self.browser.click(elem)
+
+        # Request Export
+        self.builtin.log_to_console("\n -> Requesting Export of CMS Content...")
+        self.browser.click(
+            f"{self.shared.iframe_handler()} div.slds-page-header__row >> button.slds-button:has-text('Manage')"
+        )
+        self.shared.wait_and_click(
+            f"{self.shared.iframe_handler()} div.slds-page-header__row >> div.slds-dropdown__list >> span.slds-truncate:has-text('Export')"
+        )
+        self.shared.wait_and_click(
+            f"{self.shared.iframe_handler()} button.slds-button:has-text('Export')"
+        )
+        self.builtin.log_to_console(
+            "\n -> REQUEST SENT! Please check the Salesforce Admin emails for the export email with the download link for the file(s) which contain the content for this workspace."
+        )
 
     def create_workspace(self, workspace_name, channels=None, enhanced_workspace=True):
         """
