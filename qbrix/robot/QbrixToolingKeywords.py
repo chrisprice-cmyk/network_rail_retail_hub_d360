@@ -164,6 +164,56 @@ class QbrixToolingKeywords(QbrixRobotTask):
             self.browser.take_screenshot()
             raise e
 
+    def assign_permission_set_to_connected_app(
+        self,
+        connected_app_name: str,
+        permission_set_name: str,
+        browse_to_app_page: bool = True,
+        waittime: str = "15s",
+    ):
+        """
+        Assign permission provided permission set to connected app
+
+        Args:
+            connected_app_name (str): The label for the Connected App
+            permission_set_name (str): The label for the Permission Set
+            browse_to_app_page (bool): Set to true (The Default) when you want this function to browse to the connected app page. This can be set to False if it is assumed the browser will be on the connected app page, when its run.
+            waittime override for orgs that are a little slower
+        """
+        try:
+            if browse_to_app_page:
+                self.go_to_connected_app_page(connected_app_name)
+
+            self.builtin.log_to_console("\nUpdating permission set...")
+            iframe_selector = self.shared.iframe_handler()
+            self.browser.wait_for_elements_state(
+                f"{iframe_selector} .btn:has-text('Manage Permission Sets')",
+                ElementState.visible,
+                waittime,
+            )
+            self.browser.click(
+                f"{iframe_selector} .btn:has-text('Manage Permission Sets')"
+            )
+            self.browser.wait_for_elements_state(
+                f"{iframe_selector} h1:text-is('Application Permission Set Assignment')",
+                ElementState.visible,
+                waittime,
+            )
+            if not "checked" in self.browser.get_element_states(
+                f"{iframe_selector} tr:has-text('{permission_set_name}') >> input"
+            ):
+                self.browser.click(
+                    f"{iframe_selector} tr:has-text('{permission_set_name}') >> input"
+                )
+                self.browser.click(f"{iframe_selector} .btn:has-text('Save')")
+                sleep(2)
+            self.builtin.log_to_console(
+                "\nAdded Provided permission set to the provided connected app!"
+            )
+        except Exception as e:
+            self.browser.take_screenshot()
+            raise e
+
     def enable_vbt_passport(self):
         """Enables VBT (PostSpin) Connected App Settings"""
         connected_app_name = "VBT Connected"
