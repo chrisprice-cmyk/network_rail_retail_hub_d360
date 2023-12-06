@@ -77,7 +77,7 @@ class QbrixFINSKeywords(QbrixRobotTask):
             "30s",
         )
         checked = "checked" in self.browser.get_element_states(
-            ".toggle:has-text('Disabled')"
+            ".toggle:has-text('Disabled') label"
         )
         if not checked:
             self.browser.click(".toggle:has-text('Disabled')")
