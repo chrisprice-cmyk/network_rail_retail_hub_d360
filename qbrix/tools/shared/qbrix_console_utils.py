@@ -97,7 +97,7 @@ def get_terminal_width():
     return 0
 
 
-def run_command(cmd: str, cwd=None) -> int:
+def run_command(cmd: str, cwd=None, silent=False) -> int:
     """
     Runs a command as a subprocess and returns the result code
 
@@ -152,11 +152,17 @@ def run_command(cmd: str, cwd=None) -> int:
         cwd = "."
     cwd = os.path.normpath(cwd)
 
-    log.info("Running Command: [%s] in directory [%s]...", cmd, cwd)
+    if not silent:
+        log.info("Running Command: [%s] in directory [%s]...", cmd, cwd)
     try:
         process_result = subprocess.check_call(cmd, shell=True, cwd=cwd)
-        print("command '%s' succeeded, returned: %s" % (cmd, str(process_result)))
+
+        if not silent:
+            log.info(f" -> Command [{cmd}] succeeded, returned: {str(process_result)}")
     except subprocess.CalledProcessError as e:
+        if e.returncode == 1:
+            log.info(e)
+            return 0
         sys.exit("'%s' failed, returned code %d" % (cmd, e.returncode))
     except OSError as e:
         sys.exit("failed to run shell: '%s'" % (str(e)))
