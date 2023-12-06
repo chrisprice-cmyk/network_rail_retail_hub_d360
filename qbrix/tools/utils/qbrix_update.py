@@ -423,7 +423,7 @@ class QBrixUpdater(BaseTask, ABC):
             self.logger.info(" -> Checking for required QBrix Project dependencies")
             check_and_update_nodejs()
             update_salesforce_cli()
-            cumulusci_update_check()
+            # cumulusci_update_check()
 
             # Checking for required py libraries for QBrix
             self.logger.info(" -> Checking for required QBrix Python libraries")
