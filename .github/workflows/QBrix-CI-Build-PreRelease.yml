@@ -28,7 +28,7 @@ env:
 
 jobs:
   collection_deployment_steps:
-    runs-on: ubuntu-latest
+    runs-on: sfdc-qbranch-nextgen-ubuntu
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
@@ -63,7 +63,7 @@ jobs:
 
   target_org_env_build:
     needs: [collection_deployment_steps]
-    runs-on: ubuntu-latest
+    runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
       image: "ghcr.io/sfdc-qbranch/qbrix-base-container-quasar:latest"
       credentials:
@@ -230,7 +230,7 @@ jobs:
 
   qbrix_deployments:
     needs: [collection_deployment_steps, target_org_env_build]
-    runs-on: ubuntu-latest
+    runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
       image: "ghcr.io/sfdc-qbranch/qbrix-base-container-quasar:latest"
       credentials:
@@ -318,7 +318,7 @@ jobs:
 
   qbrix_build_validate:
     needs: [qbrix_deployments, target_org_env_build]
-    runs-on: ubuntu-latest
+    runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
       image: "ghcr.io/sfdc-qbranch/qbrix-base-container-quasar:latest"
       credentials:

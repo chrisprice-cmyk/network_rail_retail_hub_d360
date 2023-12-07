@@ -22,7 +22,7 @@ env:
   BUILD_SUFFIX: SDO
   QBRIX_SYSTEM_ID: GIT_BUILD_AUTOMATION
   SF_USE_PROGRESS_BAR: false
-  CUMULUSCI_SERVICE_metadeploy: "{\"url\":\"${{secrets.QBRIX_CUMULUSCI_SERVICE_METADEPLOY_URL}}\",\"token\": \"${{secrets.QBRIX_CUMULUSCI_SERVICE_METADEPLOY_TOKEN}}\"}"
+  CUMULUSCI_SERVICE_metadeploy: '{"url":"${{secrets.QBRIX_CUMULUSCI_SERVICE_METADEPLOY_URL}}","token": "${{secrets.QBRIX_CUMULUSCI_SERVICE_METADEPLOY_TOKEN}}"}'
   AUTO_PUBLISH_TO_METADEPLOY: false
   QSR_ENDPOINT: ${{ secrets.QSR_ENDPOINT }}
   QSR_JWT_SIGNING_SECRET: ${{ secrets.QSR_JWT_SIGNING_SECRET }}
@@ -30,7 +30,7 @@ env:
 
 jobs:
   collection_deployment_steps:
-    runs-on: ubuntu-latest
+    runs-on: sfdc-qbranch-nextgen-ubuntu
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
@@ -65,7 +65,7 @@ jobs:
 
   target_org_env_build:
     needs: [collection_deployment_steps]
-    runs-on: ubuntu-latest
+    runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
       image: "ghcr.io/sfdc-qbranch/qbrix-base-container-quasar:latest"
       credentials:
@@ -250,7 +250,7 @@ jobs:
 
   qbrix_deployments:
     needs: [collection_deployment_steps, target_org_env_build]
-    runs-on: ubuntu-latest
+    runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
       image: "ghcr.io/sfdc-qbranch/qbrix-base-container-quasar:latest"
       credentials:
@@ -338,7 +338,7 @@ jobs:
 
   qbrix_metadeploy_publish:
     needs: [qbrix_deployments, target_org_env_build]
-    runs-on: ubuntu-latest
+    runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
       image: "ghcr.io/sfdc-qbranch/qbrix-base-container-quasar:latest"
       credentials:
@@ -375,7 +375,7 @@ jobs:
 
   qbrix_build_validate:
     needs: [qbrix_deployments, target_org_env_build]
-    runs-on: ubuntu-latest
+    runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
       image: "ghcr.io/sfdc-qbranch/qbrix-base-container-quasar:latest"
       credentials:

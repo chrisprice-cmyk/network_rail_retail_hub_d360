@@ -24,7 +24,7 @@ env:
 
 jobs:
   qlabs_publish:
-    runs-on: ubuntu-latest
+    runs-on: sfdc-qbranch-nextgen-ubuntu
     steps:
       - uses: actions/checkout@v4
 
