@@ -376,6 +376,17 @@ class QbrixSharedKeywords:
             sleep(2)
             self.wait_for_page_to_load()
 
+    def assign_permission_set(self, permission_set_label, permission_set_api_name):
+        """Assigns a Permission Set to the current user"""
+        self.builtin.log_to_console(
+            f"\nAssigning Permission Set for [{permission_set_label}]"
+        )
+        self.cumulusci.run_task(
+            task_name="assign_permission_sets",
+            api_names=permission_set_api_name,
+        )
+        self.builtin.log_to_console("\n -> Complete!")
+
     # ------------------
     # LEX FUNCTIONS
     # ------------------
