@@ -12,6 +12,9 @@ from qbrix.tools.shared.qbrix_authentication import get_secure_setting
 
 @library(scope="GLOBAL", auto_keywords=True, doc_format="reST")
 class QbrixSlack(QbrixRobotTask):
+
+    """Slack Keywords for Robot"""
+
     def __init__(self):
         super().__init__()
         self._service = None
@@ -23,8 +26,6 @@ class QbrixSlack(QbrixRobotTask):
         if self._service is None:
             self._service = QbrixServiceKeywords()
         return self._service
-
-    """Slack Keywords for Robot"""
 
     def slack_message_using_webhook(
         self,
