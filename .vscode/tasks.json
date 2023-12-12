@@ -593,9 +593,9 @@
       }
     },
     {
-      "label": "Q BRIX [CODESPACES]: Initiate Codespace and Connect to DevHub",
+      "label": "QX [CODESPACES]: Initiate Codespace and Connect to DevHub",
       "type": "shell",
-      "command": "export GITHUB_TOKEN=$GH_TOKEN && sf org login device --instance-url https://nextgendevhubee.my.salesforce.com --alias DevHub && cci service connect devhub default",
+      "command": "qx setup init-codespace",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -608,9 +608,9 @@
       }
     },
     {
-      "label": "Q BRIX [CODESPACES]: Import Local Salesforce Org",
+      "label": "QX [INSTALL]: Install/Update QX CLI",
       "type": "shell",
-      "command": "sf org login access-token --instance-url ${input:ScratchOrgDomain} && cci org import ${input:ScratchOrgUsername} --org ${input:OrgAlias}",
+      "command": "source ~/.local/pipx/venvs/cumulusci/bin/activate && python3 -m pip install 'qbrix-cli @ git+https://github.com/sfdc-qbranch/qbrix_cli.git@main'",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
