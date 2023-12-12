@@ -687,3 +687,58 @@ class QbrixSlack(QbrixRobotTask):
             f"th[data-label='Layout Name']:has-text('{layout_name}')"
         )
         self.builtin.log_to_console("\n -> Layout Created!")
+
+    def update_data_sharing_for_slack_apps(self, record_security="", link_unfurling=""):
+        """Sets or Updates the Data Sharing Settings for Slack Apps"""
+        self.go_to_slack_apps_setup()
+        self.builtin.log_to_console("\nLoaded Setup Page")
+
+        # If Already Set, Expand Options
+        if (
+            self.browser.get_element_count(
+                "div.setupcontent >> h2:has-text('Verify Data Sharing Options') >> div.slds-progress-ring_complete[aria-valuetext='Complete']"
+            )
+            == 1
+        ):
+            self.browser.click(
+                "button.stage-label:has-text('Verify Data Sharing Options')"
+            )
+            sleep(1)
+
+        # Set Options
+        if record_security:
+            record_security = record_security.replace("'", "\\'")
+            self.browser.click(
+                "lightning-combobox:has-text('Set Record Detail Security for Your Salesforce Apps') >> lightning-base-combobox.slds-combobox_container"
+            )
+            sleep(0.5)
+            self.browser.click(
+                f"lightning-base-combobox-item >> span.slds-truncate:has-text('{record_security}')"
+            )
+
+        if link_unfurling:
+            link_unfurling = link_unfurling.replace("'", "\\'")
+            self.browser.click(
+                "lightning-combobox:has-text('Link Unfurling') >> lightning-base-combobox.slds-combobox_container"
+            )
+            sleep(0.5)
+            self.browser.click(
+                f"lightning-base-combobox-item >> span.slds-truncate:has-text('{link_unfurling}')"
+            )
+
+        # If not already updated, confirm the section has been updated
+        if (
+            self.browser.get_element_count(
+                "div.setupcontent >> h2:has-text('Verify Data Sharing Options') >> div.slds-progress-ring_complete[aria-valuetext='Complete']"
+            )
+            == 0
+        ):
+            # Slack Sharing Setup Complete
+            self.check_and_enable_slack_setting(
+                setting_name="Sharing Section Confirmation",
+                completed_selector="div.setupcontent >> h2:has-text('Verify Data Sharing Options') >> div.slds-progress-ring_complete[aria-valuetext='Complete']",
+                state_check_selector="div.setupcontent >> section:has(h2:has-text('Verify Data Sharing Options'))  >> div.step-container-summary >> :nth-match(input[type='checkbox'], 1)",
+                enable_selectors=[
+                    "div.setupcontent >> section:has(h2:has-text('Verify Data Sharing Options'))  >> div.step-container-summary >> :nth-match(label.slds-checkbox-button, 1)"
+                ],
+            )
