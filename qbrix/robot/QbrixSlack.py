@@ -589,4 +589,101 @@ class QbrixSlack(QbrixRobotTask):
             ],
         )
 
-        sleep(5)
+    def assign_default_slack_layout(
+        self,
+        object_name: str,
+        layout_name: str = "",
+        field_list: str = "",
+        layout_type: str = "CRUD",
+    ):
+        """Assigns a Slack Record Layout to a defined object"""
+
+        if not layout_name:
+            layout_name = "Slack Default"
+
+        self.builtin.log_to_console(f"\nCreating new Slack Layout called {layout_name}")
+
+        # Load Slack record Page
+        self.shared.go_to_setup_admin_page(
+            setup_page_url=f"ObjectManager/{object_name}/SlackRecordLayouts/view"
+        )
+        self.builtin.log_to_console(f"\n -> Loaded Object page for {object_name}")
+
+        # Check if already created
+        if self.shared.wait_on_element(
+            f"th[data-label='Layout Name']:has-text('{layout_name}')", 3
+        ):
+            self.builtin.log_to_console("\n -> Layout already assigned to object")
+            return
+
+        # Create New Layout
+        self.builtin.log_to_console("\n -> Layout not found. Creating...")
+        self.browser.click("button.slds-button:has-text('New')")
+        sleep(1)
+
+        # Set Layout Type
+        if "CRUD" not in layout_type.upper():
+            self.builtin.log_to_console("\n -> Setting to URL Unfurling Layout")
+            self.browser.click(
+                "span.slds-text-title_bold:has-text('URL Unfurling Layout')"
+            )
+        else:
+            self.builtin.log_to_console("\n -> Leaving as default type CRUD Layout")
+
+        self.browser.click("button.next-button")
+
+        # Set Layout Name
+        self.shared.wait_and_fill_text(
+            "lightning-primitive-input-simple:has-text('Layout Name') >> input.slds-input",
+            layout_name,
+        )
+        self.browser.click("lightning-primitive-input-simple:has-text('API Name')")
+        self.builtin.log_to_console("\n -> Added Layout Name")
+
+        # Set Fields
+        if len(field_list) > 0:
+            self.builtin.log_to_console("\n -> Adding Fields")
+            for field in field_list.split(","):
+                field_in_list = f":nth-match(div.slds-dueling-list__options, 1) >> :nth-match(li.slds-listbox__item:has-text('{field}'), 1)"
+                if self.browser.get_element_count(field_in_list) == 1:
+                    self.browser.click(field_in_list)
+                    self.browser.click(
+                        "button.slds-button_icon-container[title='Move selection to Selected*']"
+                    )
+                    self.builtin.log_to_console(f"\n -> Added Field {field}")
+                    sleep(0.5)
+
+        self.browser.click("button.next-button")
+
+        # Set Addditonal Settings
+        self.builtin.log_to_console("\n -> Skipping Additional Object Settings")
+        self.browser.click("button.next-button")
+
+        # Assign Actions
+        self.builtin.log_to_console("\n -> Skipping Action Assignments")
+        self.browser.click("button.next-button")
+
+        # Assign Layout to Profiles
+        self.builtin.log_to_console("\n -> Assigning to all Profiles")
+        if (
+            self.browser.get_element_count(
+                "th.assignment-header:has-text('Record Types')"
+            )
+            == 1
+        ):
+            self.browser.click("th.profile-column >> span.slds-checkbox_faux")
+        else:
+            self.browser.click(
+                "th.assignment-header:has-text('Slack Record Layout') >> span.slds-checkbox_faux"
+            )
+        sleep(0.5)
+
+        # Finish
+        self.builtin.log_to_console("\n -> Completing Setup")
+        self.browser.click("button.slds-button:has-text('Done')")
+
+        # Wait for Table to Appear
+        self.shared.wait_on_element(
+            f"th[data-label='Layout Name']:has-text('{layout_name}')"
+        )
+        self.builtin.log_to_console("\n -> Layout Created!")
