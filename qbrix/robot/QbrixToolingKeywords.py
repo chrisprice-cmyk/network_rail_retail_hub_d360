@@ -37,10 +37,10 @@ class QbrixToolingKeywords(QbrixRobotTask):
                     self.builtin.log_to_console(
                         "\nConnected App not found...extending the list of apps..."
                     )
-                    if self.browser.get_element_count("img.moreArrow:visible") > 0:
-                        self.browser.click("img.moreArrow")
+                    if self.browser.get_element_count(f"{iframe_selector} img.moreArrow:visible") > 0:
+                        self.browser.click(f"{iframe_selector} img.moreArrow")
                         sleep(1)
-                        self.shared.wait_on_element("img.fewerArrow")
+                        self.shared.wait_on_element(f"{iframe_selector} img.fewerArrow")
                 else:
                     break
 
