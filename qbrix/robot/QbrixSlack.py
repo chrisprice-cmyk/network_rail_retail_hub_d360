@@ -711,7 +711,7 @@ class QbrixSlack(QbrixRobotTask):
             self.browser.click(
                 "lightning-combobox:has-text('Set Record Detail Security for Your Salesforce Apps') >> lightning-base-combobox.slds-combobox_container"
             )
-            sleep(0.5)
+            sleep(1)
             self.browser.click(
                 f"lightning-base-combobox-item >> span.slds-truncate:has-text('{record_security}')"
             )
@@ -721,7 +721,7 @@ class QbrixSlack(QbrixRobotTask):
             self.browser.click(
                 "lightning-combobox:has-text('Link Unfurling') >> lightning-base-combobox.slds-combobox_container"
             )
-            sleep(0.5)
+            sleep(1)
             self.browser.click(
                 f"lightning-base-combobox-item >> span.slds-truncate:has-text('{link_unfurling}')"
             )
