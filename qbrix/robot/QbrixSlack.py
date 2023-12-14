@@ -711,20 +711,18 @@ class QbrixSlack(QbrixRobotTask):
             self.browser.click(
                 "lightning-combobox:has-text('Set Record Detail Security for Your Salesforce Apps') >> lightning-base-combobox.slds-combobox_container"
             )
-            sleep(1)
-            self.browser.click(
-                f"lightning-base-combobox-item >> span.slds-truncate:has-text('{record_security}')"
-            )
+            record_security_selector = f"lightning-base-combobox-item >> span.slds-truncate:has-text('{record_security}')"
+            if self.shared.wait_on_element(record_security_selector, 2):
+                self.browser.click(record_security_selector)
 
         if link_unfurling:
             link_unfurling = link_unfurling.replace("'", "\\'")
             self.browser.click(
                 "lightning-combobox:has-text('Link Unfurling') >> lightning-base-combobox.slds-combobox_container"
             )
-            sleep(1)
-            self.browser.click(
-                f"lightning-base-combobox-item >> span.slds-truncate:has-text('{link_unfurling}')"
-            )
+            unfurling_selector = f"lightning-base-combobox-item >> span.slds-truncate:has-text('{link_unfurling}')"
+            if self.shared.wait_on_element(unfurling_selector, 2):
+                self.browser.click(unfurling_selector)
 
         # If not already updated, confirm the section has been updated
         if (
