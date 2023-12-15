@@ -10,6 +10,34 @@
     }
   },
   "customizations": {
+    // Configure properties specific to Codespaces.
+    "codespaces": {
+      //give read access to qbrix that might be dynamically loaded and need out of band access 
+      "repositories": {
+        "sfdc-qbranch/QBrix-1-xDO-Tool-QBrixRegister": {
+          "permissions": "read-all"
+        },
+        "sfdc-qbranch/QBrix-2-xDO-Tool-OrgIdentifier": {
+          "permissions": "read-all"
+        },
+        "sfdc-qbranch/QBrix-2-xDO-Tool-demoappTrack": {
+          "permissions": "read-all"
+        },
+        "sfdc-qbranch/QBrix-2-xDO-Tool-UtilityLookup": {
+          "permissions": "read-all"
+        },
+        "sfdc-qbranch/QBrix-2-xDO-Tool-Spotter": {
+          "permissions": "read-all"
+        },
+        "sfdc-qbranch/QBrix-3-SDO-Platform-Components": {
+          "permissions": "read-all"
+        },
+        "sfdc-qbranch/QBrix-2-xDO-Tool-Mixpanel": {
+          "permissions": "read-all"
+        }
+      }
+
+    },
     // Configure properties specific to VS Code.
     "vscode": {
       // Set *default* container specific settings.json values on container create.
