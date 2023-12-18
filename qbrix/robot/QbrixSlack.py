@@ -665,17 +665,10 @@ class QbrixSlack(QbrixRobotTask):
 
         # Assign Layout to Profiles
         self.builtin.log_to_console("\n -> Assigning to all Profiles")
-        if (
-            self.browser.get_element_count(
-                "th.assignment-header:has-text('Record Types')"
-            )
-            == 1
-        ):
-            self.browser.click("th.profile-column >> span.slds-checkbox_faux")
-        else:
-            self.browser.click(
-                "th.assignment-header:has-text('Slack Record Layout') >> span.slds-checkbox_faux"
-            )
+        for rt in ["Slack Record Layout","Simple Opportunity","Channel (Partner)"]:
+            if self.browser.get_element_count(f"th.assignment-header:has-text('{rt}')"):
+                self.browser.click(f"th.assignment-header:has-text('{rt}') >> span.slds-checkbox_faux")
+                sleep(0.5)
         sleep(0.5)
 
         # Finish
