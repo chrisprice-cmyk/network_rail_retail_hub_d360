@@ -239,6 +239,9 @@ tasks:
   
   qbrix_fart:
     class_path: qbrix.tools.utils.qbrix_fart.FART
+  
+  qbrix_purge_inactive_flows:
+    class_path: qbrix.tools.utils.qbrix_flow_cleaner.PurgeInactiveFlows
 
   #------------------------------------#
   # DATA TOOL INTEGRATION              #
