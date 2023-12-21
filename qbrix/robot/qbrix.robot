@@ -121,6 +121,9 @@ Check and Enable Pardot
 
 Check and Create Pardot Email Template
     Create Pardot Template
+
+Check and Enable UMA Marketing Cloud
+    Check and Enable UMA Marketing Cloud
 #
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # SALES CLOUD TESTS

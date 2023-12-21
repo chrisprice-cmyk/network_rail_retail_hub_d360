@@ -6,11 +6,11 @@ from Browser import ElementState, SelectAttribute
 from robot.api.deco import library
 
 from qbrix.core.qbrix_robot_base import QbrixRobotTask
+from qbrix.robot.QbrixToolingKeywords import QbrixToolingKeywords
 from qbrix.tools.shared.qbrix_authentication import (
     generate_mfa_code,
     get_secure_setting,
 )
-from qbrix.robot.QbrixToolingKeywords import QbrixToolingKeywords
 
 
 @library(scope="GLOBAL", auto_keywords=True, doc_format="reST")
@@ -24,7 +24,6 @@ class QbrixMarketingKeywords(QbrixRobotTask):
 
     @property
     def toolinglibrary(self):
-
         """Loads Q Robot Shared Keywords and Methods"""
 
         if self._toolinglibrary is None:
@@ -50,19 +49,25 @@ class QbrixMarketingKeywords(QbrixRobotTask):
             ":nth-match(span.slds-checkbox_faux,1)"
         )
         if not checked:
-            self.builtin.log_to_console("\n -> Setting not enabled. Clicking toggle now...")
+            self.builtin.log_to_console(
+                "\n -> Setting not enabled. Clicking toggle now..."
+            )
             self.browser.click(":nth-match(span.slds-checkbox_faux,1)")
             sleep(1)
         self.builtin.log_to_console("\n -> Setting Enabled!")
 
     def enable_pardot_app(self):
         """Enables Pardot Connected App Settings"""
-        self.builtin.log_to_console("\nEnable admin permissions for the Pardot Connected App...")
+        self.builtin.log_to_console(
+            "\nEnable admin permissions for the Pardot Connected App..."
+        )
         self.toolinglibrary.enable_admin_auth_for_connected_app("b2bma_canvas")
 
     def create_pardot_template(self):
         """Enables Demo Configuration of Pardot Email Templates"""
-        self.builtin.log_to_console("\nCreating Demo Configuration of Pardot Email Templates")
+        self.builtin.log_to_console(
+            "\nCreating Demo Configuration of Pardot Email Templates"
+        )
         self.browser.go_to(
             f"{self.cumulusci.org.instance_url}/lightning/o/EmailTemplate/home"
         )
@@ -104,12 +109,16 @@ class QbrixMarketingKeywords(QbrixRobotTask):
         self.builtin.log_to_console("\nEnabling Maps Territory Planning...")
         self.shared.go_to_setup_admin_page("Territory2Settings/home")
         sleep(5)
-        self.builtin.log_to_console("\n -> Territory Settings Page Loaded. Checking to see if setting is enabled...")
+        self.builtin.log_to_console(
+            "\n -> Territory Settings Page Loaded. Checking to see if setting is enabled..."
+        )
         visible = "visible" in self.browser.get_element_states(
             ":nth-match(iframe,1) >>> button:has-text('Enable Enterprise Territory Management')"
         )
         if visible:
-            self.builtin.log_to_console("\n -> Setting not enabled. Enabling setting now...")
+            self.builtin.log_to_console(
+                "\n -> Setting not enabled. Enabling setting now..."
+            )
             button_to_click = self.browser.get_element(
                 ":nth-match(iframe,1) >>> button:has-text('Enable Enterprise Territory Management')"
             )
@@ -135,7 +144,9 @@ class QbrixMarketingKeywords(QbrixRobotTask):
         All parameters will default to the Distributed Marketing Demo instance defaults if not overridden.
         """
 
-        self.builtin.log_to_console("\nConnecting Marketing Cloud -> Distributed Marketing...")
+        self.builtin.log_to_console(
+            "\nConnecting Marketing Cloud -> Distributed Marketing..."
+        )
 
         # Use Default Creds if None are supplied
         if not marketing_cloud_username:
@@ -171,7 +182,9 @@ class QbrixMarketingKeywords(QbrixRobotTask):
         self.builtin.log_to_console("\n -> Loaded Sales Configuration Page")
 
         # Check if Already Connected
-        self.builtin.log_to_console("\n -> Checking if already connected and enabled...")
+        self.builtin.log_to_console(
+            "\n -> Checking if already connected and enabled..."
+        )
         count = 0
         while count <= 20:
             if (
@@ -345,7 +358,9 @@ class QbrixMarketingKeywords(QbrixRobotTask):
         self.builtin.log_to_console("\n -> Configuring Campaigns...")
         if campaign_lookup["totalSize"] > 0:
             for campaign in campaign_lookup["records"]:
-                self.builtin.log_to_console(f"\n -> Configuring Campaign with ID: {campaign['Id']}...")
+                self.builtin.log_to_console(
+                    f"\n -> Configuring Campaign with ID: {campaign['Id']}..."
+                )
 
                 # Open The Campaign record Page
                 self.browser.go_to(
@@ -446,3 +461,16 @@ class QbrixMarketingKeywords(QbrixRobotTask):
                 )
         else:
             self.builtin.log_to_console("\nNo option was provided. Skipping")
+
+    def check_and_enable_uma_marketing_cloud(self):
+        """Enables Marketing Cloud Unified Marketing Automation Setting"""
+        self.builtin.log_to_console(
+            "\nEnabling the marketing cloud setting for Unified Marketing Automation"
+        )
+        self.shared.go_to_setup_admin_page("UnifiedMarketingGettingStarted/home")
+        if "visible" not in self.browser.get_element_states(
+            "button.slds-button[data-id='umaEnableButton']:disabled"
+        ):
+            self.builtin.log_to_console("\n -> Found Button")
+            self.browser.click("button.slds-button[data-id='umaEnableButton']")
+            sleep(5)
