@@ -47,3 +47,4 @@ Library     QbrixRCGKeywords.py
 Library     QbrixMulesoftToolingKeywords.py
 # GENERAL - OTHER
 Library     QbrixPatchAutomation.py
+Library     QbrixDataCloud.py

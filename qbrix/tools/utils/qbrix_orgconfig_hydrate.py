@@ -3,7 +3,6 @@ import json
 import os
 import subprocess
 from abc import abstractmethod
-from qbrix.tools.shared.qbrix_authentication import *
 
 import requests
 from cumulusci.core.config import ScratchOrgConfig
@@ -11,9 +10,12 @@ from cumulusci.core.exceptions import CommandException
 from cumulusci.core.keychain import BaseProjectKeychain
 from cumulusci.tasks.sfdx import SFDXBaseTask
 
+from qbrix.tools.shared.qbrix_authentication import *
+
+
 class NGTrapDoorInjector(SFDXBaseTask):
     task_options = {
-        
+
         "trapname": {
             "description": "The name to store under in the trapdoor package",
             "required": False
@@ -70,7 +72,7 @@ class NGTrapDoorInjector(SFDXBaseTask):
             self.trapname =None
         else:
             self.trapname =self.options["trapname"]
-            
+
         if "context" not in self.options or not self.options["context"]:
             self.context =None
         else:
@@ -84,22 +86,22 @@ class NGTrapDoorInjector(SFDXBaseTask):
                 self.targetusername = self.org_config.username
         else:
             self.targetusername = self.options["targetusername"]
-        
+
         #self.logger.info(f'TRAPNAME::{self.trapname}')
         #self.logger.info(f'CONTEXT::{self.context}')
 
         self._translate_context()
-        
+
     def getenvironvariable(self,name):
         return os.environ.get(name)
-    
+
     def getsecuresetting(self,name):
         res = get_secure_setting(name)
         return res
-    
+
 
     def _translate_context(self):
-        
+
         if(not self.context is None and self.context.startswith("${{") and self.context.endswith("}}")):
             try:
                 sub1="${{"
@@ -121,12 +123,12 @@ class NGTrapDoorInjector(SFDXBaseTask):
                     self.context = res
                 else:
                     self.context =''
-                    
+
             except Exception as inst:
                 self.logger.error(f"Unable to evaluate dynamic express::{inst}")
-        
+
     def _run_task(self):
-    
+
         self._prepruntime()
 
         url = f"{self.org_config.instance_url}/services/apexrest/qbrix_devops/NGContextTrapDoorService"
@@ -428,7 +430,7 @@ class NGOrgConfig(SFDXBaseTask):
 
         if self.org_config.is_scratch_org is None:
             self.org_config.is_scratch_org = self._is_scratch_org
-            
+
         if self.org_config.get_secure_setting is None:
             self.org_config.get_secure_setting = get_secure_setting
 
@@ -787,7 +789,7 @@ class NGCacheAdd(SFDXBaseTask):
         self._prepruntime()
 
         if(self.value.startswith("${{") and self.value.endswith("}}")):
-            try:                
+            try:
                 exp = self.value[3:][:-2].strip()
                 #exit if inline import detected
                 if "__import__" in exp:
