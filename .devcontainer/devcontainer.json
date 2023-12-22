@@ -1,19 +1,25 @@
 {
   "image": "ghcr.io/sfdc-qbranch/qbrix-base-container-quasar:latest",
-  "forwardPorts": [7788, 1717],
+  "forwardPorts": [7788, 1717, 6080],
   "portsAttributes": {
     "7788": {
       "label": "cci-auth-callback"
     },
     "1717": {
       "label": "sfdx-web-auth"
+    },
+    "6080": {
+      "label": "qbrix robot vnc viewer"
     }
   },
   "customizations": {
     // Configure properties specific to Codespaces.
     "codespaces": {
-      //give read access to qbrix that might be dynamically loaded and need out of band access 
+      //give read access to qbrix that might be dynamically loaded and need out of band access
       "repositories": {
+        "sfdc-qbranch/QBrix-0-xDO-BaseConfig" :{
+          "permissions": "read-all"
+        },
         "sfdc-qbranch/QBrix-1-xDO-Tool-QBrixRegister": {
           "permissions": "read-all"
         },
@@ -36,7 +42,6 @@
           "permissions": "read-all"
         }
       }
-
     },
     // Configure properties specific to VS Code.
     "vscode": {
@@ -50,10 +55,17 @@
         "salesforce.salesforcedx-vscode",
         "redhat.vscode-xml",
         "dbaeumer.vscode-eslint",
-        "esbenp.prettier-vscode"
+        "esbenp.prettier-vscode",
+        "king2021.vnc-extension"
       ]
     }
   },
-  "features": {},
+  "features": {
+    "desktop-lite": {
+      "password": "vscode",
+      "webPort": "6080",
+      "vncPort": "5901"
+    }
+  },
   "postStartCommand": "qx setup init-codespace"
 }
