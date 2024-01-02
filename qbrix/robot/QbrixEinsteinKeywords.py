@@ -291,6 +291,7 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
         )
         self.shared.wait_on_element(":nth-match(span.slds-checkbox--faux,1)")
         self.builtin.log_to_console("\nLoaded Setup Page")
+        sleep(2)
 
         # Ensure All Toggles are On
         self.builtin.log_to_console("\nChecking all toggles are on")
@@ -303,6 +304,7 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
         self.shared.go_to_setup_admin_page(
             setup_page_url="AutomatedDataCapture/home", force_reload=True
         )
+        sleep(2)
 
         # Validate All Checkboxes are Toggled ON
         for toggle in self.browser.get_elements("span.slds-checkbox--faux"):
