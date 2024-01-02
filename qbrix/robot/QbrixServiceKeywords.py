@@ -302,16 +302,16 @@ class QbrixServiceKeywords(QbrixRobotTask):
                 self.shared.click_button_with_text("Done")
                 sleep(4)
 
-                if (
-                    self.browser.get_element_count(
-                        f"{iframe_handler} input[name='label']"
-                    )
-                    > 0
-                ):
-                    print(
-                        f"Conversation '{one_msg['name']}' API Name Component Already Exists"
-                    )
-                    self.shared.click_button_with_text("Close")
+                # if (
+                #     self.browser.get_element_count(
+                #         f"{iframe_handler} input[name='label']"
+                #     )
+                #     > 0
+                # ):
+                #     print(
+                #         f"Conversation '{one_msg['name']}' API Name Component Already Exists"
+                #     )
+                #     self.shared.click_button_with_text("Close")
             else:
                 self.builtin.log_to_console(
                     f"\nConversation '{one_msg['name']}' Component Already Exists"
