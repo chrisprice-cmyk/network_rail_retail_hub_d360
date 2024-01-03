@@ -56,7 +56,13 @@
         "redhat.vscode-xml",
         "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode",
-        "king2021.vnc-extension"
+        "king2021.vnc-extension",
+        "ms-toolsai.jupyter",
+        "ms-toolsai.jupyter-keymap",
+        "ms-toolsai.vscode-jupyter-cell-tags",
+        "ms-toolsai.jupyter-renderers",
+        "ms-toolsai.vscode-jupyter-slideshow",
+        "Postman.postman-for-vscode"
       ]
     }
   },
