@@ -171,9 +171,11 @@ class QbrixSlack(QbrixRobotTask):
             "a.slds-tabs_default__link[data-tab-value='Getting Started']"
         )
 
+        self.builtin.log_to_console("\nChecking Getting Started Page...")
+
         # Check Review Documentation Box
         self.check_and_enable_slack_setting(
-            setting_name="Review Documentation and Resources Checkbox",
+            setting_name="Getting Started > Review Documentation and Resources Checkbox",
             completed_selector="div.setupcontent >> h2:has-text('Review Documentation and Resources') >> div.slds-progress-ring_complete[aria-valuetext='Complete']",
             state_check_selector="div.setupcontent >> section:has(h2:has-text('Review Documentation and Resources')) >> :nth-match(input[type='checkbox'], 1)",
             enable_selectors=[
@@ -188,15 +190,16 @@ class QbrixSlack(QbrixRobotTask):
             == 0
         ):
             # Check Settings for Sales Channels
+            self.builtin.log_to_console("\nChecking Settings for Sales Channel Tab...")
             self.browser.click(
                 "a.slds-tabs_default__link[data-tab-value='Sales Channel']"
             )
-            sleep(1)
+            sleep(3)
 
             # Check Review Documentation Box
             self.check_and_enable_slack_setting(
                 setting_name="Documentation Checkbox",
-                completed_selector="div.setupcontent >> h2:has-text('Review Documentation and Resources'):visible >> div.slds-progress-ring_complete[aria-valuetext='Complete']",
+                completed_selector="div.setupcontent >> section:has(button:has-text('Review Documentation and Resources')):visible >> div.slds-progress-ring_complete[aria-valuetext='Complete']",
                 state_check_selector="div.setupcontent >> section:has(h2:has-text('Review Documentation and Resources'):visible)  >> :nth-match(input[type='checkbox'], 1)",
                 enable_selectors=[
                     "div.setupcontent >> section:has(h2:has-text('Review Documentation and Resources'):visible)  >> :nth-match(label.slds-checkbox-button, 1)"
@@ -206,7 +209,7 @@ class QbrixSlack(QbrixRobotTask):
             # Who Creates Sales Channels
             if (
                 self.browser.get_element_count(
-                    "div.setupcontent >> button:has-text('Manage Who Creates Sales Channels'):visible >> div.slds-progress-ring_complete[aria-valuetext='Complete']"
+                    "div.setupcontent >> h3:has-text('Manage Who Creates Sales Channels'):visible >> div.slds-progress-ring_complete[aria-valuetext='Complete']"
                 )
                 == 0
             ):
@@ -225,7 +228,7 @@ class QbrixSlack(QbrixRobotTask):
             # Page Layouts
             self.check_and_enable_slack_setting(
                 setting_name="Add the Sales Channel Related List to Page Layouts Confirmation",
-                completed_selector="div.setupcontent >> button:has-text('Add the Sales Channel Related List to Page Layouts'):visible >> div.slds-progress-ring_complete[aria-valuetext='Complete']",
+                completed_selector="div.setupcontent >> h2:has-text('Add the Sales Channel Related List to Page Layouts'):visible >> div.slds-progress-ring_complete[aria-valuetext='Complete']",
                 state_check_selector="div.setupcontent >> section:has(button:has-text('Add the Sales Channel Related List to Page Layouts'):visible)  >> :nth-match(input[type='checkbox'], 1)",
                 enable_selectors=[
                     "div.setupcontent >> section:has(button:has-text('Add the Sales Channel Related List to Page Layouts'):visible)  >> div.step-container-summary >> :nth-match(label.slds-checkbox-button, 1)"
@@ -235,7 +238,7 @@ class QbrixSlack(QbrixRobotTask):
             # Channel Action Button
             self.check_and_enable_slack_setting(
                 setting_name="Add the Link a Channel Action Button Confirmation",
-                completed_selector="div.setupcontent >> button:has-text('Add the Link a Channel Action Button'):visible >> div.slds-progress-ring_complete[aria-valuetext='Complete']",
+                completed_selector="div.setupcontent >> h2:has-text('Add the Link a Channel Action Button'):visible >> div.slds-progress-ring_complete[aria-valuetext='Complete']",
                 state_check_selector="div.setupcontent >> section:has(button:has-text('Add the Link a Channel Action Button'):visible)  >> :nth-match(input[type='checkbox'], 1)",
                 enable_selectors=[
                     "div.setupcontent >> section:has(button:has-text('Add the Link a Channel Action Button'):visible)  >> div.step-container-summary >> :nth-match(label.slds-checkbox-button, 1)"
@@ -257,11 +260,15 @@ class QbrixSlack(QbrixRobotTask):
                     "div.setupcontent >> section:has(button:has-text('Prepare for Sales Channels'):visible)  >> :nth-match(label.slds-checkbox-button, 1)"
                 ],
             )
+        else:
+            self.builtin.log_to_console(
+                "\nSettings for Sales Channel Already checked, moving on..."
+            )
 
         # Notifications
         if (
             self.browser.get_element_count(
-                "div.setupcontent >> button:has-text('Activate Automated Notifications') >> div.slds-progress-ring_complete[aria-valuetext='Complete']"
+                "div.setupcontent >> h2:has-text('Activate Automated Notifications') >> div.slds-progress-ring_complete[aria-valuetext='Complete']"
             )
             == 0
         ):
@@ -269,31 +276,34 @@ class QbrixSlack(QbrixRobotTask):
                 "a.slds-tabs_default__link[data-tab-value='Automated Notifications']"
             )
 
+            sleep(2)
+            self.builtin.log_to_console("\nChecking Automated Notification Settings...")
+
             # Check Review Documentation Box
             self.check_and_enable_slack_setting(
-                setting_name="Documentation Checkbox",
-                completed_selector="div.setupcontent >> button:has-text('Review Documentation and Resources'):visible >> div.slds-progress-ring_complete[aria-valuetext='Complete']",
-                state_check_selector="div.setupcontent >> section:has(button:has-text('Review Documentation and Resources'):visible)  >> :nth-match(input[type='checkbox'], 1)",
+                setting_name="Automated Notifications | Documentation Checkbox",
+                completed_selector="div.setupcontent >> h2:has-text('Review Documentation and Resources'):visible >> div.slds-progress-ring_complete[aria-valuetext='Complete']",
+                state_check_selector="div.setupcontent >> section:has(button:has-text('Review Documentation and Resources'):visible) >> :nth-match(input[type='checkbox'], 1)",
                 enable_selectors=[
                     "div.setupcontent >> section:has(button:has-text('Review Documentation and Resources'):visible)  >> :nth-match(label.slds-checkbox-button, 1)"
                 ],
             )
 
-            # Activation Notifications
+            # Clone and Activate Notifications for Sales Channels
             self.check_and_enable_slack_setting(
-                setting_name="Clone and Activate Notifications for Sales Channels Checkbox",
-                completed_selector="div.setupcontent >> button:has-text('Clone and Activate Notifications for Sales Channels') >> div.slds-progress-ring_complete[aria-valuetext='Complete']",
-                state_check_selector="div.setupcontent >> section:has(button:has-text('Clone and Activate Notifications for Sales Channels'))  >> :nth-match(input[type='checkbox'], 1)",
+                setting_name="Automated Notifications | Clone and Activate Notifications for Sales Channels Checkbox",
+                completed_selector="div.setupcontent >> h2:has-text('Clone and Activate Notifications for Sales Channels') >> div.slds-progress-ring_complete[aria-valuetext='Complete']",
+                state_check_selector="div.setupcontent >> section:has(button:has-text('Clone and Activate Notifications for Sales Channels')) >> :nth-match(input[type='checkbox'], 1)",
                 enable_selectors=[
-                    "div.setupcontent >> section:has(button:has-text('Clone and Activate Notifications for Sales Channels'))  >> :nth-match(label.slds-checkbox-button, 1)"
+                    "div.setupcontent >> section:has(button:has-text('Clone and Activate Notifications for Sales Channels')) >> :nth-match(label.slds-checkbox-button, 1)"
                 ],
             )
 
-            # Activation Notifications
+            # Clone and Activate Reminder Notifications for Opportunity Owners
             self.check_and_enable_slack_setting(
-                setting_name="Clone and Activate Reminder Notifications for Opportunity Owners Checkbox",
-                completed_selector="div.setupcontent >> button:has-text('Clone and Activate Reminder Notifications for Opportunity Owners') >> div.slds-progress-ring_complete[aria-valuetext='Complete']",
-                state_check_selector="div.setupcontent >> section:has(button:has-text('Clone and Activate Reminder Notifications for Opportunity Owners'))  >> :nth-match(input[type='checkbox'], 1)",
+                setting_name="Automated Notifications | Clone and Activate Reminder Notifications for Opportunity Owners Checkbox",
+                completed_selector="div.setupcontent >> h2:has-text('Clone and Activate Reminder Notifications for Opportunity Owners') >> div.slds-progress-ring_complete[aria-valuetext='Complete']",
+                state_check_selector="div.setupcontent >> section.slds-accordion__section:has(button:has-text('Clone and Activate Reminder Notifications for Opportunity Owners')) >> :nth-match(input[type='checkbox'], 1)",
                 enable_selectors=[
                     "div.setupcontent >> section:has(button:has-text('Clone and Activate Reminder Notifications for Opportunity Owners'))  >> :nth-match(label.slds-checkbox-button, 1)"
                 ],
@@ -308,17 +318,21 @@ class QbrixSlack(QbrixRobotTask):
             # Check Notifications Confirmation
             self.check_and_enable_slack_setting(
                 setting_name="Activate Automated Notifications Confirmation Checkbox",
-                completed_selector="div.setupcontent >> button:has-text('Activate Automated Notifications') >> div.slds-progress-ring_complete[aria-valuetext='Complete']",
+                completed_selector="div.setupcontent >> h2:has-text('Activate Automated Notifications') >> div.slds-progress-ring_complete[aria-valuetext='Complete']",
                 state_check_selector="div.setupcontent >> section:has(button:has-text('Activate Automated Notifications'))  >> :nth-match(input[type='checkbox'], 1)",
                 enable_selectors=[
                     "div.setupcontent >> section:has(button:has-text('Activate Automated Notifications'))  >> :nth-match(label.slds-checkbox-button, 1)"
                 ],
             )
+        else:
+            self.builtin.log_to_console(
+                "\nNotification Settings already checked. Moving on.."
+            )
 
         # Feeds
         if (
             self.browser.get_element_count(
-                "div.setupcontent >> button:has-text('Set Up Feed Channels') >> div.slds-progress-ring_complete[aria-valuetext='Complete']"
+                "div.setupcontent >> h2:has-text('Set Up Feed Channels') >> div.slds-progress-ring_complete[aria-valuetext='Complete']"
             )
             == 0
         ):
@@ -329,7 +343,7 @@ class QbrixSlack(QbrixRobotTask):
             # Check Review Documentation Box
             self.check_and_enable_slack_setting(
                 setting_name="Documentation Checkbox",
-                completed_selector="div.setupcontent >> button:has-text('Review Documentation and Resources'):visible >> div.slds-progress-ring_complete[aria-valuetext='Complete']",
+                completed_selector="div.setupcontent >> h2:has-text('Review Documentation and Resources'):visible >> div.slds-progress-ring_complete[aria-valuetext='Complete']",
                 state_check_selector="div.setupcontent >> section:has(button:has-text('Review Documentation and Resources'):visible)  >> :nth-match(input[type='checkbox'], 1)",
                 enable_selectors=[
                     "div.setupcontent >> section:has(button:has-text('Review Documentation and Resources'):visible)  >> :nth-match(label.slds-checkbox-button, 1)"
@@ -339,7 +353,7 @@ class QbrixSlack(QbrixRobotTask):
             # Activate the Deals Won Channel
             if (
                 self.browser.get_element_count(
-                    "div.setupcontent >> button:has-text('Activate the Deals Won Channel') >> div.slds-progress-ring_complete[aria-valuetext='Complete']"
+                    "div.setupcontent >> h2:has-text('Activate the Deals Won Channel') >> div.slds-progress-ring_complete[aria-valuetext='Complete']"
                 )
                 == 0
             ):
@@ -353,7 +367,7 @@ class QbrixSlack(QbrixRobotTask):
 
                 self.check_and_enable_slack_setting(
                     setting_name="Activate the Deals Won Channel Checkbox",
-                    completed_selector="div.setupcontent >> button:has-text('Activate the Deals Won Channel') >> div.slds-progress-ring_complete[aria-valuetext='Complete']",
+                    completed_selector="div.setupcontent >> h2:has-text('Activate the Deals Won Channel') >> div.slds-progress-ring_complete[aria-valuetext='Complete']",
                     state_check_selector="div.setupcontent >> section:has(button:has-text('Activate the Deals Won Channel'))  >> :nth-match(input[type='checkbox'], 1)",
                     enable_selectors=[
                         "div.setupcontent >> section:has(button:has-text('Activate the Deals Won Channel'))  >> :nth-match(label.slds-checkbox-button, 1)"
@@ -363,7 +377,7 @@ class QbrixSlack(QbrixRobotTask):
             # Activate the Deals to Watch Channel
             self.check_and_enable_slack_setting(
                 setting_name="Activate the Deals to Watch Channel",
-                completed_selector="div.setupcontent >> button:has-text('Activate the Deals to Watch Channel') >> div.slds-progress-ring_complete[aria-valuetext='Complete']",
+                completed_selector="div.setupcontent >> h2:has-text('Activate the Deals to Watch Channel') >> div.slds-progress-ring_complete[aria-valuetext='Complete']",
                 state_check_selector="div.setupcontent >> section:has(button:has-text('Activate the Deals to Watch Channel'))  >> :nth-match(input[type='checkbox'], 1)",
                 enable_selectors=[
                     "div.setupcontent >> section:has(button:has-text('Activate the Deals to Watch Channel'))  >> :nth-match(label.slds-checkbox-button, 1)"
@@ -379,7 +393,7 @@ class QbrixSlack(QbrixRobotTask):
             # Check Set Up Feed Channels Confirmation
             self.check_and_enable_slack_setting(
                 setting_name="Set Up Feed Channels Confirmation Checkbox",
-                completed_selector="div.setupcontent >> button:has-text('Set Up Feed Channels') >> div.slds-progress-ring_complete[aria-valuetext='Complete']",
+                completed_selector="div.setupcontent >> h2:has-text('Set Up Feed Channels') >> div.slds-progress-ring_complete[aria-valuetext='Complete']",
                 state_check_selector="div.setupcontent >> section:has(button:has-text('Set Up Feed Channels'))  >> :nth-match(input[type='checkbox'], 1)",
                 enable_selectors=[
                     "div.setupcontent >> section:has(button:has-text('Set Up Feed Channels'))  >> :nth-match(label.slds-checkbox-button, 1)"
@@ -397,6 +411,7 @@ class QbrixSlack(QbrixRobotTask):
         """Checks and Enables a Slack Apps Setting"""
 
         self.builtin.log_to_console(f"\nChecking {setting_name} is enabled...")
+        self.shared.wait_on_element("div.setupcontent", 3)
         if self.browser.get_element_count(completed_selector) == 1:
             self.builtin.log_to_console("\n -> Already Confirmed as Enabled")
             return
@@ -665,9 +680,11 @@ class QbrixSlack(QbrixRobotTask):
 
         # Assign Layout to Profiles
         self.builtin.log_to_console("\n -> Assigning to all Profiles")
-        for rt in ["Slack Record Layout","Simple Opportunity","Channel (Partner)"]:
+        for rt in ["Slack Record Layout", "Simple Opportunity", "Channel (Partner)"]:
             if self.browser.get_element_count(f"th.assignment-header:has-text('{rt}')"):
-                self.browser.click(f"th.assignment-header:has-text('{rt}') >> span.slds-checkbox_faux")
+                self.browser.click(
+                    f"th.assignment-header:has-text('{rt}') >> span.slds-checkbox_faux"
+                )
                 sleep(0.5)
         sleep(0.5)
 
