@@ -1,5 +1,6 @@
 import json
 import os
+import yaml
 import subprocess
 from abc import abstractmethod
 
@@ -51,6 +52,10 @@ class FART(Command):
         },
         "format": {
             "description": "Format pattern to apply to the supplied replacewith or located value from a soql statement",
+            "required": False
+        },
+        "lookup_key": {
+            "description": "Key tag of YML to replace the value",
             "required": False
         }
 
@@ -129,6 +134,15 @@ class FART(Command):
             self.tooling = False
         else:
             self.tooling = bool(self.options["tooling"])
+            
+        if self.fartmode == "SOQL-yml":
+            self.lookup_key = self.options["lookup_key"]
+            if "parent_key" not in self.options or not self.options["parent_key"]:
+                self.parent_key = None
+            else:
+                self.parent_key = self.options["parent_key"]
+        else:
+            self.lookup_key = None
 
         if self.fartmode == "Between" or self.fartmode == "SOQL-Between" or self.fartmode == "Cache-Between" or self.fartmode == "SecureCache-Between":
             if "findleft" not in self.options or not self.options["findleft"]:
@@ -141,7 +155,7 @@ class FART(Command):
             else:
                 self.fartfindright = self.options["findright"]
 
-        if self.fartmode == "SOQL" or self.fartmode == "SOQL-Between":
+        if self.fartmode == "SOQL" or self.fartmode == "SOQL-Between" or self.fartmode == "SOQL-yml" :
 
             if "soql" not in self.options or not self.options["soql"]:
                 self.soql = None
@@ -178,6 +192,9 @@ class FART(Command):
 
         if self.fartmode == "SOQL-Between":
             self.runwithsoqlbetween()
+
+        if self.fartmode == "SOQL-yml":
+            self.runwithsoqlyml()
 
     def getsecuresetting(self,name):
         res = get_secure_setting(name)
@@ -260,6 +277,23 @@ class FART(Command):
         self.fartsoqlbetween(self.fartpath, self.fartfindleft, self.fartfindright, self.accesstoken, self.soql,
                              self.formatval, self.tooling)
 
+    def runwithsoqlyml(self):
+
+        """
+        Use the supplied yml tag key to replace the value with the result from the soql
+        """
+        
+        if self.soql is None or self.soql == "":
+            return
+
+        if self.lookup_key is None:
+            return
+
+        subprocess.run([f"sf config set instanceUrl={self.instanceurl}"], shell=True, capture_output=True)
+
+        self.fartsoqlyml(self.fartpath, self.parent_key, self.lookup_key,  self.accesstoken, self.soql,
+                             self.formatval, self.tooling)
+
     def _run_task(self):
         self._prepruntime()
         self.run()
@@ -319,8 +353,34 @@ class FART(Command):
 
                 with open(f"{srcfile}", "w") as tmpFile:
                     tmpFile.write(defcontentsmodified)
-                    tmpFile.close()
+                    tmpFile.close()                    
 
+    def fartymltagvalue(self, srcfile: str, parent_key: str, lookup_key: str, replacewith: str, formatval: str = None):
+        if os.path.isfile(srcfile):
+            with open(srcfile, 'r') as file:
+                data = yaml.load(file, Loader=yaml.FullLoader)
+
+            self._replace_in_tree(data, parent_key, lookup_key, replacewith, formatval)
+
+            with open(srcfile, 'w') as file:
+                yaml.dump(data, file, default_flow_style=False)
+
+    def _replace_in_tree(self, data, parent_key, lookup_key, replacewith, formatval):
+        if isinstance(data, dict):
+            for key, value in data.items():
+                if parent_key is None or key == parent_key:
+                    self._replace_in_dict(value, lookup_key, replacewith, formatval)
+                elif isinstance(value, (dict, list)):
+                    self._replace_in_tree(value, parent_key, lookup_key, replacewith, formatval)
+
+    def _replace_in_dict(self, data, lookup_key, replacewith, formatval):
+        if isinstance(data, dict):
+            for key, value in data.items():
+                if key == lookup_key:
+                    data[key] = formatval.format(replacewith) if formatval else replacewith
+                elif isinstance(value, (dict, list)):
+                    self._replace_in_dict(value, lookup_key, replacewith, formatval)
+                    
     def getsoqldata(self, sfdxuser: str, soql: str, tooling: bool = False):
         if sfdxuser is None or soql is None:
             return None
@@ -359,3 +419,10 @@ class FART(Command):
         if replacewith is None:
             return
         self.fartbetween(srcfile, left, right, replacewith, formatval)
+
+    def fartsoqlyml(self, srcfile: str, parent_key: str, lookup_key: str, sfdxaccesstoken: str, soql: str, formatval: str,
+                        tooling: bool = False):
+        replacewith = self.getsoqldata(sfdxaccesstoken, soql, tooling)
+        if replacewith is None:
+            return
+        self.fartymltagvalue(srcfile, parent_key, lookup_key,  replacewith, formatval)
