@@ -18,4 +18,7 @@ Suite Teardown      QRobot.Close Q Browser
 # Note: The default timeout for this is 900 seconds but if you have a long running process, ensure you change the value above next to "Set browser timeout" to something more suitable for the overall timeout for everything you are running.
 #
 Run Automation
-    enable_sales_cloud_for_slack
+    create_data_stream
+    ...    name=SDO Sales
+    ...    data_bundle_name=Sales
+    ...    source_name=Salesforce CRM

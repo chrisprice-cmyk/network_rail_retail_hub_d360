@@ -79,7 +79,9 @@ class QbrixDataCloud(QbrixRobotTask):
     def create_data_stream(self, name, data_bundle_name, source_name):
         """Create a Data Stream if it does not already exist"""
 
-        self.builtin.log_to_console("\nChecking if datastream exists...")
+        self.builtin.log_to_console(
+            f"\nChecking if Data Streams have been setup for {data_bundle_name}..."
+        )
 
         query = ""
         if data_bundle_name.lower() == "sales":
@@ -93,7 +95,7 @@ class QbrixDataCloud(QbrixRobotTask):
             self.builtin.log_to_console(f"\nDataStream Already Exists: {datastream_id}")
         else:
             self.builtin.log_to_console(
-                f"\nDataStream Does Not Exist. Creating Data Stream..."
+                "\nDataStream Does Not Exist. Creating Data Stream..."
             )
 
             # Load DataStreams Page
@@ -102,22 +104,56 @@ class QbrixDataCloud(QbrixRobotTask):
                 timeout="30s",
             )
 
+            # Check for New Button (if not present then Data Cloud is not fully enabled)
+            if not self.shared.wait_on_element(
+                "ul.branding-actions >> a.forceActionLink:has-text('New')", 3
+            ):
+                self.builtin.log_to_console(
+                    "\nData Cloud is not fully enabled or your user does not have permission to create Data Streams. Skipping this task."
+                )
+                return
+
             # Click New
-            self.shared.wait_and_click(
+            self.browser.click(
                 "ul.branding-actions >> a.forceActionLink:has-text('New')"
             )
 
-            # Define Settings
+            # Define Source (Source needs clicked twice sometimes)
+            self.builtin.log_to_console(f"\n -> Selecting Source: {source_name}")
+            if not self.shared.wait_on_element(f"h2:has-text('{source_name}')"):
+                self.builtin.log_to_console(
+                    f"\n -X ERROR Failed to locate source name: {source_name}"
+                )
+                return
             self.shared.wait_and_click(f"h2:has-text('{source_name}')")
-            self.browser.click("button.slds-button:has-text('Next')")
+            self.browser.click(f"h2:has-text('{source_name}')")
+            self.shared.wait_and_click("button.slds-button:has-text('Next')")
 
-            # Salesforce CRM Settings
+            # Select Bundle
+            self.builtin.log_to_console(
+                f"\n -> Selecting Data Bundle: {data_bundle_name} from source {source_name}"
+            )
             self.shared.wait_and_click(
                 f"span.slds-visual-picker__figure >> span.slds-text-title:has-text('{data_bundle_name}')"
             )
             sleep(1)
-            self.browser.click("button.slds-button:has-text('Next')")
             self.shared.wait_and_click("button.slds-button:has-text('Next')")
+
+            # Confirm Bundle Objects
+            self.shared.wait_on_element(
+                "button.slds-button:has-text('New Formula Field')"
+            )
+            self.builtin.log_to_console(
+                f"\n -> Accepting default object selection for Data Bundle: {data_bundle_name}"
+            )
             self.shared.wait_and_click("button.slds-button:has-text('Next')")
+
+            # Confirm Configuration Details
+            self.shared.wait_on_element(
+                "div.slds-text-title_bold:has-text('Data Stream Bundle Configuration Details')"
+            )
+            self.builtin.log_to_console(
+                f"\n -> Confirming Deployment of Bundle: {data_bundle_name}"
+            )
             self.shared.wait_and_click("button.slds-button:has-text('Deploy')")
             sleep(3)
