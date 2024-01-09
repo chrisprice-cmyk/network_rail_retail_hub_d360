@@ -79,7 +79,7 @@ class ExperienceManager(BaseSalesforceApiTask):
 
     def _lookup_topic_id(self, topic_name):
         topic_lookup = self.sf.query(
-            f"select id,Name from Topic Where Name = '{topic_name}' LIMIT 1"
+            f"select id,Name from Topic Where Name = '{topic_name}' and NetworkId = '{self.network_id}' LIMIT 1"
         )
 
         if topic_lookup["totalSize"] > 0:
