@@ -136,7 +136,7 @@ class QbrixDataCloud(QbrixRobotTask):
             self.shared.wait_and_click(
                 f"span.slds-visual-picker__figure >> span.slds-text-title:has-text('{data_bundle_name}')"
             )
-            sleep(1)
+            sleep(3)
             self.shared.wait_and_click("button.slds-button:has-text('Next')")
 
             # Confirm Bundle Objects
@@ -146,6 +146,7 @@ class QbrixDataCloud(QbrixRobotTask):
             self.builtin.log_to_console(
                 f"\n -> Accepting default object selection for Data Bundle: {data_bundle_name}"
             )
+            sleep(3)
             self.shared.wait_and_click("button.slds-button:has-text('Next')")
 
             # Confirm Configuration Details
@@ -155,5 +156,6 @@ class QbrixDataCloud(QbrixRobotTask):
             self.builtin.log_to_console(
                 f"\n -> Confirming Deployment of Bundle: {data_bundle_name}"
             )
+            sleep(3)
             self.shared.wait_and_click("button.slds-button:has-text('Deploy')")
             sleep(3)
