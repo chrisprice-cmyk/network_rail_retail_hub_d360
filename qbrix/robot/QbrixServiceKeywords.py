@@ -346,7 +346,7 @@ class QbrixServiceKeywords(QbrixRobotTask):
                 "div[data-aura-class='setup_serviceLsfContent'] >> :nth-match(input.slds-input:visible, 1)",
                 channel_name,
             )
-            self.browser.click("label:text-is('Developer Name')")
+            self.browser.click(":nth-match(.activeStep label:text-is('Developer Name'):visible, 1)")
             sleep(2)
             self.browser.click("button:text-is('Save'):visible")
             sleep(3)
