@@ -374,6 +374,12 @@ class NGOrgConfig(SFDXBaseTask):
 
         self._inject_max_runtime()
         self._seed_initial_cache()
+        
+        # for global usage - we will call and inject the current user via who am
+        currentuserdata = get_who_am_i(self.accesstoken)
+        self._cache_item_set('currentuseremail',currentuserdata['email'])
+        self._cache_item_set('currentorgid',currentuserdata['organizationId'])
+        
 
     def _inject_max_runtime(self):
 
@@ -784,6 +790,8 @@ class NGCacheAdd(SFDXBaseTask):
             raise Exception(f'No key provided to add to cache')
         else:
             self.value =self.options["value"]
+            
+    
 
     def _run_task(self):
         self._prepruntime()
