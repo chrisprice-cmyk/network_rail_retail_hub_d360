@@ -202,3 +202,17 @@ class QbrixSalesCloudKeywords(QbrixRobotTask):
         toggle_input_selector = ":nth-match(span.slds-checkbox--faux,1)"
         if "checked" not in self.browser.get_element_states(toggle_input_selector):
             self.browser.click(toggle_input_selector)
+
+    def check_and_enable_seller_home(self):
+        """Enables Seller Home"""
+
+        self.shared.go_to_setup_admin_page("Home/home", 5)
+        toogle_button = "label:has-text('Inactive')"
+        if self.shared.wait_on_element(toogle_button):
+            checked = "checked" in self.browser.get_element_states(
+                "label:has-text('Inactive')"
+            )
+            if not checked:
+                self.browser.click("label:has-text('Inactive')")
+                sleep(5)
+        self.builtin.log_to_console("\n[Seller Home] -> Enabled!")

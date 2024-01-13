@@ -156,6 +156,9 @@ Messaging Components Setup
 Check and Enable Inbox
     Enable Sales Inbox
 
+Check and Enable Seller Home
+    Check and Enable Seller Home
+    
 #
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # SERVICE CLOUD TESTS
