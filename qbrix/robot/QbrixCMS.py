@@ -21,7 +21,7 @@ class QbrixCMS(QbrixRobotTask):
         self.shared.wait_for_page_to_load()
         self.builtin.log_to_console("\nDigital Experiences App Loaded")
 
-    def download_all_content(self):
+    def download_all_content(self, dir_path=None):
         """Triggers an Export of all Workspaces within the target Salesforce Org. Note that the export emails go to the admin user."""
 
         self.builtin.log_to_console(
@@ -43,7 +43,7 @@ class QbrixCMS(QbrixRobotTask):
             f"\n{len(results['records'])} CMS Workspaces in the org. Running export automation..."
         )
         for workspace in results["records"]:
-            self.download_cms_content(workspace["Name"])
+            self.download_cms_content(workspace["Name"], dir_path)
 
     def upload_cms_workspace_directories(self):
         """Create a directory within ./datasets/cms_workspaces for each workspace you want to upload files into. The name of the sub-directory needs to match the workspace name and inside the directory you can store the export .zip files, which will be uploaded in order"""
@@ -380,12 +380,17 @@ class QbrixCMS(QbrixRobotTask):
         self.shared.wait_and_click("button.slds-button:has-text('Import')")
         self.shared.wait_and_click("button.slds-button:text('ok')")
 
-    def download_cms_content(self, workspace):
+    def download_cms_content(self, workspace, dir_path=None):
         """
         Initiate the export of a workspace to a content .zip file (which is emailed to the admin)
         @param workspace: Name of workspace
         @return:
         """
+
+        if dir_path is None:
+            dir_path = os.getcwd()
+        elif not os.path.exists(dir_path):
+            os.mkdir(dir_path)
 
         if not workspace:
             self.builtin.log_to_console("\nWorkspace cannot be None. Skipping")
@@ -467,25 +472,132 @@ class QbrixCMS(QbrixRobotTask):
             enhanced = self.browser.get_element_count(
                 f"{self.shared.iframe_handler()} lightning-badge.slds-badge:has-text('Enhanced'):visible"
             ) > 0
+
             if enhanced:
                 self.builtin.log_to_console(
                     f"\n -> [{workspace}] is an Enhanced CMS Workspace."
                 )
-
-            if enhanced:
-                self.__export_enhanced_cms_workspace()
+                export_success = self.__export_enhanced_cms_workspace()
+                if export_success is True:
+                    self.__download_cms_export_files(workspace_id, dir_path)
             else:
                 self.__export_cms_workspace()
+                # download CMS file not supported
+
+
+    def __download_cms_export_files(self, workspace_id, dir_path=None):
+
+        """
+        Find the export job and download the content export file(s) to the specified directory.
+        If no directory is specified, the files will be downloaded to the current working directory.
+        """
+
+        job_completed = False
+        job_id = None
+        count = 0
+        download_button_selector = "button:has-text('Download Files')"
+        view_button_selector = "button:has-text('View Files')"
+        job_selector = "mcontent_jobs-job-management-datatable table tbody tr:first-child mcontent_jobs-action-cell a"
+        iframe_handler = self.shared.iframe_handler()
+
+        self.browser.go_to(
+            f"{self.cumulusci.org.instance_url}/lightning/cms/spaces/{workspace_id}/jobs",
+            timeout="30s",
+        )
+
+        # Find the most recent job and retrieve the job Id
+        job_id = self.browser.get_property(
+            f"{iframe_handler} {job_selector}",
+            "innerText",
+        )
+        self.builtin.log_to_console(
+            f"\n -> Checking if the export job has been completed. Job Id: {job_id}"
+        )
+        while count < 5 and job_completed is False:
+
+            # Click on the Job Id, which will launch the modal for downloading the export files
+            self.browser.click(
+                f"{iframe_handler} {job_selector}"
+            )
+
+            count += 1
+            # Added 2 seconds sleep to wait for the job status to be refershed
+            sleep(2)
+            if self.browser.get_element_count(download_button_selector) == 1:
+                job_completed = True
+                self.builtin.log_to_console(
+                    "\n -> Job completed!"
+                )
+            else:
+                # The export job is still pending
+                # refresh the page and check for the job status again
+                remaining_count = 5 - count
+                self.builtin.log_to_console(
+                    f"\n -> Job still pending. Refreshing the page...remaining tries: {remaining_count}"
+                )
+                self.browser.reload()
+
+        if job_completed is True:
+
+            # Click on the "View Files" button to see the list of exported files
+            # Not using "Download Files" button as promise_to_wait_for_download
+            # needs the file path for each file
+            self.shared.wait_and_click(
+                f"{iframe_handler} {view_button_selector}"
+            )
+            files = self.browser.get_elements(
+                f"{iframe_handler} div.downloads-section-open ul li a"
+            )
+
+            for file in files:
+                file_name = self.browser.get_property(file, "title")
+                file_path = os.path.join(dir_path, file_name)
+
+                download_promise = self.browser.promise_to_wait_for_download(
+                    saveAs=file_path
+                )
+                self.browser.click(file)
+                promise_response = self.browser.wait_for(
+                    download_promise
+                )
+                if promise_response.state == "finished":
+                    self.builtin.log_to_console(
+                        f"\n -> Downloaded [{file_name}]"
+                    )
+                else:
+                    self.builtin.log_to_console(
+                        f"\n -> Failed to download [{file_name}]"
+                    )
+
+            self.builtin.log_to_console(
+                f"\n -> Content downloaded for Job: {job_id}"
+            )
+        else:
+            self.builtin.log_to_console(
+                "\n -> Could not find the content export file, or the job is still pending."
+            )
 
     def __export_cms_workspace(self):
 
         """
-        Select all the items on a CMS workspace page, then initiate the export of the managed contents
+        Select all the items on a CMS workspace page, 
+        then initiate the export of the managed contents
+
+        Returns True if the export has been started successfully.
         """
 
         self.builtin.log_to_console("\n -> Selecting all items on the page...")
+
+        elements_selector = "table.slds-table >> sfdc_cms-content-check-box-button"
+
+        if self.browser.get_element_count(elements_selector) == 0:
+            self.builtin.log_to_console(
+                "\n -> No content found in the workspace - skipping."
+            )
+            return False
+
         elements = self.browser.get_elements(
-            f"{self.shared.iframe_handler()} table.slds-table >> sfdc_cms-content-check-box-button"
+            f"{self.shared.iframe_handler()} {elements_selector}"
         )
         for elem in elements:
             self.browser.scroll_to_element(elem)
@@ -505,16 +617,29 @@ class QbrixCMS(QbrixRobotTask):
         self.builtin.log_to_console(
             "\n -> REQUEST SENT! Please check the Salesforce Admin emails for the export email with the download link for the file(s) which contain the content for this workspace."
         )
+        return True
 
     def __export_enhanced_cms_workspace(self):
 
         """
-        Select all the items on an Enhanced CMS workspace page, then initiate the export of the managed contents, folders and CMS collections
+        Select all the items on an Enhanced CMS workspace page,
+        then initiate the export of the managed contents, folders and CMS collections
+
+        Returns True if the export has been started successfully.
         """
 
         self.builtin.log_to_console("\n -> Selecting all items on the page...")
+
+        elements_selector = "table.slds-table >> mcontent_content_picker-check-box-button-wrapper >> lightning-input"
+
+        if self.browser.get_element_count(elements_selector) == 0:
+            self.builtin.log_to_console(
+                "\n -> No content found in the workspace - skipping."
+            )
+            return False
+    
         elements = self.browser.get_elements(
-            f"{self.shared.iframe_handler()} table.slds-table >> mcontent_content_picker-check-box-button-wrapper >> lightning-input"
+            f"{self.shared.iframe_handler()} {elements_selector}"
         )
         for elem in elements:
             self.browser.scroll_to_element(elem)
@@ -532,8 +657,9 @@ class QbrixCMS(QbrixRobotTask):
             f"{self.shared.iframe_handler()} button.slds-button:has-text('Export')"
         )
         self.builtin.log_to_console(
-            "\n -> REQUEST SENT! Please check the Salesforce Admin emails for the export email with the download link for the file(s) which contain the content for this workspace."
+            "\n -> REQUEST SENT!"
         )
+        return True
 
     def create_workspace(self, workspace_name, channels=None, enhanced_workspace=True):
         """
