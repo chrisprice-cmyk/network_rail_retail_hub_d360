@@ -45,14 +45,21 @@ class QbrixCMS(QbrixRobotTask):
         for workspace in results["records"]:
             self.download_cms_content(workspace["Name"], dir_path)
 
-    def upload_cms_workspace_directories(self):
-        """Create a directory within ./datasets/cms_workspaces for each workspace you want to upload files into. The name of the sub-directory needs to match the workspace name and inside the directory you can store the export .zip files, which will be uploaded in order"""
+    def upload_cms_workspace_directories(
+        self, enhanced_workspace=False, directory_path="datasets/cms_workspaces"
+    ):
+        """Create a directory within ./datasets/cms_workspaces for each workspace you want to upload files into. The name of the sub-directory needs to match the workspace name and inside the directory you can store the export .zip files, which will be uploaded in order
 
-        directory_path = os.path.join("datasets", "cms_workspaces")
+        Args:
+            enhanced_workspace (bool): Set to True if uploading to an enhanced workspace. Defaults to False
+            directory_path (str): Set to the relative path from root, for the parent directory which contains a sub-directory for each workspace. Defaults to datasets/cms_workspaces
+        """
+
+        self.builtin.log_to_console("\nStarting CMS Workspace Upload Task")
 
         if not os.path.exists(directory_path):
             self.builtin.log_to_console(
-                f"\nNo Directories Found to Upload. Sub-directories expected within {directory_path}"
+                f"\n -> No Directories Found to Upload. Sub-directories expected within {directory_path}"
             )
             return
 
@@ -70,11 +77,11 @@ class QbrixCMS(QbrixRobotTask):
         # Process each subdirectory
         for subdirectory in subdirectories:
             self.builtin.log_to_console(
-                f"\nProcessing Workspace Subdirectory: {subdirectory}"
+                f"\n -> Processing Workspace Sub-directory: {subdirectory}"
             )
 
             # Check Workspace
-            self.create_workspace(subdirectory, enhanced_workspace=False)
+            self.create_workspace(subdirectory, enhanced_workspace=enhanced_workspace)
 
             # Get a list of all files in the subdirectory
             subdirectory_path = os.path.join(directory_path, subdirectory)
@@ -88,14 +95,16 @@ class QbrixCMS(QbrixRobotTask):
             # Print the list of files
             for file_name in files:
                 self.builtin.log_to_console(
-                    f"\n -> Uploading  {os.path.join(subdirectory_path, file_name)}"
+                    f"\n -> Uploading {os.path.join(subdirectory_path, file_name)} for {subdirectory}"
                 )
                 self.upload_cms_import_file(
-                    os.path.join(subdirectory_path, file_name), subdirectory
+                    os.path.join(subdirectory_path, file_name),
+                    subdirectory,
+                    enhanced_workspace=enhanced_workspace,
                 )
                 self.builtin.log_to_console("\n -> File Upload Complete!")
 
-        self.builtin.log_to_console("\nAll directories processed!")
+        self.builtin.log_to_console("\n -> All directories processed!")
 
     def enable_all_channels_for_all_workspaces(self):
         """Ensures that all channels have been applied for all workspaces"""
@@ -212,9 +221,11 @@ class QbrixCMS(QbrixRobotTask):
         self.builtin.log_to_console(
             f"\n -> No workspace found with name [{workspace_name}] in the Salesforce Org"
         )
-        return None      
+        return None
 
-    def upload_cms_import_file(self, file_path, workspace, enhanced_workspace, publish_all=True):
+    def upload_cms_import_file(
+        self, file_path, workspace, enhanced_workspace, publish_all=True
+    ):
         """
         Uploads the Content from the CMS import .zip file to a given workspace. If the workspace is not found, then one will be created.
 
@@ -238,9 +249,11 @@ class QbrixCMS(QbrixRobotTask):
             raise ValueError("enhanced_workspace has to be set to either True or False")
 
         workspace_id = None
-        
+
         if not self.get_workspace_id(workspace):
-            self.create_workspace(workspace_name=workspace, enhanced_workspace=enhanced_workspace)
+            self.create_workspace(
+                workspace_name=workspace, enhanced_workspace=enhanced_workspace
+            )
 
         # Ensure we are using Digital Experiences App
         self.go_to_digital_experiences()
@@ -258,15 +271,18 @@ class QbrixCMS(QbrixRobotTask):
             sleep(2)
 
             # Check if this workspace is an Enhanced CMS Workspace
-            enhanced = self.browser.get_element_count(
-                f"{self.shared.iframe_handler()} lightning-badge.slds-badge:has-text('Enhanced'):visible"
-            ) > 0
+            enhanced = (
+                self.browser.get_element_count(
+                    f"{self.shared.iframe_handler()} lightning-badge.slds-badge:has-text('Enhanced'):visible"
+                )
+                > 0
+            )
 
             if enhanced_workspace.lower() == "true" and enhanced is False:
                 raise ValueError(
                     f"The existing workspace [{workspace}] is NOT an Enhanced CMS workspace. Please set enhanced_workspace flag to False\n"
                 )
-            
+
             if enhanced_workspace.lower() == "false" and enhanced is True:
                 raise ValueError(
                     f"The existing workspace [{workspace}] is an Enhanced Workspace. Please set enhanced_workspace flag to True\n"
@@ -280,9 +296,7 @@ class QbrixCMS(QbrixRobotTask):
             else:
                 self.__import_cms_content(file_path, publish_all)
         else:
-            raise Warning(
-                "\nWorkspace cannot be None. Skipping"
-            )
+            raise Warning("\nWorkspace cannot be None. Skipping")
 
     def __import_enhanced_cms_content(self, file_path, publish_all=True):
         """
@@ -314,12 +328,8 @@ class QbrixCMS(QbrixRobotTask):
         self.browser.wait_for_all_promises()
 
         # Confirm Upload File
-        self.browser.click(
-            f"{iframe_handler} .footerCmps >> button.slds-button"
-        )
-        self.builtin.log_to_console(
-            f" -> File ${file_path} - Uploaded OK"
-        )
+        self.browser.click(f"{iframe_handler} .footerCmps >> button.slds-button")
+        self.builtin.log_to_console(f" -> File ${file_path} - Uploaded OK")
 
         # Complete Final Steps
         self.shared.wait_and_click("button.slds-button:has-text('Import')")
@@ -358,9 +368,7 @@ class QbrixCMS(QbrixRobotTask):
             import_button_selector = "button.slds-button:has-text('Import')"
 
             if self.browser.get_element_count(error_message_selector) > 0:
-                raise Exception(
-                    "Error Occurred During File Upload. CMS Import Failed"
-                )
+                raise Exception("Error Occurred During File Upload. CMS Import Failed")
 
             if (
                 self.browser.get_element_count(confirm_checkbox_selector) > 0
@@ -469,9 +477,12 @@ class QbrixCMS(QbrixRobotTask):
                     break
 
             # Check if this workspace is an Enhanced CMS Workspace
-            enhanced = self.browser.get_element_count(
-                f"{self.shared.iframe_handler()} lightning-badge.slds-badge:has-text('Enhanced'):visible"
-            ) > 0
+            enhanced = (
+                self.browser.get_element_count(
+                    f"{self.shared.iframe_handler()} lightning-badge.slds-badge:has-text('Enhanced'):visible"
+                )
+                > 0
+            )
 
             if enhanced:
                 self.builtin.log_to_console(
@@ -484,9 +495,7 @@ class QbrixCMS(QbrixRobotTask):
                 self.__export_cms_workspace()
                 # download CMS file not supported
 
-
     def __download_cms_export_files(self, workspace_id, dir_path=None):
-
         """
         Find the export job and download the content export file(s) to the specified directory.
         If no directory is specified, the files will be downloaded to the current working directory.
@@ -514,20 +523,15 @@ class QbrixCMS(QbrixRobotTask):
             f"\n -> Checking if the export job has been completed. Job Id: {job_id}"
         )
         while count < 5 and job_completed is False:
-
             # Click on the Job Id, which will launch the modal for downloading the export files
-            self.browser.click(
-                f"{iframe_handler} {job_selector}"
-            )
+            self.browser.click(f"{iframe_handler} {job_selector}")
 
             count += 1
             # Added 2 seconds sleep to wait for the job status to be refershed
             sleep(2)
             if self.browser.get_element_count(download_button_selector) == 1:
                 job_completed = True
-                self.builtin.log_to_console(
-                    "\n -> Job completed!"
-                )
+                self.builtin.log_to_console("\n -> Job completed!")
             else:
                 # The export job is still pending
                 # refresh the page and check for the job status again
@@ -538,13 +542,10 @@ class QbrixCMS(QbrixRobotTask):
                 self.browser.reload()
 
         if job_completed is True:
-
             # Click on the "View Files" button to see the list of exported files
             # Not using "Download Files" button as promise_to_wait_for_download
             # needs the file path for each file
-            self.shared.wait_and_click(
-                f"{iframe_handler} {view_button_selector}"
-            )
+            self.shared.wait_and_click(f"{iframe_handler} {view_button_selector}")
             files = self.browser.get_elements(
                 f"{iframe_handler} div.downloads-section-open ul li a"
             )
@@ -557,30 +558,23 @@ class QbrixCMS(QbrixRobotTask):
                     saveAs=file_path
                 )
                 self.browser.click(file)
-                promise_response = self.browser.wait_for(
-                    download_promise
-                )
+                promise_response = self.browser.wait_for(download_promise)
                 if promise_response.state == "finished":
-                    self.builtin.log_to_console(
-                        f"\n -> Downloaded [{file_name}]"
-                    )
+                    self.builtin.log_to_console(f"\n -> Downloaded [{file_name}]")
                 else:
                     self.builtin.log_to_console(
                         f"\n -> Failed to download [{file_name}]"
                     )
 
-            self.builtin.log_to_console(
-                f"\n -> Content downloaded for Job: {job_id}"
-            )
+            self.builtin.log_to_console(f"\n -> Content downloaded for Job: {job_id}")
         else:
             self.builtin.log_to_console(
                 "\n -> Could not find the content export file, or the job is still pending."
             )
 
     def __export_cms_workspace(self):
-
         """
-        Select all the items on a CMS workspace page, 
+        Select all the items on a CMS workspace page,
         then initiate the export of the managed contents
 
         Returns True if the export has been started successfully.
@@ -620,7 +614,6 @@ class QbrixCMS(QbrixRobotTask):
         return True
 
     def __export_enhanced_cms_workspace(self):
-
         """
         Select all the items on an Enhanced CMS workspace page,
         then initiate the export of the managed contents, folders and CMS collections
@@ -637,7 +630,7 @@ class QbrixCMS(QbrixRobotTask):
                 "\n -> No content found in the workspace - skipping."
             )
             return False
-    
+
         elements = self.browser.get_elements(
             f"{self.shared.iframe_handler()} {elements_selector}"
         )
@@ -656,9 +649,7 @@ class QbrixCMS(QbrixRobotTask):
         self.shared.wait_and_click(
             f"{self.shared.iframe_handler()} button.slds-button:has-text('Export')"
         )
-        self.builtin.log_to_console(
-            "\n -> REQUEST SENT!"
-        )
+        self.builtin.log_to_console("\n -> REQUEST SENT!")
         return True
 
     def create_workspace(self, workspace_name, channels=None, enhanced_workspace=True):
@@ -1801,16 +1792,22 @@ class QbrixCMS(QbrixRobotTask):
         )
 
         if results["totalSize"] == 0:
-            self.builtin.log_to_console(f"\nNo results for {site_name} was found. Skipping...")
-        elif results["totalSize"] == 1: 
+            self.builtin.log_to_console(
+                f"\nNo results for {site_name} was found. Skipping..."
+            )
+        elif results["totalSize"] == 1:
             siteId = results["records"][0]["Id"]
-            self.builtin.log_to_console(f"\n{site_name} site was found. Navigating to Site details with {siteId}")
+            self.builtin.log_to_console(
+                f"\n{site_name} site was found. Navigating to Site details with {siteId}"
+            )
             self.browser.go_to(f"{self.cumulusci.org.instance_url}/{siteId}")
             self.shared.wait_for_page_to_load()
 
             # Handle Edit Click
             self.builtin.log_to_console("Editing Details")
-            self.browser.click("div.bDetailBlock >> div.pbHeader >> input[value='Edit']")
+            self.browser.click(
+                "div.bDetailBlock >> div.pbHeader >> input[value='Edit']"
+            )
 
             # Check if Guest Access to Support API is enabled
             toggle_input_selector = "div.bEditBlock >> tr:has-text('Guest Access to the Support API') >> input"
@@ -1819,18 +1816,22 @@ class QbrixCMS(QbrixRobotTask):
                 self.browser.click(toggle_input_selector)
                 changes_made = True
             else:
-                self.builtin.log_to_console("Guest Access to the Support API is already enabled")
+                self.builtin.log_to_console(
+                    "Guest Access to the Support API is already enabled"
+                )
 
             # Handle Adding Quick Action
-            self.builtin.log_to_console(f"Finding the {action_name} Quick Action to add")
+            self.builtin.log_to_console(
+                f"Finding the {action_name} Quick Action to add"
+            )
             self.browser.wait_for_elements_state(
-                f"table.detailList >> td.selectCell:has-text('Available Quick Actions')", ElementState.visible, "15s"
+                f"table.detailList >> td.selectCell:has-text('Available Quick Actions')",
+                ElementState.visible,
+                "15s",
             )
 
             action = f"table.detailList >> td.selectCell:has-text('Available Quick Actions') >> option:has-text('{action_name}')"
-            action_count = self.browser.get_element_count(
-                f"{action}"
-            )
+            action_count = self.browser.get_element_count(f"{action}")
             if action_count > 0:
                 self.builtin.log_to_console(f"Found {action_name}. Now adding it")
                 # Select Action
@@ -1838,10 +1839,14 @@ class QbrixCMS(QbrixRobotTask):
                 self.browser.click(f"{action}")
                 # Click Add
                 self.builtin.log_to_console("Adding Action to Selected Quick Actions")
-                self.browser.click("table.detailList >> td.buttonCell:has-text('Add') >> :nth-match(a, 1)")
+                self.browser.click(
+                    "table.detailList >> td.buttonCell:has-text('Add') >> :nth-match(a, 1)"
+                )
                 changes_made = True
             else:
-                self.builtin.log_to_console(f"Could not find {action_name} in available actions. It does not exist or may have been added already")
+                self.builtin.log_to_console(
+                    f"Could not find {action_name} in available actions. It does not exist or may have been added already"
+                )
 
             if changes_made:
                 # Save Changes
@@ -1850,6 +1855,8 @@ class QbrixCMS(QbrixRobotTask):
                 sleep(2)
             else:
                 self.builtin.log_to_console("No changes made. Exiting...")
-            
+
         else:
-            self.builtin.log_to_console(f"\nMore than 1 result for {site_name} was found. Aborting...")
+            self.builtin.log_to_console(
+                f"\nMore than 1 result for {site_name} was found. Aborting..."
+            )

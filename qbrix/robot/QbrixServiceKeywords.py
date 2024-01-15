@@ -75,7 +75,11 @@ class QbrixServiceKeywords(QbrixRobotTask):
         """Enables Case Swarming"""
 
         # Ensure Slack Integration is enabled
+        self.builtin.log_to_console(
+            "\nChecking that Slack Integration is enabled for the org and Service..."
+        )
         self.enable_slack_integration()
+        self.builtin.log_to_console("\nSlack Integration enabled.")
 
         # Go To Service Cloud for Slack Setup Page
         self.shared.go_to_setup_admin_page("SlackServiceApp/home")
@@ -88,18 +92,33 @@ class QbrixServiceKeywords(QbrixRobotTask):
             self.browser.click(toggle_selector)
             sleep(3)
 
+        self.builtin.log_to_console("\nSlack Integration enabled for Service Cloud.")
+
         # Go To Case Swarming Setup Page
         self.shared.go_to_setup_admin_page("CaseSwarming/home")
+        self.builtin.log_to_console("\nOpened Case Swarming Setup Page")
 
         # Check and Enable Case Swarming
+        self.builtin.log_to_console("\nChecking that Case Swarming is enabled.")
         case_swarming_toggle = (
             "div.slds-media:has-text('Turn On Swarming') >> label.slds-checkbox_toggle"
         )
         self.shared.wait_on_element(case_swarming_toggle)
-        checked = "checked" in self.browser.get_element_states(case_swarming_toggle)
-        if not checked:
+        if "checked" not in self.browser.get_element_states(case_swarming_toggle):
             self.browser.click(case_swarming_toggle)
             sleep(2)
+        self.builtin.log_to_console("\nCase Swarming enabled.")
+
+        # Set default collaboration tool
+        self.builtin.log_to_console("\nSetting default collaboration tool to Slack.")
+        self.browser.click(
+            "li.slds-setup-assistant__item:has-text('Swarm With a Collaboration Tool') >> button.slds-combobox__input"
+        )
+        self.shared.wait_and_click("span.slds-truncate:has-text('Slack'):visible")
+        self.builtin.log_to_console("\nSlack set as default tool.")
+
+        # Complete
+        self.builtin.log_to_console("\nCase Swarming setup complete!")
 
     def create_chat_button(self):
         """Creates a new Chat Button"""
@@ -346,7 +365,9 @@ class QbrixServiceKeywords(QbrixRobotTask):
                 "div[data-aura-class='setup_serviceLsfContent'] >> :nth-match(input.slds-input:visible, 1)",
                 channel_name,
             )
-            self.browser.click(":nth-match(.activeStep label:text-is('Developer Name'):visible, 1)")
+            self.browser.click(
+                ":nth-match(.activeStep label:text-is('Developer Name'):visible, 1)"
+            )
             sleep(2)
             self.browser.click("button:text-is('Save'):visible")
             sleep(3)
@@ -533,8 +554,8 @@ class QbrixServiceKeywords(QbrixRobotTask):
 
         # Go To Setup Page
         self.shared.go_to_setup_admin_page("DialerSetupPage/home", 5)
-        
-         # Check if Enabled and enable if not already
+
+        # Check if Enabled and enable if not already
         timeout_count = 0
         timeout_reached = False
         while timeout_count <= 30:
@@ -551,7 +572,9 @@ class QbrixServiceKeywords(QbrixRobotTask):
                 "div.voiceSliderCheckBox:has-text('Call Recording'):near(h3:has-text('Call Recording')) >> div.switchText:text-is('Enabled'):visible"
             )
             if enabled_count == 1:
-                self.builtin.log_to_console("\nCall Recordings already enabled. Skipping task.")
+                self.builtin.log_to_console(
+                    "\nCall Recordings already enabled. Skipping task."
+                )
                 return
 
             timeout_count += 1
