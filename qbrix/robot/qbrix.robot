@@ -158,7 +158,6 @@ Check and Enable Inbox
 
 Check and Enable Seller Home
     Check and Enable Seller Home
-    
 #
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # SERVICE CLOUD TESTS
