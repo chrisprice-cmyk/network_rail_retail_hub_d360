@@ -956,12 +956,12 @@ class QbrixSharedKeywords:
         """
         self.go_to_setup_admin_page("SonicGettingStarted/home")
         self.browser.wait_for_elements_state(
-            "h2:text-is('Data Pipelines')", ElementState.visible, "30s"
+            "h2:has-text('Data Pipeline')", ElementState.visible, "30s"
         )
-        if not "checked" in self.browser.get_element_states(
-            "label:has-text('Disabled')"
-        ):
-            self.browser.click("label:has-text('Disabled')")
+        toggle_selector = "lightning-primitive-input-toggle label:has-text('Data Pipeline')"
+        self.browser.wait_for_elements_state(toggle_selector, ElementState.visible, "30s")
+        if not "checked" in self.browser.get_element_states(toggle_selector):
+            self.browser.click(toggle_selector)
             sleep(3)
 
     def check_package_id_version(self, package_id=None, wait_for_upgrade=True):
