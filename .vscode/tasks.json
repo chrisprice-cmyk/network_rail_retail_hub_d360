@@ -5,9 +5,273 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Q BRIX [VNC]: Open VNC Web Browser)",
+      "label": "QX: 🔗 Connect to Salesforce Production or Demo Org",
+      "type": "shell",
+      "command": "qx org connect --org ${input:OrgAlias}",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "QX: 🔗 Connect to Salesforce Sandbox or Scratch Org",
+      "type": "shell",
+      "command": "qx org connect --org ${input:OrgAlias} --sandbox",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "QX: 🛠️ Create a scratch org",
+      "type": "shell",
+      "command": "qx org create --org ${input:OrgAlias}",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "QX: 🛠️ Create dev and qa scratch orgs",
+      "type": "shell",
+      "command": "qx org create --org dev && qx org create --org qa",
+      "windows": {
+        "command": "qx org create --org dev ; qx org create --org qa"
+      },
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "QX: 🌐 Open Salesforce Org in browser",
+      "type": "shell",
+      "command": "qx org open --org ${input:OrgAlias}",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "QX: 💾 Save changes from Salesforce Org to Q Brix",
+      "type": "shell",
+      "command": "qx retrieve --org ${input:OrgAlias}",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "QX: 💾 Save changes to GitHub",
+      "type": "shell",
+      "command": "git add -A && git commit -m ${input:CommitMessage}",
+      "windows": {
+        "command": "git add -A ; git commit -m ${input:CommitMessage}"
+      },
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "QX: 🗑 Delete dev and qa scratch orgs",
+      "type": "shell",
+      "command": "qx org delete qa && qx org delete dev",
+      "windows": {
+        "command": "qx org delete qa ; qx org delete dev"
+      },
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "QX: 🗑 Delete a Scratch Org",
+      "type": "shell",
+      "command": "qx org delete ${input:OrgAlias}",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "QX: 📤 Deploy Q Brix to Salesforce Org",
+      "type": "shell",
+      "command": "qx deploy --org ${input:OrgAlias} --flow_name ${input:FlowName} --generate_permission_set ${input:GeneratePermSet}",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "QX: 🔀 Migrate Q Brix to QX Format",
+      "type": "shell",
+      "command": "qx migrate legacy-qbrix",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "QX: 📦 Retrieve unmanaged package from Salesforce Org",
+      "type": "shell",
+      "command": "qx migrate package --org ${input:OrgAlias} --package ${input:PackageName}",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "QX: 🔍 Search Qverse",
+      "type": "shell",
+      "command": "qx qverse search '${input:SearchString}'",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "QX: 🔗 Connect to NextGen DevHub",
+      "type": "shell",
+      "command": "qx config sfdx --connect_devhub",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "QX: 🔄 Install and Update QX",
+      "type": "shell",
+      "command": "source ~/.local/pipx/venvs/cumulusci/bin/activate && python3 -m pip install 'qbrix-cli @ git+https://github.com/sfdc-qbranch/qbrix_cli.git@main'",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "QX: 🔄 Install and Update CumulusCI (Q Brix Edition)",
+      "type": "shell",
+      "command": "python3 -m pip install 'cumulusci @ git+https://github.com/sfdc-qbranch/CumulusCI.git@quasar' --force",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Codespace: 🖥 Open VNC View",
       "type": "shell",
       "command": "open https://$CODESPACE_NAME-6080.app.github.dev",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Codespace: ↩️ Reset QX and Initiate Codespace",
+      "type": "shell",
+      "command": "qx setup init-codespace",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -322,7 +586,7 @@
     {
       "label": "Q BRIX [INFO]: Show information about a specified flow.",
       "type": "shell",
-      "command": "cci task info ${input:FlowName}",
+      "command": "cci flow info ${input:FlowName}",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -606,57 +870,18 @@
         "showReuseMessage": false,
         "panel": "shared"
       }
-    },
-    {
-      "label": "QX [CODESPACES]: Initiate Codespace and Connect to DevHub",
-      "type": "shell",
-      "command": "qx setup init-codespace",
-      "group": "build",
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "revealProblems": "onProblem",
-        "focus": true,
-        "echo": false,
-        "showReuseMessage": false,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "QX [INSTALL]: Install/Update QX CLI",
-      "type": "shell",
-      "command": "source ~/.local/pipx/venvs/cumulusci/bin/activate && python3 -m pip install 'qbrix-cli @ git+https://github.com/sfdc-qbranch/qbrix_cli.git@main'",
-      "group": "build",
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "revealProblems": "onProblem",
-        "focus": true,
-        "echo": false,
-        "showReuseMessage": false,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "Quasar [INSTALL]: Install/Update Quasar CumulusCI",
-      "type": "shell",
-      "command": "python3 -m pip install 'cumulusci @ git+https://github.com/sfdc-qbranch/CumulusCI.git@quasar' --force",
-      "group": "build",
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "revealProblems": "onProblem",
-        "focus": true,
-        "echo": false,
-        "showReuseMessage": false,
-        "panel": "shared"
-      }
     }
   ],
   "inputs": [
     {
       "id": "ScratchOrgUsername",
       "description": "Please enter the username for the org",
+      "default": "",
+      "type": "promptString"
+    },
+    {
+      "id": "SearchString",
+      "description": "Please enter the search term",
       "default": "",
       "type": "promptString"
     },
@@ -729,7 +954,7 @@
     {
       "id": "FlowName",
       "description": "Enter the name of the flow:",
-      "default": "",
+      "default": "deploy_qbrix",
       "type": "promptString"
     },
     {
@@ -755,6 +980,19 @@
       "description": "Enter the relevent start url for the robot session. Default is setup home /lightning/setup/SetupOneHome/home:",
       "default": "/lightning/setup/SetupOneHome/home",
       "type": "promptString"
+    },
+    {
+      "id": "GeneratePermSet",
+      "description": "Set to True to generate and update the Permission Set for the Q Brix",
+      "default": "True",
+      "type": "pickString",
+      "options": [
+        "True",
+        "False"
+      ]
     }
+
+
+
   ]
 }
