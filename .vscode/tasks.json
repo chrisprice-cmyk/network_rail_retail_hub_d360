@@ -98,12 +98,24 @@
       }
     },
     {
-      "label": "QX: 💾 Save changes to GitHub",
+      "label": "QX: 💾 Save and push changes to GitHub",
       "type": "shell",
-      "command": "git add -A && git commit -m ${input:CommitMessage}",
-      "windows": {
-        "command": "git add -A ; git commit -m ${input:CommitMessage}"
-      },
+      "command": "qx github push --commit_message '${input:CommitMessage}'",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "QX: 📩 Get/Pull latest changes from GitHub",
+      "type": "shell",
+      "command": "qx github pull",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
