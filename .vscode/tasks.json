@@ -118,9 +118,9 @@
     {
       "label": "QX: 🗑 Delete dev and qa scratch orgs",
       "type": "shell",
-      "command": "qx org delete qa && qx org delete dev",
+      "command": "qx org delete --org qa && qx org delete --org dev",
       "windows": {
-        "command": "qx org delete qa ; qx org delete dev"
+        "command": "qx org delete --org qa ; qx org delete --org dev"
       },
       "group": "build",
       "problemMatcher": [],
