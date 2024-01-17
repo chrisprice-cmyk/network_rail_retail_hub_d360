@@ -163,7 +163,7 @@
     {
       "label": "QX: 📤 Deploy Q Brix to Salesforce Org",
       "type": "shell",
-      "command": "qx deploy --org ${input:OrgAlias} --flow_name ${input:FlowName} --generate_permission_set ${input:GeneratePermSet}",
+      "command": "qx deploy --org ${input:OrgAlias} --flow_name ${input:FlowName} --generate_permission_set",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
