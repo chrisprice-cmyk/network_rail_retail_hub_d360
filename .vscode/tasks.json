@@ -35,6 +35,21 @@
       }
     },
     {
+      "label": "QX: 🗑 Logout/Disconnect from Salesforce Production or Demo Org",
+      "type": "shell",
+      "command": "qx org logout --alias ${input:OrgAlias}",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "shared"
+      }
+    },
+    {
       "label": "QX: 🔗 Connect to Salesforce Sandbox or Scratch Org",
       "type": "shell",
       "command": "qx org connect --org ${input:OrgAlias} --sandbox",
