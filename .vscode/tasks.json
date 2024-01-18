@@ -5,6 +5,21 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "QX: 🧰 Show Utilities",
+      "type": "shell",
+      "command": "qx utils list",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "shared"
+      }
+    },
+    {
       "label": "QX: 🔗 Connect to Salesforce Production or Demo Org",
       "type": "shell",
       "command": "qx org connect --org ${input:OrgAlias}",
