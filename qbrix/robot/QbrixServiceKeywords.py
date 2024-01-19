@@ -109,16 +109,30 @@ class QbrixServiceKeywords(QbrixRobotTask):
             sleep(2)
         self.builtin.log_to_console("\nCase Swarming enabled.")
 
-        # Set default collaboration tool
-        self.builtin.log_to_console("\nSetting default collaboration tool to Slack.")
-        self.browser.click(
-            "li.slds-setup-assistant__item:has-text('Swarm With a Collaboration Tool') >> button.slds-combobox__input"
-        )
-        self.shared.wait_and_click("span.slds-truncate:has-text('Slack'):visible")
-        self.builtin.log_to_console("\nSlack set as default tool.")
+        self.enable_slack_for_swarming(browse_to_setup_page=False)
 
         # Complete
         self.builtin.log_to_console("\nCase Swarming setup complete!")
+
+    def enable_slack_for_swarming(self, browse_to_setup_page=True):
+        """Enables Slack as the Case Swarming Collaboration Tool"""
+        if browse_to_setup_page:
+            self.shared.go_to_setup_admin_page("CaseSwarming/home")
+
+        # Set default collaboration tool
+        self.builtin.log_to_console("\nSetting default collaboration tool to Slack.")
+        try:
+            self.browser.click(
+                "li.slds-setup-assistant__item:has-text('Swarm With a Collaboration Tool') >> button.slds-combobox__input"
+            )
+            self.shared.wait_and_click(
+                "span.slds-truncate:has-text('Slack'):visible", timeout=3
+            )
+            self.builtin.log_to_console("\nSlack set as default tool.")
+        except Exception as e:
+            self.builtin.log_to_console(
+                "\nUnable to set collaboration tool setting. Moving on."
+            )
 
     def create_chat_button(self):
         """Creates a new Chat Button"""
