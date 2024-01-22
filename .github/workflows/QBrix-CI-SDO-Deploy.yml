@@ -67,7 +67,7 @@ jobs:
     needs: [collection_deployment_steps]
     runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
-      image: "ghcr.io/sfdc-qbranch/qbrix-base-container-quasar:latest"
+      image: "ghcr.io/${{ github.repository_owner }}/qbrix-base-container-quasar:latest"
       credentials:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.QBRIX_CONTAINER_PUBLISH_GITHUB_PAT}}
@@ -252,7 +252,7 @@ jobs:
     needs: [collection_deployment_steps, target_org_env_build]
     runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
-      image: "ghcr.io/sfdc-qbranch/qbrix-base-container-quasar:latest"
+      image: "ghcr.io/${{ github.repository_owner }}/qbrix-base-container-quasar:latest"
       credentials:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.QBRIX_CONTAINER_PUBLISH_GITHUB_PAT}}
@@ -340,7 +340,7 @@ jobs:
     needs: [qbrix_deployments, target_org_env_build]
     runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
-      image: "ghcr.io/sfdc-qbranch/qbrix-base-container-quasar:latest"
+      image: "ghcr.io/${{ github.repository_owner }}/qbrix-base-container-quasar:latest"
       credentials:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.QBRIX_CONTAINER_PUBLISH_GITHUB_PAT}}
@@ -377,7 +377,7 @@ jobs:
     needs: [qbrix_deployments, target_org_env_build]
     runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
-      image: "ghcr.io/sfdc-qbranch/qbrix-base-container-quasar:latest"
+      image: "ghcr.io/${{ github.repository_owner }}/qbrix-base-container-quasar:latest"
       credentials:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.QBRIX_CONTAINER_PUBLISH_GITHUB_PAT}}
