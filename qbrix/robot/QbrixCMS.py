@@ -552,7 +552,7 @@ class QbrixCMS(QbrixRobotTask):
 
             for file in files:
                 file_name = self.browser.get_property(file, "title")
-                file_path = os.path.join(dir_path, file_name)
+                file_path = os.path.abspath(os.path.join(dir_path, file_name))
 
                 download_promise = self.browser.promise_to_wait_for_download(
                     saveAs=file_path
