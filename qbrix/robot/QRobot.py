@@ -8,7 +8,7 @@ from robot.api.deco import library
 from robot.libraries.BuiltIn import BuiltIn
 
 
-@library(scope='GLOBAL', auto_keywords=True, doc_format='reST')
+@library(scope="GLOBAL", auto_keywords=True, doc_format="reST")
 class QRobot:
     """Initializes the Q Robot Browser"""
 
@@ -20,7 +20,6 @@ class QRobot:
 
     @property
     def salesforce_api(self):
-
         """Loads Salesforce API Keywords and methods"""
 
         if self._salesforce_api is None:
@@ -29,7 +28,6 @@ class QRobot:
 
     @property
     def builtin(self):
-
         """Loads Builtin Methods"""
 
         if getattr(self, "_builtin", None) is None:
@@ -38,7 +36,6 @@ class QRobot:
 
     @property
     def cumulusci(self):
-
         """Loads Keyword Library for working with CumulusCI from Robot"""
 
         if getattr(self, "_cumulusci", None) is None:
@@ -47,7 +44,6 @@ class QRobot:
 
     @property
     def browser(self):
-
         """Loads Default Browser Instance"""
 
         if self._browser is None:
@@ -75,11 +71,49 @@ class QRobot:
             self.browser.click("a.switch-to-lightning")
             return True
 
-        except (AssertionError):
+        except AssertionError:
             return False
 
-    def open_q_browser(self, record_video=False):
+    def set_user_to_english(self, revert=False):
+        """If the current user is not using English as their language, set the language to English for the run"""
 
+        self.builtin.log_to_console("\nChecking Running User Language")
+        username = self.cumulusci.get_org_info().get("username")
+        self.builtin.log_to_console(f"\n -> Running User: {username}")
+
+        if username:
+            results = self.salesforce_api.soql_query(
+                f"SELECT Id, LanguageLocaleKey FROM USER WHERE Username = '{username}' LIMIT 1"
+            )
+            if results.get("totalSize", 0) == 1:
+                self.builtin.log_to_console("\n -> Loaded User Record")
+                language_key = results.get("records", {})[0].get("LanguageLocaleKey")
+                user_id = results.get("records", {})[0].get("Id")
+                self.builtin.log_to_console(
+                    f"\n -> ID: {user_id}\n -> Current Language Key: {language_key}"
+                )
+                if not revert and language_key and not language_key.startswith("en_"):
+                    self.builtin.log_to_console("\n -> Non-English Language Detected")
+                    self.builtin.set_suite_variable("${ORIGINAL_LANG}", language_key)
+                    self.builtin.log_to_console(
+                        "\n -> Switching Language to English (US) for run"
+                    )
+                    self.salesforce_api.salesforce_update(
+                        obj_name="User", obj_id=user_id, LanguageLocaleKey="en_us"
+                    )
+                if revert:
+                    original_language = self.builtin.get_variable_value(
+                        "${ORIGINAL_LANG}"
+                    )
+                    if original_language:
+                        self.builtin.log_to_console(
+                            f"\n -> Reverting User Language to {original_language}"
+                        )
+                        self.salesforce_api.salesforce_update(
+                            obj_name="User", obj_id=user_id, LanguageLocaleKey="en_us"
+                        )
+
+    def open_q_browser(self, record_video=False):
         """Starts a new browser session with Chromium, performs login and goes to Setup home"""
 
         # Set Defaults for Browser Instance
@@ -90,9 +124,9 @@ class QRobot:
         browser_enum = getattr(SupportedBrowsers, browser_type, None)
 
         # Enable Video Recording (if requested)
-        rec=None
+        rec = None
         if record_video:
-            rec={"dir": "../video"}
+            rec = {"dir": "../video"}
 
         # Open New Browser
         browser_id = self.browser.new_browser(browser=browser_enum, headless=headless)
@@ -125,14 +159,21 @@ class QRobot:
         if retries >= 3:
             raise Exception("Unable to launch robot. Please try again.")
 
+        # International Check - Switch to English US if not English US
+        self.set_user_to_english()
+
         # Browse to Setup Page if not there already
-        if not str(self.browser.get_url()).endswith("/lightning/setup/SetupOneHome/home"):
-            self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/setup/SetupOneHome/home", timeout="120s")
+        if not str(self.browser.get_url()).endswith(
+            "/lightning/setup/SetupOneHome/home"
+        ):
+            self.browser.go_to(
+                f"{self.cumulusci.org.instance_url}/lightning/setup/SetupOneHome/home",
+                timeout="120s",
+            )
 
         return browser_id, context_id, page_details
 
     def close_q_browser(self):
-
         """Closes All Instances of Browser which have been launched within the session"""
-
+        self.set_user_to_english(revert=True)
         self.browser.close_browser("ALL")
