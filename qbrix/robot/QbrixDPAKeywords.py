@@ -55,25 +55,19 @@ class QbrixDPAKeywords(QbrixRobotTask):
         # 1 = OmniStudio Metadata - index 0
         # 2 = Standard OmniStudio Runtime - index 1
         # 3 = DataRaptor Versioning - index 2
-
-        checked = "checked" in self.browser.get_element_states(
-            ":nth-match(label:has-text('OmniStudio Metadata'), 1)"
-        )
+        selector = "lightning-primitive-input-toggle label:has-text('OmniStudio Metadata')"
+        checked = "checked" in self.browser.get_element_states(selector)
         if not checked:
-            toggle_switch = self.browser.get_element(
-                ":nth-match(label:has-text('OmniStudio Metadata'), 1)"
-            )
-            self.browser.click(toggle_switch)
-            sleep(1)
-        sleep(15)
-        try:
-            self.shared.click_button_with_text("OK")
-            sleep(10)
-            self.builtin.log_to_console("\n -> Enabled OmniStudio Metadata")
-        except Exception as e:
-            self.builtin.log_to_console(
-                f"\n -> [SILENT FAILURE] Unable to enable OmniStudio Metadata.\nError Details: {e}"
-            )
+            self.browser.click(selector)
+            sleep(2)
+            try:
+                self.shared.click_button_with_text("OK")
+                sleep(10)
+                self.builtin.log_to_console("\n -> Enabled OmniStudio Metadata")
+            except Exception as e:
+                self.builtin.log_to_console(
+                    f"\n -> [SILENT FAILURE] Unable to enable OmniStudio Metadata.\nError Details: {e}"
+                )       
 
         self.go_to_lightning_setup_omnistudio_settings()
 
