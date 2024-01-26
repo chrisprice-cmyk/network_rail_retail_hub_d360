@@ -589,6 +589,7 @@ class QbrixSharedKeywords:
         self.browser.click(selector)
         sleep(post_click_sleep)
 
+
     def wait_and_fill_text(
         self,
         selector: str = None,
@@ -616,6 +617,40 @@ class QbrixSharedKeywords:
         )
         self.browser.fill_text(selector, text)
         sleep(post_click_sleep)
+
+
+    def wait_and_toggle(
+        self, selector: str = None, toggle_on: bool = True, timeout: str = "30", post_toggle_sleep: int = 1
+    ):
+        """Waits for an element to become visible and enabled. Then toggle.
+
+        Args:
+            selector (str): Playwright selector for the element
+            toggle_on (bool): if True, we only want to toggle On, otherwise, only want to toggle Off
+            timeout (str): (Optional) Duration in seconds as a string. Defaults to 30 seconds
+            post_toggle_sleep (int): (Optional) The amount of time in seconds to wait after the element is clicked. The default is 1 second.
+        """
+
+        if not selector:
+            return False
+
+        self.wait_for_page_to_load()
+        self.browser.wait_for_elements_state(
+            selector, ElementState.visible, f"{timeout}s"
+        )
+        self.browser.wait_for_elements_state(
+            selector, ElementState.enabled, f"{timeout}s"
+        )
+        # get states of the toggle
+        states = self.browser.get_element_states(selector)
+        # only click it if: we need on but it's currently off, or we need off but it's currently on
+        if (toggle_on and not "checked" in states) or (not toggle_on and "checked" in states):
+            self.browser.click(selector)
+            sleep(post_toggle_sleep)
+            return True
+        
+        return False
+
 
     def check_state(self, selector: str = None, state: str = "visible"):
         """Checks if an element state is equal to a given state within a certain timeout

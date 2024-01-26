@@ -71,36 +71,26 @@ class QbrixDPAKeywords(QbrixRobotTask):
 
         self.go_to_lightning_setup_omnistudio_settings()
 
-    def enable_standard_omnistudio_runtime(self):
-        sleep(10)
-        # 1 = OmniStudio Metadata - index 0
-        # 2 = Standard OmniStudio Runtime - index 1
-        # 3 = DataRaptor Versioning - index 2
 
-        js_var = self.build_toggle_on_js(1)
-        self.browser.evaluate_javascript(
-            ":nth-match(runtime_omnistudio-pref-toggle,2)", js_var
-        )
-        sleep(15)
+    def enable_standard_omnistudio_runtime(self):
+        selector = "lightning-primitive-input-toggle label:has-text('Managed Package Runtime')"
+        toggled = self.shared.wait_and_toggle(selector, True)
+        if toggled:
+            self.builtin.log_to_console("\n -> Enabled Managed Package Runtime")
+        else:
+            self.builtin.log_to_console("\n -> Managed Package Runtime already enabled previously")
         self.go_to_lightning_setup_omnistudio_settings()
+
 
     def disable_standard_omnistudio_runtime(self):
-        sleep(10)
-        # 1 = OmniStudio Metadata - index 0
-        # 2 = Standard OmniStudio Runtime - index 1
-        # 3 = DataRaptor Versioning - index 2
-
-        checked = "checked" in self.browser.get_element_states(
-            ":nth-match(label:has-text('Managed Package Runtime'), 1)"
-        )
-        if checked:
-            toggle_switch = self.browser.get_element(
-                ":nth-match(label:has-text('Managed Package Runtime'), 1)"
-            )
-            self.browser.click(toggle_switch)
-            sleep(1)
-        sleep(15)
+        selector = "lightning-primitive-input-toggle label:has-text('Managed Package Runtime')"
+        toggled = self.shared.wait_and_toggle(selector, False)
+        if toggled:
+            self.builtin.log_to_console("\n -> Disabled Managed Package Runtime")
+        else:
+            self.builtin.log_to_console("\n -> Managed Package Runtime already disabled previously")
         self.go_to_lightning_setup_omnistudio_settings()
+
 
     def enable_dataraptor_versioning(self):
         sleep(10)
