@@ -108,6 +108,9 @@ Add Case Classification Model
     Enable Einstein Classification
     Create Case Classification Model
 
+Activate Einstein Classification Models
+    Activate Einstein Case Classification Model     Seg1       Case Classification     True
+    Activate Einstein Case Classification Model     Case Wrap-up       Case Wrap-up     False
 #
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # MARKETING TESTS

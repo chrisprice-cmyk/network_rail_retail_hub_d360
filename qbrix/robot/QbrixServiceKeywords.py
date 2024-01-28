@@ -258,6 +258,80 @@ class QbrixServiceKeywords(QbrixRobotTask):
             model_name="SDO - Classification", model_type="Case Classification"
         )
 
+    def enable_einstein_classification(self, classification_toggle: str = None):
+        self.shared.wait_on_element(classification_toggle)
+        if "checked" not in self.browser.get_element_states(classification_toggle):
+            self.browser.click(classification_toggle)
+        else:
+            return
+        sleep(60)
+        self.shared.wait_on_element("#modelTable")
+        self.builtin.log_to_console("\n Enabled einstein classification")
+
+    def disable_einstein_classification(self, classification_toggle: str = None):
+        self.shared.wait_on_element(classification_toggle)
+        if "checked" in self.browser.get_element_states(classification_toggle):
+            self.browser.click(classification_toggle)
+        else:
+            return
+        modal_turnoff_button = (
+            "div.modal-footer >> button.slds-button:has-text('Turn Off')"
+        )
+        self.shared.wait_and_click(modal_turnoff_button)
+        sleep(3)
+        self.builtin.log_to_console("\n Disabled einstein classification")
+
+    def activate_einstein_case_classification_model(self, model_name: str = None, model_type: str = None, should_enable_toggle: str = None):
+    
+        #navigate to einstein case classification setup page
+        self.shared.go_to_setup_admin_page("EinsteinCaseClassification/home", 5)
+        model_type_tab = (
+            f"a.slds-tabs_scoped__link:has-text('{model_type}')"
+        )
+        self.shared.wait_and_click(model_type_tab)
+
+        #getting the toggle element
+        if model_type == 'Case Classification':
+            tab_element_no = 1
+        else:
+            tab_element_no = 2
+
+        classification_toggle = (
+             f"div.slds-tabs_scoped >> :nth-match(div.case-classification-pref, {tab_element_no}) >> lightning-input >> label.slds-checkbox_toggle"
+        )
+
+        #enabling and disabling toggle 
+        if(should_enable_toggle == 'True'):
+            self.enable_einstein_classification(
+                classification_toggle= classification_toggle
+            )
+            self.disable_einstein_classification(
+                classification_toggle= classification_toggle
+            )
+            self.enable_einstein_classification(
+                classification_toggle= classification_toggle
+            )
+
+        #click on model name if exists and ready to activate
+        if(self.browser.get_element_count(f"#modelTable tr:has(td.modelName button:text-is('{model_name}')) td.modelStatus:text-is('Ready to Activate')")):
+            model_click = (
+                f"td.modelName >> button.slds-button:has-text('{model_name}')"
+            )
+            self.shared.wait_and_click(model_click)
+            activate_button = (
+                "div.ccProgressStepButtons >> button.slds-button:has-text('activate')"
+            )
+            self.shared.wait_and_click(activate_button)
+
+            modal_activate_button = (
+                "div.modal-footer >> button.slds-button:has-text('Activate')"
+            )
+            self.shared.wait_and_click(modal_activate_button)
+            self.builtin.log_to_console(f"\n Activated {model_name} einstein classification")
+            self.browser.reload()
+        else:
+            self.builtin.log_to_console(f"\n Model {model_name} is not present or already activated")
+
     def messaging_components_setup(self):
         """
         Runs the Messaging Components Setup
