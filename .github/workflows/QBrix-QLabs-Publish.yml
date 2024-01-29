@@ -25,6 +25,11 @@ env:
 jobs:
   qlabs_publish:
     runs-on: sfdc-qbranch-nextgen-ubuntu
+    container:
+      image: "ghcr.io/${{ github.repository_owner }}/qbrix-base-container-quasar:latest"
+      credentials:
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.QBRIX_CONTAINER_PUBLISH_GITHUB_PAT}}
     steps:
       - uses: actions/checkout@v4
 
@@ -43,76 +48,75 @@ jobs:
         run: sf org display -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} --json > qlab_tmp.json
 
       - name: extract the accesstoken for qlabs
-        uses: sergeysova/jq-action@v2
         id: qlabs_accesstoken
-        with:
-          cmd: jq '.result.accessToken' qlab_tmp.json -r
+        run: |
+          jq '.result.accessToken' qlab_tmp.json -r
+          echo "qlabs_accesstoken=$(jq '.result.accessToken' qlab_tmp.json -r)" >> "$GITHUB_OUTPUT"
 
       - name: Install PYYaml
         run: python3 -m pip install pyyaml
 
       - name: Write python File
-        uses: "DamianReeves/write-file-action@master"
-        with:
-          path: ${{ github.workspace }}/qlab_publish.py
-          write-mode: overwrite
-          contents: |
-            import yaml
-            import os
-            import requests
-            import jwt
-            import json
-            def getAuth(user:str):
-              QSR_JWT_SIGNING_SECRET = os.environ.get('QSR_JWT_SIGNING_SECRET')
-              encoded_jwt = jwt.encode({"sub": f"{user}", "external_id": f"{user}", "aud": f"{user}"},QSR_JWT_SIGNING_SECRET, algorithm="HS256")
-              return encoded_jwt
+        id: create_publish_file
+        run: |
+          cat << EOF > qlab_publish.py
+          import yaml
+          import os
+          import requests
+          import jwt
+          import json
+          def getAuth(user:str):
+            QSR_JWT_SIGNING_SECRET = os.environ.get('QSR_JWT_SIGNING_SECRET')
+            encoded_jwt = jwt.encode({"sub": f"{user}", "external_id": f"{user}", "aud": f"{user}"},QSR_JWT_SIGNING_SECRET, algorithm="HS256")
+            return encoded_jwt
 
-            def refreshQBrix(qbrix:str):
-              url = os.environ.get('QSR_ENDPOINT')
-              payload = json.dumps({
-                  "qbrix": f"{qbrix}"
-              })
-              print(payload)
-              headers = {
-                  'Content-Type': 'application/json',
-                  'Authorization': f'Bearer {getAuth(os.environ.get("USER"))}'
-              }
-              response = requests.request("PUT", url, headers=headers, data=payload)
+          def refreshQBrix(qbrix:str):
+            url = os.environ.get('QSR_ENDPOINT')
+            payload = json.dumps({
+                "qbrix": f"{qbrix}"
+            })
+            print(payload)
+            headers = {
+                'Content-Type': 'application/json',
+                'Authorization': f'Bearer {getAuth(os.environ.get("USER"))}'
+            }
+            response = requests.request("PUT", url, headers=headers, data=payload)
 
-            refreshQBrix('${{ github.event.repository.name }}')
-            filepath='${{ github.workspace }}/cumulusci.yml'
-            inputsfile = '${{ github.workspace }}/qbrix_local/inputs/required.json'
-            if(os.path.isfile(filepath)):
-                with open(filepath, 'r') as stream:
-                  yamldata = yaml.safe_load(stream)
-                  url = "https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixContentService"
+          refreshQBrix('${{ github.event.repository.name }}')
+          filepath='${{ github.workspace }}/cumulusci.yml'
+          inputsfile = '${{ github.workspace }}/qbrix_local/inputs/required.json'
+          if(os.path.isfile(filepath)):
+              with open(filepath, 'r') as stream:
+                yamldata = yaml.safe_load(stream)
+                url = "https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixContentService"
 
-                  payload = json.dumps(yamldata)
-                  payloaddic = json.loads(payload)
-                  print(type(payload))
-                  payloaddic["github_repository_id"] = "${{ github.repository_id }}"
-                  payloaddic["github_repository_url"] = "${{ github.repositoryUrl }}"
-                  payloaddic["github_sha"] = "${{ github.sha }}"
-                  payload=json.dumps(payloaddic)
+                payload = json.dumps(yamldata)
+                payloaddic = json.loads(payload)
+                print(type(payload))
+                payloaddic["github_repository_id"] = "${{ github.repository_id }}"
+                payloaddic["github_repository_url"] = "${{ github.repositoryUrl }}"
+                payloaddic["github_sha"] = "${{ github.sha }}"
+                payload=json.dumps(payloaddic)
 
-                  #check for a required parameters object
-                  if (os.path.isfile(inputsfile)):
-                    inputcontent = open(inputsfile, "r")
-                    inputjson = inputcontent.read()
-                    inputsdict = json.loads(inputjson)
+                #check for a required parameters object
+                if (os.path.isfile(inputsfile)):
+                  inputcontent = open(inputsfile, "r")
+                  inputjson = inputcontent.read()
+                  inputsdict = json.loads(inputjson)
 
-                    if("parameters" in inputsdict):
-                      print('Parameters found')
-                      print(payload)
-                      tempPayload=json.loads(payload)
-                      tempPayload["parameters"]=inputsdict["parameters"]
-                      payload=json.dumps(tempPayload)
+                  if("parameters" in inputsdict):
+                    print('Parameters found')
+                    print(payload)
+                    tempPayload=json.loads(payload)
+                    tempPayload["parameters"]=inputsdict["parameters"]
+                    payload=json.dumps(tempPayload)
 
-                  headers = {
-                      'Authorization': 'Bearer ${{ steps.qlabs_accesstoken.outputs.value }}',
-                      'Content-Type': 'application/json'
-                  }
-                  requests.request("POST", url, headers=headers, data=payload)
+                headers = {
+                    'Authorization': 'Bearer ${{ steps.qlabs_accesstoken.outputs.qlabs_accesstoken  }}',
+                    'Content-Type': 'application/json'
+                }
+                requests.request("POST", url, headers=headers, data=payload)
+          EOF
 
       - name: Run the publish
-        run: python3 ${{ github.workspace }}/qlab_publish.py
+        run: python3 qlab_publish.py

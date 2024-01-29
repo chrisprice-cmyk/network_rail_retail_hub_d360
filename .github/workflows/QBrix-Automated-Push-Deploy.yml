@@ -24,17 +24,22 @@ env:
 jobs:
   collection_deployment_steps:
     runs-on: sfdc-qbranch-nextgen-ubuntu
+    container:
+      image: "ghcr.io/${{ github.repository_owner }}/qbrix-base-container-quasar:latest"
+      credentials:
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.QBRIX_CONTAINER_PUBLISH_GITHUB_PAT}}
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Core Setup - key for jwt auth
-        run: echo "${{ secrets.QBRIX_DEVHUB_PRIVATE_KEY }}" > devhub.key
-
-      # Install SFDX
-      - name: Install SFDX
-        run: npm install @salesforce/cli --global
+      - name: Set ownership
+        id: set_ownership
+        run: |
+          # this is to fix GIT not liking owner of the checkout dir
+          chown -R $(id -u):$(id -g) $PWD
+          echo '${{ secrets.QBRIX_DEVHUB_PRIVATE_KEY }}' > devhub.key
 
       # We will use a common app with a common key -
       - name: Create SFDX Session for QLABS Service Account
@@ -44,39 +49,32 @@ jobs:
         run: sf org display -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} --json > qlab_tmp.json
 
       - name: extract the accesstoken for qlabs
-        uses: sergeysova/jq-action@v2
         id: qlabs_accesstoken
-        with:
-          cmd: jq '.result.accessToken' qlab_tmp.json -r
+        run: |
+          echo "qlabs_accesstoken=$(jq '.result.accessToken' qlab_tmp.json -r)" >> "$GITHUB_OUTPUT"
 
       #determine if there is a template or instance override defined in qlabs for this build config
-      - name: get qlabs auto deploy settings
+      - name: get qlabs auto deploy settings - pipe to jq to file
         id: qlab_config_settings
-        uses: fjogeleit/http-request-action@v1
-        with:
-          url: "https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixAutoDeploySettings?qbrixid=${{ github.event.repository.name }}"
-          method: "GET"
-          customHeaders: '{"Content-Type": "application/json","Authorization": "Bearer ${{ steps.qlabs_accesstoken.outputs.value }}"}'
-          timeout: 30000
-
-      - name: create the automated deploy settings
-        uses: "DamianReeves/write-file-action@master"
-        with:
-          path: ${{ github.workspace }}/automated_deploy.json
-          write-mode: overwrite
-          contents: |
-            ${{ steps.qlab_config_settings.outputs.response }}
-
-      - uses: nelonoel/branch-name@v1.0.1
-      - id: set-matrix
-        uses: JoshuaTheMiller/conditional-build-matrix@main
-        with:
-          filter: "[*]"
-          inputFile: ${{ github.workspace }}/automated_deploy.json
+        run: |
+           # call qlabs setting service for this qbrix -> get the json -> pipe to jq
+            curl --location --request GET 'https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixAutoDeploySettings?qbrixid=${{ github.event.repository.name }}' \
+            --header 'Content-Type: application/json' \
+            --header 'Authorization: Bearer ${{ steps.qlabs_accesstoken.outputs.qlabs_accesstoken }}' | jq > automated_deploy.json
+        
+      - name: set the build job matrix for deployments
+        id: set-matrix
+        run: |
+            echo "matrix={\"include\":$(jq -c '.' automated_deploy.json -r)}" >> $GITHUB_OUTPUT
 
   qbrix_deployments:
     needs: [collection_deployment_steps]
     runs-on: sfdc-qbranch-nextgen-ubuntu
+    container:
+      image: "ghcr.io/${{ github.repository_owner }}/qbrix-base-container-quasar:latest"
+      credentials:
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.QBRIX_CONTAINER_PUBLISH_GITHUB_PAT}}
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.collection_deployment_steps.outputs.matrix) }}
@@ -84,20 +82,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Disable TCP/UDP Offloading (Linux)
-        if: matrix.targetusername!=''
-        shell: bash
-        run: sudo ethtool -K eth0 tx off rx off
-
       - name: Core Setup - key for jwt auth
         if: matrix.targetusername!=''
         run: echo "${{ secrets.QBRIX_DEVHUB_PRIVATE_KEY }}" > devhub.key
-
-      # Install SFDX
-      - name: Install SFDX
-        if: matrix.targetusername!=''
-        run: npm install @salesforce/cli --global
-
+      
       # We will use a common app with a common key -
       - name: Create SFDX Session for QLABS Service Account
         if: matrix.targetusername!=''
@@ -109,76 +97,13 @@ jobs:
 
       - name: extract the accesstoken for qlabs
         if: matrix.targetusername!=''
-        uses: sergeysova/jq-action@v2
         id: qlabs_accesstoken
-        with:
-          cmd: jq '.result.accessToken' qlab_tmp.json -r
+        run: |
+          echo "qlabs_accesstoken=$(jq '.result.accessToken' qlab_tmp.json -r)" >> "$GITHUB_OUTPUT"
 
       - name: The automated deploy matrix json contains the list of target org usernames (TSOs Ideally) to deploy against.
         if: matrix.targetusername!=''
         run: sf org login jwt -o ${{ matrix.targetusername }} -a dev_target_username -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
-
-      # We will use a common app with a common key -
-      #- name: Create SFDX Session for DEV HUB ACCESS
-      #  if: matrix.targetusername!=''
-      #  run: sf org login jwt -o ${{ secrets.QBRIX_DEVHUB_USERACCOUNT }} -a DEVHUB_ACCT -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }} --setdefaultdevhubusername
-
-      #install Python Test Resources
-      - name: Install Python Test Resources
-        if: matrix.targetusername!=''
-        run: sudo apt install python3-testresources
-
-      #Setup PyOpenSSL and keyrings.alt
-      - name: Setup PyOpenSSL
-        if: matrix.targetusername!=''
-        run: |
-          pip install pyopenssl --upgrade
-          pip install keyrings.alt
-
-      #install CumumulsCI
-      - name: Install CumulusCI
-        if: matrix.targetusername!=''
-        run: pip install cumulusci
-
-      #install playright via CCI
-      - name: Install Playwright via CCI
-        if: matrix.targetusername!=''
-        run: cci robot install_playwright
-
-      #display cci version
-      - name: cci version
-        if: matrix.targetusername!=''
-        run: cci version
-
-      #CCI Service List
-      - name: cci service list
-        if: matrix.targetusername!=''
-        run: cci service list
-
-      #install Behave
-      - name: Install Behave Feature Testing
-        if: matrix.targetusername!=''
-        run: pip install behave
-
-      #install Pandas
-      - name: Install Pandas
-        if: matrix.targetusername!=''
-        run: pip install pandas
-
-      #install Pandasql
-      - name: Install Pandasql
-        if: matrix.targetusername!=''
-        run: pip install pandasql
-
-      # Install Vlocity
-      - name: Install Vlocity
-        if: matrix.targetusername!=''
-        run: npm install --location=global vlocity
-
-      # Install sfdmu
-      - name: Install sfdmu
-        if: matrix.targetusername!=''
-        run: sfdx plugins:install sfdmu
 
       - name: Set CCI DevHub Username
         if: matrix.targetusername!=''
@@ -216,29 +141,23 @@ jobs:
           on_retry_command: cci error info
 
       - name: fail details
-        uses: mathiasvr/command-output@v1
         if: ${{ matrix.targetusername!='' && failure() && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
         id: cci_failure_details
-        with:
-          run: |
-            cci error info | base64 -w 0
+        run: |
+          cci error info | base64 -w 0
 
       - name: fail status
-        if: ${{ matrix.targetusername!='' && failure() && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
-        uses: fjogeleit/http-request-action@v1
-        with:
-          url: "https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixAutoDeploySettings"
-          method: "POST"
-          customHeaders: '{"Content-Type": "application/json","Authorization": "Bearer ${{ steps.qlabs_accesstoken.outputs.value }}"}'
-          data: '{"qbrixid": "${{ github.event.repository.name }}", "status": "Failed", "notify": "${{ matrix.notify }}" }'
-          timeout: 30000
+        if: ${{  matrix.targetusername!='' && failure() && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
+        run: |
+          curl --location 'https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixAutoDeploySettings' \
+          --header 'Content-Type: application/json' \
+          --header 'Authorization: Bearer ${{ steps.qlabs_accesstoken.outputs.qlabs_accesstoken }}' \
+          --data '{"qbrixid": "${{ github.event.repository.name }}", "status": "Failed", "notify": "${{ matrix.notify }}" }'
 
       - name: success status
         if: ${{ matrix.targetusername!='' && success() && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
-        uses: fjogeleit/http-request-action@v1
-        with:
-          url: "https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixAutoDeploySettings"
-          method: "POST"
-          customHeaders: '{"Content-Type": "application/json","Authorization": "Bearer ${{ steps.qlabs_accesstoken.outputs.value }}"}'
-          data: '{"qbrixid": "${{ github.event.repository.name }}", "status": "Success", "notify": "${{ matrix.notify }}" }'
-          timeout: 30000
+        run: |
+          curl --location 'https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixAutoDeploySettings' \
+          --header 'Content-Type: application/json' \
+          --header 'Authorization: Bearer ${{ steps.qlabs_accesstoken.outputs.qlabs_accesstoken }}' \
+          --data '{"qbrixid": "${{ github.event.repository.name }}", "status": "Success", "notify": "${{ matrix.notify }}" }'
