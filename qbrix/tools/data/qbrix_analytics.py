@@ -297,6 +297,10 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
             "description": "Path to folder which contains your analytics datasets. Defaults to datasets/analytics",
             "required": False
         },
+        "wave_folder": {
+            "description": "Path to folder that contains your analytics files. Defaults to force-app/main/default/wave",
+            "required": False
+        },
         "mode": {
             "description": "(optional) Data Options are Download (d), Upload (u) or clean (c).",
             "required": False
@@ -326,6 +330,7 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
     def _init_options(self, kwargs):
         super(AnalyticsManager, self)._init_options(kwargs)
         self.dataset_folder = self.options["dataset_folder"] if "dataset_folder" in self.options else "datasets/analytics"
+        self.wave_folder = self.options["wave_folder"] if "wave_folder" in self.options else "force-app/main/default/wave"
         self.mode = self.options["mode"] if "mode" in self.options else "upload"
         self.share_to_all_internal_users = self.options["share_to_all_internal_users"] if "share_to_all_internal_users" in self.options else False
         self.share_to_all_portal_users = self.options["share_to_all_portal_users"] if "share_to_all_portal_users" in self.options else False
@@ -394,11 +399,11 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
         return Path(dataset_file_path).stem.replace(".wds-meta", "")
 
     def download_datasets(self):
-        if not os.path.exists("force-app/main/default/wave"):
+        if not os.path.exists(self.wave_folder):
             log.debug("No Analytics Folder Found. Skipping Dataset Download.")
             return
 
-        wave_dataset_files = glob.glob("force-app/main/default/wave/*.wds-meta.xml", recursive=False)
+        wave_dataset_files = glob.glob(f"{self.wave_folder}/*.wds-meta.xml", recursive=False)
 
         self.logger.info("Starting Download of dataset files")
 
@@ -421,8 +426,8 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
                     self.logger.info(f"{dataset_name} is not present in the target org. Skipping.")
                 
     def upload_dataset_data(self):
-        if not os.path.exists("force-app/main/default/wave"):
-            log.debug("No Source Analytics Folder Found at the expected location (force-app/main/default/wave). Skipping Dataset Deployment.")
+        if not os.path.exists(self.wave_folder):
+            log.debug(f"No Source Analytics Folder Found at the expected location ({self.wave_folder}). Skipping Dataset Deployment.")
             return
 
         if not os.path.exists(self.dataset_folder):
@@ -431,7 +436,7 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
 
         self.run_cleaners()
 
-        wave_dataset_files = glob.glob("force-app/main/default/wave/*.wds-meta.xml", recursive=False)
+        wave_dataset_files = glob.glob(f"{self.wave_folder}/*.wds-meta.xml", recursive=False)
 
         if len(wave_dataset_files) > 0:
             for file in wave_dataset_files:
@@ -696,11 +701,11 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
         self.logger.info(f"Sharing Updated for {folder_name}")
 
     def update_sharing_for_applications(self):
-        if not os.path.exists("force-app/main/default/wave"):
-            log.debug("No Source Analytics Folder Found at the expected location (force-app/main/default/wave). Skipping Dataset Deployment.")
+        if not os.path.exists(self.wave_folder):
+            log.debug(f"No Source Analytics Folder Found at the expected location ({self.wave_folder}). Skipping Dataset Deployment.")
             return
 
-        wave_app_files = glob.glob("force-app/main/default/wave/*.wapp-meta.xml", recursive=False)
+        wave_app_files = glob.glob(f"{self.wave_folder}/*.wapp-meta.xml", recursive=False)
 
         if len(wave_app_files) == 0:
             self.logger.info("No Wave Application Files found. Skipping.")
@@ -799,7 +804,7 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
             return
 
         # print(f"\nChecking {find_value}")
-        wave_dashboard_files = glob.glob("force-app/main/default/wave/*.wdash", recursive=False)
+        wave_dashboard_files = glob.glob(f"{self.wave_folder}/*.wdash", recursive=False)
         for dash in wave_dashboard_files:
             # print(f"\nChecking {dash}")
 
@@ -941,10 +946,10 @@ class AnalyticsManager(BaseSalesforceApiTask, ABC):
                     with open(dash, 'w') as json_file:
                         json.dump(data, json_file)
 
-        wave_xmd_files = glob.glob("force-app/main/default/wave/*.xmd-meta.xml", recursive=False)
+        wave_xmd_files = glob.glob(f"{self.wave_folder}/*.xmd-meta.xml", recursive=False)
         for xmd in wave_xmd_files:
             replace_file_text(file_location=xmd, search_string=f"{find_value}</field>", replacement_string=f"{replace_value}</field>", show_info=False)
-        wave_wcomp_files = glob.glob("force-app/main/default/wave/*.wcomp", recursive=False)
+        wave_wcomp_files = glob.glob(f"{self.wave_folder}/*.wcomp", recursive=False)
         for wcomp in wave_wcomp_files:
             replace_file_text(file_location=wcomp, search_string=find_value, replacement_string=replace_value, show_info=True)
 
