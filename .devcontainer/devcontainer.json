@@ -12,12 +12,23 @@
       "label": "qbrix robot vnc viewer"
     }
   },
+  "remoteEnv": {
+    // Use a GitHub Codespaces secret:
+    "QSR_ENDPOINT": "${localEnv:QSR_ENDPOINT}",
+    "QSR_JWT_SIGNING_SECRET": "${localEnv:QSR_JWT_SIGNING_SECRET}",
+    "NEXTGEN_GATE_KEEPER_AUTH_URL": "${localEnv:NEXTGEN_GATE_KEEPER_AUTH_URL}",
+    "NEXTGEN_GATE_KEEPER_CONSUMER_KEY": "${localEnv:NEXTGEN_GATE_KEEPER_CONSUMER_KEY}",
+    "NEXTGEN_GATE_KEEPER_CONSUMER_SECRET": "${localEnv:NEXTGEN_GATE_KEEPER_CONSUMER_SECRET}"
+  },
   "customizations": {
     // Configure properties specific to Codespaces.
     "codespaces": {
       //give read access to qbrix that might be dynamically loaded and need out of band access
       "repositories": {
-        "sfdc-qbranch/QBrix-0-xDO-BaseConfig" :{
+        "sfdc-qbranch/qbrix_cli": {
+          "permissions": "read-all"
+        },
+        "sfdc-qbranch/QBrix-0-xDO-BaseConfig": {
           "permissions": "read-all"
         },
         "sfdc-qbranch/QBrix-1-xDO-Tool-QBrixRegister": {
@@ -62,7 +73,8 @@
         "ms-toolsai.vscode-jupyter-cell-tags",
         "ms-toolsai.jupyter-renderers",
         "ms-toolsai.vscode-jupyter-slideshow",
-        "Postman.postman-for-vscode"
+        "Postman.postman-for-vscode",
+        "pomdtr.secrets"
       ]
     }
   },
