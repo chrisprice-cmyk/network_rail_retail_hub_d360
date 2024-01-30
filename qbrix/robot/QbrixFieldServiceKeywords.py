@@ -130,7 +130,7 @@ class QbrixFieldServiceKeywords(QbrixRobotTask):
         # Setup Dispatcher UI - Custom Actions
         self.builtin.log_to_console("\nEnabling Dispatcher UI > Custom Actions")
         menu_dispatcher_ui_selector = f"{iframe_selector} #SettingsMenu >> div.menuItem >> span:text-is('Dispatcher Console UI'):visible"
-        drag_jumps_selector = f"{iframe_selector} div.setting-row-container:has-text('Drag jumps on gantt') >> div.select-container >> input.input-settings"
+        drag_jumps_selector = f"{iframe_selector} div.setting-row-container:has-text('Time intervals when dragging on Gantt') >> div.select-container >> input.input-settings"
         gantt_settings_selector = (
             f"{iframe_selector} div.settings-tab:has-text('Updating the Gantt')"
         )
