@@ -94,6 +94,23 @@
     },
     "userEngagementSettings": {
       "enableShowSalesforceUserAssist": false
+    },
+    "communitiesSettings": {
+      "enableNetworksEnabled": true
+    },
+    "experienceBundleSettings": {
+      "enableExperienceBundleMetadata": true
+    },
+    "userManagementSettings": {
+      "enableEnhancedProfileMgmt": true,
+      "enableEnhancedPermsetMgmt": true,
+      "enableNewProfileUI": true
+    },
+    "chatterSettings": {
+      "enableChatter": true
+    },
+    "botSettings": {
+      "enableBots": true
     }
   }
 }

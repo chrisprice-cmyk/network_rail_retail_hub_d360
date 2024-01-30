@@ -1344,7 +1344,9 @@ class QbrixCMS(QbrixRobotTask):
             self.browser.close_page()
 
         if collection_data_dict and len(collection_data_dict):
-            save_location = os.path.join("datasets", "cms_collection_data")
+            save_location = os.path.join(
+                "datasets", "cms_collection_data", experience_cloud_name
+            )
             os.makedirs(save_location, exist_ok=True)
 
             if os.path.exists(

@@ -589,7 +589,6 @@ class QbrixSharedKeywords:
         self.browser.click(selector)
         sleep(post_click_sleep)
 
-
     def wait_and_fill_text(
         self,
         selector: str = None,
@@ -618,9 +617,12 @@ class QbrixSharedKeywords:
         self.browser.fill_text(selector, text)
         sleep(post_click_sleep)
 
-
     def wait_and_toggle(
-        self, selector: str = None, toggle_on: bool = True, timeout: str = "30", post_toggle_sleep: int = 1
+        self,
+        selector: str = None,
+        toggle_on: bool = True,
+        timeout: str = "30",
+        post_toggle_sleep: int = 1,
     ):
         """Waits for an element to become visible and enabled. Then toggle.
 
@@ -644,13 +646,14 @@ class QbrixSharedKeywords:
         # get states of the toggle
         states = self.browser.get_element_states(selector)
         # only click it if: we need on but it's currently off, or we need off but it's currently on
-        if (toggle_on and not "checked" in states) or (not toggle_on and "checked" in states):
+        if (toggle_on and not "checked" in states) or (
+            not toggle_on and "checked" in states
+        ):
             self.browser.click(selector)
             sleep(post_toggle_sleep)
             return True
-        
-        return False
 
+        return False
 
     def check_state(self, selector: str = None, state: str = "visible"):
         """Checks if an element state is equal to a given state within a certain timeout
@@ -993,8 +996,12 @@ class QbrixSharedKeywords:
         self.browser.wait_for_elements_state(
             "h2:has-text('Data Pipeline')", ElementState.visible, "30s"
         )
-        toggle_selector = "lightning-primitive-input-toggle label:has-text('Data Pipeline')"
-        self.browser.wait_for_elements_state(toggle_selector, ElementState.visible, "30s")
+        toggle_selector = (
+            "lightning-primitive-input-toggle label:has-text('Data Pipeline')"
+        )
+        self.browser.wait_for_elements_state(
+            toggle_selector, ElementState.visible, "30s"
+        )
         if not "checked" in self.browser.get_element_states(toggle_selector):
             self.browser.click(toggle_selector)
             sleep(3)
