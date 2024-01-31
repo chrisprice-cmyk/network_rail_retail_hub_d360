@@ -652,7 +652,7 @@ class QbrixCMS(QbrixRobotTask):
         self.builtin.log_to_console("\n -> REQUEST SENT!")
         return True
 
-    def create_workspace(self, workspace_name, channels=None, enhanced_workspace=True):
+    def create_workspace(self, workspace_name, channels=None, enhanced_workspace=True, workspace_type="General"):
         """
         Creates a new Digital Experience workspace
 
@@ -660,6 +660,7 @@ class QbrixCMS(QbrixRobotTask):
             workspace_name: Name of the workspace. This must be unique from other workspaces
             channels: (Optional) Channels you want to target. Defaults to all available channels
             enhanced_workspace: (Optional) Set to True if you are creating an Enhanced workspace, otherwise set to False. Defaults to True.
+            workspace_type: (Optional) Type of CMS Workspace. Valid values are: General and Marketing. If not specified, defaults to General.
         """
 
         # Default Channels
@@ -670,6 +671,12 @@ class QbrixCMS(QbrixRobotTask):
         if self.get_workspace_id(workspace_name=workspace_name):
             self.builtin.log_to_console(
                 f"The workspace with name {workspace_name} already exists, skipping."
+            )
+            return
+
+        if workspace_type not in ("General",  "Marketing"):
+            self.builtin.log_to_console(
+                f"Invalid workspace type [{workspace_type}]."
             )
             return
 
@@ -693,7 +700,6 @@ class QbrixCMS(QbrixRobotTask):
         # If this screen exists, select the general content type
         # marketing type needs to be supported in the future.
         purpose_heading = "What’s the main purpose of your workspace?"
-        workspace_type = "General"
 
         if self.browser.get_element_count(
             f"div.activeStep >> h3:has-text('{purpose_heading}')"
@@ -706,6 +712,11 @@ class QbrixCMS(QbrixRobotTask):
                 f"\n -> Selected the workspace type [{workspace_type}]"
             )
             self.browser.click("button.nextButton:visible")
+        elif workspace_type == "Marketing":
+            self.builtin.log_to_console(
+                f"\n -> Workspace type [{workspace_type}] is not available on this org."
+            )
+            return
 
         # Enter initial information
         self.shared.wait_and_click(
@@ -717,36 +728,40 @@ class QbrixCMS(QbrixRobotTask):
         self.builtin.log_to_console(f"\n -> Set name to [{workspace_name}]")
 
         # Handle enhanced workspace option
-        if enhanced_workspace:
-            self.builtin.log_to_console("\n -> Setting to Enhanced CMS Workspace")
-            self.browser.click(
-                "span.slds-text-heading_medium:text-is('Enhanced CMS Workspace')"
-            )
-        else:
-            self.builtin.log_to_console("\n -> Setting to legacy CMS Workspace")
-        self.browser.click("button.nextButton:visible")
+        # Only applicable to "General" CMS workspaces
+        if workspace_type == "General":
+            if enhanced_workspace:
+                self.builtin.log_to_console("\n -> Setting to Enhanced CMS Workspace")
+                self.browser.click(
+                    "span.slds-text-heading_medium:text-is('Enhanced CMS Workspace')"
+                )
+            else:
+                self.builtin.log_to_console("\n -> Setting to legacy CMS Workspace")
+            self.browser.click("button.nextButton:visible")
 
-        # Handle Channel Selection
-        self.builtin.log_to_console("\n -> Assigning Channels")
-        sleep(3)
-        if len(channels) > 0:
-            for channel in channels:
-                self.builtin.log_to_console(f"\n -> Assigning channel [{channel}]")
-                if self.browser.get_element_count(
-                    f"tr.slds-hint-parent:has-text('{channel}')"
+            # Handle Channel Selection
+            self.builtin.log_to_console("\n -> Assigning Channels")
+            sleep(3)
+            if len(channels) > 0:
+                for channel in channels:
+                    self.builtin.log_to_console(f"\n -> Assigning channel [{channel}]")
+                    if self.browser.get_element_count(
+                        f"tr.slds-hint-parent:has-text('{channel}')"
+                    ):
+                        self.browser.click(
+                            f"tr.slds-hint-parent:has-text('{channel}') >> div.slds-checkbox_add-button"
+                        )
+            else:
+                self.builtin.log_to_console("\n -> Assigning ALL Channels")
+                channel_count = 0
+                for checkbox_add_button in self.browser.get_elements(
+                    "div.slds-checkbox_add-button"
                 ):
-                    self.browser.click(
-                        f"tr.slds-hint-parent:has-text('{channel}') >> div.slds-checkbox_add-button"
-                    )
-        else:
-            self.builtin.log_to_console("\n -> Assigning ALL Channels")
-            channel_count = 0
-            for checkbox_add_button in self.browser.get_elements(
-                "div.slds-checkbox_add-button"
-            ):
-                self.browser.click(checkbox_add_button)
-                channel_count += 1
-            self.builtin.log_to_console(f"\n -> Assigned to {channel_count} channel(s)")
+                    self.browser.click(checkbox_add_button)
+                    channel_count += 1
+                self.builtin.log_to_console(f"\n -> Assigned to {channel_count} channel(s)")
+        
+        # Click the next button
         self.browser.click("button.nextButton:visible")
 
         # Handle Contributors
