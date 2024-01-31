@@ -689,6 +689,24 @@ class QbrixCMS(QbrixRobotTask):
             "\n -> Clicked new button to create new CMS Workspace"
         )
 
+        # Main purpose of the workspace
+        # If this screen exists, select the general content type
+        # marketing type needs to be supported in the future.
+        purpose_heading = "What’s the main purpose of your workspace?"
+        workspace_type = "General"
+
+        if self.browser.get_element_count(
+            f"div.activeStep >> h3:has-text('{purpose_heading}')"
+        ) == 1:
+            # Select the general content type
+            self.browser.click(
+                f"mcontent_shared-visual-picker div.slds-visual-picker >> span.slds-visual-picker__body > span:text-is('{workspace_type}')"
+            )
+            self.builtin.log_to_console(
+                f"\n -> Selected the workspace type [{workspace_type}]"
+            )
+            self.browser.click("button.nextButton:visible")
+
         # Enter initial information
         self.shared.wait_and_click(
             "lightning-input:has-text('Name') >> input.slds-input"
