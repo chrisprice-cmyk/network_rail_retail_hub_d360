@@ -130,7 +130,7 @@ class QbrixFieldServiceKeywords(QbrixRobotTask):
         # Setup Dispatcher UI - Custom Actions
         self.builtin.log_to_console("\nEnabling Dispatcher UI > Custom Actions")
         menu_dispatcher_ui_selector = f"{iframe_selector} #SettingsMenu >> div.menuItem >> span:text-is('Dispatcher Console UI'):visible"
-        drag_jumps_selector = f"{iframe_selector} div.setting-row-container:has-text('Time intervals when dragging on Gantt') >> div.select-container >> input.input-settings"
+        drag_jumps_selector = f"{iframe_selector} div.setting-row-container:has-text('Drag jumps on gantt') >> div.select-container >> input.input-settings"
         gantt_settings_selector = (
             f"{iframe_selector} div.settings-tab:has-text('Updating the Gantt')"
         )
@@ -426,6 +426,23 @@ class QbrixFieldServiceKeywords(QbrixRobotTask):
         self.relax_security_on_fs_apps("Salesforce Field Service for iOS")
         self.relax_security_on_fs_apps("Salesforce Field Service for Android")
 
+    def enable_document_reader(self):
+        """
+        Enable Document Reader
+        """
+        self.shared.go_to_setup_admin_page("FieldServiceSettings/home", 5)
+        checked = "checked" in self.browser.get_element_states(
+            f"{self.shared.iframe_handler()} label:has-text('Enable Document Builder') >> span.slds-checkbox_faux"
+        )
+        if not checked:
+            self.browser.click(
+                f"{self.shared.iframe_handler()} label:has-text('Enable Document Builder') >> span.slds-checkbox_faux"
+            )
+            sleep(1)
+            self.browser.click("button.slds-button:text-is('Save')")
+
+
+
     def select_default_territory(self, territory=None):
         """
         Sets the Default Territory for the Field Service Dispatcher Console
@@ -623,3 +640,4 @@ class QbrixFieldServiceKeywords(QbrixRobotTask):
 
         else:
             self.builtin.log_to_console(f"\n{label} Already Exists... Skipping")
+
