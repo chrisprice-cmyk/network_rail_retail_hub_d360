@@ -68,6 +68,12 @@ Check and Enable Call Coaching ECI
 
 Check and Setup Einstein Article Recommendations
     Einstein Article Recommendations Setup
+
+Check and Enable Einstein Search Answers
+    Enable Einstein Search Answers
+
+Check and Enable Einstein Service Replies for Email
+    Enable Einstein Service Replies For Email
 #
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # FIELD SERVICE TESTS
