@@ -116,13 +116,13 @@ class QbrixManufacturingKeywords(QbrixRobotTask):
         self.builtin.log_to_console("\n[MFG] Enable Program Based Business Settings")
         self.shared.go_to_setup_admin_page("MfgProgramTemplates/home")
         self.browser.wait_for_elements_state(
-            "h2:text-is('Program Based Business')", ElementState.visible, "30s"
+            "h1:text-is('Program Based Business')", ElementState.visible, "30s"
         )
         if "checked" not in self.browser.get_element_states(
-            "div.slds-card:has(h2:text-is('Program Based Business')) >> input[name='mfgProgramPref']"
+            "div.slds-card:has(h1:text-is('Program Based Business')) >> input[name='mfgProgramPref']"
         ):
             self.browser.click(
-                "div.slds-card:has(h2:text-is('Program Based Business')) >> lightning-input.slds-form-element"
+                "div.slds-card:has(h1:text-is('Program Based Business')) >> lightning-input.slds-form-element"
             )
             sleep(2)
         self.builtin.log_to_console("\n[MFG] -> Enabled!")
