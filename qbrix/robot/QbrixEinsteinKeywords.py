@@ -1029,7 +1029,7 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
             self.browser.click(":nth-match(div.slds-dropdown-trigger_click, 2)")
             self.shared.wait_and_click("div.slds-dropdown-trigger_click lightning-base-combobox-item span.slds-truncate:text-is('Summary')")
 
-            self.browser.click("button:text-is('Save')")
+            self.shared.wait_and_click("button:text-is('Save')")
             self.shared.wait_and_toggle(knowledge_grounding_selector, True)  
 
         #Grounding for Cases
@@ -1045,7 +1045,7 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
             self.browser.click(":nth-match(div.slds-dropdown-trigger_click, 4)")
             self.shared.wait_and_click("div.slds-dropdown-trigger_click lightning-base-combobox-item span.slds-truncate:text-is('Description')")
 
-            self.browser.click("button:text-is('Save')")
+            self.shared.wait_and_click("button:text-is('Save')")
             self.shared.wait_and_toggle(case_grounding_selector, True) 
 
 
