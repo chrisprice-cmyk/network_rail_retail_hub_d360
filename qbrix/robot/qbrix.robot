@@ -74,6 +74,10 @@ Check and Enable Einstein Search Answers
 
 Check and Enable Einstein Service Replies for Email
     Enable Einstein Service Replies For Email
+
+Check And Enable Einstein Generative
+    Check And Enable Einstein Generative
+    
 #
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # FIELD SERVICE TESTS

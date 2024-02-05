@@ -1047,3 +1047,15 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
 
             self.browser.click("button:text-is('Save')")
             self.shared.wait_and_toggle(case_grounding_selector, True) 
+
+    def check_and_enable_einstein_generative(self):
+        """Checks and enables Einstein Generative """
+        self.shared.go_to_setup_admin_page("EinsteinGPTSetup/home", 5)
+        checked = "checked" in self.browser.get_element_states(
+            f"{self.shared.iframe_handler()} div:has-text('Turn on Einstein') >> span.slds-checkbox_faux"
+        )
+        if not checked:
+            self.browser.click(
+                f"{self.shared.iframe_handler()} div:has-text('Turn on Einstein') >> span.slds-checkbox_faux"
+            )
+            sleep(10)
