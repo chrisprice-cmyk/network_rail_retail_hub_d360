@@ -1024,10 +1024,10 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
             self.browser.click("button:text-is('Edit')")
 
             self.browser.click(":nth-match(div.slds-dropdown-trigger_click, 1)")
-            self.shared.wait_and_click("div.slds-dropdown-trigger_click lightning-base-combobox-item span.slds-truncate:text-is('Title')")
+            self.shared.wait_and_click("div.slds-dropdown-trigger_click lightning-base-combobox-item span.slds-truncate:text-is('Title'):visible")
 
             self.browser.click(":nth-match(div.slds-dropdown-trigger_click, 2)")
-            self.shared.wait_and_click("div.slds-dropdown-trigger_click lightning-base-combobox-item span.slds-truncate:text-is('Summary')")
+            self.shared.wait_and_click("div.slds-dropdown-trigger_click lightning-base-combobox-item span.slds-truncate:text-is('Summary'):visible")
 
             self.shared.wait_and_click("button:text-is('Save')")
             self.shared.wait_and_toggle(knowledge_grounding_selector, True)  
@@ -1040,10 +1040,10 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
             self.browser.click(":nth-match(button:text-is('Edit'), 2)")
 
             self.browser.click(":nth-match(div.slds-dropdown-trigger_click, 3)")
-            self.shared.wait_and_click("div.slds-dropdown-trigger_click lightning-base-combobox-item span.slds-truncate:text-is('Subject')")
+            self.shared.wait_and_click("div.slds-dropdown-trigger_click lightning-base-combobox-item span.slds-truncate:text-is('Subject'):visible")
             
             self.browser.click(":nth-match(div.slds-dropdown-trigger_click, 4)")
-            self.shared.wait_and_click("div.slds-dropdown-trigger_click lightning-base-combobox-item span.slds-truncate:text-is('Description')")
+            self.shared.wait_and_click("div.slds-dropdown-trigger_click lightning-base-combobox-item span.slds-truncate:text-is('Description'):visible")
 
             self.shared.wait_and_click("button:text-is('Save')")
             self.shared.wait_and_toggle(case_grounding_selector, True) 
