@@ -11,7 +11,6 @@ from qbrix.core.qbrix_robot_base import QbrixRobotTask
 
 @library(scope="GLOBAL", auto_keywords=True, doc_format="reST")
 class QbrixCMS(QbrixRobotTask):
-
     """Qbrix Salesforce CMS and Digital Experiences Keywords Library"""
 
     def go_to_digital_experiences(self):
@@ -81,7 +80,9 @@ class QbrixCMS(QbrixRobotTask):
             )
 
             # Check Workspace
-            self.create_workspace(subdirectory, enhanced_workspace=enhanced_workspace)
+            self.create_workspace(
+                workspace_name=subdirectory, enhanced_workspace=enhanced_workspace
+            )
 
             # Get a list of all files in the subdirectory
             subdirectory_path = os.path.join(directory_path, subdirectory)
@@ -278,14 +279,9 @@ class QbrixCMS(QbrixRobotTask):
                 > 0
             )
 
-            if enhanced_workspace.lower() == "true" and enhanced is False:
+            if enhanced_workspace and enhanced is False:
                 raise ValueError(
                     f"The existing workspace [{workspace}] is NOT an Enhanced CMS workspace. Please set enhanced_workspace flag to False\n"
-                )
-
-            if enhanced_workspace.lower() == "false" and enhanced is True:
-                raise ValueError(
-                    f"The existing workspace [{workspace}] is an Enhanced Workspace. Please set enhanced_workspace flag to True\n"
                 )
 
             if enhanced:
@@ -652,7 +648,13 @@ class QbrixCMS(QbrixRobotTask):
         self.builtin.log_to_console("\n -> REQUEST SENT!")
         return True
 
-    def create_workspace(self, workspace_name, channels=None, enhanced_workspace=True, workspace_type="General"):
+    def create_workspace(
+        self,
+        workspace_name,
+        channels=None,
+        enhanced_workspace=True,
+        workspace_type="General",
+    ):
         """
         Creates a new Digital Experience workspace
 
@@ -674,10 +676,8 @@ class QbrixCMS(QbrixRobotTask):
             )
             return
 
-        if workspace_type not in ("General",  "Marketing"):
-            self.builtin.log_to_console(
-                f"Invalid workspace type [{workspace_type}]."
-            )
+        if workspace_type not in ("General", "Marketing"):
+            self.builtin.log_to_console(f"Invalid workspace type [{workspace_type}].")
             return
 
         # Go to Digital Experience Home and initiate Workspace creation
@@ -701,9 +701,12 @@ class QbrixCMS(QbrixRobotTask):
         # marketing type needs to be supported in the future.
         purpose_heading = "What’s the main purpose of your workspace?"
 
-        if self.browser.get_element_count(
-            f"div.activeStep >> h3:has-text('{purpose_heading}')"
-        ) == 1:
+        if (
+            self.browser.get_element_count(
+                f"div.activeStep >> h3:has-text('{purpose_heading}')"
+            )
+            == 1
+        ):
             # Select the general content type
             self.browser.click(
                 f"mcontent_shared-visual-picker div.slds-visual-picker >> span.slds-visual-picker__body > span:text-is('{workspace_type}')"
@@ -759,8 +762,10 @@ class QbrixCMS(QbrixRobotTask):
                 ):
                     self.browser.click(checkbox_add_button)
                     channel_count += 1
-                self.builtin.log_to_console(f"\n -> Assigned to {channel_count} channel(s)")
-        
+                self.builtin.log_to_console(
+                    f"\n -> Assigned to {channel_count} channel(s)"
+                )
+
         # Click the next button
         self.browser.click("button.nextButton:visible")
 
