@@ -70,7 +70,7 @@ def replace_file_text(
     if search_regex:
         # notice the last arg, re.sub use count 0 instead of -1 for "replace all", so we need to do a bit tweak here
         updated_file_contents = re.sub(
-            search_string,Demo Brix
+            search_string,
             replacement_string,
             file_contents,
             number_of_replacements if number_of_replacements > 0 else 0,
