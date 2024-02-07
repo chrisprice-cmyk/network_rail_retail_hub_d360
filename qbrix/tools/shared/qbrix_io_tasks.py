@@ -5,8 +5,7 @@ from qbrix.tools.shared.qbrix_console_utils import init_logger
 
 
 class QbrixFileTask:
-
-    """Provides general functions and security for working with files in Q brix"""
+    """Provides general functions and security for working with files in Demo Brix"""
 
     def __init__(self, file_location: str):
         self.logger = init_logger()
@@ -17,11 +16,12 @@ class QbrixFileTask:
             self.check_file()
 
     def delete_file(self) -> bool:
-
-        """ Deletes a given file """
+        """Deletes a given file"""
 
         if self.new_file_mode:
-            self.logger.info("'%s' does not exist or has already been deleted.", self.file_path)
+            self.logger.info(
+                "'%s' does not exist or has already been deleted.", self.file_path
+            )
             return True
 
         os.remove(self.file_path)
@@ -29,21 +29,23 @@ class QbrixFileTask:
         return True
 
     def _is_within_project_directory(self):
-
         """Checks to ensure that given file path is not outwith the current project"""
 
-        current_dir = os.path.realpath('.')
-        common_prefix = os.path.commonprefix([os.path.realpath(self.file_path), current_dir])
+        current_dir = os.path.realpath(".")
+        common_prefix = os.path.commonprefix(
+            [os.path.realpath(self.file_path), current_dir]
+        )
         if common_prefix != current_dir:
-            raise ValueError(f"Cannot modify or read file outside of current project: {self.file_path}")
+            raise ValueError(
+                f"Cannot modify or read file outside of current project: {self.file_path}"
+            )
         return True
 
     def check_file(self):
-
         """Carries out checks on the file to ensure we can proceed with other operations"""
 
         if not os.path.exists(self.file_path):
-             raise FileNotFoundError("File does not exist")
+            raise FileNotFoundError("File does not exist")
 
         if not os.path.isfile(self.file_path):
             raise FileNotFoundError("File provided is not a File")
@@ -51,7 +53,6 @@ class QbrixFileTask:
         self._is_within_project_directory()
 
     def get_file_contents(self):
-
         """Returns the file contents of a given file"""
 
         with open(self.file_path, "r", encoding="utf-8") as tmpFile:
@@ -70,7 +71,6 @@ class QbrixFileTask:
             return False
 
     def update_file(self, updated_file_contents) -> bool:
-
         """Updates an existing file with the given updated_file_contents with raise exception if file does not exist"""
 
         if self.new_file_mode:
@@ -80,7 +80,6 @@ class QbrixFileTask:
         return self._upsert_file(updated_file_contents)
 
     def write_file(self, new_file_contents, overwrite_existing_file: bool = False):
-
         """
         Creates a new file using the given content. Raises an exception if file already exists and the overwrite_existing_file is False.
 
@@ -90,15 +89,16 @@ class QbrixFileTask:
 
         """
         if not self.new_file_mode and not overwrite_existing_file:
-            self.logger.error("File already exists. Write new file method was called but file already exists.")
+            self.logger.error(
+                "File already exists. Write new file method was called but file already exists."
+            )
             return
 
         self.update_file(new_file_contents)
 
 
 class QBrixDirectoryTask:
-
-    """Provides general functions and security for working with directories in Q brix"""
+    """Provides general functions and security for working with directories in Demo Brix"""
 
     def __init__(self, directory_location: str):
         self.logger = init_logger()
@@ -111,28 +111,33 @@ class QBrixDirectoryTask:
                 os.makedirs(self.location, exist_ok=True)
 
     def _is_within_project_directory(self):
-
         """Checks to ensure that the directory is within the current project"""
 
-        current_dir = os.path.realpath('.')
-        common_prefix = os.path.commonprefix([os.path.realpath(self.location), current_dir])
+        current_dir = os.path.realpath(".")
+        common_prefix = os.path.commonprefix(
+            [os.path.realpath(self.location), current_dir]
+        )
         if common_prefix != current_dir:
-            raise ValueError(f"Cannot read or modify directory outside of current project: {self.location}")
+            raise ValueError(
+                f"Cannot read or modify directory outside of current project: {self.location}"
+            )
 
     def check_dir(self):
-
         """Runs several checks on the directory to ensure we can proceed with other operations"""
 
         if not os.path.exists(self.location):
-            raise FileNotFoundError("Directory already appears to have been removed or does not exist.")
+            raise FileNotFoundError(
+                "Directory already appears to have been removed or does not exist."
+            )
 
         if not os.path.isdir(self.location):
-            raise FileNotFoundError(f"Directory provided '{self.location}' is not a directory, stopping additional processing.")
+            raise FileNotFoundError(
+                f"Directory provided '{self.location}' is not a directory, stopping additional processing."
+            )
 
         self._is_within_project_directory()
 
     def delete_directory(self) -> bool:
-
         """Deletes a given directory along with all sub-directories and files for a given parent directory"""
 
         if not os.path.exists(self.location):

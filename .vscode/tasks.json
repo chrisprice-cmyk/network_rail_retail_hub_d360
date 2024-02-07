@@ -113,7 +113,7 @@
       }
     },
     {
-      "label": "QX: 💾 Save changes from Salesforce Org to Q Brix",
+      "label": "QX: 💾 Save changes from Salesforce Org to Demo Brix",
       "type": "shell",
       "command": "qx retrieve --org ${input:OrgAlias}",
       "group": "build",
@@ -191,7 +191,7 @@
       }
     },
     {
-      "label": "QX: 📤 Deploy Q Brix to Salesforce Org",
+      "label": "QX: 📤 Deploy Demo Brix to Salesforce Org",
       "type": "shell",
       "command": "qx deploy --org ${input:OrgAlias} --flow_name ${input:FlowName} --generate_permission_set",
       "group": "build",
@@ -206,7 +206,7 @@
       }
     },
     {
-      "label": "QX: 🔀 Migrate Q Brix to QX Format",
+      "label": "QX: 🔀 Migrate Demo Brix to QX Format",
       "type": "shell",
       "command": "qx migrate legacy-qbrix",
       "group": "build",
@@ -281,7 +281,7 @@
       }
     },
     {
-      "label": "QX: 🔄 Install and Update CumulusCI (Q Brix Edition)",
+      "label": "QX: 🔄 Install and Update CumulusCI (Demo Brix Edition)",
       "type": "shell",
       "command": "python3 -m pip install 'cumulusci @ git+https://github.com/sfdc-qbranch/CumulusCI.git@quasar' --force",
       "group": "build",
@@ -326,7 +326,7 @@
       }
     },
     {
-      "label": "Q BRIX [ORG]: Create New Developer Org (Alias 'dev')",
+      "label": "Demo Brix [ORG]: Create New Developer Org (Alias 'dev')",
       "type": "shell",
       "command": "cci org remove dev && cci org info dev && cci flow run deploy_qbrix --org dev && cci task run snapshot_changes && echo 'New Developer Scratch Org has been created with alias dev.'",
       "group": "build",
@@ -341,7 +341,7 @@
       }
     },
     {
-      "label": "Q BRIX [SETUP]: Setup new QBrix Project (incudes Updater)",
+      "label": "Demo Brix [SETUP]: Setup new QBrix Project (incudes Updater)",
       "type": "shell",
       "command": "cci task run update_qbrix && cci task run setup_qbrix",
       "group": "build",
@@ -356,7 +356,7 @@
       }
     },
     {
-      "label": "Q BRIX [INFO]: List installed Q Brix",
+      "label": "Demo Brix [INFO]: List installed Demo Brix",
       "type": "shell",
       "command": "cci task run list_qbrix --org ${input:OrgAlias}",
       "group": "build",
@@ -371,7 +371,7 @@
       }
     },
     {
-      "label": "Q BRIX [UTILITY]: Run Mass Operations Utility",
+      "label": "Demo Brix [UTILITY]: Run Mass Operations Utility",
       "type": "shell",
       "command": "cci task run mass_qbrix_update",
       "group": "build",
@@ -386,7 +386,7 @@
       }
     },
     {
-      "label": "Q BRIX [HEALTH]: Run Health Checker",
+      "label": "Demo Brix [HEALTH]: Run Health Checker",
       "type": "shell",
       "command": "cci task run health_check",
       "group": "build",
@@ -401,7 +401,7 @@
       }
     },
     {
-      "label": "Q BRIX [UPDATE]: Update QBrix Default Scripts",
+      "label": "Demo Brix [UPDATE]: Update QBrix Default Scripts",
       "type": "shell",
       "command": "cci task run update_qbrix",
       "group": "build",
@@ -416,7 +416,7 @@
       }
     },
     {
-      "label": "Q BRIX [ORG]: Create New Developer Preview Org (Alias 'dev_preview')",
+      "label": "Demo Brix [ORG]: Create New Developer Preview Org (Alias 'dev_preview')",
       "type": "shell",
       "command": "cci org remove dev_preview && cci flow run dev_org --org dev_preview && echo 'New Developer Scratch Org has been created with alias dev_preview.'",
       "group": "build",
@@ -431,7 +431,7 @@
       }
     },
     {
-      "label": "Q BRIX [ORG]: Create New QA/Testing Org (Alias 'qa')",
+      "label": "Demo Brix [ORG]: Create New QA/Testing Org (Alias 'qa')",
       "type": "shell",
       "command": "cci org remove qa && cci flow run qa_org --org qa && echo 'New Developer Scratch Org has been created with alias qa.'",
       "group": "build",
@@ -446,7 +446,7 @@
       }
     },
     {
-      "label": "Q BRIX [ORG]: Create New QA/Testing Preview Org (Alias 'qa_preview')",
+      "label": "Demo Brix [ORG]: Create New QA/Testing Preview Org (Alias 'qa_preview')",
       "type": "shell",
       "command": "cci org remove qa_preview && cci flow run qa_org --org qa_preview && echo 'New Developer Scratch Org has been created with alias qa_preview.'",
       "group": "build",
@@ -461,7 +461,7 @@
       }
     },
     {
-      "label": "Q BRIX [ORG]: Clean Up Scratch Orgs and Expired Orgs",
+      "label": "Demo Brix [ORG]: Clean Up Scratch Orgs and Expired Orgs",
       "type": "shell",
       "command": "cci org remove dev && cci org remove qa && cci org remove dev_preview && cci org prune && echo 'Org Cleanup Complete!'",
       "group": "build",
@@ -476,7 +476,7 @@
       }
     },
     {
-      "label": "Q BRIX [ORG]: List connected orgs for this project",
+      "label": "Demo Brix [ORG]: List connected orgs for this project",
       "type": "shell",
       "command": "cci org list",
       "group": "build",
@@ -491,7 +491,7 @@
       }
     },
     {
-      "label": "Q BRIX [CONNECT]: Connect to a Production Org/TSO and Deploy Q Brix",
+      "label": "Demo Brix [CONNECT]: Connect to a Production Org/TSO and Deploy Demo Brix",
       "type": "shell",
       "command": "cci org connect ${input:OrgAlias} && cci flow run deploy_qbrix_tso --org ${input:OrgAlias}",
       "group": "build",
@@ -506,7 +506,7 @@
       }
     },
     {
-      "label": "Q BRIX [CONNECT]: Connect to a Sandbox and Deploy Q Brix",
+      "label": "Demo Brix [CONNECT]: Connect to a Sandbox and Deploy Demo Brix",
       "type": "shell",
       "command": "cci org connect ${input:OrgAlias} --sandbox && cci flow run deploy_qbrix --org ${input:OrgAlias} && cci task run snapshot_changes --org ${input:OrgAlias}",
       "group": "build",
@@ -521,7 +521,7 @@
       }
     },
     {
-      "label": "Q BRIX [CONNECT]: Connect to a Sandbox",
+      "label": "Demo Brix [CONNECT]: Connect to a Sandbox",
       "type": "shell",
       "command": "cci org connect ${input:OrgAlias} --sandbox",
       "group": "build",
@@ -536,7 +536,7 @@
       }
     },
     {
-      "label": "Q BRIX [CONNECT]: Connect to a Production Org/TSO",
+      "label": "Demo Brix [CONNECT]: Connect to a Production Org/TSO",
       "type": "shell",
       "command": "cci org connect ${input:OrgAlias}",
       "group": "build",
@@ -551,7 +551,7 @@
       }
     },
     {
-      "label": "Q BRIX [CONNECT]: Disconnect from org and delete scratch org (if scratch org)",
+      "label": "Demo Brix [CONNECT]: Disconnect from org and delete scratch org (if scratch org)",
       "type": "shell",
       "command": "cci org remove ${input:OrgAlias}",
       "group": "build",
@@ -566,7 +566,7 @@
       }
     },
     {
-      "label": "Q BRIX [PUBLISH]: Publish to Metadeploy",
+      "label": "Demo Brix [PUBLISH]: Publish to Metadeploy",
       "type": "shell",
       "command": "cci task run metadeploy_publish --publish True --commit ${input:Commit}",
       "group": "build",
@@ -581,7 +581,7 @@
       }
     },
     {
-      "label": "Q BRIX [SAVE]: Save Changes to GitHub",
+      "label": "Demo Brix [SAVE]: Save Changes to GitHub",
       "type": "shell",
       "command": "git add . && git commit -m '${input:CommitMessage}' && git push && git pull && echo 'Save complete!'",
       "group": "build",
@@ -596,7 +596,7 @@
       }
     },
     {
-      "label": "Q BRIX [BUILD]: Snapshot Current Changes (Run before making changes to org)",
+      "label": "Demo Brix [BUILD]: Snapshot Current Changes (Run before making changes to org)",
       "type": "shell",
       "command": "cci task run snapshot_changes --org ${input:OrgAlias}",
       "group": "build",
@@ -611,7 +611,7 @@
       }
     },
     {
-      "label": "Q BRIX [INFO]: Show information about a specified task.",
+      "label": "Demo Brix [INFO]: Show information about a specified task.",
       "type": "shell",
       "command": "cci task info ${input:TaskName}",
       "group": "build",
@@ -626,7 +626,7 @@
       }
     },
     {
-      "label": "Q BRIX [INFO]: Show information about a specified flow.",
+      "label": "Demo Brix [INFO]: Show information about a specified flow.",
       "type": "shell",
       "command": "cci flow info ${input:FlowName}",
       "group": "build",
@@ -641,7 +641,7 @@
       }
     },
     {
-      "label": "Q BRIX [INFO]: Show information about a connected org.",
+      "label": "Demo Brix [INFO]: Show information about a connected org.",
       "type": "shell",
       "command": "cci org info ${input:OrgAlias}",
       "group": "build",
@@ -656,7 +656,7 @@
       }
     },
     {
-      "label": "Q BRIX [SAVE]: Review a List of Changes in org",
+      "label": "Demo Brix [SAVE]: Review a List of Changes in org",
       "type": "shell",
       "command": "cci task run list_changes --org ${input:OrgAlias}",
       "group": "build",
@@ -671,7 +671,7 @@
       }
     },
     {
-      "label": "Q BRIX [SAVE]: Retrieve Changes from org",
+      "label": "Demo Brix [SAVE]: Retrieve Changes from org",
       "type": "shell",
       "command": "cci task run retrieve_changes --org ${input:OrgAlias}",
       "group": "build",
@@ -686,7 +686,7 @@
       }
     },
     {
-      "label": "Q BRIX [DEPLOY]: Deploy Q Brix to specified org",
+      "label": "Demo Brix [DEPLOY]: Deploy Demo Brix to specified org",
       "type": "shell",
       "command": "cci flow run deploy_qbrix --org ${input:OrgAlias}",
       "group": "build",
@@ -701,7 +701,7 @@
       }
     },
     {
-      "label": "Q BRIX [DATA]: Deploy Q Brix data to specified org (check generate_qbrix_data flow)",
+      "label": "Demo Brix [DATA]: Deploy Demo Brix data to specified org (check generate_qbrix_data flow)",
       "type": "shell",
       "command": "cci flow run generate_qbrix_data --org ${input:OrgAlias}",
       "group": "build",
@@ -716,7 +716,7 @@
       }
     },
     {
-      "label": "Q BRIX [DATA]: Generate Dataset Mapping File from specified org",
+      "label": "Demo Brix [DATA]: Generate Dataset Mapping File from specified org",
       "type": "shell",
       "command": "cci task run generate_dataset_mapping --org ${input:OrgAlias} --path ${input:DataFolderString}",
       "group": "build",
@@ -731,7 +731,7 @@
       }
     },
     {
-      "label": "Q BRIX [DATA]: Extract Dataset from specified org",
+      "label": "Demo Brix [DATA]: Extract Dataset from specified org",
       "type": "shell",
       "command": "cci task run extract_dataset --org ${input:OrgAlias} --path ${input:DataFolderString} --sql_path ${input:SqlDataFolderString}",
       "group": "build",
@@ -746,7 +746,7 @@
       }
     },
     {
-      "label": "Q BRIX [DEPLOY]: Deploy specific folder to specified org",
+      "label": "Demo Brix [DEPLOY]: Deploy specific folder to specified org",
       "type": "shell",
       "command": "cci task run deploy --path ${input:FolderString} --org ${input:OrgAlias}",
       "group": "build",
@@ -761,7 +761,7 @@
       }
     },
     {
-      "label": "Q BRIX [RETRIEVE]: Download Data for Analytics Datasets",
+      "label": "Demo Brix [RETRIEVE]: Download Data for Analytics Datasets",
       "type": "shell",
       "command": "cci task run analytics_manager --mode d --org ${input:OrgAlias} --generate_metadata_desc True",
       "group": "build",
@@ -776,7 +776,7 @@
       }
     },
     {
-      "label": "Q BRIX [RETRIEVE]: Retrieve specific Metadata from Specified Org",
+      "label": "Demo Brix [RETRIEVE]: Retrieve specific Metadata from Specified Org",
       "type": "shell",
       "command": "cci task run dx --command 'force:source:retrieve -m \"${input:MetadataString}\"' --org ${input:OrgAlias}",
       "group": "build",
@@ -791,7 +791,7 @@
       }
     },
     {
-      "label": "Q BRIX [RETRIEVE]: Retrieve unmanaged package metadata from specified org and merge into force-app",
+      "label": "Demo Brix [RETRIEVE]: Retrieve unmanaged package metadata from specified org and merge into force-app",
       "type": "shell",
       "command": "cci task run retrieve_src --org ${input:OrgAlias} --package ${input:PackageName} && cci task run dx_convert_to",
       "group": "build",
@@ -806,7 +806,7 @@
       }
     },
     {
-      "label": "Q BRIX [SAVE]: Retrieve ALL Project metadata from org",
+      "label": "Demo Brix [SAVE]: Retrieve ALL Project metadata from org",
       "type": "shell",
       "command": "cp -r ./force-app ./backup && cci task run dx --command 'force:source:retrieve -p force-app' --org ${input:OrgAlias} && echo 'Check Custom Objects and Profiles if any as additional metadata may have been captured. Then remove backup folder.'",
       "windows": {
@@ -824,7 +824,7 @@
       }
     },
     {
-      "label": "Q BRIX [ORG]: Open Org in Browser",
+      "label": "Demo Brix [ORG]: Open Org in Browser",
       "type": "shell",
       "command": "cci org browser ${input:OrgAlias}",
       "group": "build",
@@ -839,7 +839,7 @@
       }
     },
     {
-      "label": "Q BRIX [INFO]: List Installed Packages in Org",
+      "label": "Demo Brix [INFO]: List Installed Packages in Org",
       "type": "shell",
       "command": "cci task run dx --org ${input:OrgAlias} --command force:package:installed:list",
       "group": "build",
@@ -854,7 +854,7 @@
       }
     },
     {
-      "label": "Q BRIX [PUBLISH]: Show Latest Commit Hash (For Metadeploy)",
+      "label": "Demo Brix [PUBLISH]: Show Latest Commit Hash (For Metadeploy)",
       "type": "shell",
       "command": "git rev-parse HEAD",
       "group": "build",
@@ -869,7 +869,7 @@
       }
     },
     {
-      "label": "Q BRIX [INFO]: Find Metadata in your depencencies",
+      "label": "Demo Brix [INFO]: Find Metadata in your depencencies",
       "type": "shell",
       "command": "cci task run qbrix_metadata_checker --metadata_type ${input:MetadataType} --api_names ${input:ApiNames} --dependency_flow ${input:DependencyFlow}",
       "group": "build",
@@ -884,7 +884,7 @@
       }
     },
     {
-      "label": "Q BRIX [INFO]: Scan for duplicated Metadata in your depencencies",
+      "label": "Demo Brix [INFO]: Scan for duplicated Metadata in your depencencies",
       "type": "shell",
       "command": "cci task run qbrix_metadata_checker --dependency_flow ${input:DependencyFlow} --scan_mode True",
       "group": "build",
@@ -899,7 +899,7 @@
       }
     },
     {
-      "label": "Q BRIX [ROBOT]: Launch Q Robot Sandbox",
+      "label": "Demo Brix [ROBOT]: Launch Q Robot Sandbox",
       "type": "shell",
       "command": "cci task run qbrix_robot_test --org ${input:OrgAlias} --start_url ${input:RobotStartURL}",
       "group": "build",
@@ -1025,7 +1025,7 @@
     },
     {
       "id": "GeneratePermSet",
-      "description": "Set to True to generate and update the Permission Set for the Q Brix",
+      "description": "Set to True to generate and update the Permission Set for the Demo Brix",
       "default": "True",
       "type": "pickString",
       "options": [

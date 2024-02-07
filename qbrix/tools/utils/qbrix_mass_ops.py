@@ -7,22 +7,24 @@ from time import sleep
 from cumulusci.core.tasks import BaseTask
 
 from qbrix.tools.bundled.sam.main import migrate
-from qbrix.tools.shared.qbrix_project_tasks import (assign_prefix_to_files,
-                                                    compare_metadata,
-                                                    create_external_id_field,
-                                                    create_permission_set_file,
-                                                    delete_standard_fields,
-                                                    generate_stack_view,
-                                                    push_changes,
-                                                    update_file_api_versions,
-                                                    update_project_api_versions)
+from qbrix.tools.shared.qbrix_project_tasks import (
+    assign_prefix_to_files,
+    compare_metadata,
+    create_external_id_field,
+    create_permission_set_file,
+    delete_standard_fields,
+    generate_stack_view,
+    push_changes,
+    update_file_api_versions,
+    update_project_api_versions,
+)
 
 
 class MassFileOps(BaseTask, ABC):
-    """Q Brix Mass Operations Utility has a number of helpful methods to save time when developing projects which store Salesforce metadata."""
+    """Demo Brix Mass Operations Utility has a number of helpful methods to save time when developing projects which store Salesforce metadata."""
 
     task_docs = """
-    Q Brix Mass Operations Utility has a number of helpful methods to save time when developing projects which store Salesforce metadata.
+    Demo Brix Mass Operations Utility has a number of helpful methods to save time when developing projects which store Salesforce metadata.
     """
 
     def _show_menu(self):
@@ -30,15 +32,15 @@ class MassFileOps(BaseTask, ABC):
 
         os.system("clear")
         self.logger.info(
-            """\nQ BRIX - MASS OPERATIONS UTILITIES\n\n
+            """\nDemo Brix - MASS OPERATIONS UTILITIES\n\n
             OPTION  DESCRIPTION\n
-            [1]     Update File APIs : Updates Apex Classes and LWC/Aura Components with Q Brix API Version\n
+            [1]     Update File APIs : Updates Apex Classes and LWC/Aura Components with Demo Brix API Version\n
             [2]     Delete Standard Fields : Removes standard fields within object folders\n
             [3]     Prefix Generator : Assign Prefix to all Custom Entities (Folders and References) in Project\n
             [4]     External ID Field Generator : Generate External ID Fields for a list of Object names\n
             [5]     Push Upgrade Tool (BETA) : Compare changes in metadata between the target org and your project, then push changes to the org.\n
             [6]     Permission Set Generator : Generate Permission Set for Objects, Fields, Tabs and Classes in your project.\n
-            [7]     Q Brix Stack Viewer (BETA): Generates a view of the metadata deployed by the whole stack of Q Brix.\n
+            [7]     Demo Brix Stack Viewer (BETA): Generates a view of the metadata deployed by the whole stack of Demo Brix.\n
             [8]     SAM CRM Analytics Migration Tool (v0.4.1 - BETA): Can be used to migrate CRMA Assets from one Salesforce Org to Another\n
             [9]     Update Project API\n
             [r]     Reset Menu
@@ -72,22 +74,44 @@ class MassFileOps(BaseTask, ABC):
         try:
             new_api_version = int(float(new_api_version))
         except ValueError:
-            self.logger.error("Please provide an valid api number, an integer value that's larger than current project api version")
+            self.logger.error(
+                "Please provide an valid api number, an integer value that's larger than current project api version"
+            )
             return False
         new_api_version = f"{str(new_api_version)}.0"
 
-        if not new_api_version or not new_api_version.isnumeric or float(new_api_version) <= float(self.project_config.project__package__api_version):
-            self.logger.error("Please provide an valid api number, an integer value that's larger than current project api version")
+        if (
+            not new_api_version
+            or not new_api_version.isnumeric
+            or float(new_api_version)
+            <= float(self.project_config.project__package__api_version)
+        ):
+            self.logger.error(
+                "Please provide an valid api number, an integer value that's larger than current project api version"
+            )
             return False
 
-        target_org_alias = input("Please enter the alias of the scratch org (Default: dev): ") or "dev"
-        skip_deploy = input("If you already had a fully deploy to your scratch org previously, you can skip the deploy to save some time, default N (y/N): ") or "n"
+        target_org_alias = (
+            input("Please enter the alias of the scratch org (Default: dev): ") or "dev"
+        )
+        skip_deploy = (
+            input(
+                "If you already had a fully deploy to your scratch org previously, you can skip the deploy to save some time, default N (y/N): "
+            )
+            or "n"
+        )
 
-        self.logger.info(f"Updating Project API from {old_api_version} to {new_api_version}")
+        self.logger.info(
+            f"Updating Project API from {old_api_version} to {new_api_version}"
+        )
 
-        update_project_api_versions(new_api_version, old_api_version, target_org_alias, skip_deploy)
+        update_project_api_versions(
+            new_api_version, old_api_version, target_org_alias, skip_deploy
+        )
 
-        self.logger.debug("Update Complete. PLEASE CHECK YOUR CODE CHANGES AND TEST DEPLOYS BEFORE COMMIT !!! \nthere will be a lot of changes that you want to discard\nespecially check record types and custom fields, the update pull will often add tons of picklist values in record types and sometimes pull extra custom fields to objects")
+        self.logger.debug(
+            "Update Complete. PLEASE CHECK YOUR CODE CHANGES AND TEST DEPLOYS BEFORE COMMIT !!! \nthere will be a lot of changes that you want to discard\nespecially check record types and custom fields, the update pull will often add tons of picklist values in record types and sometimes pull extra custom fields to objects"
+        )
 
     def _run_remove_standard_fields_utility(self):
         """Run Core Field Removal Utility"""
@@ -124,7 +148,7 @@ class MassFileOps(BaseTask, ABC):
         """Run External ID Field Generator Utility"""
         self.logger.info("\n\nRunning External ID Field Generator Utility")
         mode = input(
-            "Do you want to generate fields from current objects (p) in the Q Brix or a list within a file (f)? (p/f)"
+            "Do you want to generate fields from current objects (p) in the Demo Brix or a list within a file (f)? (p/f)"
         )
         if mode.lower() == "project":
             create_external_id_field()
@@ -259,7 +283,7 @@ class MassFileOps(BaseTask, ABC):
             self._run_update_project_api()
 
         elif option.lower() == "e":
-            self.logger.info("Exiting Q Brix Mass Operations Utility")
+            self.logger.info("Exiting Demo Brix Mass Operations Utility")
             sys.exit()
 
         elif option == "r":

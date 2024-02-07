@@ -1,11 +1,11 @@
-from robot.libraries.BuiltIn import BuiltIn
-from cumulusci.robotframework.SalesforceAPI import SalesforceAPI
 from cumulusci.robotframework.CumulusCI import CumulusCI
+from cumulusci.robotframework.SalesforceAPI import SalesforceAPI
+from robot.libraries.BuiltIn import BuiltIn
+
 from qbrix.robot.QbrixSharedKeywords import QbrixSharedKeywords
 
 
-class QBrixRobotLibrary():
-
+class QBrixRobotLibrary:
     """Base Library for Q Robot Keyword Libraries"""
 
     def __init__(self):
@@ -17,7 +17,6 @@ class QBrixRobotLibrary():
 
     @property
     def salesforceapi(self):
-
         """Loads Salesforce API Keywords and methods"""
 
         if self._salesforceapi is None:
@@ -26,7 +25,6 @@ class QBrixRobotLibrary():
 
     @property
     def builtin(self):
-
         """Loads Builtin Methods"""
 
         if getattr(self, "_builtin", None) is None:
@@ -35,7 +33,6 @@ class QBrixRobotLibrary():
 
     @property
     def cumulusci(self):
-
         """Loads Keyword Library for working with CumulusCI from Robot"""
 
         if getattr(self, "_cumulusci", None) is None:
@@ -44,7 +41,6 @@ class QBrixRobotLibrary():
 
     @property
     def browser(self):
-
         """Loads Default Browser Instance"""
 
         if self._browser is None:
@@ -53,7 +49,6 @@ class QBrixRobotLibrary():
 
     @property
     def tooling(self):
-
         """Loads Salesforce Tooling API"""
 
         if self._tooling is None:
@@ -62,8 +57,7 @@ class QBrixRobotLibrary():
 
 
 class QbrixRobotTask(QBrixRobotLibrary):
-
-    """Base Class For Q Brix Robot Keyword Libraries"""
+    """Base Class For Demo Brix Robot Keyword Libraries"""
 
     def __init__(self):
         super().__init__()
@@ -71,7 +65,6 @@ class QbrixRobotTask(QBrixRobotLibrary):
 
     @property
     def shared(self):
-
         """Loads Q Robot Shared Keywords and Methods"""
 
         if self._shared is None:

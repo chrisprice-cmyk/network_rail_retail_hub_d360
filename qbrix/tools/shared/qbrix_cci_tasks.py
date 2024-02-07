@@ -17,7 +17,7 @@ def rebuild_cci_cache(
 
     Args:
         cci_project_cache_directory (str): Relative File Path to the CCI Projects Directory
-        rebuild_flow (str): (Optional) Name of the flow from the Q Brix to use to get all relevant sources. Defaults to deploy_qbrix
+        rebuild_flow (str): (Optional) Name of the flow from the Demo Brix to use to get all relevant sources. Defaults to deploy_qbrix
 
     Returns:
         bool: True when complete

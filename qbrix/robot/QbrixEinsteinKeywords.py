@@ -8,7 +8,6 @@ from qbrix.core.qbrix_robot_base import QbrixRobotTask
 
 @library(scope="GLOBAL", auto_keywords=True, doc_format="reST")
 class QbrixEinsteinKeywords(QbrixRobotTask):
-
     """Keywords for Qbrix Einstein"""
 
     def enable_einstein_analytics_crm(self):
@@ -951,7 +950,6 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
         self.browser.click(f":nth-match({iframe_handler} Button:text-is('Activate'),2)")
         sleep(4)
 
-
     def enable_einstein_search_answers(self):
         """
         Enable Einstein Search Answers and AI-Generated Search Answers
@@ -966,91 +964,107 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
         checkbox_clicked = False
 
         # # Enable Search Answers
-        if self.shared.wait_and_toggle("lightning-primitive-input-checkbox label:has(span:text-is('Search Answers'))", True):
+        if self.shared.wait_and_toggle(
+            "lightning-primitive-input-checkbox label:has(span:text-is('Search Answers'))",
+            True,
+        ):
             self.builtin.log_to_console("\nSearch Answers checked...")
             checkbox_clicked = True
 
         # # Enable Generative AI Search Answers
-        if self.shared.wait_and_toggle("lightning-primitive-input-checkbox label:has(span:has-text('AI-Generated Search Answers'))", True):
+        if self.shared.wait_and_toggle(
+            "lightning-primitive-input-checkbox label:has(span:has-text('AI-Generated Search Answers'))",
+            True,
+        ):
             self.builtin.log_to_console("\nAI-Generated Search Answers checked...")
             checkbox_clicked = True
 
         if checkbox_clicked:
             self.shared.click_button_with_text("Save")
 
-
     def enable_einstein_service_replies_for_email(self):
         """
         Enable Einstein Service Replies for Email
         """
         self.builtin.log_to_console("\nChecking Knowledge Settings...")
-        
+
         # Go To Setup Page
         self.shared.go_to_setup_admin_page("KnowledgeSettings/home", 5)
         self.shared.wait_for_page_to_load()
 
         # Allow users to share articles via public URLs
         my_iframe_handler = self.shared.iframe_handler()
-        self.shared.wait_and_click(f"{my_iframe_handler} #topButtonRow input.btn:has-text('Edit')")
+        self.shared.wait_and_click(
+            f"{my_iframe_handler} #topButtonRow input.btn:has-text('Edit')"
+        )
 
         my_iframe_handler = self.shared.iframe_handler()
-        checkbox_clicked = self.shared.wait_and_toggle(f"{my_iframe_handler} input[name='enableShareKbArticlePublicUrl']",True)
-        if checkbox_clicked:        
-            self.shared.wait_and_click(f"{my_iframe_handler} #topButtonRow input.btn:has-text('Save')") 
-
+        checkbox_clicked = self.shared.wait_and_toggle(
+            f"{my_iframe_handler} input[name='enableShareKbArticlePublicUrl']", True
+        )
+        if checkbox_clicked:
+            self.shared.wait_and_click(
+                f"{my_iframe_handler} #topButtonRow input.btn:has-text('Save')"
+            )
 
         # Enable Service Replies for Email
         self.builtin.log_to_console("\nChecking Einstein Service Replies for Email...")
 
         self.shared.go_to_setup_admin_page("EinsteinGPTEmailGenSetting/home", 5)
         self.shared.wait_for_page_to_load()
-        
+
         toggle_input_selector = "lightning-primitive-input-toggle label:has(span:text-is('Einstein Service Replies for Email'))"
         self.shared.wait_and_toggle(toggle_input_selector, True)
-
-
 
         # Setup AI Grounding
         self.shared.go_to_setup_admin_page("EinsteinGPTGrounding/home", 5)
         self.shared.wait_for_page_to_load()
 
-        toggle_input_selector = "lightning-primitive-input-toggle label:has(span:text-is('Service AI Grounding'))" 
+        toggle_input_selector = "lightning-primitive-input-toggle label:has(span:text-is('Service AI Grounding'))"
         self.shared.wait_and_toggle(toggle_input_selector, True)
 
-
-        #Grounding for Knowledge
+        # Grounding for Knowledge
         knowledge_grounding_selector = "lightning-primitive-input-toggle label:has-text('Grounding with Knowledge')"
         if "unchecked" in self.browser.get_element_states(knowledge_grounding_selector):
             self.browser.click("button:text-is('Edit')")
 
             self.browser.click(":nth-match(div.slds-dropdown-trigger_click, 1)")
-            self.shared.wait_and_click("div.slds-dropdown-trigger_click lightning-base-combobox-item span.slds-truncate:text-is('Title'):visible")
+            self.shared.wait_and_click(
+                "div.slds-dropdown-trigger_click lightning-base-combobox-item span.slds-truncate:text-is('Title'):visible"
+            )
 
             self.browser.click(":nth-match(div.slds-dropdown-trigger_click, 2)")
-            self.shared.wait_and_click("div.slds-dropdown-trigger_click lightning-base-combobox-item span.slds-truncate:text-is('Summary'):visible")
+            self.shared.wait_and_click(
+                "div.slds-dropdown-trigger_click lightning-base-combobox-item span.slds-truncate:text-is('Summary'):visible"
+            )
 
             self.shared.wait_and_click("button:text-is('Save')")
-            self.shared.wait_and_toggle(knowledge_grounding_selector, True)  
+            self.shared.wait_and_toggle(knowledge_grounding_selector, True)
 
-        #Grounding for Cases
+        # Grounding for Cases
         self.browser.click("li.slds-tabs_default__item:has-text('Case')")
-        case_grounding_selector = "lightning-primitive-input-toggle label:has-text('Grounding with Cases')"
+        case_grounding_selector = (
+            "lightning-primitive-input-toggle label:has-text('Grounding with Cases')"
+        )
         if "unchecked" in self.browser.get_element_states(case_grounding_selector):
-            
+
             self.browser.click(":nth-match(button:text-is('Edit'), 2)")
 
             self.browser.click(":nth-match(div.slds-dropdown-trigger_click, 3)")
-            self.shared.wait_and_click("div.slds-dropdown-trigger_click lightning-base-combobox-item span.slds-truncate:text-is('Subject'):visible")
-            
+            self.shared.wait_and_click(
+                "div.slds-dropdown-trigger_click lightning-base-combobox-item span.slds-truncate:text-is('Subject'):visible"
+            )
+
             self.browser.click(":nth-match(div.slds-dropdown-trigger_click, 4)")
-            self.shared.wait_and_click("div.slds-dropdown-trigger_click lightning-base-combobox-item span.slds-truncate:text-is('Description'):visible")
+            self.shared.wait_and_click(
+                "div.slds-dropdown-trigger_click lightning-base-combobox-item span.slds-truncate:text-is('Description'):visible"
+            )
 
             self.shared.wait_and_click("button:text-is('Save')")
-            self.shared.wait_and_toggle(case_grounding_selector, True) 
-
+            self.shared.wait_and_toggle(case_grounding_selector, True)
 
     def check_and_enable_einstein_generative(self):
-        """Checks and enables Einstein Generative """
+        """Checks and enables Einstein Generative"""
         self.shared.go_to_setup_admin_page("EinsteinGPTSetup/home", 5)
         checked = "checked" in self.browser.get_element_states(
             f"{self.shared.iframe_handler()} div:has-text('Turn on Einstein') >> span.slds-checkbox_faux"

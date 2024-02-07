@@ -70,7 +70,7 @@ def QbrixInstallCheck(qbrix_name, org_alias):
     Check if a QBrix is installed in the target org
 
     Args:
-        qbrix_name (str): The name of the Q brix, for example 'QBrix-0-xDO-BaseConfig'
+        qbrix_name (str): The name of the Demo Brix, for example 'QBrix-0-xDO-BaseConfig'
         org_alias (str): The alias for the target org, for example 'dev'
 
     Returns:
@@ -128,7 +128,6 @@ def _remove_missing_field_schema(submitted_dict, field_names):
 
 
 class CreateUser(BaseSalesforceApiTask, NGOrgConfig, ABC):
-
     """Creates a user or multiple user records in a target org."""
 
     salesforce_task = True
@@ -575,7 +574,7 @@ class CreateUser(BaseSalesforceApiTask, NGOrgConfig, ABC):
         # Clean up ContentDocument after uploading user profile photo
         self.logger.info(
             "Cleaning up the Content Document created for user profile photo: %s",
-            path.name
+            path.name,
         )
         api.ContentDocument.delete(content_document_id)
 
@@ -1008,7 +1007,7 @@ class ListQBrix(SFDXOrgTask, ABC):
 class QBrixInstalled(BaseTask, ABC):
     task_options = {
         "qbrix_name": {
-            "description": "Name of the Q Brix, starting with Qbrix-",
+            "description": "Name of the Demo Brix, starting with Qbrix-",
             "required": True,
         }
     }
@@ -1036,12 +1035,12 @@ class QUpdateDependencies(UpdateDependencies, ABC):
 
 class QbrixDeployer(BaseSalesforceApiTask, ABC):
     task_docs = """
-    Overview: Deploys the Q Brix if not already deployed
+    Overview: Deploys the Demo Brix if not already deployed
     """
 
     task_options = {
         "qbrix_name": {
-            "description": "Name of the Q Brix, starting with Qbrix-",
+            "description": "Name of the Demo Brix, starting with Qbrix-",
             "required": True,
         },
         "org": {"description": "Org alias", "required": False},
@@ -1065,7 +1064,7 @@ class QbrixDeployer(BaseSalesforceApiTask, ABC):
                 if not QbrixInstallCheck(self.qbrix_name, self.org_config.name):
                     run_cci_flow(f"{name}:deploy_qbrix", self.org_config.name)
             else:
-                print("Source name not found in Q Brix")
+                print("Source name not found in Demo Brix")
 
 
 class PopulateRecentlyViewed(BaseSalesforceApiTask, ABC):
@@ -1436,7 +1435,7 @@ class UploadFiles(BaseSalesforceApiTask, ABC):
 
 class QRetrieveChanges(RetrieveChanges):
     """
-    Adds Q Brix custom logic to the Retrieve Changes Task
+    Adds Demo Brix custom logic to the Retrieve Changes Task
     """
 
     def _get_changes(self):
@@ -1458,7 +1457,7 @@ class QRetrieveChanges(RetrieveChanges):
 
         # Add your custom logic here after the original implementation
 
-        self.logger.info("Running Q Brix Checks...")
+        self.logger.info("Running Demo Brix Checks...")
         member_types = set(change["MemberType"] for change in self.filtered)
 
         if "WaveDataset" in member_types:
@@ -1545,7 +1544,6 @@ class CommunityPublisher(BaseSalesforceApiTask, ABC):
 
 
 class RunPerfectDateWizard(BaseSalesforceApiTask, ABC):
-
     """Connects to Perfect Date Wizard and requests a run against the target Salesforce org."""
 
     perfect_date_wizard_endpoint = "https://q-pdw-api.herokuapp.com/api/v1/trigger"

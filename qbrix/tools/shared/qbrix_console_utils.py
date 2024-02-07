@@ -33,7 +33,7 @@ class CreateBanner(Command, ABC):
 
     task_options = {
         "text": {
-            "description": "Text you want to show in a banner. If you leave this blank it will show the current Q Brix details.",
+            "description": "Text you want to show in a banner. If you leave this blank it will show the current Demo Brix details.",
             "required": False,
         }
     }

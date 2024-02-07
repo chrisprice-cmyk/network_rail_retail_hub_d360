@@ -83,16 +83,15 @@ Q_BRIX_GITIGNORE_ENTRIES = [
     "*_results.xml",
 ]
 
-# Required Directories for Q Brix
+# Required Directories for Demo Brix
 QBRIX_REQUIRED_DIRECTORIES = [".vscode", ".qbrix", ".git", "qbrix"]
 
 
 class QBrixUpdater(BaseTask, ABC):
-
-    """Updates Q Brix Scripts along with any optional, custom updates"""
+    """Updates Demo Brix Scripts along with any optional, custom updates"""
 
     task_docs = """
-    Updated the Q brix Extension Library and other Q Brix related bundles like GitHub Actions and VSCode Extensions in line with the XDO-Template (main branch).
+    Updated the Demo Brix Extension Library and other Demo Brix related bundles like GitHub Actions and VSCode Extensions in line with the XDO-Template (main branch).
 
     Can also be used to update custom scripts and other custom directories from a .zip file which needs to be hosted somewhere (by setting the URL of the .zip file as the UpdateLocation option), in addition the .zip files can also have a password set and you can specify the password using the ArchivePassword option when running the task.
     """
@@ -157,7 +156,7 @@ class QBrixUpdater(BaseTask, ABC):
 
         if legacy_placeholder == -1 and new_placeholder == -1:
             self.logger.error(
-                "Unable to update cumulusci.yml file. Missing placeholder for Q Brix Tasks."
+                "Unable to update cumulusci.yml file. Missing placeholder for Demo Brix Tasks."
             )
         else:
             # Check for Legacy Placeholder
@@ -309,7 +308,7 @@ class QBrixUpdater(BaseTask, ABC):
         return False
 
     def _run_task(self):
-        """ " Updates the Q brix Project with the latest files from xDO-Template main branch"""
+        """ " Updates the Demo Brix Project with the latest files from xDO-Template main branch"""
 
         self.logger.info("STARTING QBRIX UPDATE\n")
 
@@ -323,7 +322,7 @@ class QBrixUpdater(BaseTask, ABC):
             shutil.copyfile(
                 "qbrix/tools/utils/qbrix_update.py", ".qbrix/qbrix_update.py"
             )
-        self.logger.info(" -> Downloading Latest version of Q Brix Extensions...")
+        self.logger.info(" -> Downloading Latest version of Demo Brix Extensions...")
         if download_and_unzip(Q_BRANCH_LOCATION, self.ArchivePassword, False, True):
             # ADD FOLDERS HERE WHICH YOU WANT TO UPDATE IN PROJECT DIRECTORIES
             # PARAM1 = The folder as if it was from the root path

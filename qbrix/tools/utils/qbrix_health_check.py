@@ -63,7 +63,7 @@ class HealthChecker(BaseTask, ABC):
     }
 
     task_docs = """
-    Checks for known configuration issues within the project files and corrects them (if possible). For anything that cannot be automatically repaired, the end user will be prompted for an action or simply shown a detailed error message with guidance on how to resolve the issue. Note that some errors come from outside of Q Brix and may not have additional guidance.
+    Checks for known configuration issues within the project files and corrects them (if possible). For anything that cannot be automatically repaired, the end user will be prompted for an action or simply shown a detailed error message with guidance on how to resolve the issue. Note that some errors come from outside of Demo Brix and may not have additional guidance.
     """
 
     def _init_options(self, kwargs):
@@ -125,7 +125,7 @@ class HealthChecker(BaseTask, ABC):
         self.logger.info(" -> Check Complete!")
 
         self.logger.info(
-            "\nHealth Check: Checking that orgs/dev.json has all features from all sources related to this Q Brix."
+            "\nHealth Check: Checking that orgs/dev.json has all features from all sources related to this Demo Brix."
         )
         source_org_feature_checker()
         self.logger.info(" -> Check Complete!")
@@ -167,7 +167,7 @@ class HealthChecker(BaseTask, ABC):
             project_name = self.project_config.project__name
             if project_name:
                 self.logger.info(
-                    "\nHealth Check: Checking and generating Permission Set for the Q Brix"
+                    "\nHealth Check: Checking and generating Permission Set for the Demo Brix"
                 )
                 permission_set_file_name = project_name.replace(" ", "_")
                 permission_set_check = (
@@ -256,7 +256,7 @@ class HealthChecker(BaseTask, ABC):
         repo_url = self.project_config.project__git__repo_url
 
         self.logger.info(
-            "Naming Check: Checking File and Project Naming aligns with correct Q Brix Name"
+            "Naming Check: Checking File and Project Naming aligns with correct Demo Brix Name"
         )
         file_name_error = False
 
@@ -288,7 +288,7 @@ class HealthChecker(BaseTask, ABC):
             ):
                 file_name_error = True
                 log.error(
-                    "Naming Check: [FAIL] You must update your project names in the cumulusci.yml file to be the same as your Q Brix repo url. xDO-Template was found and this should have been updated, see Readme."
+                    "Naming Check: [FAIL] You must update your project names in the cumulusci.yml file to be the same as your Demo Brix repo url. xDO-Template was found and this should have been updated, see Readme."
                 )
                 self.logger.info(
                     f"Names Found:\nProject Name: {project_name}\nPackage Name: {package_name}\nRepo URL: {repo_url}\nQBrix Name (From Repo URL): {repo_qbrix_name}"
@@ -298,7 +298,7 @@ class HealthChecker(BaseTask, ABC):
             if not project_name == package_name == repo_qbrix_name:
                 file_name_error = True
                 log.error(
-                    "Naming Check: [FAIL] You must update your project names in the cumulusci.yml file to be the same as your Q Brix repo url"
+                    "Naming Check: [FAIL] You must update your project names in the cumulusci.yml file to be the same as your Demo Brix repo url"
                 )
                 self.logger.info(
                     f"Names Found:\nProject Name: {project_name}\nPackage Name: {package_name}\nRepo URL: {repo_url}\nQBrix Name (From Repo URL): {repo_qbrix_name}"

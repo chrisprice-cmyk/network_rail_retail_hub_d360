@@ -18,11 +18,10 @@ from qbrix.tools.utils.qbrix_orgconfig_hydrate import NGOrgConfig
 
 
 class RunPreflight(BaseTask, ABC):
-
     """Runs initial setup tasks before any other deployment happens"""
 
     task_docs = """
-    Q Brix Preflight runs multiple tasks and flows against your target org to prepare it for the main deployment. By default it deploys settings and ensures that the Q Brix Registration package is installed.
+    Demo Brix Preflight runs multiple tasks and flows against your target org to prepare it for the main deployment. By default it deploys settings and ensures that the Demo Brix Registration package is installed.
     """
 
     task_options = {
@@ -119,25 +118,25 @@ class RunPreflight(BaseTask, ABC):
             )
 
     def deploy_qbrix_register(self):
-        # Check if Q Brix Registration is already installed
+        # Check if Demo Brix Registration is already installed
         self.logger.info(
-            f"\nPREFLIGHT TASK: Check Q Brix Register is deployed in org with alias {self.org_config.name}"
+            f"\nPREFLIGHT TASK: Check Demo Brix Register is deployed in org with alias {self.org_config.name}"
         )
 
         if not QbrixInstallCheck(
             "QBrix-1-xDO-Tool-QBrixRegister", self.org_config.name
         ):
             self.logger.info(
-                f" -> Deploying Q Brix Registration to Org {self.org_config.name}"
+                f" -> Deploying Demo Brix Registration to Org {self.org_config.name}"
             )
             checkreg_deploy_result = run_cci_task(
                 "base:check_register", self.org_config.name
             )
             if checkreg_deploy_result:
-                self.logger.info(" -> Q Brix Register Check Complete!")
+                self.logger.info(" -> Demo Brix Register Check Complete!")
             else:
                 self.logger.info(
-                    " -> Q Brix Register Check Failed. Check errors and warnings (if any) mentioned above."
+                    " -> Demo Brix Register Check Failed. Check errors and warnings (if any) mentioned above."
                 )
 
     def deploy_base_config_and_data(self):
@@ -146,33 +145,33 @@ class RunPreflight(BaseTask, ABC):
         )
 
         if not QbrixInstallCheck("QBrix-0-xDO-BaseConfig", self.org_config.name):
-            self.logger.info(" -> Deploying Q Brix Base Config")
+            self.logger.info(" -> Deploying Demo Brix Base Config")
             deploy_result = run_cci_flow("base:deploy_qbrix", self.org_config.name)
 
             if deploy_result:
-                self.logger.info(" -> Q Brix Base Config Deployment Complete!")
+                self.logger.info(" -> Demo Brix Base Config Deployment Complete!")
             else:
                 self.logger.error(
-                    " -> Q Brix Base Config Deployment Failed. Check errors and warnings (if any) mentioned above."
+                    " -> Demo Brix Base Config Deployment Failed. Check errors and warnings (if any) mentioned above."
                 )
         else:
-            self.logger.info(" -> Q Brix Base Config Deployed")
+            self.logger.info(" -> Demo Brix Base Config Deployed")
 
         if not self.only_base_config:
             if not QbrixInstallCheck("QBrix-0-xDO-BaseData", self.org_config.name):
-                self.logger.info(" -> Installing Q Brix Base Data")
+                self.logger.info(" -> Installing Demo Brix Base Data")
                 deploy_result = run_cci_flow(
                     "base:deploy_qbrix_base_data", self.org_config.name
                 )
 
                 if deploy_result:
-                    self.logger.info(" -> Q Brix Base Data Deployment Complete!")
+                    self.logger.info(" -> Demo Brix Base Data Deployment Complete!")
                 else:
                     self.logger.error(
-                        " ->Q Brix Base Data Deployment Failed. Check errors and warnings (if any) mentioned above."
+                        " ->Demo Brix Base Data Deployment Failed. Check errors and warnings (if any) mentioned above."
                     )
             else:
-                self.logger.info(" -> Q Brix Base Data Deployed")
+                self.logger.info(" -> Demo Brix Base Data Deployed")
 
     def scratch_org_tasks(self):
         """Add Tasks here to be executed when the target org is a Scratch Org or Sandbox"""
@@ -192,7 +191,7 @@ class RunPreflight(BaseTask, ABC):
         # Deploy Settings
         self._deploy_settings()
 
-        # Check and deploy Q Brix Register
+        # Check and deploy Demo Brix Register
         self.deploy_qbrix_register()
 
         # Check for Experience Cloud sites
@@ -209,9 +208,9 @@ class RunPreflight(BaseTask, ABC):
                 self.logger.info("No Experiences to pre-deploy.")
 
     def _run_task(self):
-        self.logger.info("\nPREFLIGHT: Starting Q Brix Preflight Check")
+        self.logger.info("\nPREFLIGHT: Starting Demo Brix Preflight Check")
 
-        # Initial Q Brix Tasks
+        # Initial Demo Brix Tasks
         if not self.skip_hydrate:
             self.logger.info("\nPREFLIGHT TASK: Running Org Config Hydrate")
             hydrate = NGOrgConfig(
