@@ -203,7 +203,9 @@ Check and Enable Dialer
 
 Check and Enable Dialer Call Recordings
     Enable Dialer Call Recordings
-    
+
+Enable Enhanced Omni-Channel
+    Enable Enhanced Omni Channel
 #
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # Q BRANCH TOOLING TESTS

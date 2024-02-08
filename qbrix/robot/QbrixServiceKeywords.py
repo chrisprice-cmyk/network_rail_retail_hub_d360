@@ -677,3 +677,44 @@ class QbrixServiceKeywords(QbrixRobotTask):
             raise Exception(
                 "Unable to locate Call Recordings elements on page. Please review script."
             )
+
+
+    def enable_enhanced_omni_channel(self):
+        """
+        Enable Enhanced Omni-Channel
+        """
+
+        self.builtin.log_to_console("\nChecking Enhanced Omni-Channel...")
+
+        # Go To Setup Page
+        self.shared.go_to_setup_admin_page("OmniChannelSettings/home", 5)
+        self.shared.wait_for_page_to_load()
+
+        # Enable Enhanced Omni
+        my_iframe_handler = self.shared.iframe_handler()
+        if "visible" in self.browser.get_element_states(f"{my_iframe_handler} input[id='toggleScrt2RoutingConnect']"):
+            self.builtin.log_to_console("\n -> Found Toggle")
+
+            toggle_selector = f"{my_iframe_handler} label.slds-checkbox_toggle:has(input[id='toggleScrt2RoutingConnect'])"
+            if "unchecked" in self.browser.get_element_states(toggle_selector):
+                self.browser.click(toggle_selector)
+                self.builtin.log_to_console("\n -> Clicked Toggle")
+
+                self.shared.wait_and_click(
+                    f"{self.shared.iframe_handler()} footer.slds-modal__footer  >> input.btn:has-text('Continue')",
+                    post_click_sleep = 2
+                )
+
+                # if the org had Enhanced Omni-Channel turned on before and disabled again, you will not see this agreement checkbox and "accept" button again, let's skip it if this is the case.
+                checkbox_selector = f"{my_iframe_handler} input[name='j_id0:scrt2Form:toggleAcceptAgreement']:visible"
+                if not self.browser.get_element_count(checkbox_selector):
+                    return
+
+                self.shared.wait_and_toggle(checkbox_selector, True)
+                
+                self.browser.wait_for_elements_state(
+                    f"{my_iframe_handler} footer.slds-modal__footer  >> input.btn:has-text('Accept')", ElementState.visible, "10s"
+                )
+                self.browser.click(
+                    f"{self.shared.iframe_handler()} footer.slds-modal__footer  >> input.btn:has-text('Accept')"
+                )
