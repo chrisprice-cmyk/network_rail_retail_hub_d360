@@ -37,8 +37,8 @@ jobs:
         run: echo "${{ secrets.QBRIX_DEVHUB_PRIVATE_KEY }}" > devhub.key
 
       # Install SFDX
-      - name: Install SFDX
-        run: npm install @salesforce/cli --global
+      #- name: Install SFDX
+      #  run: npm install @salesforce/cli --global
 
       # We will use a common app with a common key -
       - name: Create SFDX Session for QLABS Service Account
