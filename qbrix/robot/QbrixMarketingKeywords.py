@@ -7,6 +7,7 @@ from robot.api.deco import library
 
 from qbrix.core.qbrix_robot_base import QbrixRobotTask
 from qbrix.robot.QbrixToolingKeywords import QbrixToolingKeywords
+from Browser.utils.data_types import SelectionType
 from qbrix.tools.shared.qbrix_authentication import (
     generate_mfa_code,
     get_secure_setting,
@@ -464,13 +465,212 @@ class QbrixMarketingKeywords(QbrixRobotTask):
 
     def check_and_enable_uma_marketing_cloud(self):
         """Enables Marketing Cloud Unified Marketing Automation Setting"""
-        self.builtin.log_to_console(
-            "\nEnabling the marketing cloud setting for Unified Marketing Automation"
-        )
-        self.shared.go_to_setup_admin_page("UnifiedMarketingGettingStarted/home")
-        if "visible" not in self.browser.get_element_states(
-            "button.slds-button[data-id='umaEnableButton']:disabled"
-        ):
-            self.builtin.log_to_console("\n -> Found Button")
-            self.browser.click("button.slds-button[data-id='umaEnableButton']")
+        self.builtin.log_to_console("\nEnabling the marketing cloud setting for Unified Marketing Automation")
+        retries = 0
+        while retries < 5:
+            retries += 1
+            self.shared.go_to_setup_admin_page("UnifiedMarketingGettingStarted/home", force_reload= True)
+            sleep(3)
+            if "visible" not in self.browser.get_element_states("lightning-button[data-id='umaEnableButton'] button.slds-button:has-text('Enable Marketing Cloud'):disabled"):
+                self.builtin.log_to_console("\n -> Found Button")
+                self.shared.wait_and_click("lightning-button[data-id='umaEnableButton'] button.slds-button:has-text('Enable Marketing Cloud')")
+                break
+            elif self.browser.get_element_count("setup_marketing_unifiedmarketing-uma-enablement-expandable-step div.slds-progress-ring__content") > 0: 
+                self.builtin.log_to_console("Marketing Cloud activation is in process")
+                break
+            else:
+                self.builtin.log_to_console(f"Button didn't load, we are retrying the activation: {retries}")     
+                sleep(3)           
+            
+        if self.shared.wait_on_element("setup_marketing_unifiedmarketing-uma-enablement-expandable-step:nth-child(1) div.slds-progress-ring__content span.slds-icon-utility-success", 240):
+            self.builtin.log_to_console("Marketing Cloud was enabled successfully.")
+                
+            
+    def create_identity_resolution(self, ir_name): 
+        """Create an Identity Resolution"""
+        
+        self.builtin.log_to_console(f"\nCreate an Identity Resolution...")
+        self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/o/IdentityResolution/home", timeout="30s")
+        self.shared.wait_for_page_to_load()
+        # self.shared.wait_on_element(".slds-page-header--object-home a.forceActionLink:has-text('New')")
+            
+        self.shared.wait_and_click("div.slds-page-header--object-home a.forceActionLink:has-text('New')")
+        self.shared.wait_on_element("div.slds-modal__container header.slds-modal__header:has-text('New Ruleset')")
+        
+        self.browser.click("lightning-combobox.slds-form-element[data-tid='dataSpace'] div.slds-dropdown-trigger_click")
+        self.shared.wait_and_click("lightning-combobox.slds-form-element[data-tid='dataSpace'] div.slds-dropdown-trigger_click div.slds-listbox lightning-base-combobox-item span.slds-truncate:has-text('default')")
+            
+        self.browser.click("lightning-combobox.slds-form-element[data-tid='entity'] div.slds-dropdown-trigger_click")
+        self.shared.wait_and_click("lightning-combobox.slds-form-element[data-tid='entity'] div.slds-dropdown-trigger_click div.slds-listbox lightning-base-combobox-item span.slds-truncate:has-text('Individual')")
+        
+        self.shared.wait_and_click("footer.slds-modal__footer button:has-text('Next')")
+        
+        
+        self.shared.wait_on_element("input.slds-input[placeholder='Enter a name...']")
+        self.browser.fill_text("input.slds-input[placeholder='Enter a name...']",ir_name)
+        
+        self.shared.wait_and_click("footer.slds-modal__footer button:has-text('Save')")
+        
+        if self.shared.wait_on_element(f"div.toastContainer:has-text('Ruleset {ir_name} was created')", 25):
+            self.builtin.log_to_console("\n -> Identity Resolution Created!")
+        else:
+            raise Exception("Identity Resolution couldn't be created, please contact you adminstrator for details")
+        
+    def create_ir_matching_rule(self, ir_name): 
+        """Create a Custom Matching Rule for the Identity Resolution"""
+        self.builtin.log_to_console(f"\nCreate a Custom Matching Rule for the Identity Resolution...")
+        
+        # query = "SELECT Id FROM IdentityResolution Where Name = 'test' LIMIT 1"
+        query = f"SELECT Id FROM IdentityResolution Where Name = '{ir_name}' LIMIT 1"
+        
+        ir_lookup = self.salesforceapi.soql_query(query)
+        lookup_size = ir_lookup.get("totalSize", 0)
+        if lookup_size > 0:
+            ir_id = ir_lookup.get("records", {})[0].get("Id")
+            
+            # Load IdentityResolutions Page
+            self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/r/IdentityResolution/{ir_id}/view", timeout="30s")
+            
+            self.shared.wait_and_click("div[data-component-id='runtime_cdp_identityResolutionRuleConfiguration'] slot[name='actions'] button:has-text('Configure')")
+            self.shared.wait_on_element("div.slds-modal__container div.greybackground div.subHeader:has-text('Match Rule 1')" )
+            self.shared.wait_and_click("div.slds-modal__container div.greybackground button:has-text('Configure')")
+            
+            self.shared.wait_on_element("table.slds-table tbody tr:has(span:has-text('Custom Rule'))" )
+            self.browser.check_checkbox(f"table.slds-table tbody tr:has(span:has-text('Custom Rule')) span.slds-radio_faux")
+            self.shared.wait_and_click("footer.slds-modal__footer button:has-text('Next')")
+                        
+            self.shared.wait_on_element("div.slds-modal__container div.identity-resolution-match-rules-wizard div.subHeader:has-text('Match Rule Criteria')" )
+            
+            #1st Rule
+            self.browser.click("div[data-tid='match-rule-criteria']:nth-child(1) lightning-combobox[data-tid='select-dmo'] div.slds-dropdown-trigger_click")
+            self.shared.wait_and_click("div[data-tid='match-rule-criteria']:nth-child(1) lightning-combobox[data-tid='select-dmo'] div.slds-dropdown-trigger_click div.slds-listbox lightning-base-combobox-item span.slds-truncate:has-text('Individual')")
+            
+            self.shared.wait_and_click("div[data-tid='match-rule-criteria']:nth-child(1) lightning-combobox[data-tid='select-field'] div.slds-dropdown-trigger_click")
+            self.shared.wait_and_click("div[data-tid='match-rule-criteria']:nth-child(1) lightning-combobox[data-tid='select-field'] div.slds-dropdown-trigger_click div.slds-listbox lightning-base-combobox-item span.slds-truncate:has-text('First Name')")
+            
+            self.shared.wait_and_click("div[data-tid='match-rule-criteria']:nth-child(1) lightning-combobox[data-tid='select-match-method'] div.slds-dropdown-trigger_click")
+            self.shared.wait_and_click("div[data-tid='match-rule-criteria']:nth-child(1) lightning-combobox[data-tid='select-match-method'] div.slds-dropdown-trigger_click div.slds-listbox lightning-base-combobox-item span.slds-truncate:has-text('Fuzzy - Medium Precision')")
+            
+            #Adding an additional criteria to the rule.
+            self.browser.click("button:has-text('Add Criteria')")            
+            
+            #2nd Rule
+            self.browser.click("div[data-tid='match-rule-criteria']:nth-child(2) lightning-combobox[data-tid='select-dmo'] div.slds-dropdown-trigger_click")
+            self.shared.wait_and_click("div[data-tid='match-rule-criteria']:nth-child(2) lightning-combobox[data-tid='select-dmo'] div.slds-dropdown-trigger_click div.slds-listbox lightning-base-combobox-item span.slds-truncate:has-text('Individual')")
+            
+            self.shared.wait_and_click("div[data-tid='match-rule-criteria']:nth-child(2) lightning-combobox[data-tid='select-field'] div.slds-dropdown-trigger_click")
+            self.shared.wait_and_click("div[data-tid='match-rule-criteria']:nth-child(2) lightning-combobox[data-tid='select-field'] div.slds-dropdown-trigger_click div.slds-listbox lightning-base-combobox-item span.slds-truncate:has-text('Last Name')")
+            
+            self.shared.wait_and_click("div[data-tid='match-rule-criteria']:nth-child(2) lightning-combobox[data-tid='select-match-method'] div.slds-dropdown-trigger_click")
+            self.shared.wait_and_click("div[data-tid='match-rule-criteria']:nth-child(2) lightning-combobox[data-tid='select-match-method'] div.slds-dropdown-trigger_click div.slds-listbox lightning-base-combobox-item span.slds-truncate:has-text('Exact')")
+            
+            #Adding an additional criteria to the rule.
+            self.browser.click("button:has-text('Add Criteria')")            
+            
+            #3 Rule
+            self.browser.click("div[data-tid='match-rule-criteria']:nth-child(3) lightning-combobox[data-tid='select-dmo'] div.slds-dropdown-trigger_click")
+            self.shared.wait_and_click("div[data-tid='match-rule-criteria']:nth-child(3) lightning-combobox[data-tid='select-dmo'] div.slds-dropdown-trigger_click div.slds-listbox lightning-base-combobox-item span.slds-truncate:has-text('Contact Point Email')")
+            
+            self.shared.wait_and_click("div[data-tid='match-rule-criteria']:nth-child(3) lightning-combobox[data-tid='select-field'] div.slds-dropdown-trigger_click")
+            self.shared.wait_and_click("div[data-tid='match-rule-criteria']:nth-child(3) lightning-combobox[data-tid='select-field'] div.slds-dropdown-trigger_click div.slds-listbox lightning-base-combobox-item span.slds-truncate:has-text('Email Address')")
+            
+            self.shared.wait_and_click("div[data-tid='match-rule-criteria']:nth-child(3) lightning-combobox[data-tid='select-match-method'] div.slds-dropdown-trigger_click")
+            self.shared.wait_and_click("div[data-tid='match-rule-criteria']:nth-child(3) lightning-combobox[data-tid='select-match-method'] div.slds-dropdown-trigger_click div.slds-listbox lightning-base-combobox-item span.slds-truncate:has-text('Exact Normalized')")
+            
             sleep(5)
+            self.shared.wait_and_click("footer.slds-modal__footer button:has-text('Next')")
+            self.shared.wait_and_click("footer.slds-modal__footer button:has-text('Save')")
+            
+    def publish_scoring_rules(self, retries=0):
+        """Selecting Unified Individual and Publishing Scoring Rules"""
+        self.builtin.log_to_console(f"\nSelecting Unified Individual and Publishing Scoring Rules...")
+        
+        # self.shared.go_to_setup_admin_page("PeopleScoringSetup/home", force_reload= True)
+        self.shared.go_to_setup_admin_page("UnifiedMarketingCustomSettings/home", force_reload= True)
+        
+        self.shared.wait_and_click("lightning-tab-bar li.slds-tabs_default__item a:has-text('Customer Lifecycle')")
+        self.shared.wait_and_click("div.uma-marketing-setup-button-title button.slds-button:has-text('Enable Lead Scoring')")
+        
+        self.browser.switch_page(self.browser.get_page_ids(SelectionType["ALL"])[0])
+        sleep(3)
+        if self.browser.get_element_count("setup_scoring_peoplescoring-people-score-details button.slds-button:has-text('Select Unified Individual')") > 0:
+            self.builtin.log_to_console("\n -> Found Select Unified Individual Button")
+            self.browser.click("setup_scoring_peoplescoring-people-score-details button.slds-button:has-text('Select Unified Individual')")
+            self.shared.wait_on_element("h1.slds-modal__title:has-text('Select Your Unified Individual')" )
+            
+            self.browser.click("div.select-unified-individual-modal-body div.slds-dropdown-trigger_click")
+            if self.browser.get_element_count("div.select-unified-individual-modal-body div.slds-dropdown-trigger_click lightning-base-combobox-item span.slds-truncate") > 0: 
+                self.shared.wait_and_click("div.select-unified-individual-modal-body div.slds-dropdown-trigger_click lightning-base-combobox-item span.slds-truncate:nth-child(1)")
+            else:
+                if retries < 5:
+                    sleep(3)
+                    self.publish_scoring_rules(retries+1)
+                    return
+                else:
+                    raise Exception("Unified Individual couldnt be found. Please configure this manually or contact your administrator")
+            
+            self.shared.wait_and_click("div.slds-modal__footer button:has-text('Save')")
+            
+            if "visible" not in self.browser.get_element_states("button.slds-button:has-text('Publish'):disabled"):
+                self.builtin.log_to_console("\n -> Found Publish Button")
+                self.browser.click("button.slds-button:has-text('Publish')")
+                self.shared.wait_and_click("div.slds-modal__footer button:has-text('Publish')")
+                # sleep(15)
+                self.builtin.log_to_console("\n -> Scoring Rules were published")
+            else:
+                self.builtin.log_to_console("\n -> Scoring Rules were already published")
+            return
+            
+        else:
+            self.builtin.log_to_console("\n -> Unified Individual was already selected")
+        
+    
+    def activate_co_create_with_einstein(self):
+        """Activates Co-Create with Einstein"""
+        self.builtin.log_to_console(f"\nActivating Co-Create with Einstein...")
+        
+        self.shared.go_to_setup_admin_page("EinsteinCoCreate/home")
+        if "visible" in self.browser.get_element_states("button.slds-button:has-text('Activate')"):
+            self.builtin.log_to_console("\n -> Found Activate Button")
+            self.browser.click("button.slds-button:has-text('Activate')")
+            
+            if self.shared.wait_on_element("p.coCreateActivationStatusLabel span:has-text('Activated')", 15):
+                self.builtin.log_to_console("\n -> Co-Create with Einstein is now ON")
+        else:
+            self.builtin.log_to_console("\n -> Co-Create with Einstein is already active.")
+    
+    def activate_einstein_sto(self):
+        """Activates Einstein Send Time Optimization (STO)"""
+        self.builtin.log_to_console(f"\nActivates Einstein Send Time Optimization (STO)...")
+        
+        self.shared.go_to_setup_admin_page("UmaSto/home")
+        if "visible" in self.browser.get_element_states("button.slds-button:has-text('Activate')"):
+            self.builtin.log_to_console("\n -> Found Activate Button")
+            self.browser.click("button.slds-button:has-text('Activate')")
+            
+            self.builtin.log_to_console("\n -> Einstein Send Time Optimization is now ON")
+            # if self.shared.wait_on_element("p.stoActivationStatusLabel span:has-text('Activated')", 15): 
+            #     self.builtin.log_to_console("\n -> Einstein Send Time Optimization is now ON")
+        else:
+            self.builtin.log_to_console("\n -> Einstein Send Time Optimization is already active.")
+    
+    def enable_einstein_metrics_guard(self):
+        """Enable Einstein Metrics Guard"""
+        self.builtin.log_to_console(f"\nEnable Einstein Metrics Guard...")
+        
+        self.shared.go_to_setup_admin_page("E360EmailFeatures/home")
+        if "visible" in self.browser.get_element_states("h2.slds-card__header-title span:has-text('Einstein Metrics Guard')"):
+            checked = "checked" in self.browser.get_element_states(
+                "span.slds-checkbox_faux"
+            )
+            if not checked:
+                self.builtin.log_to_console(
+                    "\n -> Setting not enabled. Clicking toggle now..."
+                )
+                self.browser.click("span.slds-checkbox_faux")
+                sleep(1)
+            if self.shared.wait_on_element("div.toastContainer:has-text('This option has successfully been updated')", 15):
+                self.builtin.log_to_console("\n -> Einstein Metrics Guard Setting is NOW Enabled!")
+        else:
+            self.builtin.log_to_console("\n -> Einstein Metrics Guard Setting is already active.")
+            
