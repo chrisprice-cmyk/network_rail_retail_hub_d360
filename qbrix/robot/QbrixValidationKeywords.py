@@ -10,7 +10,7 @@ from robot.api.deco import library
 from qbrix.core.qbrix_robot_base import QbrixRobotTask
 
 
-@library(scope='GLOBAL', auto_keywords=True, doc_format='reST')
+@library(scope="GLOBAL", auto_keywords=True, doc_format="reST")
 class QbrixValidationKeywords(QbrixRobotTask):
     """Validation Keywords for Robot"""
 
@@ -30,7 +30,13 @@ class QbrixValidationKeywords(QbrixRobotTask):
 
         return self._validationresults
 
-    def __recordFailureResultException(self, resulttype: str = None, name: str = None, exceptionMessage: str = None, datatag=None):
+    def __recordFailureResultException(
+        self,
+        resulttype: str = None,
+        name: str = None,
+        exceptionMessage: str = None,
+        datatag=None,
+    ):
         """Records a result exception"""
 
         if not resulttype:
@@ -42,18 +48,28 @@ class QbrixValidationKeywords(QbrixRobotTask):
         if not exceptionMessage:
             exceptionMessage = "NO EXCEPTION MESSAGE PROVIDED"
 
-        res = {'type': resulttype, 'name': name, 'status': "Result Exception", 'details': exceptionMessage, 'datatag': datatag}
+        res = {
+            "type": resulttype,
+            "name": name,
+            "status": "Result Exception",
+            "details": exceptionMessage,
+            "datatag": datatag,
+        }
 
         self.builtin.log_to_console("\n[VALIDATION] Recording Exception")
         self.builtin.log_to_console(f"\n{res}")
 
-        self.__recordFailureResult(resulttype=resulttype, name=name, details=exceptionMessage, datatag=datatag)
+        self.__recordFailureResult(
+            resulttype=resulttype, name=name, details=exceptionMessage, datatag=datatag
+        )
         self.validationresults["results"].append(res)
         self.__writeresultstofile()
 
         raise Exception(exceptionMessage)
 
-    def __recordIgnoredResult(self, resulttype: str, name: str, details: str = None, datatag=None):
+    def __recordIgnoredResult(
+        self, resulttype: str, name: str, details: str = None, datatag=None
+    ):
         """Records an ignored validation result"""
 
         if details is None:
@@ -62,22 +78,38 @@ class QbrixValidationKeywords(QbrixRobotTask):
         if datatag is None:
             datatag = ""
 
-        res = {'type': resulttype, 'name': name, 'status': "Ignored", 'details': details, 'datatag': datatag}
+        res = {
+            "type": resulttype,
+            "name": name,
+            "status": "Ignored",
+            "details": details,
+            "datatag": datatag,
+        }
 
-        self.builtin.log_to_console("\n[VALIDATION] Recording Ignored Validation Result")
+        self.builtin.log_to_console(
+            "\n[VALIDATION] Recording Ignored Validation Result"
+        )
         self.builtin.log_to_console(f"\n{res}")
 
         self.validationresults["results"].append(res)
         self.__writeresultstofile()
 
-    def __recordFailureResult(self, resulttype: str, name: str, details: str = None, datatag=None):
+    def __recordFailureResult(
+        self, resulttype: str, name: str, details: str = None, datatag=None
+    ):
         if details is None:
             details = ""
 
         if datatag is None:
             datatag = ""
 
-        res = {'type': resulttype, 'name': name, 'status': "Failing", 'details': details, 'datatag': datatag}
+        res = {
+            "type": resulttype,
+            "name": name,
+            "status": "Failing",
+            "details": details,
+            "datatag": datatag,
+        }
 
         self.builtin.log_to_console("\n[VALIDATION] Recording Record Failure Result")
         self.builtin.log_to_console(f"\n{res}")
@@ -85,14 +117,22 @@ class QbrixValidationKeywords(QbrixRobotTask):
         self.validationresults["results"].append(res)
         self.__writeresultstofile()
 
-    def __recordPassingResult(self, resulttype: str, name: str, details: str = None, datatag=None):
+    def __recordPassingResult(
+        self, resulttype: str, name: str, details: str = None, datatag=None
+    ):
         if details is None:
             details = ""
 
         if datatag is None:
             datatag = ""
 
-        res = {'type': resulttype, 'name': name, 'status': "Passing", 'details': details, 'datatag': datatag}
+        res = {
+            "type": resulttype,
+            "name": name,
+            "status": "Passing",
+            "details": details,
+            "datatag": datatag,
+        }
 
         self.builtin.log_to_console("\n[VALIDATION] Recording Record Passing Result")
         self.builtin.log_to_console(f"\n{res}")
@@ -109,7 +149,17 @@ class QbrixValidationKeywords(QbrixRobotTask):
             tmpFile.write(jsondata)
             tmpFile.close()
 
-    def validate_minimal_rowcount(self, targetobject, count, filter=None, tooling=False, continueonfail=True, datatag=None, targetruntime=None, runasfilter=None):
+    def validate_minimal_rowcount(
+        self,
+        targetobject,
+        count,
+        filter=None,
+        tooling=False,
+        continueonfail=True,
+        datatag=None,
+        targetruntime=None,
+        runasfilter=None,
+    ):
         """
         Validate that the rows for the target object and filter do not go below the minimal count
         :param targetobject: The target object you want to lookup
@@ -123,33 +173,73 @@ class QbrixValidationKeywords(QbrixRobotTask):
         """
 
         resulttype = "Data"
-        resultname = f'Validate Minimal Count of {targetobject} for {count} rows'
+        resultname = f"Validate Minimal Count of {targetobject} for {count} rows"
 
         # Check the runtime to see if this validation should be run on the org type
         if not self.__isapplicableruntime(targetruntime):
-            self.__recordIgnoredResult(resulttype, resultname, f"IGNORED::targetruntime {targetruntime} does not apply to this org", datatag=datatag)
+            self.__recordIgnoredResult(
+                resulttype,
+                resultname,
+                f"IGNORED::targetruntime {targetruntime} does not apply to this org",
+                datatag=datatag,
+            )
             return
 
         if targetobject is None:
-            self.__recordFailureResultException(resulttype, resultname, "A target object must be specified", datatag=datatag)
+            self.__recordFailureResultException(
+                resulttype,
+                resultname,
+                "A target object must be specified",
+                datatag=datatag,
+            )
 
         if count is None:
-            self.__recordFailureResultException(resulttype, resultname, "'count' must be specified. This should be the minimum number of object records you expect in the org.", datatag=datatag)
+            self.__recordFailureResultException(
+                resulttype,
+                resultname,
+                "'count' must be specified. This should be the minimum number of object records you expect in the org.",
+                datatag=datatag,
+            )
 
-        foundcnt = self.find_record_count(targetobject, filter, tooling, targetruntime, runasfilter)
+        foundcnt = self.find_record_count(
+            targetobject, filter, tooling, targetruntime, runasfilter
+        )
 
         if (int(foundcnt) >= int(count)) is False:
             if continueonfail:
-                self.__recordFailureResult(resulttype, resultname, f"A minimal count not met. The expected minimal number of records was: {count} and the total found was: {foundcnt}", datatag=datatag)
+                self.__recordFailureResult(
+                    resulttype,
+                    resultname,
+                    f"A minimal count not met. The expected minimal number of records was: {count} and the total found was: {foundcnt}",
+                    datatag=datatag,
+                )
                 return
             else:
-                self.__recordFailureResultException(resulttype, resultname, f"A minimal count not met. The expected minimal number of records was: {count} and the total found was: {foundcnt}", datatag=datatag)
+                self.__recordFailureResultException(
+                    resulttype,
+                    resultname,
+                    f"A minimal count not met. The expected minimal number of records was: {count} and the total found was: {foundcnt}",
+                    datatag=datatag,
+                )
 
-        self.__recordPassingResult(resulttype, resultname, f"Minimal count met. Found: {foundcnt}", datatag=datatag)
+        self.__recordPassingResult(
+            resulttype,
+            resultname,
+            f"Minimal count met. Found: {foundcnt}",
+            datatag=datatag,
+        )
 
-        pass
-
-    def validate_exact_rowcount(self, targetobject, count, filter=None, tooling=False, continueonfail=True, datatag=None, targetruntime=None, runasfilter=None):
+    def validate_exact_rowcount(
+        self,
+        targetobject,
+        count,
+        filter=None,
+        tooling=False,
+        continueonfail=True,
+        datatag=None,
+        targetruntime=None,
+        runasfilter=None,
+    ):
         """
         Validate that the rows for the target object and filter match the expected count
         :param targetobject: Target Object you want to lookup
@@ -163,32 +253,73 @@ class QbrixValidationKeywords(QbrixRobotTask):
         """
 
         resulttype = "Data"
-        resultname = f'Validate Exact Count of {targetobject} for {count} rows'
+        resultname = f"Validate Exact Count of {targetobject} for {count} rows"
 
         # Check the runtime to see if this validation should be run on the org type
-        if (self.__isapplicableruntime(targetruntime) == False):
-            self.__recordIgnoredResult(resulttype, resultname, f"IGNORED::targetruntime {targetruntime} does not apply to this org", datatag=datatag)
+        if self.__isapplicableruntime(targetruntime) == False:
+            self.__recordIgnoredResult(
+                resulttype,
+                resultname,
+                f"IGNORED::targetruntime {targetruntime} does not apply to this org",
+                datatag=datatag,
+            )
             return
 
         if targetobject is None:
-            self.__recordFailureResultException(resulttype, resultname, "A target object must be specified", datatag=datatag)
+            self.__recordFailureResultException(
+                resulttype,
+                resultname,
+                "A target object must be specified",
+                datatag=datatag,
+            )
 
         if count is None:
-            self.__recordFailureResultException(resulttype, resultname, "'count' must be specified. This should be the exact number of object records you expect in the org.", datatag=datatag)
+            self.__recordFailureResultException(
+                resulttype,
+                resultname,
+                "'count' must be specified. This should be the exact number of object records you expect in the org.",
+                datatag=datatag,
+            )
 
-        foundcnt = self.find_record_count(targetobject, filter, tooling, targetruntime, runasfilter)
+        foundcnt = self.find_record_count(
+            targetobject, filter, tooling, targetruntime, runasfilter
+        )
 
         if not foundcnt == int(count):
-            if (continueonfail):
-                self.__recordFailureResult(resulttype, resultname, f"An exact count not met. Expected was: {count} and found count was {foundcnt}", datatag=datatag)
+            if continueonfail:
+                self.__recordFailureResult(
+                    resulttype,
+                    resultname,
+                    f"An exact count not met. Expected was: {count} and found count was {foundcnt}",
+                    datatag=datatag,
+                )
                 return
             else:
-                self.__recordFailureResultException(resulttype, resultname, f"An exact count not met. Expected was: {count} and found count was {foundcnt}", datatag=datatag)
+                self.__recordFailureResultException(
+                    resulttype,
+                    resultname,
+                    f"An exact count not met. Expected was: {count} and found count was {foundcnt}",
+                    datatag=datatag,
+                )
 
-        self.__recordPassingResult(resulttype, resultname, f"Exact count met. Found: {foundcnt}", datatag=datatag)
-        pass
+        self.__recordPassingResult(
+            resulttype,
+            resultname,
+            f"Exact count met. Found: {foundcnt}",
+            datatag=datatag,
+        )
 
-    def validate_maximum_rowcount(self, targetobject, count, filter=None, tooling=False, continueonfail=True, datatag=None, targetruntime=None, runasfilter=None):
+    def validate_maximum_rowcount(
+        self,
+        targetobject,
+        count,
+        filter=None,
+        tooling=False,
+        continueonfail=True,
+        datatag=None,
+        targetruntime=None,
+        runasfilter=None,
+    ):
         """
         Validate that the rows for the target object and filter do not exceed the expected count
         :param targetobject: Object to lookup
@@ -202,32 +333,71 @@ class QbrixValidationKeywords(QbrixRobotTask):
         """
 
         resulttype = "Data"
-        resultname = f'Validate Maximum Count of {targetobject} for {count} rows'
+        resultname = f"Validate Maximum Count of {targetobject} for {count} rows"
 
         # Check the runtime to see if this validation should be run on the org type
-        if (self.__isapplicableruntime(targetruntime) == False):
-            self.__recordIgnoredResult(resulttype, resultname, f"IGNORED::targetruntime {targetruntime} does not apply to this org", datatag=datatag)
+        if self.__isapplicableruntime(targetruntime) == False:
+            self.__recordIgnoredResult(
+                resulttype,
+                resultname,
+                f"IGNORED::targetruntime {targetruntime} does not apply to this org",
+                datatag=datatag,
+            )
             return
 
         if targetobject is None:
-            self.__recordFailureResultException(resulttype, resultname, "A target object must be specified", datatag=datatag)
+            self.__recordFailureResultException(
+                resulttype,
+                resultname,
+                "A target object must be specified",
+                datatag=datatag,
+            )
 
         if count is None:
-            self.__recordFailureResultException(resulttype, resultname, "'count' must be specified. This should be the maximum number of object records you expect in the org.", datatag=datatag)
+            self.__recordFailureResultException(
+                resulttype,
+                resultname,
+                "'count' must be specified. This should be the maximum number of object records you expect in the org.",
+                datatag=datatag,
+            )
 
-        foundcnt = self.find_record_count(targetobject, filter, tooling, targetruntime, runasfilter)
+        foundcnt = self.find_record_count(
+            targetobject, filter, tooling, targetruntime, runasfilter
+        )
 
         if foundcnt > int(count):
-            if (continueonfail):
-                self.__recordFailureResult(resulttype, resultname, f"A max count not met. Expected was: {count} and found count was {foundcnt}", datatag=datatag)
+            if continueonfail:
+                self.__recordFailureResult(
+                    resulttype,
+                    resultname,
+                    f"A max count not met. Expected was: {count} and found count was {foundcnt}",
+                    datatag=datatag,
+                )
                 return
             else:
-                self.__recordFailureResultException(resulttype, resultname, f"A max count not met. Expected was: {count} and found count was {foundcnt}", datatag=datatag)
+                self.__recordFailureResultException(
+                    resulttype,
+                    resultname,
+                    f"A max count not met. Expected was: {count} and found count was {foundcnt}",
+                    datatag=datatag,
+                )
 
-        self.__recordPassingResult(resulttype, resultname, f"Max count met. Found: {foundcnt}", datatag=datatag)
-        pass
+        self.__recordPassingResult(
+            resulttype, resultname, f"Max count met. Found: {foundcnt}", datatag=datatag
+        )
 
-    def validate_range_rowcount(self, targetobject, lowercount, uppercount, filter=None, tooling=False, continueonfail=True, datatag=None, targetruntime=None, runasfilter=None):
+    def validate_range_rowcount(
+        self,
+        targetobject,
+        lowercount,
+        uppercount,
+        filter=None,
+        tooling=False,
+        continueonfail=True,
+        datatag=None,
+        targetruntime=None,
+        runasfilter=None,
+    ):
         """Validate the count of the rows for the specified object and filter is >= lower value and <= upper value
         :param targetobject: Target object you are going to lookup
         :param lowercount: Minimum number for the range you want to specify. e.g. 0 if the range is 0-10
@@ -240,38 +410,72 @@ class QbrixValidationKeywords(QbrixRobotTask):
         :param runasfilter(Optional): To use a different user context, filter to query User by to locate the first user record.
         """
         resulttype = "Data"
-        resultname = f'Validate Range Count of {targetobject} between {lowercount} and {uppercount} rows'
+        resultname = f"Validate Range Count of {targetobject} between {lowercount} and {uppercount} rows"
 
         self.shared.log_to_file(f"Found targetruntime::{targetruntime}")
         # Check the runtime to see if this validation should be run on the org type
-        if (self.__isapplicableruntime(targetruntime) == False):
-            self.__recordIgnoredResult(resulttype, resultname, f"IGNORED::targetruntime {targetruntime} does not apply to this org", datatag=datatag)
+        if self.__isapplicableruntime(targetruntime) == False:
+            self.__recordIgnoredResult(
+                resulttype,
+                resultname,
+                f"IGNORED::targetruntime {targetruntime} does not apply to this org",
+                datatag=datatag,
+            )
             return
 
         if targetobject is None:
-            self.__recordFailureResultException(resulttype=resulttype, name="A target object must be specified", datatag=datatag)
+            self.__recordFailureResultException(
+                resulttype=resulttype,
+                name="A target object must be specified",
+                datatag=datatag,
+            )
 
         if lowercount is None:
-            self.__recordFailureResultException(resulttype=resulttype, name="A lower count must be specified", datatag=datatag)
+            self.__recordFailureResultException(
+                resulttype=resulttype,
+                name="A lower count must be specified",
+                datatag=datatag,
+            )
 
         if uppercount is None:
-            self.__recordFailureResultException(resulttype=resulttype, name="As upper count must be specified", datatag=datatag)
+            self.__recordFailureResultException(
+                resulttype=resulttype,
+                name="As upper count must be specified",
+                datatag=datatag,
+            )
 
-        foundcnt = self.find_record_count(targetobject, filter, tooling, targetruntime, runasfilter)
+        foundcnt = self.find_record_count(
+            targetobject, filter, tooling, targetruntime, runasfilter
+        )
 
         if not foundcnt >= int(lowercount) or not foundcnt <= int(uppercount):
             message = f"A range count not met. Expected Range was between {lowercount} and {uppercount} and the found count was {foundcnt}"
 
-            if (continueonfail):
-                self.__recordFailureResult(resulttype, resultname, message, datatag=datatag)
+            if continueonfail:
+                self.__recordFailureResult(
+                    resulttype, resultname, message, datatag=datatag
+                )
                 return
             else:
-                self.__recordFailureResultException(resulttype, resultname, message, datatag=datatag)
+                self.__recordFailureResultException(
+                    resulttype, resultname, message, datatag=datatag
+                )
 
-        self.__recordPassingResult(resulttype, resultname, f"Range count met. Found: {foundcnt}", datatag=datatag)
-        pass
+        self.__recordPassingResult(
+            resulttype,
+            resultname,
+            f"Range count met. Found: {foundcnt}",
+            datatag=datatag,
+        )
 
-    def find_record_count(self, targetobject, filter=None, tooling=False, targetruntime=None, runasfilter=None):
+    def find_record_count(
+        self,
+        targetobject,
+        filter=None,
+        tooling=False,
+        targetruntime=None,
+        runasfilter=None,
+    ):
         """Locate the record count for the target object and given filter
         :param targetobject: Target Object
         :param filter: (Optional) SOQL Filter for the target object (e.g. MyCustomField__c = 'Example')
@@ -283,7 +487,11 @@ class QbrixValidationKeywords(QbrixRobotTask):
 
         # Check the runtime to see if this validation should be run on the org type
         if self.__isapplicableruntime(targetruntime) is False:
-            self.__recordIgnoredResult("Data", "Data Query to Find Row Count", f"IGNORED::targetruntime {targetruntime} does not apply to this org")
+            self.__recordIgnoredResult(
+                "Data",
+                "Data Query to Find Row Count",
+                f"IGNORED::targetruntime {targetruntime} does not apply to this org",
+            )
             return
 
         if targetobject is None or targetobject == "":
@@ -313,8 +521,10 @@ class QbrixValidationKeywords(QbrixRobotTask):
         if not tooling:
             results = self.cumulusci.sf.query_all(f"{soql}")
         else:
-            toolingendpoint = 'query?q='
-            results = self.cumulusci.sf.toolingexecute(f"{toolingendpoint}{soql.replace(' ', '+')}")
+            toolingendpoint = "query?q="
+            results = self.cumulusci.sf.toolingexecute(
+                f"{toolingendpoint}{soql.replace(' ', '+')}"
+            )
 
         # revert to the original token
         self.cumulusci.sf.session_id = self._mainusersessionid
@@ -326,7 +536,9 @@ class QbrixValidationKeywords(QbrixRobotTask):
 
         # we use the totalsize instead of aggregate count
         if self.__does_not_support_count(targetobject):
-            self.builtin.log_to_console(f"\n[VALIDATION] {targetobject} does not support count")
+            self.builtin.log_to_console(
+                f"\n[VALIDATION] {targetobject} does not support count"
+            )
             return int(results["totalSize"])
         else:
             if results["totalSize"] == 1:
@@ -344,7 +556,15 @@ class QbrixValidationKeywords(QbrixRobotTask):
 
         return False
 
-    def validate_entity_contains(self, targetobjectlabel: str, layer: str, findfilter: str, continueonfail=True, datatag=None, targetruntime=None):
+    def validate_entity_contains(
+        self,
+        targetobjectlabel: str,
+        layer: str,
+        findfilter: str,
+        continueonfail=True,
+        datatag=None,
+        targetruntime=None,
+    ):
         """Allows a validation to treat metadata for the specified object as a queryable object via SQL and DataFrames
         :param targetobjectlabel: The object that metadata will be extracted via the REST api.
         :param layer: The array of data within the metadata to search against
@@ -359,11 +579,16 @@ class QbrixValidationKeywords(QbrixRobotTask):
         # self.shared.log_to_file(f"Find Filter::{findfilter}")
 
         resulttype = "Metadata"
-        resultname = f'Validate that {targetobjectlabel} has {layer}'
+        resultname = f"Validate that {targetobjectlabel} has {layer}"
 
         # Check the runtime to see if this validation should be run on the org type
         if self.__isapplicableruntime(targetruntime) is False:
-            self.__recordIgnoredResult(resulttype, resultname, f"IGNORED::targetruntime {targetruntime} does not apply to this org", datatag=datatag)
+            self.__recordIgnoredResult(
+                resulttype,
+                resultname,
+                f"IGNORED::targetruntime {targetruntime} does not apply to this org",
+                datatag=datatag,
+            )
             return
 
         sobjectset = self.cumulusci.sf.describe()["sobjects"]
@@ -372,10 +597,15 @@ class QbrixValidationKeywords(QbrixRobotTask):
             foundlabel = x["label"]
             foundname = x["name"]
 
-            if foundlabel.lower() == targetobjectlabel.lower() or foundname.lower() == targetobjectlabel.lower():
+            if (
+                foundlabel.lower() == targetobjectlabel.lower()
+                or foundname.lower() == targetobjectlabel.lower()
+            ):
                 # self.shared.log_to_file(f"Found SObject::{foundlabel}")
 
-                targetdescribe = self.cumulusci.sf.__getattr__(targetobjectlabel).describe()
+                targetdescribe = self.cumulusci.sf.__getattr__(
+                    targetobjectlabel
+                ).describe()
 
                 # self.shared.log_to_file(f"DescKey::{targetdescribe.keys()}")
                 layerfound = False
@@ -407,30 +637,50 @@ class QbrixValidationKeywords(QbrixRobotTask):
 
                     try:
                         if not findfilter is None:
-                            filter = f"SELECT count(*) datacount from df where {findfilter}"
+                            filter = (
+                                f"SELECT count(*) datacount from df where {findfilter}"
+                            )
                         else:
                             filter = "SELECT count(*) datacount"
 
                         dfqueryres = ps.sqldf(filter)
                         # self.shared.log_to_file(f"Query Result::{dfqueryres}")
 
-                        if not dfqueryres is None or (len(dfqueryres) == 1 and dfqueryres[1] == 0):
-                            self.__recordPassingResult(resulttype, resultname, "Metadata contains the specified", datatag=datatag)
+                        if not dfqueryres is None or (
+                            len(dfqueryres) == 1 and dfqueryres[1] == 0
+                        ):
+                            self.__recordPassingResult(
+                                resulttype,
+                                resultname,
+                                "Metadata contains the specified",
+                                datatag=datatag,
+                            )
                             return
                     except:
-                        message = 'Unable to locate the metadata object to locate the layer'
+                        message = (
+                            "Unable to locate the metadata object to locate the layer"
+                        )
                         # we hit an exception - fail closed
 
         # we did not locate the object to traverse the metadata
-        message = 'Unable to locate the metadata object to locate the layer'
+        message = "Unable to locate the metadata object to locate the layer"
 
         if continueonfail:
             self.__recordFailureResult(resulttype, resultname, message, datatag=datatag)
             return
         else:
-            self.__recordFailureResultException(resulttype, resultname, message, datatag=datatag)
+            self.__recordFailureResultException(
+                resulttype, resultname, message, datatag=datatag
+            )
 
-    def validate_with_testim(self, testimscriptname: str, continueonfail=True, datatag=None, targetruntime=None, runasfilter=None):
+    def validate_with_testim(
+        self,
+        testimscriptname: str,
+        continueonfail=True,
+        datatag=None,
+        targetruntime=None,
+        runasfilter=None,
+    ):
         """NO LONGER USED"""
 
         raise Exception("TESTIM NO LONGER SUPPORTED. PLEASE UPDATE YOUR SCRIPT.")
@@ -452,7 +702,7 @@ class QbrixValidationKeywords(QbrixRobotTask):
         else:
             with open(sourcefile, "r", encoding="utf-8") as datafile:
                 xmldata = datafile.read()
-            tree = et.fromstring(bytes(xmldata, 'utf-8'))
+            tree = et.fromstring(bytes(xmldata, "utf-8"))
             foundata = tree.xpath(xpathfilter)
             return foundata
 
@@ -466,17 +716,24 @@ class QbrixValidationKeywords(QbrixRobotTask):
 
             return True
 
-        elif targetruntime in ('SCRATCHONLY', 'PRODONLY'):
+        elif targetruntime in ("SCRATCHONLY", "PRODONLY"):
             results = self.cumulusci.sf.query_all("SELECT IsSandbox FROM Organization")
             self.shared.log_to_file(f"RunTimeCheck::results::{results}")
             totalSize = results["totalSize"]
-            self.shared.log_to_file(f"RunTimeCheck::results::totalSize:{totalSize}::{type(totalSize)}")
+            self.shared.log_to_file(
+                f"RunTimeCheck::results::totalSize:{totalSize}::{type(totalSize)}"
+            )
 
             if totalSize == 1:
-                if targetruntime == 'SCRATCHONLY' and bool(results["records"][0]["IsSandbox"]):
+                if targetruntime == "SCRATCHONLY" and bool(
+                    results["records"][0]["IsSandbox"]
+                ):
                     return True
 
-                if targetruntime == 'PRODONLY' and bool(results["records"][0]["IsSandbox"]) is False:
+                if (
+                    targetruntime == "PRODONLY"
+                    and bool(results["records"][0]["IsSandbox"]) is False
+                ):
                     return True
 
         # TODO: Look at supporting a customizable lookup that indicates the runtime condition of the env.
@@ -498,7 +755,9 @@ class QbrixValidationKeywords(QbrixRobotTask):
 
         self.shared.log_to_file(f"Running::__getrunasuserid::{userfilter}")
 
-        results = self.cumulusci.sf.query_all(f"SELECT Username FROM User where {userfilter} LIMIT 1")
+        results = self.cumulusci.sf.query_all(
+            f"SELECT Username FROM User where {userfilter} LIMIT 1"
+        )
         self.shared.log_to_file(f"RunAs Filter Results::{results}")
 
         if results["totalSize"] == 1:
@@ -511,8 +770,10 @@ class QbrixValidationKeywords(QbrixRobotTask):
             url = "https://sfi-needlecast-stage.herokuapp.com/authenticate"
             payload = json.dumps({"username": f"{targetusername}"})
             self.shared.log_to_file(payload)
-            headers = {'Content-Type': 'application/json'}
-            response = requests.request("POST", url, headers=headers, data=payload, timeout=30)
+            headers = {"Content-Type": "application/json"}
+            response = requests.request(
+                "POST", url, headers=headers, data=payload, timeout=30
+            )
 
             self.shared.log_to_file(response.text)
             jsondata = json.loads(response.text)
