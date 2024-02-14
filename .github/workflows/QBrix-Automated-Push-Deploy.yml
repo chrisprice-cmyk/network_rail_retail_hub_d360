@@ -144,7 +144,7 @@ jobs:
         if: ${{ matrix.targetusername!='' && failure() && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
         id: cci_failure_details
         run: |
-          cci error info | base64 -w 0
+          echo "errorlog=$(cci error info | base64 -w 0)" >> $GITHUB_OUTPUT
 
       - name: fail status
         if: ${{  matrix.targetusername!='' && failure() && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
@@ -152,7 +152,14 @@ jobs:
           curl --location 'https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixAutoDeploySettings' \
           --header 'Content-Type: application/json' \
           --header 'Authorization: Bearer ${{ steps.qlabs_accesstoken.outputs.qlabs_accesstoken }}' \
-          --data '{"qbrixid": "${{ github.event.repository.name }}", "status": "Failed", "notify": "${{ matrix.notify }}" }'
+          --data '{
+            "qbrixid": "${{ github.event.repository.name }}", 
+            "status": "Failed", 
+            "notify": "${{ matrix.notify }}", 
+            "errorlog": "${{ steps.cci_failure_details.outputs.errorlog }}",
+            "runurl": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+            "commit": ${{ toJSON(github.event.head_commit.message) }}
+          }'
 
       - name: success status
         if: ${{ matrix.targetusername!='' && success() && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
@@ -160,4 +167,10 @@ jobs:
           curl --location 'https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixAutoDeploySettings' \
           --header 'Content-Type: application/json' \
           --header 'Authorization: Bearer ${{ steps.qlabs_accesstoken.outputs.qlabs_accesstoken }}' \
-          --data '{"qbrixid": "${{ github.event.repository.name }}", "status": "Success", "notify": "${{ matrix.notify }}" }'
+          --data '{
+            "qbrixid": "${{ github.event.repository.name }}", 
+            "status": "Success", 
+            "notify": "${{ matrix.notify }}",
+            "runurl": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+            "commit": ${{ toJSON(github.event.head_commit.message) }}
+          }'
