@@ -71,6 +71,7 @@ jobs:
       target-org: ${{ steps.extrattargetorg.outputs.extrattargetorg }}
       target-accesstoken: ${{ steps.extrattargetaccesstoken.outputs.extrattargetaccesstoken }}
       target-instanceurl: ${{ steps.extrattargetinstanceurl.outputs.extrattargetinstanceurl }}
+      target-auto-publish-metadeploy: ${{ steps.qlab_config_settings.outputs.loadtautopublishmetadeploy }}
     steps:
       - uses: actions/checkout@v4
 
@@ -131,6 +132,7 @@ jobs:
           echo "ORG_TARGET_USER=$(jq '.org_target_user' qlab_settings.json -r)" >> "$GITHUB_OUTPUT"
           echo "GITHUB_API_SLEEP_TIME=$(jq '.github_api_reset_seconds' qlab_settings.json -r)" >> "$GITHUB_OUTPUT"
           echo "AUTO_PUBLISH_TO_METADEPLOY=$(jq '.auto_publish_metadeploy' qlab_settings.json -r)" >> "$GITHUB_OUTPUT"
+          echo "loadtautopublishmetadeploy=$(jq '.auto_publish_metadeploy' qlab_settings.json -r)" >> "$GITHUB_OUTPUT"
 
       - name: extract qlabs config setting
         run: |
@@ -139,6 +141,7 @@ jobs:
           echo "::set-env name=ORG_TARGET_USER::${{ steps.qlab_config_settings.outputs.ORG_TARGET_USER }}"
           echo "::set-env name=GITHUB_API_SLEEP_TIME::${{ steps.qlab_config_settings.outputs.GITHUB_API_SLEEP_TIME }}"
           echo "::set-env name=AUTO_PUBLISH_TO_METADEPLOY::${{ steps.qlab_config_settings.outputs.AUTO_PUBLISH_TO_METADEPLOY }}"
+
 
       - name: Sleep for ${{env.GITHUB_API_SLEEP_TIME}} seconds per GIT API SLEEP TIME
         run: |
