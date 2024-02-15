@@ -955,14 +955,19 @@ class QbrixEinsteinKeywords(QbrixRobotTask):
         """
         Runs the Einstein Generative AI Setup
         """
-        # iframe_handler = self.shared.iframe_handler()
-        
-        self.shared.go_to_setup_admin_page("EinsteinGPTSetup/home")
-        if "checked" not in self.browser.get_element_states("div.slds-form-element__control label.slds-checkbox_toggle:has-text('Turn on Einstein')"):
-            self.builtin.log_to_console("\n -> Enabling Einstein Generative AI")
-            self.browser.click("div.slds-form-element__control label.slds-checkbox_toggle:has-text('Turn on Einstein')")
+        timeout = 1
+        while timeout < 6000:
+            self.shared.go_to_setup_admin_page("EinsteinGPTSetup/home")
             
-            if self.shared.wait_on_element("div.toastContainer:has-text('Einstein Generative AI is on.')", 15):
-                self.builtin.log_to_console("\n -> Einstein Generative AI is ON")    
-        else:
-            self.builtin.log_to_console("\n -> Einstein Generative AI is already active")
+            if 1 == self.browser.get_element_count("div.slds-form-element__control label.slds-checkbox_toggle:has-text('Turn on Einstein'):visible"):
+                if "checked" not in self.browser.get_element_states("div.slds-form-element__control label.slds-checkbox_toggle:has-text('Turn on Einstein')"):
+                    self.builtin.log_to_console("\n -> Enabling Einstein Generative AI")
+                    self.browser.click("div.slds-form-element__control label.slds-checkbox_toggle:has-text('Turn on Einstein')")
+                    
+                    if self.shared.wait_on_element("div.toastContainer:has-text('is on')"):
+                        self.builtin.log_to_console("\n -> Einstein Generative AI is ON")
+                else:
+                    self.builtin.log_to_console("\n -> Einstein Generative AI is already active")
+                break
+            timeout += 1
+            sleep(1)

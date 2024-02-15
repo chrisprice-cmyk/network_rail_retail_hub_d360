@@ -257,7 +257,7 @@ class QbrixDataCloud(QbrixRobotTask):
         
         # How do you want to create your segment?
         # Check if Create segment using Einstein is available if not Einstein Segment creation is not fully Enable
-        if not self.shared.wait_on_element("runtime_cdp-market-segment-creation-type-info-card input[data-tid='Create with Einstein']", 3):
+        if not self.shared.wait_on_element("runtime_cdp-market-segment-creation-type-info-card input[data-tid='Use a Visual Builder']", 3):
             raise Exception("Einstein Segment Creation is not fully enabled or your user does not have permission to create Segments. Skipping this task.")
         
         self.shared.wait_and_click("runtime_cdp-market-segment-creation-type-info-card:has(input[data-tid='Use a Visual Builder']) label")
