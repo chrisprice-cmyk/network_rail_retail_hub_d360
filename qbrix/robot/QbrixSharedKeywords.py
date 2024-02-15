@@ -16,7 +16,6 @@ from qbrix.tools.shared.qbrix_authentication import get_secure_setting
 
 @library(scope="GLOBAL", auto_keywords=True, doc_format="reST")
 class QbrixSharedKeywords:
-
     """Shared Keywords for Robot"""
 
     def __init__(self):
@@ -134,6 +133,23 @@ class QbrixSharedKeywords:
                 timeout="30s",
             )
             self.wait_for_page_to_load()
+            self.clear_popups()
+
+    def clear_popups(self):
+        """Clears known popups which may exist on the page"""
+
+        # Forced Sleep to allow pop up to launch
+        sleep(1)
+
+        if (
+            self.browser.get_element_count(
+                "div.slds-modal__header:has-text('Canvas - Q_Demo_Tracker_Prod')"
+            )
+            > 0
+        ):
+            self.browser.click(
+                "div.slds-modal__header:has-text('Canvas - Q_Demo_Tracker_Prod') >> button[title='Close this window']"
+            )
 
     def go_to_lightning_page(self, page_api_name: str):
         """
@@ -150,6 +166,7 @@ class QbrixSharedKeywords:
                 timeout="30s",
             )
             self.wait_for_page_to_load()
+            self.clear_popups()
 
     def go_to_setup_admin_page(
         self, setup_page_url: str, sleep_length: Optional[int] = 2, force_reload=False

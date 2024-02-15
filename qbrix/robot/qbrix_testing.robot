@@ -19,4 +19,4 @@ Suite Teardown      QRobot.Close Q Browser
 #
 
 Test 1
-    Go To Lightning Setup Home
+    Go To App    Sales
