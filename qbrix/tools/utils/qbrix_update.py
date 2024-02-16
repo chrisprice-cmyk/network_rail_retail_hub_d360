@@ -84,7 +84,14 @@ Q_BRIX_GITIGNORE_ENTRIES = [
 ]
 
 # Required Directories for Demo Brix
-QBRIX_REQUIRED_DIRECTORIES = [".vscode", ".qbrix", ".git", "qbrix"]
+QBRIX_REQUIRED_DIRECTORIES = [
+    ".vscode",
+    ".qbrix",
+    ".git",
+    "qbrix",
+    "force-app/main/default/lwc",
+    "force-app/main/default/aura",
+]
 
 
 class QBrixUpdater(BaseTask, ABC):
@@ -334,9 +341,29 @@ class QBrixUpdater(BaseTask, ABC):
                 ".qbrix/Update/xDO-Template-main/playwright.config.ts",
                 "./playwright.config.ts",
             )
-            self._update_folder("qbrix", ".qbrix/Update/xDO-Template-main", False)
-            self._update_folder(".vscode", ".qbrix/Update/xDO-Template-main", False)
-            self._update_folder(".github", ".qbrix/Update/xDO-Template-main", False)
+            self._update_file(
+                ".qbrix/Update/xDO-Template-main/.eslintrc.json",
+                "./.eslintrc.json",
+            )
+            self._update_file(
+                ".qbrix/Update/xDO-Template-main/force-app/main/default/aura/.eslintrc.json",
+                "./force-app/main/default/aura/.eslintrc.json",
+            )
+            self._update_file(
+                ".qbrix/Update/xDO-Template-main/force-app/main/default/lwc/.eslintrc.json",
+                "./force-app/main/default/lwc/.eslintrc.json",
+            )
+            self._update_file(
+                ".qbrix/Update/xDO-Template-main/.prettierrc",
+                "./.prettierrc",
+            )
+            self._update_file(
+                ".qbrix/Update/xDO-Template-main/.prettierignore",
+                "./.prettierignore",
+            )
+            self._update_folder("qbrix", ".qbrix/Update/xDO-Template-main", True)
+            self._update_folder(".vscode", ".qbrix/Update/xDO-Template-main", True)
+            self._update_folder(".github", ".qbrix/Update/xDO-Template-main", True)
             self._update_folder(
                 ".devcontainer", ".qbrix/Update/xDO-Template-main", True
             )
