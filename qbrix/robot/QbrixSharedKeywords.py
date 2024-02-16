@@ -151,22 +151,23 @@ class QbrixSharedKeywords:
                 "div.slds-modal__header:has-text('Canvas - Q_Demo_Tracker_Prod') >> button[title='Close this window']"
             )
 
-    def go_to_lightning_page(self, page_api_name: str):
+    def go_to_lightning_page(self, page_api_name: str, suffix="n"):
         """
         Browses to the given lightning page name within the browser. For example “et4ae5__ExactTargetPhoenix” lightning page.
         Args:
             page_api_name (str): Name of the Lightning Page.
+            suffix (str): (Optional) The letter after the lightning/ within the URL. Defaults to "n" although could be "r" for record pages and "o" for object home pages.
         """
         if not page_api_name:
             self.builtin.log_to_console("\nNo Lightning Page Provided")
             return
-        else:
-            self.browser.go_to(
-                f"{self.cumulusci.org.instance_url}/lightning/n/{page_api_name}",
+
+        self.browser.go_to(
+                f"{self.cumulusci.org.instance_url}/lightning/{suffix}/{page_api_name}",
                 timeout="30s",
             )
-            self.wait_for_page_to_load()
-            self.clear_popups()
+        self.wait_for_page_to_load()
+        self.clear_popups()
 
     def go_to_setup_admin_page(
         self, setup_page_url: str, sleep_length: Optional[int] = 2, force_reload=False
