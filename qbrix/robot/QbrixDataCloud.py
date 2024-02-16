@@ -109,148 +109,153 @@ class QbrixDataCloud(QbrixRobotTask):
             return
         else:
             while deployment_completed:
-                self.builtin.log_to_console(
-                    "\nDataStream Does Not Exist. Creating Data Stream..."
-                )
-                # Load DataStreams Page
-                self.browser.go_to(
-                    f"{self.cumulusci.org.instance_url}/lightning/o/DataStream/home",
-                    timeout="30s",
-                )
-
-                # Check for New Button (if not present then Data Cloud is not fully enabled)
-                if not self.shared.wait_on_element(
-                    "ul.branding-actions >> a.forceActionLink:has-text('New')", 3
-                ):
+                try:
                     self.builtin.log_to_console(
-                        "\nData Cloud is not fully enabled or your user does not have permission to create Data Streams. Skipping this task."
+                        "\nDataStream Does Not Exist. Creating Data Stream..."
                     )
-                    return
+                    # Load DataStreams Page
+                    self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/o/DataStream/home",timeout="30s")
+                    self.shared.wait_for_page_to_load()
+                    self.shared.clear_popups()
 
-                # Click New
-                self.browser.click(
-                    "ul.branding-actions >> a.forceActionLink:has-text('New')"
-                )
-
-                # Define Source (Source needs clicked twice sometimes)
-                self.builtin.log_to_console(f"\n -> Selecting Source: {source_name}")
-                if not self.shared.wait_on_element(f"h4:has-text('{source_name}')"):
-                    self.builtin.log_to_console(
-                        f"\n -X ERROR Failed to locate source name: {source_name}"
-                    )
-                    return
-                self.shared.wait_and_click(f"h4:has-text('{source_name}')")
-                # self.browser.click(f"h2:has-text('{source_name}')")
-                self.shared.wait_and_click("button.slds-button:has-text('Next')")
-                
-                if type == "bundle":
-
-                    # Select Bundle
-                    self.builtin.log_to_console(
-                        f"\n -> Selecting Data Bundle: {data_stream_name} from source {source_name}"
-                    )
-                    self.shared.wait_and_click(
-                        f"span.slds-visual-picker__figure >> span.slds-text-title:has-text('{data_stream_name}')"
-                    )
-                    sleep(3)
-                    self.shared.wait_and_click("button.slds-button:has-text('Next')")
-
-                    # Confirm Bundle Objects
-                    self.shared.wait_on_element(
-                        "button.slds-button:has-text('New Formula Field')"
-                    )
-                    self.builtin.log_to_console(
-                        f"\n -> Accepting default object selection for Data Bundle: {data_stream_name}"
-                    )
-                    sleep(3)
-                    self.shared.wait_and_click("button.slds-button:has-text('Next')")
-
-                    # Confirm Configuration Details
-                    self.shared.wait_on_element(
-                        "div.slds-text-title_bold:has-text('Data Stream Bundle Configuration Details')"
-                    )
-                    self.builtin.log_to_console(
-                        f"\n -> Confirming Deployment of Bundle: {data_stream_name}"
-                    )
-                    sleep(5)
-                    self.shared.wait_and_click("button.slds-button:has-text('Deploy')")
-                    sleep(3)
-                    return
-                    
-                elif type == "package":
-                    
-                    if not self.shared.wait_on_element(f"div.slds-tabs_default lightning-tab-bar li[data-tab-value='packages']"):
-                        self.builtin.log_to_console(f"\n -X ERROR Failed to locate package tab")
+                    # Check for New Button (if not present then Data Cloud is not fully enabled)
+                    if not self.shared.wait_on_element("ul.branding-actions >> a.forceActionLink:has-text('New')", 3):
+                        self.builtin.log_to_console("\nData Cloud is not fully enabled or your user does not have permission to create Data Streams. Skipping this task.")
                         return
-                    self.shared.wait_and_click( f"div.slds-tabs_default lightning-tab-bar li[data-tab-value='packages']")
-                    elements_to_count = "lightning-layout-item lightning-tab[aria-labelledby='packages__item'] ul li.slds-split-view__list-item"
-                    
-                    # self.builtin.log_to_console(f'ELEMENT COUNT -->{self.browser.get_element_count(elements_to_count)}')
-                    if not self.shared.wait_on_element(elements_to_count, 20):
-                        self.builtin.log_to_console(f"\n -X ERROR Failed to locate packages items to install")
+
+                    # Click New
+                    self.shared.wait_and_click("ul.branding-actions >> a.forceActionLink:has-text('New')")
+
+                    # Define Source (Source needs clicked twice sometimes)
+                    self.builtin.log_to_console(f"\n -> Selecting Source: {source_name}")
+                    if not self.shared.wait_on_element(f"h4:has-text('{source_name}')"):
+                        self.builtin.log_to_console(
+                            f"\n -X ERROR Failed to locate source name: {source_name}"
+                        )
                         return
-                    number_of_packages = self.browser.get_element_count(elements_to_count)
-                    self.builtin.log_to_console(f'Number of packages found: {number_of_packages}')
-                    package = 1
-                    datastream_count = 0
-                    while package <= number_of_packages:
-                        self.builtin.log_to_console(f'Processing ({package})')
-                        # package_name = self.browser.get_text(f"{elements_to_count}:nth-child({package})")
-                        package_name = self.browser.get_text(f"{elements_to_count}:nth-child({package}) a div span.slds-text-body_regular")
-                        self.builtin.log_to_console(f'Processing ({package_name})')
-                        self.shared.wait_and_click(f"{elements_to_count}:nth-child({package})")
-                        
-                        if not self.shared.wait_on_element(f"lightning-layout-item.detail table tbody tr"):
-                            self.builtin.log_to_console(f"\n -X No Datastreams available to deploy for {package_name} package")
-                            package += 1
-                            continue
-                        datastream_count += self.browser.get_element_count("lightning-layout-item.detail table tbody tr")
-                        self.builtin.log_to_console(f'Number of datastreams found: {self.browser.get_element_count("lightning-layout-item.detail table tbody tr")}')
-                        
-                        
-                        self.shared.wait_and_click("lightning-layout-item.detail table tbody tr:nth-child(1) lightning-primitive-cell-checkbox")
+                    self.shared.wait_and_click(f"h4:has-text('{source_name}')")
+                    # self.browser.click(f"h2:has-text('{source_name}')")
+                    self.shared.wait_and_click("button.slds-button:has-text('Next')")
+                    
+                    if type == "bundle":
+
+                        # Select Bundle
+                        self.builtin.log_to_console(
+                            f"\n -> Selecting Data Bundle: {data_stream_name} from source {source_name}"
+                        )
+                        self.shared.wait_and_click(
+                            f"span.slds-visual-picker__figure >> span.slds-text-title:has-text('{data_stream_name}')"
+                        )
+                        sleep(3)
+                        self.shared.wait_and_click("button.slds-button:has-text('Next')")
+
+                        # Confirm Bundle Objects
+                        self.shared.wait_on_element(
+                            "button.slds-button:has-text('New Formula Field')"
+                        )
+                        self.builtin.log_to_console(
+                            f"\n -> Accepting default object selection for Data Bundle: {data_stream_name}"
+                        )
+                        sleep(3)
                         self.shared.wait_and_click("button.slds-button:has-text('Next')")
 
                         # Confirm Configuration Details
-                        self.builtin.log_to_console(f"\n -> Accepting default object selection")
-                        self.shared.wait_on_element( "div.slds-text-slds-nav-vertical__title:has-text('Objects to Configure')" )
-                        self.shared.wait_and_click("button.slds-button:has-text('Next')")
-                        
-                        self.builtin.log_to_console(f"\n -> Confirming Deployment of DataStream Package")
-                        self.shared.wait_on_element( "h1.slds-text-align_left:has-text('Data Streams to be Deployed')" )
+                        self.shared.wait_on_element(
+                            "div.slds-text-title_bold:has-text('Data Stream Bundle Configuration Details')"
+                        )
+                        self.builtin.log_to_console(
+                            f"\n -> Confirming Deployment of Bundle: {data_stream_name}"
+                        )
+                        sleep(5)
                         self.shared.wait_and_click("button.slds-button:has-text('Deploy')")
                         sleep(3)
-                        break
-                        
-                    self.builtin.log_to_console(f'Total Number of datastreams found: {datastream_count}')
-                        
-                    if datastream_count == 0:
                         return
-                else: # it is a datakit
-                    return
+                        
+                    elif type == "package":
+                        
+                        if not self.shared.wait_on_element(f"div.slds-tabs_default lightning-tab-bar li[data-tab-value='packages']"):
+                            self.builtin.log_to_console(f"\n -X ERROR Failed to locate package tab")
+                            return
+                        self.shared.wait_and_click( f"div.slds-tabs_default lightning-tab-bar li[data-tab-value='packages']")
+                        elements_to_count = "lightning-layout-item lightning-tab[aria-labelledby='packages__item'] ul li.slds-split-view__list-item"
+                        
+                        # self.builtin.log_to_console(f'ELEMENT COUNT -->{self.browser.get_element_count(elements_to_count)}')
+                        if not self.shared.wait_on_element(elements_to_count, 20):
+                            self.builtin.log_to_console(f"\n -X ERROR Failed to locate packages items to install")
+                            return
+                        number_of_packages = self.browser.get_element_count(elements_to_count)
+                        self.builtin.log_to_console(f'Number of packages found: {number_of_packages}')
+                        package = 1
+                        datastream_count = 0
+                        while package <= number_of_packages:
+                            self.builtin.log_to_console(f'Processing ({package})')
+                            # package_name = self.browser.get_text(f"{elements_to_count}:nth-child({package})")
+                            package_name = self.browser.get_text(f"{elements_to_count}:nth-child({package}) a div span.slds-text-body_regular")
+                            self.builtin.log_to_console(f'Processing ({package_name})')
+                            self.shared.wait_and_click(f"{elements_to_count}:nth-child({package})")
+                            
+                            if not self.shared.wait_on_element(f"lightning-layout-item.detail table tbody tr"):
+                                self.builtin.log_to_console(f"\n -X No Datastreams available to deploy for {package_name} package")
+                                package += 1
+                                continue
+                            datastream_count += self.browser.get_element_count("lightning-layout-item.detail table tbody tr")
+                            self.builtin.log_to_console(f'Number of datastreams found: {self.browser.get_element_count("lightning-layout-item.detail table tbody tr")}')
+                            
+                            
+                            self.shared.wait_and_click("lightning-layout-item.detail table tbody tr:nth-child(1) lightning-primitive-cell-checkbox")
+                            self.shared.wait_and_click("button.slds-button:has-text('Next')")
+
+                            # Confirm Configuration Details
+                            self.builtin.log_to_console(f"\n -> Accepting default object selection")
+                            self.shared.wait_on_element( "div.slds-text-slds-nav-vertical__title:has-text('Objects to Configure')" )
+                            self.shared.wait_and_click("button.slds-button:has-text('Next')")
+                            
+                            self.builtin.log_to_console(f"\n -> Confirming Deployment of DataStream Package")
+                            self.shared.wait_on_element( "h1.slds-text-align_left:has-text('Data Streams to be Deployed')" )
+                            self.shared.wait_and_click("button.slds-button:has-text('Deploy')")
+                            sleep(3)
+                            break
+                            
+                        self.builtin.log_to_console(f'Total Number of datastreams found: {datastream_count}')
+                            
+                        if datastream_count == 0:
+                            return
+                    else: # it is a datakit
+                        return
+                except Exception as e:
+                    self.builtin.log_to_console(f'ERROR! we found an error when creating the Datastreams: {e}')
+                    continue
+                    
 
     def enable_einstein_segment_creation(self):
         """Enable Einstein Segment Creation"""
-        
-        self.shared.go_to_setup_admin_page("BetaFeaturesSetup/home")
-        if self.browser.get_element_count("setup_cdp-beta-feature-row h2:has-text('Einstein Segment Creation')"):
-            
-            if self.browser.get_element_count("setup_cdp-beta-feature-row:has(h2:has-text('Einstein Segment Creation')) button.slds-not-selected"):
-                self.builtin.log_to_console("\n -> Found Enable Button")
-                self.browser.click("setup_cdp-beta-feature-row:has(h2:has-text('Einstein Segment Creation')) button.slds-button:has-text('Enable')")
+        retries = 0
+        while(retries < 3):
+            retries += 1
+            self.shared.go_to_setup_admin_page("BetaFeaturesSetup/home")
+            if self.browser.get_element_count("setup_cdp-beta-feature-row h2:has-text('Einstein Segment Creation')"):
                 
-                self.shared.wait_and_click("lightning-modal-base lightning-button[data-tid='confirm-button']")
-                if self.shared.wait_on_element("div.toastContainer:has-text('Einstein Segment Creation was enabled')", 15):
-                    self.builtin.log_to_console("\n -> Einstein Segment Creation Setting is NOW Enabled!")
+                if self.browser.get_element_count("setup_cdp-beta-feature-row:has(h2:has-text('Einstein Segment Creation')) button.slds-not-selected"):
+                    self.builtin.log_to_console("\n -> Found Enable Button")
+                    if self.shared.wait_on_element("setup_cdp-beta-feature-row:has(h2:has-text('Einstein Segment Creation')) button.slds-button:has-text('Enable'):visible:enabled"):
+                        self.shared.wait_and_click("setup_cdp-beta-feature-row:has(h2:has-text('Einstein Segment Creation')) button.slds-button:has-text('Enable'):visible:enabled")
+                        self.shared.wait_and_click("lightning-modal-base lightning-button[data-tid='confirm-button']")
+                        if self.shared.wait_on_element("div.toastContainer:has-text('Einstein Segment Creation was enabled')", 15):
+                            self.builtin.log_to_console("\n -> Einstein Segment Creation Setting is NOW Enabled!")
+                        return True
+                else:
+                    self.builtin.log_to_console("\n -> Einstein Segment Creation Setting is already active.")
             else:
-                self.builtin.log_to_console("\n -> Einstein Segment Creation Setting is already active.")
-        else:
-            raise Exception("Einstein Segment Creation is not available for activation, please add the feature to this org and try to enable it again.")
+                raise Exception("Einstein Segment Creation is not available for activation, please add the feature to this org and try to enable it again.")
+            sleep(10)
+        raise Exception("Einstein Segment Creation button couldn't be clicked, needs to be done manually.")
             
     def create_batch_segment(self, segment_name, segment_on):
         """Given Segment Name and where it will be on Creates a Segment"""
         # Load Sements Page
         self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/o/MarketSegment/home",timeout="30s")
+        self.shared.wait_for_page_to_load()
+        self.shared.clear_popups()
         
         # Click New
         self.browser.click("ul.branding-actions >> a.forceActionLink:has-text('New')")

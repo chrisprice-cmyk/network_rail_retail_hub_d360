@@ -492,6 +492,7 @@ class QbrixMarketingKeywords(QbrixRobotTask):
         self.builtin.log_to_console(f"\nCreate an Identity Resolution...")
         self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/o/IdentityResolution/home", timeout="30s")
         self.shared.wait_for_page_to_load()
+        self.shared.clear_popups()
         # self.shared.wait_on_element(".slds-page-header--object-home a.forceActionLink:has-text('New')")
             
         self.shared.wait_and_click("div.slds-page-header--object-home a.forceActionLink:has-text('New')")
@@ -530,6 +531,8 @@ class QbrixMarketingKeywords(QbrixRobotTask):
             
             # Load IdentityResolutions Page
             self.browser.go_to(f"{self.cumulusci.org.instance_url}/lightning/r/IdentityResolution/{ir_id}/view", timeout="30s")
+            self.shared.wait_for_page_to_load()
+            self.shared.clear_popups()
             
             self.shared.wait_and_click("div[data-component-id='runtime_cdp_identityResolutionRuleConfiguration'] slot[name='actions'] button:has-text('Configure')")
             self.shared.wait_on_element("div.slds-modal__container div.greybackground div.subHeader:has-text('Match Rule 1')" )
