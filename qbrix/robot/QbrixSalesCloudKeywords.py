@@ -216,3 +216,21 @@ class QbrixSalesCloudKeywords(QbrixRobotTask):
                 self.browser.click("label:has-text('Inactive')")
                 sleep(5)
         self.builtin.log_to_console("\n[Seller Home] -> Enabled!")
+
+    def enable_pipeline_inspection(self):
+        """
+        Enable Pipeline Inspection
+        """
+
+        self.shared.go_to_setup_admin_page("PipelineInspectionSettings/home")
+        toogle_button = "lightning-input.pipelineInspectionToggle"
+        if self.shared.wait_on_element(toogle_button):
+            checked = "checked" in self.browser.get_element_states(
+                "lightning-input.pipelineInspectionToggle span.slds-checkbox_on"
+            )
+            if not checked:
+                self.browser.click(toogle_button)
+                sleep(5)
+                self.builtin.log_to_console("\n[Pipeline Inspection] -> Enabled!")
+            else:
+                self.builtin.log_to_console("\n[Pipeline Inspection] -> Already enabled.")
