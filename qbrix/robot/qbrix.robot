@@ -110,17 +110,14 @@ Create Mackie Chat Button
 Create Heka Chat Button
     Create A Chat Button And Automated Invitations    HLS - Heka Bot    HLS_Heka_Bot
 
-Add Case Wrap Up Model
-    Enable Einstein Classification
-    Add Case Wrap Up Model
-
-Add Case Classification Model
-    Enable Einstein Classification
-    Create Case Classification Model
+Add Einstein Classification Models
+    Enable Einstein Case Classification
+    Create Case Classification Model        SDO - Classification
+    Add Case Wrap Up Model      Case Wrap-up
 
 Activate Einstein Classification Models
-    Activate Einstein Case Classification Model     Seg1       Case Classification     True
-    Activate Einstein Case Classification Model     Case Wrap-up       Case Wrap-up     False
+    Activate Einstein Case Classification Model     SDO - Classification       Case Classification     Yes
+    Activate Einstein Case Classification Model     Case Wrap-up       Case Wrap-up     No
 
 Check and Enable Document Reader
     Enable Document Reader
