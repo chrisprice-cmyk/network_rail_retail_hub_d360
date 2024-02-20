@@ -8,7 +8,6 @@ from qbrix.core.qbrix_robot_base import QbrixRobotTask
 
 @library(scope="GLOBAL", auto_keywords=True, doc_format="reST")
 class QbrixServiceKeywords(QbrixRobotTask):
-
     """Service Cloud Robot Keywords"""
 
     def enable_incident_management(self):
@@ -141,177 +140,184 @@ class QbrixServiceKeywords(QbrixRobotTask):
         self.browser.get_element_states(".button:has-text('New')")
         sleep(5)
 
-    def enable_einstein_case_classification(self, model_type: str = "Case Classification"):
-            self.shared.go_to_setup_admin_page("EinsteinCaseClassification/home", 5)
-            self.browser.reload()
-            classification_toggle = (
-                 "div.slds-tabs_scoped >> div.case-classification-pref >> lightning-input >> label.slds-checkbox_toggle"
-             )
-            self.shared.wait_on_element(classification_toggle)
-            if "checked" not in self.browser.get_element_states(classification_toggle):
-                self.browser.click(classification_toggle)
-            else:
-                self.builtin.log_to_console("\n einstein classification is already enabled")
-                return
-            sleep(60)
-            self.builtin.log_to_console("\n Enabled einstein classification")
+    def enable_einstein_case_classification(
+        self, model_type: str = "Case Classification"
+    ):
+        self.shared.go_to_setup_admin_page("EinsteinCaseClassification/home", 5)
+        self.browser.reload()
+        classification_toggle = "div.slds-tabs_scoped >> div.case-classification-pref >> lightning-input >> label.slds-checkbox_toggle"
+        self.shared.wait_on_element(classification_toggle)
+        if "checked" not in self.browser.get_element_states(classification_toggle):
+            self.browser.click(classification_toggle)
+        else:
+            self.builtin.log_to_console("\n einstein classification is already enabled")
+            return
+        sleep(60)
+        self.builtin.log_to_console("\n Enabled einstein classification")
 
-    def disable_einstein_case_classification(self, model_type: str = "Case Classification"):
-            self.shared.go_to_setup_admin_page("EinsteinCaseClassification/home", 5)
-            self.browser.reload()
-            classification_toggle = (
-                 "div.slds-tabs_scoped >> div.case-classification-pref >> lightning-input >> label.slds-checkbox_toggle"
-             )
-            self.shared.wait_on_element(classification_toggle)
-            if "checked" in self.browser.get_element_states(classification_toggle):
-                self.browser.click(classification_toggle)
-            else:
-                self.builtin.log_to_console("\n einstein classification is already disabled")
-                return
-            modal_turnoff_button = (
-                "div.modal-footer >> button.slds-button:has-text('Turn Off')"
+    def disable_einstein_case_classification(
+        self, model_type: str = "Case Classification"
+    ):
+        self.shared.go_to_setup_admin_page("EinsteinCaseClassification/home", 5)
+        self.browser.reload()
+        classification_toggle = "div.slds-tabs_scoped >> div.case-classification-pref >> lightning-input >> label.slds-checkbox_toggle"
+        self.shared.wait_on_element(classification_toggle)
+        if "checked" in self.browser.get_element_states(classification_toggle):
+            self.browser.click(classification_toggle)
+        else:
+            self.builtin.log_to_console(
+                "\n einstein classification is already disabled"
             )
-            self.shared.wait_and_click(modal_turnoff_button)
-            sleep(3)
-            self.builtin.log_to_console("\n Disabled einstein classification")
+            return
+        modal_turnoff_button = (
+            "div.modal-footer >> button.slds-button:has-text('Turn Off')"
+        )
+        self.shared.wait_and_click(modal_turnoff_button)
+        sleep(3)
+        self.builtin.log_to_console("\n Disabled einstein classification")
 
-    def create_einstein_classification_model(self, model_name: str = None, model_type: str = None):
-            """Creates an Einstein Classification Model
+    def create_einstein_classification_model(
+        self, model_name: str = None, model_type: str = None
+    ):
+        """Creates an Einstein Classification Model
 
-            Args:
-                model_name (str): The label which you want to give to the model
-                model_type (str): The type for the model. This should be either "Case Classification" or "Case Wrap-Up"
-            """
+        Args:
+            model_name (str): The label which you want to give to the model
+            model_type (str): The type for the model. This should be either "Case Classification" or "Case Wrap-Up"
+        """
 
-            if not model_name:
-                raise ValueError("No model name was provided.")
+        if not model_name:
+            raise ValueError("No model name was provided.")
 
-            if not model_type:
-                raise ValueError("No model type was provided.")
+        if not model_type:
+            raise ValueError("No model type was provided.")
 
-            if model_type not in ("Case Wrap-Up", "Case Classification"):
-                raise ValueError(
-                    f"Model type was not one of the expected values (Note that this is case sensitive). You submitted {model_type} and the accepted values are 'Case Classification' or 'Case Wrap-Up'"
-                )
-            self.builtin.log_to_console(f"\n Creating Model {model_name}")
-            # Go To Einstein Classification Setup Page
-            self.shared.go_to_setup_admin_page("EinsteinCaseClassification/home", 5)
-            self.browser.reload()
-
-            # Go To {Model Type} Tab
-            if model_type == 'Case Classification':
-                tab_element_no = 1
-            else:
-                tab_element_no = 2
-
-            model_type_tab = (
-                f"a.slds-tabs_scoped__link:has-text('{model_type}')"
+        if model_type not in ("Case Wrap-Up", "Case Classification"):
+            raise ValueError(
+                f"Model type was not one of the expected values (Note that this is case sensitive). You submitted {model_type} and the accepted values are 'Case Classification' or 'Case Wrap-Up'"
             )
-            self.shared.wait_and_click(model_type_tab)
+        self.builtin.log_to_console(f"\n Creating Model {model_name}")
+        # Go To Einstein Classification Setup Page
+        self.shared.go_to_setup_admin_page("EinsteinCaseClassification/home", 5)
+        self.browser.reload()
 
-            # Check if model has already been created
-            if (
-                self.browser.get_element_count(
-                    f"td.modelName >> button:has-text('{model_name}')"
-                )
-                > 0
-            ):
-                self.builtin.log_to_console(f"\n{model_name} has already been defined")
-                return
+        # Go To {Model Type} Tab
+        if model_type == "Case Classification":
+            tab_element_no = 1
+        else:
+            tab_element_no = 2
 
-            # Specify App and Name for the Model
-            new_model_button_selector = f":nth-match(button.slds-button:text-is('New Model'),{tab_element_no})"
-            next_button_selector = "div.modal-footer >> button.slds-button:text-is('Next')"
-            self.shared.wait_and_click(new_model_button_selector)
-            self.browser.fill_text("label:has-text('Model Name')", model_name)
-            self.browser.click("label:has-text('API Name')")
-            self.shared.wait_and_click(next_button_selector)
+        model_type_tab = f"a.slds-tabs_scoped__link:has-text('{model_type}')"
+        self.shared.wait_and_click(model_type_tab)
 
-            if self.browser.get_element_count("div.error:visible") > 0:
-                self.builtin.log_to_console(f"{model_name} has already been created with the same api name. Skipping.")
-                return
+        # Check if model has already been created
+        if (
+            self.browser.get_element_count(
+                f"td.modelName >> button:has-text('{model_name}')"
+            )
+            > 0
+        ):
+            self.builtin.log_to_console(f"\n{model_name} has already been defined")
+            return
 
-            self.shared.wait_and_click(next_button_selector)
-            self.shared.wait_and_click(next_button_selector)
-            self.shared.wait_and_click(
-                "tr:has-text('Case Reason') >> div.slds-checkbox_add-button"
+        # Specify App and Name for the Model
+        new_model_button_selector = (
+            f":nth-match(button.slds-button:text-is('New Model'),{tab_element_no})"
+        )
+        next_button_selector = "div.modal-footer >> button.slds-button:text-is('Next')"
+        self.shared.wait_and_click(new_model_button_selector)
+        self.browser.fill_text("label:has-text('Model Name')", model_name)
+        self.browser.click("label:has-text('API Name')")
+        self.shared.wait_and_click(next_button_selector)
+
+        if self.browser.get_element_count("div.error:visible") > 0:
+            self.builtin.log_to_console(
+                f"{model_name} has already been created with the same api name. Skipping."
+            )
+            return
+
+        self.shared.wait_and_click(next_button_selector)
+        self.shared.wait_and_click(next_button_selector)
+        self.shared.wait_and_click(
+            "tr:has-text('Case Reason') >> div.slds-checkbox_add-button"
+        )
+
+        # Additional Settings for Case Wrap Up
+        if model_type == "Case Wrap-Up":
+            self.browser.click(
+                "tr:has-text('Case Type') >> div.slds-checkbox_add-button"
+            )
+            self.browser.click(
+                "tr:has-text('Escalated') >> div.slds-checkbox_add-button"
+            )
+            self.browser.click(
+                "tr:has-text('Priority') >> div.slds-checkbox_add-button"
             )
 
-            # Additional Settings for Case Wrap Up
-            if model_type == "Case Wrap-Up":
-                self.browser.click(
-                    "tr:has-text('Case Type') >> div.slds-checkbox_add-button"
-                )
-                self.browser.click(
-                    "tr:has-text('Escalated') >> div.slds-checkbox_add-button"
-                )
-                self.browser.click(
-                    "tr:has-text('Priority') >> div.slds-checkbox_add-button"
-                )
-
-            # Complete Setup
-            self.shared.wait_and_click(next_button_selector)
-            self.shared.wait_and_click(
-                "div.modal-footer >> button.slds-button:text-is('Finish')"
-            )
-            self.builtin.log_to_console(f"\n{model_name} has been created")
-            sleep(2)
-            self.browser.reload()
+        # Complete Setup
+        self.shared.wait_and_click(next_button_selector)
+        self.shared.wait_and_click(
+            "div.modal-footer >> button.slds-button:text-is('Finish')"
+        )
+        self.builtin.log_to_console(f"\n{model_name} has been created")
+        sleep(2)
+        self.browser.reload()
 
     def add_case_wrap_up_model(self, model_name: str = None):
-            """Add Case Wrap Up Model"""
+        """Add Case Wrap Up Model"""
 
-            self.create_einstein_classification_model(
-                model_name=model_name, model_type="Case Wrap-Up"
-            )
+        self.create_einstein_classification_model(
+            model_name=model_name, model_type="Case Wrap-Up"
+        )
 
     def create_case_classification_model(self, model_name: str = None):
-            """Create Case Classification"""
+        """Create Case Classification"""
 
-            self.create_einstein_classification_model(
-                model_name=model_name, model_type="Case Classification"
+        self.create_einstein_classification_model(
+            model_name=model_name, model_type="Case Classification"
+        )
+
+    def activate_einstein_case_classification_model(
+        self,
+        model_name: str = None,
+        model_type: str = None,
+        should_enable_toggle: str = None,
+    ):
+        # enabling and disabling toggle
+        if should_enable_toggle == "Yes":
+            self.enable_einstein_case_classification(model_type=model_type)
+            self.disable_einstein_case_classification(model_type=model_type)
+            self.enable_einstein_case_classification(model_type=model_type)
+        else:
+            self.shared.go_to_setup_admin_page("EinsteinCaseClassification/home", 5)
+            self.browser.reload()
+
+        model_type_tab = f"a.slds-tabs_scoped__link:has-text('{model_type}')"
+        self.shared.wait_and_click(model_type_tab)
+
+        # click on model name if exists and ready to activate
+        if self.browser.get_element_count(
+            f"#modelTable tr:has(td.modelName button:text-is('{model_name}')) td.modelStatus:text-is('Ready to Activate')"
+        ):
+            model_click = f"td.modelName >> button.slds-button:has-text('{model_name}')"
+            self.shared.wait_and_click(model_click)
+            activate_button = (
+                "div.ccProgressStepButtons >> button.slds-button:has-text('activate')"
             )
+            self.shared.wait_and_click(activate_button)
 
-    def activate_einstein_case_classification_model(self, model_name: str = None, model_type: str = None, should_enable_toggle: str = None):
-            #enabling and disabling toggle 
-            if(should_enable_toggle == "Yes"):
-                self.enable_einstein_case_classification(
-                    model_type= model_type
-                )
-                self.disable_einstein_case_classification(
-                    model_type= model_type
-                )
-                self.enable_einstein_case_classification(
-                    model_type= model_type
-                )
-            else:
-                self.shared.go_to_setup_admin_page("EinsteinCaseClassification/home", 5)
-                self.browser.reload()
-                
-            model_type_tab = (
-                f"a.slds-tabs_scoped__link:has-text('{model_type}')"
+            modal_activate_button = (
+                "div.modal-footer >> button.slds-button:has-text('Activate')"
             )
-            self.shared.wait_and_click(model_type_tab)
-
-            #click on model name if exists and ready to activate
-            if(self.browser.get_element_count(f"#modelTable tr:has(td.modelName button:text-is('{model_name}')) td.modelStatus:text-is('Ready to Activate')")):
-                model_click = (
-                    f"td.modelName >> button.slds-button:has-text('{model_name}')"
-                )
-                self.shared.wait_and_click(model_click)
-                activate_button = (
-                    "div.ccProgressStepButtons >> button.slds-button:has-text('activate')"
-                )
-                self.shared.wait_and_click(activate_button)
-
-                modal_activate_button = (
-                    "div.modal-footer >> button.slds-button:has-text('Activate')"
-                )
-                self.shared.wait_and_click(modal_activate_button)
-                self.builtin.log_to_console(f"\n Activated {model_name} einstein classification")
-                self.browser.reload()
-            else:
-                self.builtin.log_to_console(f"\n Model {model_name} is not present or already activated")
+            self.shared.wait_and_click(modal_activate_button)
+            self.builtin.log_to_console(
+                f"\n Activated {model_name} einstein classification"
+            )
+            self.browser.reload()
+        else:
+            self.builtin.log_to_console(
+                f"\n Model {model_name} is not present or already activated"
+            )
 
     def messaging_components_setup(self):
         """
@@ -659,7 +665,6 @@ class QbrixServiceKeywords(QbrixRobotTask):
                 "Unable to locate Call Recordings elements on page. Please review script."
             )
 
-
     def enable_enhanced_omni_channel(self):
         """
         Enable Enhanced Omni-Channel
@@ -673,7 +678,9 @@ class QbrixServiceKeywords(QbrixRobotTask):
 
         # Enable Enhanced Omni
         my_iframe_handler = self.shared.iframe_handler()
-        if "visible" in self.browser.get_element_states(f"{my_iframe_handler} input[id='toggleScrt2RoutingConnect']"):
+        if "visible" in self.browser.get_element_states(
+            f"{my_iframe_handler} input[id='toggleScrt2RoutingConnect']"
+        ):
             self.builtin.log_to_console("\n -> Found Toggle")
 
             toggle_selector = f"{my_iframe_handler} label.slds-checkbox_toggle:has(input[id='toggleScrt2RoutingConnect'])"
@@ -683,7 +690,7 @@ class QbrixServiceKeywords(QbrixRobotTask):
 
                 self.shared.wait_and_click(
                     f"{self.shared.iframe_handler()} footer.slds-modal__footer  >> input.btn:has-text('Continue')",
-                    post_click_sleep = 2
+                    post_click_sleep=2,
                 )
 
                 # if the org had Enhanced Omni-Channel turned on before and disabled again, you will not see this agreement checkbox and "accept" button again, let's skip it if this is the case.
@@ -692,9 +699,11 @@ class QbrixServiceKeywords(QbrixRobotTask):
                     return
 
                 self.shared.wait_and_toggle(checkbox_selector, True)
-                
+
                 self.browser.wait_for_elements_state(
-                    f"{my_iframe_handler} footer.slds-modal__footer  >> input.btn:has-text('Accept')", ElementState.visible, "10s"
+                    f"{my_iframe_handler} footer.slds-modal__footer  >> input.btn:has-text('Accept')",
+                    ElementState.visible,
+                    "10s",
                 )
                 self.browser.click(
                     f"{self.shared.iframe_handler()} footer.slds-modal__footer  >> input.btn:has-text('Accept')"
