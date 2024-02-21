@@ -223,13 +223,24 @@ class QbrixSalesCloudKeywords(QbrixRobotTask):
         """
 
         self.shared.go_to_setup_admin_page("PipelineInspectionSettings/home")
-        toogle_button = "lightning-input.pipelineInspectionToggle"
-        if self.shared.wait_on_element(toogle_button):
+
+        # if Pipeline Inspection is not enabled and the button (not toggle) shows up,
+        # click the button to enable it first
+        enable_button_selector = "button:has-text('Enable Pipeline Inspection')"
+        enable_button_count = self.browser.get_element_count(
+            enable_button_selector
+        )
+        if enable_button_count > 0:
+            self.browser.click(enable_button_selector)
+            sleep(3)
+
+        toogle_button_selector = "lightning-input.pipelineInspectionToggle"
+        if self.shared.wait_on_element(toogle_button_selector):
             checked = "checked" in self.browser.get_element_states(
                 "lightning-input.pipelineInspectionToggle span.slds-checkbox_on"
             )
             if not checked:
-                self.browser.click(toogle_button)
+                self.browser.click(toogle_button_selector)
                 sleep(5)
                 self.builtin.log_to_console("\n[Pipeline Inspection] -> Enabled!")
             else:
