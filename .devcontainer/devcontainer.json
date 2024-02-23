@@ -74,7 +74,8 @@
         "ms-toolsai.jupyter-renderers",
         "ms-toolsai.vscode-jupyter-slideshow",
         "Postman.postman-for-vscode",
-        "pomdtr.secrets"
+        "pomdtr.secrets",
+        "ms-python.python"
       ]
     }
   },
