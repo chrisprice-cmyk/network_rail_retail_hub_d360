@@ -3,11 +3,12 @@ project:
   # DEMO BRIX CONFIG                   #
   #------------------------------------#
   # Demo Brix Name, API Version and Repo URL are all set here. Name and Package > Name should be the same.
+  # Find out more about this template here: https://qlabs-org.my.site.com/qverse/s/learn?name=Template-Overview
 
   name: xDO-Template
   package:
     name: xDO-Template
-    api_version: "58.0"
+    api_version: "60.0"
   git:
     default_branch: "main"
     repo_url: https://github.com/sfdc-qbranch/xDO-Template
@@ -26,7 +27,7 @@ project:
     qbrix_publisher_name: "OWNER OR PUBLISHER NAME HERE"
     qbrix_publisher_team: "OWNER OR PUBLISHER TEAM HERE"
     qbrix_documentation_url: https://confluence.internal.salesforce.com/pages/viewpage.action?pageId=487362018
-    qbrix_description: "SHORT DESCRIPTION OF QBRIX HERE"
+    qbrix_description: "SHORT DESCRIPTION OF BRIX HERE"
 
     # Github Additional Information
     qbrix_repo_id: 0
@@ -45,10 +46,9 @@ project:
       - "FlowDefinition:"
 
   #------------------------------------#
-  # DEMO BRIX PACKAGE DEPENDENCIES     #
+  # SALESFORCE PACKAGE DEPENDENCIES    #
   #------------------------------------#
-  # ADD MANAGED & UNMANAGED PACKAGE DEPENDENCIES HERE. OTHER CCI PROJECTS CAN ALSO BE LINKED PROVIDING THEY WORK WITH JUST A DEPLOY METHOD.
-  # Guidance: https://confluence.internal.salesforce.com/display/QNEXTGENDEMOS/Package+Install
+  # Guidance: https://qlabs-org.my.site.com/qverse/s/learn?name=Template-Dependencies-and-Packages
 
   dependencies:
 
@@ -56,8 +56,7 @@ sources:
   #------------------------------------#
   # DEMO BRIX SOURCES                  #
   #------------------------------------#
-  # Add Demo Brix Sources here. These must be located on GitHub and be a CCI Project or Demo Brix Project.
-  # Guidance: https://confluence.internal.salesforce.com/display/QNEXTGENDEMOS/QBrix+Dependencies
+  # Guidance: https://qlabs-org.my.site.com/qverse/s/learn?name=Template-Dependencies-and-Packages
 
   base:
     github: https://github.com/sfdc-qbranch/QBrix-0-xDO-BaseConfig
@@ -66,7 +65,7 @@ tasks:
   #------------------------------------#
   # CCI TASK DEFAULTS                  #
   #------------------------------------#
-  # Default configuration and overrides for builtin CCI Tasks
+  # Guidance: https://qlabs-org.my.site.com/qverse/s/learn?name=Template-Defaults-and-Overrides
 
   run_tests:
     options:
@@ -91,9 +90,9 @@ tasks:
       exclude: *exclude-list
 
   #------------------------------------#
-  # Demo Brix TASKS                       #
+  # Demo Brix Tasks                    #
   #------------------------------------#
-  # CUSTOM TASKS ADDED FOR Demo Brix DEVELOPMENT
+  # CUSTOM TASKS ADDED FOR BRIX DEVELOPMENT
 
   qbrix_robot_test:
     class_path: qbrix.tools.utils.qbrix_launch_test_robot.QRobotTestCapture
@@ -166,13 +165,6 @@ tasks:
         log: None
         output: None
 
-  qbrix_apex_run_and_wait_example:
-    class_path: qbrix.tools.utils.qbrix_batch_apex.RunAnonymousApexAndWait
-    options:
-      filepath: path to anonymous block to run
-      exitonsoqlzero: "select count() soql to verify exit on 0 count"
-      maxwaithchecks: 10
-
   experience_manager:
     class_path: qbrix.tools.utils.qbrix_experience_manager.ExperienceManager
 
@@ -240,8 +232,7 @@ tasks:
   #------------------------------------#
   # DATA TOOL INTEGRATION              #
   #------------------------------------#
-  # Note: This section can be removed if you are not using the NextGen Data Tool
-  # Guide: https://confluence.internal.salesforce.com/display/QNEXTGENDEMOS/NextGen+Data+Tool
+  # Guide: https://qlabs-org.my.site.com/qverse/s/learn?name=Data-Tool-Overview
 
   deploy_nextgen_data:
     class_path: qbrix.tools.utils.qbrix_nextgen_datatool.RunDataTool
@@ -249,28 +240,26 @@ tasks:
   #------------------------------------#
   # CUSTOM TASKS                       #
   #------------------------------------#
-  # Add Your Custom Tasks here
+  # Add Your Custom Tasks and Robot Tasks below
+  # Robot Script Guidance: https://qlabs-org.my.site.com/qverse/s/learn?name=Robot-Script-Life-Hacks-01-Introduction
 
 flows:
   #------------------------------------#
   # STAGE 1 of 3: PRE DEPLOYMENT       #
   #------------------------------------#
-  # Define steps to prepare the org and deploy other dependencies in this section
-  # NOTE: "prepare_org" and "source_dependencies" SHOULD ALWAYS BE DEFINED
+  # Define steps to prepare the org and deploy other dependencies in this section. prepare_org and source_dependencies should always be defined
 
-  # Prepares the Org with any required settings/Robot scripts
   prepare_org:
     steps:
       1:
-        # Deploys settings and configuration to prep the org and flows
         task: qbrix_preflight
+        ui_options:
+          name: Preparing Org for Demo Brix Deployment
       2:
-        # Dependencies are set in the QBRIX PACKAGE DEPENDENCIES area above.
         task: update_dependencies
         ui_options:
           name: Installs/Updates Demo Brix Dependencies
 
-  # Add steps here to deploy Demo Brix added to the sources area above
   source_dependencies:
     steps:
       1:
@@ -280,8 +269,48 @@ flows:
   #------------------------------------#
   # STAGE 2 of 3: Demo BRIX DEPLOYMENT #
   #------------------------------------#
-  # DEFAULT INSTALL FLOWS ARE DEFINED HERE.
-  # NOTE: "deploy_qbrix" and "deploy_qbrix_without_dependencies" SHOULD ALWAYS BE DEFINED
+  # MOVED TO DEFAULTS AREA BELOW - DEPLOY FLOWS SHOULD NOT NORMALLY BE CHANGED
+
+  #-------------------------------------------------#
+  # STAGE 3 of 3 (OPTIONAL) POST DEPLOYMENT         #
+  #-------------------------------------------------#
+  # ADD POST DEPLOYMENT STEPS HERE (post_qbrix_deploy should always be defined)
+
+  post_qbrix_deploy:
+    steps:
+      1:
+        # Placeholder task, replace this with your custom steps
+        task: None
+
+  #------------------------------------#
+  # DEMO BRIX TEST VALIDATION          #
+  #------------------------------------#
+  # Add steps here to validate your org deployment through testing - "validate_qbrix" SHOULD ALWAYS BE DEFINED
+  # Guide Here: https://confluence.internal.salesforce.com/display/QNEXTGENDEMOS/Validation+Methods
+
+  validate_qbrix:
+    steps:
+      1:
+        task: validate_qbrix
+
+  #------------------------------------#
+  # DEMO BRIX DATA                     #
+  #------------------------------------#
+  # DEFINE DATA GENERATION FLOWS AND TASKS HERE
+  # Guide: https://confluence.internal.salesforce.com/display/QNEXTGENDEMOS/Data
+  # NOTE: "deploy_qbrix_data" SHOULD ALWAYS BE DEFINED
+
+  deploy_qbrix_data:
+    steps:
+      1:
+        # Placeholder task, replace this with your custom steps
+        # task: deploy_nextgen_data
+        task: None
+
+  #----------------------------------------#
+  # DEMO BRIX LEGACY FLOWS AND DEFAULTS    #
+  #----------------------------------------#
+  # NOTE: These flows should not need to be modified and allow for legacy integration and default overrides.
 
   # Deploys the Demo Brix
   deploy_qbrix:
@@ -324,48 +353,6 @@ flows:
         task: qbrix_installer_tracking
         options:
           explicitexit: True
-
-  #-------------------------------------------------#
-  # STAGE 3 of 3 (OPTIONAL) POST DEPLOYMENT         #
-  #-------------------------------------------------#
-  # ADD POST DEPLOYMENT STEPS HERE
-  # NOTE: "post_qbrix_deploy" SHOULD ALWAYS BE DEFINED
-
-  post_qbrix_deploy:
-    steps:
-      1:
-        # Placeholder task, replace this with your custom steps
-        task: None
-
-  #------------------------------------#
-  # DEMO BRIX TEST VALIDATION          #
-  #------------------------------------#
-  # Add steps here to validate your org deployment through testing
-  # Guide Here: https://confluence.internal.salesforce.com/display/QNEXTGENDEMOS/Validation+Methods
-  # NOTE: "validate_qbrix" SHOULD ALWAYS BE DEFINED
-
-  validate_qbrix:
-    steps:
-      1:
-        task: validate_qbrix
-
-  #------------------------------------#
-  # DEMO BRIX DATA                     #
-  #------------------------------------#
-  # DEFINE DATA GENERATION FLOWS AND TASKS HERE
-  # Guide: https://confluence.internal.salesforce.com/display/QNEXTGENDEMOS/Data
-  # NOTE: "deploy_qbrix_data" SHOULD ALWAYS BE DEFINED
-
-  deploy_qbrix_data:
-    steps:
-      1:
-        # Placeholder task, replace this with your custom steps
-        task: None
-
-  #----------------------------------------#
-  # DEMO BRIX LEGACY FLOWS AND DEFAULTS    #
-  #----------------------------------------#
-  # NOTE: These flows should not need to be modified and allow for legacy integration and default overrides.
 
   # Deploys just the contents of this Demo Brix with any essential dependencies
   deploy_qbrix_min:
@@ -480,6 +467,6 @@ plans:
     is_listed: True
     steps:
       1:
-        task: qbrix_shell_deploy_metadeploy
+        flow: deploy_qbrix
         ui_options:
           name: Deploy Demo Brix

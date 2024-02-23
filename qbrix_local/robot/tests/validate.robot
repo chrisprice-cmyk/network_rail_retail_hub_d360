@@ -1,5 +1,5 @@
 *** Settings ***
-Resource            ../../../qbrix/robot/QRobot.resource
+Resource            qx/qrobot/keywords/QRobot.resource
 
 Suite Setup         Run keyword
 ...                     QRobot.Open Q Browser

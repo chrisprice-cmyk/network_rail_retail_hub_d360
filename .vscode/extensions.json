@@ -13,6 +13,7 @@
     "salesforce.salesforce-vscode-slds",
     "salesforce.salesforcedx-vscode-visualforce",
     "salesforce.codegenie",
-    "ms-playwright.playwright"
+    "ms-playwright.playwright",
+    "pomdtr.secrets"
   ]
 }

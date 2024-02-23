@@ -5,7 +5,7 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "QX: 🧰 Show Utilities",
+      "label": "UTILS: 🧰 Show Utilities Menu",
       "type": "shell",
       "command": "qx utils list",
       "group": "build",
@@ -20,7 +20,7 @@
       }
     },
     {
-      "label": "QX: 🔗 Connect to Salesforce Production or Demo Org",
+      "label": "ORG: 🔗 Connect to Salesforce Production Org",
       "type": "shell",
       "command": "qx org connect --org ${input:OrgAlias}",
       "group": "build",
@@ -35,7 +35,7 @@
       }
     },
     {
-      "label": "QX: 🗑 Logout/Disconnect from Salesforce Production or Demo Org",
+      "label": "ORG: 🗑 Logout/Disconnect from Salesforce Production Org",
       "type": "shell",
       "command": "qx org logout --alias ${input:OrgAlias}",
       "group": "build",
@@ -50,7 +50,7 @@
       }
     },
     {
-      "label": "QX: 🔗 Connect to Salesforce Sandbox or Scratch Org",
+      "label": "ORG: 🔗 Connect to Salesforce Sandbox or Scratch Org",
       "type": "shell",
       "command": "qx org connect --org ${input:OrgAlias} --sandbox",
       "group": "build",
@@ -65,7 +65,7 @@
       }
     },
     {
-      "label": "QX: 🛠️ Create a scratch org",
+      "label": "ORG: 🛠️ Create a scratch org",
       "type": "shell",
       "command": "qx org create --org ${input:OrgAlias}",
       "group": "build",
@@ -80,7 +80,7 @@
       }
     },
     {
-      "label": "QX: 🛠️ Create dev and qa scratch orgs",
+      "label": "ORG: 🛠️ Create Development and Test Orgs",
       "type": "shell",
       "command": "qx org create --org dev && qx org create --org qa",
       "windows": {
@@ -98,7 +98,7 @@
       }
     },
     {
-      "label": "QX: 🌐 Open Salesforce Org in browser",
+      "label": "ORG: 🌐 Open Salesforce Org in browser",
       "type": "shell",
       "command": "qx org open --org ${input:OrgAlias}",
       "group": "build",
@@ -113,7 +113,7 @@
       }
     },
     {
-      "label": "QX: 💾 Save changes from Salesforce Org to Demo Brix",
+      "label": "RETRIEVE: 💾 Retrieve Changes from Salesforce Org",
       "type": "shell",
       "command": "qx retrieve --org ${input:OrgAlias}",
       "group": "build",
@@ -128,7 +128,7 @@
       }
     },
     {
-      "label": "QX: 💾 Save and push changes to GitHub",
+      "label": "GITHUB: 💾 Save/Push local changes to GitHub",
       "type": "shell",
       "command": "qx github push --commit_message '${input:CommitMessage}'",
       "group": "build",
@@ -143,7 +143,7 @@
       }
     },
     {
-      "label": "QX: 📩 Get/Pull latest changes from GitHub",
+      "label": "GITHUB: 📩 Get/Pull latest version from GitHub",
       "type": "shell",
       "command": "qx github pull",
       "group": "build",
@@ -158,7 +158,7 @@
       }
     },
     {
-      "label": "QX: 🗑 Delete dev and qa scratch orgs",
+      "label": "ORG: 🗑 Delete Development and Test orgs",
       "type": "shell",
       "command": "qx org delete --org qa && qx org delete --org dev",
       "windows": {
@@ -176,7 +176,7 @@
       }
     },
     {
-      "label": "QX: 🗑 Delete a Scratch Org",
+      "label": "ORG: 🗑 Delete a Scratch Org",
       "type": "shell",
       "command": "qx org delete ${input:OrgAlias}",
       "group": "build",
@@ -191,7 +191,7 @@
       }
     },
     {
-      "label": "QX: 📤 Deploy Demo Brix to Salesforce Org",
+      "label": "DEPLOY: 📤 Deploy Demo Brix to Salesforce Org",
       "type": "shell",
       "command": "qx deploy --org ${input:OrgAlias} --flow_name ${input:FlowName} --generate_permission_set",
       "group": "build",
@@ -206,7 +206,7 @@
       }
     },
     {
-      "label": "QX: 🔀 Migrate Demo Brix to QX Format",
+      "label": "MIGRATE: 🔀 Migrate Demo Brix to QX Format",
       "type": "shell",
       "command": "qx migrate legacy-qbrix",
       "group": "build",
@@ -221,7 +221,7 @@
       }
     },
     {
-      "label": "QX: 📦 Retrieve unmanaged package from Salesforce Org",
+      "label": "RETRIEVE: 📦 Retrieve unmanaged package from Salesforce Org",
       "type": "shell",
       "command": "qx migrate package --org ${input:OrgAlias} --package ${input:PackageName}",
       "group": "build",
@@ -236,7 +236,7 @@
       }
     },
     {
-      "label": "QX: 🔍 Search Qverse",
+      "label": "UTILS: 🔍 Search Qverse",
       "type": "shell",
       "command": "qx qverse search '${input:SearchString}'",
       "group": "build",
@@ -251,7 +251,7 @@
       }
     },
     {
-      "label": "QX: 🔗 Connect to NextGen DevHub",
+      "label": "ORG: 🔗 Connect to NextGen DevHub",
       "type": "shell",
       "command": "qx config sfdx --connect_devhub",
       "group": "build",
@@ -266,9 +266,9 @@
       }
     },
     {
-      "label": "QX: 🔄 Install and Update QX",
+      "label": "UPDATE: 🔄 Check and Install Updates",
       "type": "shell",
-      "command": "source ~/.local/pipx/venvs/cumulusci/bin/activate && python3 -m pip install 'qbrix-cli @ git+https://github.com/sfdc-qbranch/qbrix_cli.git@main'",
+      "command": "qx update",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -283,7 +283,7 @@
     {
       "label": "QX: 🔄 Install and Update CumulusCI (Demo Brix Edition)",
       "type": "shell",
-      "command": "python3 -m pip install 'cumulusci @ git+https://github.com/sfdc-qbranch/CumulusCI.git@quasar' --force",
+      "command": "qx setup cci",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -296,9 +296,9 @@
       }
     },
     {
-      "label": "Codespace: 🖥 Open VNC View",
+      "label": "CONTAINER: 🖥 Open VNC View",
       "type": "shell",
-      "command": "open https://$CODESPACE_NAME-6080.app.github.dev",
+      "command": "qx utils vnc",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -311,7 +311,7 @@
       }
     },
     {
-      "label": "Codespace: ↩️ Reset QX and Initiate Codespace",
+      "label": "CONTAINER: ↩️ Reset and Initiate Container",
       "type": "shell",
       "command": "qx setup init-codespace",
       "group": "build",
@@ -326,9 +326,9 @@
       }
     },
     {
-      "label": "Demo Brix [ORG]: Create New Developer Org (Alias 'dev')",
+      "label": "UTILS: 🛠️ Setup new Brix Project",
       "type": "shell",
-      "command": "cci org remove dev && cci org info dev && cci flow run deploy_qbrix --org dev && cci task run snapshot_changes && echo 'New Developer Scratch Org has been created with alias dev.'",
+      "command": "cci task run setup_qbrix",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -341,22 +341,7 @@
       }
     },
     {
-      "label": "Demo Brix [SETUP]: Setup new QBrix Project (incudes Updater)",
-      "type": "shell",
-      "command": "cci task run update_qbrix && cci task run setup_qbrix",
-      "group": "build",
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "revealProblems": "onProblem",
-        "focus": true,
-        "echo": false,
-        "showReuseMessage": false,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "Demo Brix [INFO]: List installed Demo Brix",
+      "label": "INFO: ℹ️ List installed Demo Brix",
       "type": "shell",
       "command": "cci task run list_qbrix --org ${input:OrgAlias}",
       "group": "build",
@@ -371,9 +356,9 @@
       }
     },
     {
-      "label": "Demo Brix [UTILITY]: Run Mass Operations Utility",
+      "label": "UTILS: 🚑 Run Metadata Doctor",
       "type": "shell",
-      "command": "cci task run mass_qbrix_update",
+      "command": "qx utils doctor",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -386,22 +371,7 @@
       }
     },
     {
-      "label": "Demo Brix [HEALTH]: Run Health Checker",
-      "type": "shell",
-      "command": "cci task run health_check",
-      "group": "build",
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "revealProblems": "onProblem",
-        "focus": true,
-        "echo": false,
-        "showReuseMessage": false,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "Demo Brix [UPDATE]: Update QBrix Default Scripts",
+      "label": "UPDATE: 🆕 Update Project Template",
       "type": "shell",
       "command": "cci task run update_qbrix",
       "group": "build",
@@ -416,157 +386,7 @@
       }
     },
     {
-      "label": "Demo Brix [ORG]: Create New Developer Preview Org (Alias 'dev_preview')",
-      "type": "shell",
-      "command": "cci org remove dev_preview && cci flow run dev_org --org dev_preview && echo 'New Developer Scratch Org has been created with alias dev_preview.'",
-      "group": "build",
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "revealProblems": "onProblem",
-        "focus": true,
-        "echo": false,
-        "showReuseMessage": false,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "Demo Brix [ORG]: Create New QA/Testing Org (Alias 'qa')",
-      "type": "shell",
-      "command": "cci org remove qa && cci flow run qa_org --org qa && echo 'New Developer Scratch Org has been created with alias qa.'",
-      "group": "build",
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "revealProblems": "onProblem",
-        "focus": true,
-        "echo": false,
-        "showReuseMessage": false,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "Demo Brix [ORG]: Create New QA/Testing Preview Org (Alias 'qa_preview')",
-      "type": "shell",
-      "command": "cci org remove qa_preview && cci flow run qa_org --org qa_preview && echo 'New Developer Scratch Org has been created with alias qa_preview.'",
-      "group": "build",
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "revealProblems": "onProblem",
-        "focus": true,
-        "echo": false,
-        "showReuseMessage": false,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "Demo Brix [ORG]: Clean Up Scratch Orgs and Expired Orgs",
-      "type": "shell",
-      "command": "cci org remove dev && cci org remove qa && cci org remove dev_preview && cci org prune && echo 'Org Cleanup Complete!'",
-      "group": "build",
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "revealProblems": "onProblem",
-        "focus": true,
-        "echo": false,
-        "showReuseMessage": false,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "Demo Brix [ORG]: List connected orgs for this project",
-      "type": "shell",
-      "command": "cci org list",
-      "group": "build",
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "revealProblems": "onProblem",
-        "focus": true,
-        "echo": false,
-        "showReuseMessage": false,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "Demo Brix [CONNECT]: Connect to a Production Org/TSO and Deploy Demo Brix",
-      "type": "shell",
-      "command": "cci org connect ${input:OrgAlias} && cci flow run deploy_qbrix_tso --org ${input:OrgAlias}",
-      "group": "build",
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "revealProblems": "onProblem",
-        "focus": true,
-        "echo": false,
-        "showReuseMessage": false,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "Demo Brix [CONNECT]: Connect to a Sandbox and Deploy Demo Brix",
-      "type": "shell",
-      "command": "cci org connect ${input:OrgAlias} --sandbox && cci flow run deploy_qbrix --org ${input:OrgAlias} && cci task run snapshot_changes --org ${input:OrgAlias}",
-      "group": "build",
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "revealProblems": "onProblem",
-        "focus": true,
-        "echo": false,
-        "showReuseMessage": false,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "Demo Brix [CONNECT]: Connect to a Sandbox",
-      "type": "shell",
-      "command": "cci org connect ${input:OrgAlias} --sandbox",
-      "group": "build",
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "revealProblems": "onProblem",
-        "focus": true,
-        "echo": false,
-        "showReuseMessage": false,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "Demo Brix [CONNECT]: Connect to a Production Org/TSO",
-      "type": "shell",
-      "command": "cci org connect ${input:OrgAlias}",
-      "group": "build",
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "revealProblems": "onProblem",
-        "focus": true,
-        "echo": false,
-        "showReuseMessage": false,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "Demo Brix [CONNECT]: Disconnect from org and delete scratch org (if scratch org)",
-      "type": "shell",
-      "command": "cci org remove ${input:OrgAlias}",
-      "group": "build",
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "revealProblems": "onProblem",
-        "focus": true,
-        "echo": false,
-        "showReuseMessage": false,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "Demo Brix [PUBLISH]: Publish to Metadeploy",
+      "label": "PUBLISH: 📡 Publish to Metadeploy",
       "type": "shell",
       "command": "cci task run metadeploy_publish --publish True --commit ${input:Commit}",
       "group": "build",
@@ -581,22 +401,7 @@
       }
     },
     {
-      "label": "Demo Brix [SAVE]: Save Changes to GitHub",
-      "type": "shell",
-      "command": "git add . && git commit -m '${input:CommitMessage}' && git push && git pull && echo 'Save complete!'",
-      "group": "build",
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "revealProblems": "onProblem",
-        "focus": true,
-        "echo": false,
-        "showReuseMessage": false,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "Demo Brix [BUILD]: Snapshot Current Changes (Run before making changes to org)",
+      "label": "BUILD: ⏱️ Snapshot Changes from now",
       "type": "shell",
       "command": "cci task run snapshot_changes --org ${input:OrgAlias}",
       "group": "build",
@@ -611,7 +416,7 @@
       }
     },
     {
-      "label": "Demo Brix [INFO]: Show information about a specified task.",
+      "label": "INFO: ℹ️ Display information about Task",
       "type": "shell",
       "command": "cci task info ${input:TaskName}",
       "group": "build",
@@ -626,7 +431,7 @@
       }
     },
     {
-      "label": "Demo Brix [INFO]: Show information about a specified flow.",
+      "label": "INFO: ℹ️ Display Information about Flow",
       "type": "shell",
       "command": "cci flow info ${input:FlowName}",
       "group": "build",
@@ -641,7 +446,7 @@
       }
     },
     {
-      "label": "Demo Brix [INFO]: Show information about a connected org.",
+      "label": "INFO: ℹ️ Show Salesforce Org Information",
       "type": "shell",
       "command": "cci org info ${input:OrgAlias}",
       "group": "build",
@@ -656,9 +461,9 @@
       }
     },
     {
-      "label": "Demo Brix [SAVE]: Review a List of Changes in org",
+      "label": "RETRIEVE: ℹ️ Preview Changes Made in Salesforce Org",
       "type": "shell",
-      "command": "cci task run list_changes --org ${input:OrgAlias}",
+      "command": "qx retrieve --org ${input:OrgAlias} --preview",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -671,37 +476,7 @@
       }
     },
     {
-      "label": "Demo Brix [SAVE]: Retrieve Changes from org",
-      "type": "shell",
-      "command": "cci task run retrieve_changes --org ${input:OrgAlias}",
-      "group": "build",
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "revealProblems": "onProblem",
-        "focus": true,
-        "echo": false,
-        "showReuseMessage": false,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "Demo Brix [DEPLOY]: Deploy Demo Brix to specified org",
-      "type": "shell",
-      "command": "cci flow run deploy_qbrix --org ${input:OrgAlias}",
-      "group": "build",
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "revealProblems": "onProblem",
-        "focus": true,
-        "echo": false,
-        "showReuseMessage": false,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "Demo Brix [DATA]: Deploy Demo Brix data to specified org (check generate_qbrix_data flow)",
+      "label": "DATA: 📤 Deploy Data to Salesforce Org",
       "type": "shell",
       "command": "cci flow run generate_qbrix_data --org ${input:OrgAlias}",
       "group": "build",
@@ -716,37 +491,7 @@
       }
     },
     {
-      "label": "Demo Brix [DATA]: Generate Dataset Mapping File from specified org",
-      "type": "shell",
-      "command": "cci task run generate_dataset_mapping --org ${input:OrgAlias} --path ${input:DataFolderString}",
-      "group": "build",
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "revealProblems": "onProblem",
-        "focus": true,
-        "echo": false,
-        "showReuseMessage": false,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "Demo Brix [DATA]: Extract Dataset from specified org",
-      "type": "shell",
-      "command": "cci task run extract_dataset --org ${input:OrgAlias} --path ${input:DataFolderString} --sql_path ${input:SqlDataFolderString}",
-      "group": "build",
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "revealProblems": "onProblem",
-        "focus": true,
-        "echo": false,
-        "showReuseMessage": false,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "Demo Brix [DEPLOY]: Deploy specific folder to specified org",
+      "label": "DEPLOY: 📤 Deploy specific directory to specified org",
       "type": "shell",
       "command": "cci task run deploy --path ${input:FolderString} --org ${input:OrgAlias}",
       "group": "build",
@@ -761,7 +506,7 @@
       }
     },
     {
-      "label": "Demo Brix [RETRIEVE]: Download Data for Analytics Datasets",
+      "label": "RETRIEVE: 📈 Download Data for CRM Analytics Datasets",
       "type": "shell",
       "command": "cci task run analytics_manager --mode d --org ${input:OrgAlias} --generate_metadata_desc True",
       "group": "build",
@@ -776,9 +521,9 @@
       }
     },
     {
-      "label": "Demo Brix [RETRIEVE]: Retrieve specific Metadata from Specified Org",
+      "label": "RETRIEVE: 📤 Retrieve specific Metadata from Specified Org",
       "type": "shell",
-      "command": "cci task run dx --command 'force:source:retrieve -m \"${input:MetadataString}\"' --org ${input:OrgAlias}",
+      "command": "qx retrieve --metadata \"${input:MetadataString}\" --org ${input:OrgAlias}",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -791,22 +536,7 @@
       }
     },
     {
-      "label": "Demo Brix [RETRIEVE]: Retrieve unmanaged package metadata from specified org and merge into force-app",
-      "type": "shell",
-      "command": "cci task run retrieve_src --org ${input:OrgAlias} --package ${input:PackageName} && cci task run dx_convert_to",
-      "group": "build",
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "revealProblems": "onProblem",
-        "focus": true,
-        "echo": false,
-        "showReuseMessage": false,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "Demo Brix [SAVE]: Retrieve ALL Project metadata from org",
+      "label": "RETRIEVE: 📤 Retrieve ALL Project metadata from org",
       "type": "shell",
       "command": "cp -r ./force-app ./backup && cci task run dx --command 'force:source:retrieve -p force-app' --org ${input:OrgAlias} && echo 'Check Custom Objects and Profiles if any as additional metadata may have been captured. Then remove backup folder.'",
       "windows": {
@@ -824,22 +554,7 @@
       }
     },
     {
-      "label": "Demo Brix [ORG]: Open Org in Browser",
-      "type": "shell",
-      "command": "cci org browser ${input:OrgAlias}",
-      "group": "build",
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "revealProblems": "onProblem",
-        "focus": true,
-        "echo": false,
-        "showReuseMessage": false,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "Demo Brix [INFO]: List Installed Packages in Org",
+      "label": "INFO: ℹ️ List Installed Packages in Org",
       "type": "shell",
       "command": "cci task run dx --org ${input:OrgAlias} --command force:package:installed:list",
       "group": "build",
@@ -854,9 +569,9 @@
       }
     },
     {
-      "label": "Demo Brix [PUBLISH]: Show Latest Commit Hash (For Metadeploy)",
+      "label": "PUBLISH: ℹ️ Show Latest Commit Hash (For Metadeploy)",
       "type": "shell",
-      "command": "git rev-parse HEAD",
+      "command": "git rev-parse --short HEAD",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -869,7 +584,7 @@
       }
     },
     {
-      "label": "Demo Brix [INFO]: Find Metadata in your depencencies",
+      "label": "UTILS: 🔍 Find Metadata in your depencencies",
       "type": "shell",
       "command": "cci task run qbrix_metadata_checker --metadata_type ${input:MetadataType} --api_names ${input:ApiNames} --dependency_flow ${input:DependencyFlow}",
       "group": "build",
@@ -884,7 +599,7 @@
       }
     },
     {
-      "label": "Demo Brix [INFO]: Scan for duplicated Metadata in your depencencies",
+      "label": "UTILS: 🔍 Scan for duplicated Metadata in your depencencies",
       "type": "shell",
       "command": "cci task run qbrix_metadata_checker --dependency_flow ${input:DependencyFlow} --scan_mode True",
       "group": "build",
@@ -899,9 +614,24 @@
       }
     },
     {
-      "label": "Demo Brix [ROBOT]: Launch Q Robot Sandbox",
+      "label": "ROBOT: 🤖 Launch Q Robot Sandbox",
       "type": "shell",
       "command": "cci task run qbrix_robot_test --org ${input:OrgAlias} --start_url ${input:RobotStartURL}",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "ROBOT: 🤖 Run robot file against org",
+      "type": "shell",
+      "command": "cci task run robot --org ${input:OrgAlias} --suites ${input:RobotFilePath}",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -1032,8 +762,13 @@
         "True",
         "False"
       ]
-    }
-
+    },
+    {
+      "id": "RobotFilePath",
+      "description": "Enter the file path to the .robot file",
+      "default": "",
+      "type": "promptString"
+    },
 
 
   ]

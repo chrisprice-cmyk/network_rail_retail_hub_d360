@@ -1,6 +1,7 @@
 {
   "orgName": "xDO-Template - Dev org",
   "edition": "Enterprise",
+  "instance": "NA135",
   "features": [
     "AddCustomApps:30",
     "AddCustomObjects:30",
@@ -25,10 +26,6 @@
     "CustomerCommunityPlus",
     "ConnectedAppToolingAPI",
     "ContactsToMultipleAccounts",
-    "CustomerCommunity",
-    "CustomerCommunityLogin",
-    "CustomerCommunityPlus",
-    "CustomerCommunityPlusLogin",
     "DataMaskUser",
     "DefaultWorkflowUser",
     "DevelopmentWave",
@@ -39,7 +36,6 @@
     "EinsteinRecommendationBuilder",
     "EnablePRM",
     "Entitlements",
-    "FieldAuditTrail",
     "FieldAuditTrail",
     "FieldService:1",
     "FieldServiceAppointmentAssistantUser:1",
@@ -94,7 +90,23 @@
     },
     "userEngagementSettings": {
       "enableShowSalesforceUserAssist": false
+    },
+    "communitiesSettings": {
+      "enableNetworksEnabled": true
+    },
+    "experienceBundleSettings": {
+      "enableExperienceBundleMetadata": true
+    },
+    "userManagementSettings": {
+      "enableEnhancedProfileMgmt": true,
+      "enableEnhancedPermsetMgmt": true,
+      "enableNewProfileUI": true
+    },
+    "chatterSettings": {
+      "enableChatter": true
+    },
+    "botSettings": {
+      "enableBots": true
     }
-  },
-  "instance": "NA135"
+  }
 }
