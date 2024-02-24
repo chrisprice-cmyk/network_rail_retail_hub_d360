@@ -160,10 +160,7 @@
     {
       "label": "ORG: 🗑 Delete Development and Test orgs",
       "type": "shell",
-      "command": "qx org delete --org qa && qx org delete --org dev",
-      "windows": {
-        "command": "qx org delete --org qa ; qx org delete --org dev"
-      },
+      "command": "qx org delete --dev_orgs",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -666,7 +663,7 @@
     {
       "id": "OrgAlias",
       "description": "Please enter the org alias for the TSO",
-      "default": "dev",
+      "default": "",
       "type": "promptString"
     },
     {
