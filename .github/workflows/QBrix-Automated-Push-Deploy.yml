@@ -57,15 +57,15 @@ jobs:
       - name: get qlabs auto deploy settings - pipe to jq to file
         id: qlab_config_settings
         run: |
-           # call qlabs setting service for this qbrix -> get the json -> pipe to jq
-            curl --location --request GET 'https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixAutoDeploySettings?qbrixid=${{ github.event.repository.name }}' \
-            --header 'Content-Type: application/json' \
-            --header 'Authorization: Bearer ${{ steps.qlabs_accesstoken.outputs.qlabs_accesstoken }}' | jq > automated_deploy.json
-        
+          # call qlabs setting service for this qbrix -> get the json -> pipe to jq
+           curl --location --request GET 'https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixAutoDeploySettings?qbrixid=${{ github.event.repository.name }}' \
+           --header 'Content-Type: application/json' \
+           --header 'Authorization: Bearer ${{ steps.qlabs_accesstoken.outputs.qlabs_accesstoken }}' | jq > automated_deploy.json
+
       - name: set the build job matrix for deployments
         id: set-matrix
         run: |
-            echo "matrix={\"include\":$(jq -c '.' automated_deploy.json -r)}" >> $GITHUB_OUTPUT
+          echo "matrix={\"include\":$(jq -c '.' automated_deploy.json -r)}" >> $GITHUB_OUTPUT
 
   qbrix_deployments:
     needs: [collection_deployment_steps]
@@ -85,7 +85,7 @@ jobs:
       - name: Core Setup - key for jwt auth
         if: matrix.targetusername!=''
         run: echo "${{ secrets.QBRIX_DEVHUB_PRIVATE_KEY }}" > devhub.key
-      
+
       # We will use a common app with a common key -
       - name: Create SFDX Session for QLABS Service Account
         if: matrix.targetusername!=''
@@ -111,7 +111,7 @@ jobs:
 
       - name: force an update
         if: matrix.targetusername!=''
-        run: cci task run update_qbrix --SkipDependencyChecks True
+        run: cci task run update_qbrix
 
       - name: rfbrowser init setup
         if: matrix.targetusername!=''
@@ -153,9 +153,9 @@ jobs:
           --header 'Content-Type: application/json' \
           --header 'Authorization: Bearer ${{ steps.qlabs_accesstoken.outputs.qlabs_accesstoken }}' \
           --data '{
-            "qbrixid": "${{ github.event.repository.name }}", 
-            "status": "Failed", 
-            "notify": "${{ matrix.notify }}", 
+            "qbrixid": "${{ github.event.repository.name }}",
+            "status": "Failed",
+            "notify": "${{ matrix.notify }}",
             "errorlog": "${{ steps.cci_failure_details.outputs.errorlog }}",
             "runurl": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
             "commit": ${{ toJSON(github.event.head_commit.message) }}
@@ -168,8 +168,8 @@ jobs:
           --header 'Content-Type: application/json' \
           --header 'Authorization: Bearer ${{ steps.qlabs_accesstoken.outputs.qlabs_accesstoken }}' \
           --data '{
-            "qbrixid": "${{ github.event.repository.name }}", 
-            "status": "Success", 
+            "qbrixid": "${{ github.event.repository.name }}",
+            "status": "Success",
             "notify": "${{ matrix.notify }}",
             "runurl": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
             "commit": ${{ toJSON(github.event.head_commit.message) }}
