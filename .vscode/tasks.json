@@ -20,6 +20,21 @@
       }
     },
     {
+      "label": "ORG: 💧 Connect to Pool Org",
+      "type": "shell",
+      "command": "qx org pool --org ${input:OrgAlias}",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "shared"
+      }
+    },
+    {
       "label": "ORG: 🔗 Connect to Salesforce Production Org",
       "type": "shell",
       "command": "qx org connect --org ${input:OrgAlias}",
