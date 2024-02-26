@@ -142,7 +142,6 @@ jobs:
           echo "::set-env name=GITHUB_API_SLEEP_TIME::${{ steps.qlab_config_settings.outputs.GITHUB_API_SLEEP_TIME }}"
           echo "::set-env name=AUTO_PUBLISH_TO_METADEPLOY::${{ steps.qlab_config_settings.outputs.AUTO_PUBLISH_TO_METADEPLOY }}"
 
-
       - name: Sleep for ${{env.GITHUB_API_SLEEP_TIME}} seconds per GIT API SLEEP TIME
         run: |
           sleep ${{ steps.qlab_config_settings.outputs.GITHUB_API_SLEEP_TIME }}
@@ -479,9 +478,9 @@ jobs:
           curl --location 'https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixBuildService' \
           --header 'Content-Type: application/json' \
           --header 'Authorization: Bearer ${{ steps.qlabs_accesstoken.outputs.qlabs_accesstoken }}' \
-          --data '{"github_repository_id": "${{ github.repository_id }}", 
-                  "qbrixname": "${{ github.repository }}-${{ env.BUILD_SUFFIX }}", 
-                  "buildstatus": "Failed", 
+          --data '{"github_repository_id": "${{ github.repository_id }}",
+                  "qbrixname": "${{ github.repository }}-${{ env.BUILD_SUFFIX }}",
+                  "buildstatus": "Failed",
                   "details": "${{ steps.cci_failure_details.outputs.cci_failure_details }}" }'
 
       - name: success status
@@ -490,7 +489,7 @@ jobs:
           curl --location 'https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixBuildService' \
           --header 'Content-Type: application/json' \
           --header 'Authorization: Bearer ${{ steps.qlabs_accesstoken.outputs.qlabs_accesstoken }}' \
-          --data '{"github_repository_id": "${{ github.repository_id }}", 
-                  "qbrixname": "${{ github.repository }}-${{ env.BUILD_SUFFIX }}", 
-                  "buildstatus": "Passed", 
+          --data '{"github_repository_id": "${{ github.repository_id }}",
+                  "qbrixname": "${{ github.repository }}-${{ env.BUILD_SUFFIX }}",
+                  "buildstatus": "Passed",
                   "details": ""}'

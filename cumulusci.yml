@@ -95,37 +95,37 @@ tasks:
   # CUSTOM TASKS ADDED FOR BRIX DEVELOPMENT
 
   qbrix_robot_test:
-    class_path: qbrix.tools.utils.qbrix_launch_test_robot.QRobotTestCapture
+    class_path: qx.qrobot.qx_robot_launch_sandbox.QRobotTestCapture
 
   qbrix_trapdoor_add:
-    class_path: qbrix.tools.utils.qbrix_orgconfig_hydrate.NGTrapDoorInjector
+    class_path: qx.platform.cumulusci.tasks.qx_cci_orgconfig_hydrate.NGTrapDoorInjector
 
   precommit_check:
-    class_path: qbrix.git.hooks_ext.pre_commit.PreCommit
+    class_path: qx.platform.cumulusci.tasks.qx_cci_pre_commit.PreCommit
 
   qbrix_landing:
-    class_path: qbrix.tools.utils.qbrix_landing.RunLanding
+    class_path: qx.platform.cumulusci.tasks.qx_cci_landing.RunLanding
 
   qbrix_preflight:
-    class_path: qbrix.tools.utils.qbrix_preflight.RunPreflight
+    class_path: qx.platform.cumulusci.tasks.qx_cci_preflight.RunPreflight
 
   health_check:
-    class_path: qbrix.tools.utils.qbrix_health_check.HealthChecker
+    class_path: qx.platform.cumulusci.tasks.qx_cci_health_checker.HealthChecker
 
   update_qbrix:
-    class_path: qbrix.tools.utils.qbrix_update.QBrixUpdater
+    class_path: qx.platform.cumulusci.tasks.qx_cci_brix_update.BrixUpdater
 
   setup_qbrix:
-    class_path: qbrix.tools.utils.qbrix_project_setup.InitProject
+    class_path: qx.platform.cumulusci.tasks.qx_cci_initial_setup.InitProject
 
   list_qbrix:
-    class_path: qbrix.salesforce.qbrix_salesforce_tasks.ListQBrix
+    class_path: qx.platform.salesforce_platform.qx_salesforce_utils.ListQBrix
 
   q_update_dependencies:
-    class_path: qbrix.salesforce.qbrix_salesforce_tasks.QUpdateDependencies
+    class_path: qx.platform.salesforce_platform.qx_salesforce_utils.QUpdateDependencies
 
   mass_qbrix_update:
-    class_path: qbrix.tools.utils.qbrix_mass_ops.MassFileOps
+    class_path: qx.shared.utils.qx_cci_mass_ops.MassFileOps
 
   deploy_settings:
     description: Checks that Settings have been defined in force-app and deploys them if present
@@ -135,23 +135,23 @@ tasks:
 
   spin_request:
     description: generate a spin
-    class_path: qbrix.tools.utils.qbrix_org_generator.Spin
+    class_path: qx.platform.salesforce_platform.qx_salesforce_org_generator.Spin
 
   upsert_favorite:
-    class_path: qbrix.salesforce.qbrix_salesforce_ui.UpsertFavorite
+    class_path: qx.platform.salesforce_platform.qx_salesforce_ui.UpsertFavorite
 
   analytics_manager:
-    class_path: qbrix.tools.data.qbrix_analytics.AnalyticsManager
+    class_path: qx.platform.einstein.analytics.qx_analytics.AnalyticsManager
 
   analytics_timeshift:
     description: timeshifts the specified dataset and fields based on a date
-    class_path: qbrix.tools.data.qbrix_analytics.TimeShift
+    class_path: qx.platform.einstein.analytics.qx_analytics.TimeShift
 
   user_manager:
-    class_path: qbrix.salesforce.qbrix_salesforce_tasks.CreateUser
+    class_path: qx.platform.salesforce_platform.qx_salesforce_utils.CreateUser
 
   omniscript_align:
-    class_path: qbrix.tools.utils.qbrix_chiro.OmniscriptAlign
+    class_path: qx.platform.omnistudio.qx_omniscript_chiro.OmniscriptAlign
 
   validate_qbrix:
     description: Validates the qbrix
@@ -166,21 +166,21 @@ tasks:
         output: None
 
   experience_manager:
-    class_path: qbrix.tools.utils.qbrix_experience_manager.ExperienceManager
+    class_path: qx.platform.digital_experience.qx_experience_manager.ExperienceManager
 
   experience_file_asset_manager:
-    class_path: qbrix.tools.utils.qbrix_experience_manager.ExperienceFileAssetManager
+    class_path: qx.platform.digital_experience.qx_experience_manager.ExperienceFileAssetManager
 
   qbrix_installer_tracking:
-    class_path: qbrix.tools.utils.qbrix_installtracking.InstallRecorder
+    class_path: qx.platform.cumulusci.tasks.qx_cci_tracking.InstallRecorder
 
   abort_install:
     description: Aborts the install due to the when condition being met.
-    class_path: qbrix.tools.utils.qbrix_orgconfig_hydrate.NGAbort
+    class_path: qx.platform.cumulusci.tasks.qx_cci_orgconfig_hydrate.NGAbort
 
   qbrix_shell_deploy_metadeploy:
     description: Runs the specified task or flow of the qbrix in a subprocess.
-    class_path: qbrix.tools.utils.qbrix_deploy.Deploy
+    class_path: qx.platform.cumulusci.tasks.qx_cci_legacy_deploy.Deploy
     options:
       message: Runs the specified task or flow of the qbrix in a subprocess.
       entrypoint: deploy_qbrix
@@ -188,15 +188,15 @@ tasks:
 
   qbrix_cache_add:
     description: Run the datapack via apex in the new datamodel
-    class_path: qbrix.tools.utils.qbrix_orgconfig_hydrate.NGCacheAdd
+    class_path: qx.platform.cumulusci.tasks.qx_cci_orgconfig_hydrate.NGCacheAdd
 
   qbrix_metadata_checker:
     description: Demo Brix Metadata Scan for missing metadata tool
-    class_path: qbrix.tools.utils.qbrix_metadata_checker.MetadataChecker
+    class_path: qx.platform.cumulusci.tasks.qx_cci_metadata_checker.MetadataChecker
 
   orgconfig_hydrate:
     description: injects additional context into the orgconfig that can be referenced downstream
-    class_path: qbrix.tools.utils.qbrix_orgconfig_hydrate.NGOrgConfig
+    class_path: qx.platform.cumulusci.tasks.qx_cci_orgconfig_hydrate.NGOrgConfig
 
   deploy_dx:
     class_path: cumulusci.tasks.sfdx.SFDXOrgTask
@@ -205,29 +205,29 @@ tasks:
 
   dustpan:
     description: injects additional context into the orgconfig that can be referenced downstream
-    class_path: qbrix.tools.utils.qbrix_orgconfig_hydrate.NGBroom
+    class_path: qx.platform.cumulusci.tasks.qx_cci_orgconfig_hydrate.NGBroom
 
   flow_wrapper:
     description: Runs the specified task or flow of the qbrix in a subprocess in a single task. This allows us to use When against a flow.
-    class_path: qbrix.tools.utils.qbrix_deploy.Deploy
+    class_path: qx.platform.cumulusci.tasks.qx_cci_legacy_deploy.Deploy
 
   qbrix_sfdx:
     class_path: cumulusci.tasks.sfdx.SFDXOrgTask
 
   qbrix_upload_files:
-    class_path: qbrix.salesforce.qbrix_salesforce_tasks.UploadFiles
+    class_path: qx.platform.salesforce_platform.qx_salesforce_utils.UploadFiles
 
   qbrix_download_files:
-    class_path: qbrix.salesforce.qbrix_salesforce_tasks.DownloadFiles
+    class_path: qx.platform.salesforce_platform.qx_salesforce_utils.DownloadFiles
 
   qbrix_glooop:
-    class_path: qbrix.tools.utils.qbrix_glooop.Glooop
+    class_path: qx.platform.cumulusci.tasks.qx_cci_glooop.Glooop
 
   qbrix_fart:
-    class_path: qbrix.tools.utils.qbrix_fart.FART
+    class_path: qx.platform.cumulusci.tasks.qx_cci_fart.FART
 
   qbrix_purge_inactive_flows:
-    class_path: qbrix.tools.utils.qbrix_flow_cleaner.PurgeInactiveFlows
+    class_path: qx.platform.cumulusci.tasks.qx_cci_flow_cleaner.PurgeInactiveFlows
 
   #------------------------------------#
   # DATA TOOL INTEGRATION              #
@@ -235,7 +235,7 @@ tasks:
   # Guide: https://qlabs-org.my.site.com/qverse/s/learn?name=Data-Tool-Overview
 
   deploy_nextgen_data:
-    class_path: qbrix.tools.utils.qbrix_nextgen_datatool.RunDataTool
+    class_path: qx.data.qx_nextgen_datatool.RunDataTool
 
   #------------------------------------#
   # CUSTOM TASKS                       #

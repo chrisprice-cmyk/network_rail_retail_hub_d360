@@ -51,12 +51,12 @@ jobs:
               echo "files_exists=false" >> "$GITHUB_OUTPUT"
               echo '[{ "action": "flow", "target": "deploy_qbrix", "description": "Deploy QBrix" }]' >  ${{ github.workspace }}/collection_run.json
           fi
-          
+
       - name: load run matrix
         id: set-matrix
         run: |
           echo "matrix={\"include\":$(jq -c '.' ${{github.workspace}}/collection_run.json -r)}" >> $GITHUB_OUTPUT
-        
+
   target_org_env_build:
     needs: [collection_deployment_steps]
     runs-on: sfdc-qbranch-nextgen-ubuntu
@@ -435,9 +435,9 @@ jobs:
           curl --location 'https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixBuildService' \
           --header 'Content-Type: application/json' \
           --header 'Authorization: Bearer ${{ steps.qlabs_accesstoken.outputs.qlabs_accesstoken }}' \
-          --data '{"github_repository_id": "${{ github.repository_id }}", 
-                  "qbrixname": "${{ github.repository }}-${{ env.BUILD_SUFFIX }}", 
-                  "buildstatus": "Failed", 
+          --data '{"github_repository_id": "${{ github.repository_id }}",
+                  "qbrixname": "${{ github.repository }}-${{ env.BUILD_SUFFIX }}",
+                  "buildstatus": "Failed",
                   "details": "${{ steps.cci_failure_details.outputs.cci_failure_details }}" }'
 
       - name: success status
@@ -446,7 +446,7 @@ jobs:
           curl --location 'https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixBuildService' \
           --header 'Content-Type: application/json' \
           --header 'Authorization: Bearer ${{ steps.qlabs_accesstoken.outputs.qlabs_accesstoken }}' \
-          --data '{"github_repository_id": "${{ github.repository_id }}", 
-                  "qbrixname": "${{ github.repository }}-${{ env.BUILD_SUFFIX }}", 
-                  "buildstatus": "Passed", 
+          --data '{"github_repository_id": "${{ github.repository_id }}",
+                  "qbrixname": "${{ github.repository }}-${{ env.BUILD_SUFFIX }}",
+                  "buildstatus": "Passed",
                   "details": ""}'
