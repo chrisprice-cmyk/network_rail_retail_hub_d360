@@ -82,9 +82,9 @@
     {
       "label": "ORG: 🛠️ Create Development and Test Orgs",
       "type": "shell",
-      "command": "qx org create --org dev && qx org create --org qa",
+      "command": "qx org create --org dev && qx org create --org qa --set_default false",
       "windows": {
-        "command": "qx org create --org dev ; qx org create --org qa"
+        "command": "qx org create --org dev ; qx org create --org qa --set_default false"
       },
       "group": "build",
       "problemMatcher": [],
