@@ -467,6 +467,6 @@ plans:
     is_listed: True
     steps:
       1:
-        flow: deploy_qbrix
+        task: qbrix_shell_deploy_metadeploy
         ui_options:
           name: Deploy Demo Brix
