@@ -184,7 +184,7 @@ tasks:
     options:
       message: Runs the specified task or flow of the qbrix in a subprocess.
       entrypoint: deploy_qbrix
-      etnrypointtype: flow
+      entrypointtype: flow
 
   qbrix_cache_add:
     description: Run the datapack via apex in the new datamodel
