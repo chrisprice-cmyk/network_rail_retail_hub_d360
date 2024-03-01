@@ -80,7 +80,9 @@ jobs:
                 'Content-Type': 'application/json',
                 'Authorization': f'Bearer {getAuth(os.environ.get("USER"))}'
             }
+            response = requests.request("DELETE", url, headers=headers, data=payload)
             response = requests.request("PUT", url, headers=headers, data=payload)
+            
 
           refreshQBrix('${{ github.event.repository.name }}')
           filepath='${{ github.workspace }}/cumulusci.yml'
