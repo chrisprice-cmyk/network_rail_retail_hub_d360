@@ -5,6 +5,20 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "Check Project Configuration with Template",
+      "type": "shell",
+      "command": "cci task run update_qbrix",
+      "problemMatcher": [],
+      "presentation": {
+        "revealProblems": "onProblem",
+        "panel": "new",
+        "close": true
+      },
+      "runOptions": {
+        "runOn": "folderOpen"
+      }
+    },
+    {
       "label": "UTILS: 🧰 Show Utilities Menu",
       "type": "shell",
       "command": "qx utils list",
