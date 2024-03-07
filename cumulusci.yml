@@ -60,6 +60,8 @@ sources:
 
   base:
     github: https://github.com/sfdc-qbranch/QBrix-0-xDO-BaseConfig
+  qbrix_register_base:
+    github: https://github.com/sfdc-qbranch/QBrix-1-xDO-Tool-QBrixRegister
 
 tasks:
   #------------------------------------#
@@ -252,10 +254,10 @@ flows:
   prepare_org:
     steps:
       1:
-        task: qbrix_preflight
-        ui_options:
-          name: Preparing Org for Demo Brix Deployment
+        flow: qbrix_register_base:deploy_qbrix
       2:
+        task: deploy_settings
+      3:
         task: update_dependencies
         ui_options:
           name: Installs/Updates Demo Brix Dependencies

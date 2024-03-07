@@ -407,8 +407,7 @@
         "focus": true,
         "echo": false,
         "showReuseMessage": false,
-        "panel": "new",
-        "close": true
+        "panel": "new"
       }
     },
     {
