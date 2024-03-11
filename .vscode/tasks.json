@@ -498,7 +498,7 @@
     {
       "label": "RETRIEVE: ℹ️ Preview Changes Made in Salesforce Org",
       "type": "shell",
-      "command": "qx retrieve --org ${input:OrgAlias} --preview",
+      "command": "qx retrieve --preview --org ${input:OrgAlias} ",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -507,7 +507,6 @@
         "echo": false,
         "showReuseMessage": false,
         "panel": "new",
-        "close": true
       }
     },
     {
