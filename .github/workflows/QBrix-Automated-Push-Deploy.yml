@@ -20,6 +20,8 @@ env:
   BUILD_SUFFIX: QBrix-Automated-Push-Deploy
   QBRIX_SYSTEM_ID: AUTO_DEPLOY
   SF_USE_PROGRESS_BAR: false
+  QSR_ENDPOINT: ${{ secrets.QSR_ENDPOINT }}
+  QSR_JWT_SIGNING_SECRET: ${{ secrets.QSR_JWT_SIGNING_SECRET }}
 
 jobs:
   collection_deployment_steps:
