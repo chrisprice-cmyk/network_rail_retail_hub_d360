@@ -85,8 +85,8 @@ jobs:
             
 
           refreshQBrix('${{ github.event.repository.name }}')
-          filepath='${{ github.workspace }}/cumulusci.yml'
-          inputsfile = '${{ github.workspace }}/qbrix_local/inputs/required.json'
+          filepath='cumulusci.yml'
+          inputsfile = 'qbrix_local/inputs/required.json'
           if(os.path.isfile(filepath)):
               with open(filepath, 'r') as stream:
                 yamldata = yaml.safe_load(stream)
