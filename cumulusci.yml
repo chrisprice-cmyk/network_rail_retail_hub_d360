@@ -60,6 +60,7 @@ sources:
 
   base:
     github: https://github.com/sfdc-qbranch/QBrix-0-xDO-BaseConfig
+
   qbrix_register_base:
     github: https://github.com/sfdc-qbranch/QBrix-1-xDO-Tool-QBrixRegister
 
@@ -254,9 +255,13 @@ flows:
   prepare_org:
     steps:
       1:
-        flow: qbrix_register_base:deploy_qbrix
+        task: orgconfig_hydrate
+        ui_options:
+          name: Setting up additional support for when clauses
       2:
         task: deploy_settings
+        ui_options:
+          name: Pre-Deploys Settings defined in force-app
       3:
         task: update_dependencies
         ui_options:
@@ -265,8 +270,9 @@ flows:
   source_dependencies:
     steps:
       1:
-        # Placeholder task, replace this with your custom steps
-        task: None
+        flow: qbrix_register_base:deploy_qbrix
+        ui_options:
+          name: Installs/Updates Demo Brix Register
 
   #------------------------------------#
   # STAGE 2 of 3: Demo BRIX DEPLOYMENT #
