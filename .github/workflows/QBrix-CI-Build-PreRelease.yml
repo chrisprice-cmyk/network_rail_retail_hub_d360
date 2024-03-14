@@ -377,6 +377,15 @@ jobs:
       - name: Make sure session is valid
         run: cci org info dev
 
+      - name: run flow info to detect bad refs or paths
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 1440
+          retry_on: error
+          max_attempts: 2
+          command: cci flow info deploy_qbrix
+          on_retry_command: cci error info
+
       - name: run qbrix validate
         uses: nick-fields/retry@v2
         with:
