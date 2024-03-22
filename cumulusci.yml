@@ -11,7 +11,7 @@ project:
     api_version: "60.0"
   git:
     default_branch: "main"
-    repo_url: https://github.com/sfdc-qbranch/xDO-Template
+    repo_url: https://github.com/sfdc-qbranch-emu/xDO-Template
   source_format: sfdx
 
   #------------------------------------#
@@ -59,10 +59,10 @@ sources:
   # Guidance: https://qlabs-org.my.site.com/qverse/s/learn?name=Template-Dependencies-and-Packages
 
   base:
-    github: https://github.com/sfdc-qbranch/QBrix-0-xDO-BaseConfig
+    github: https://github.com/sfdc-qbranch-emu/QBrix-0-xDO-BaseConfig
 
   qbrix_register_base:
-    github: https://github.com/sfdc-qbranch/QBrix-1-xDO-Tool-QBrixRegister
+    github: https://github.com/sfdc-qbranch-emu/QBrix-1-xDO-Tool-QBrixRegister
 
 tasks:
   #------------------------------------#

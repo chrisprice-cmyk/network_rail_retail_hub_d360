@@ -25,7 +25,7 @@
     </values>
     <values>
         <field>xDO_Repository_URL__c</field>
-        <value xsi:type="xsd:string">https://github.com/sfdc-qbranch/xDO-Template</value>
+        <value xsi:type="xsd:string">https://github.com/sfdc-qbranch-emu/xDO-Template</value>
     </values>
     <values>
         <field>xDO_Type__c</field>
