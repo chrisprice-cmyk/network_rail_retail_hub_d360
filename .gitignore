@@ -114,3 +114,6 @@ validationresult.json
 /playwright/.cache/
 *.pyc
 .idea/*
+
+#Quasar 
+QUASAR_LEAF_SHAKE
