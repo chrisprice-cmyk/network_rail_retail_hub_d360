@@ -526,6 +526,7 @@ jobs:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.QBRIX_CONTAINER_PUBLISH_GITHUB_PAT}}
     strategy:
+      fail-fast: false
       matrix: ${{ fromJSON(needs.setup_leafshake_steps.outputs.matrix) }}
       max-parallel: 250 #run in sequence
     steps:
@@ -786,7 +787,7 @@ jobs:
     if: |
       always() &&
       (github.ref_name == 'main' || github.ref_name == 'master') &&
-      (needs.leaf_shake_deployments.result == 'success' || needs.leaf_shake_deployments.result == 'skipped') 
+      (needs.leaf_shake_deployments.result == 'success' || needs.leaf_shake_deployments.result == 'skipped' || needs.leaf_shake_deployments.result == 'failed') 
     runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
       image: "ghcr.io/${{ github.repository_owner }}/qbrix-base-container-quasar:latest"
@@ -953,7 +954,7 @@ jobs:
       always() &&
       (github.ref_name == 'main' || github.ref_name == 'master') &&
       needs.build_deployments.result == 'success' &&
-      (needs.leaf_shake_deployments.result == 'success' || needs.leaf_shake_deployments.result == 'skipped') 
+      (needs.leaf_shake_deployments.result == 'success' || needs.leaf_shake_deployments.result == 'skipped' || needs.leaf_shake_deployments.result == 'failed') 
     runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
       image: "ghcr.io/${{ github.repository_owner }}/qbrix-base-container-quasar:latest"
