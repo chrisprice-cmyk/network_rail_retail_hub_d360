@@ -36,6 +36,20 @@
       }
     },
     {
+      "label": "UTILS: 🧰 Describe Scratch Org Features",
+      "type": "shell",
+      "command": "qx utils describe_features",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "new"
+      }
+    },
+    {
       "label": "ORG: 💧 Connect to Pool Org",
       "type": "shell",
       "command": "qx org pool --org ${input:OrgAlias}",
@@ -266,6 +280,20 @@
       "label": "UTILS: 🔍 Search Qverse",
       "type": "shell",
       "command": "qx qverse search '${input:SearchString}'",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "new"
+      }
+    },
+    {
+      "label": "UTILS: 🔍 Search Scratch Org Features Database",
+      "type": "shell",
+      "command": "qx utils feature-search '${input:SearchString}'",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
