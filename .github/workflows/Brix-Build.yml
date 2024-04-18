@@ -207,6 +207,7 @@ jobs:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.QBRIX_CONTAINER_PUBLISH_GITHUB_PAT}}
     strategy:
+      fail-fast: false
       matrix: ${{ fromJSON(needs.setup_build_steps.outputs.matrix) }}
       max-parallel: 250 #run in sequence
     steps:
