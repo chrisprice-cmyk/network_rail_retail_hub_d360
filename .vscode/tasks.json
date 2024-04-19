@@ -165,6 +165,20 @@
       }
     },
     {
+      "label": "ORG: 🌐 Open Default Org in browser",
+      "type": "shell",
+      "command": "qx org open",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "new"
+      }
+    },
+    {
       "label": "RETRIEVE: 💾 Retrieve Changes from Salesforce Org",
       "type": "shell",
       "command": "qx retrieve --org ${input:OrgAlias}",
@@ -674,32 +688,14 @@
   ],
   "inputs": [
     {
-      "id": "ScratchOrgUsername",
-      "description": "Please enter the username for the org",
-      "default": "",
-      "type": "promptString"
-    },
-    {
       "id": "SearchString",
       "description": "Please enter the search term",
       "default": "",
       "type": "promptString"
     },
     {
-      "id": "ScratchOrgDomain",
-      "description": "Please enter the domain for the org",
-      "default": "",
-      "type": "promptString"
-    },
-    {
       "id": "OrgAlias",
-      "description": "Please enter the org alias for the TSO",
-      "default": "",
-      "type": "promptString"
-    },
-    {
-      "id": "VersionNumber",
-      "description": "Enter the version number you wish to publish",
+      "description": "Please provide the Salesforce org alias",
       "default": "",
       "type": "promptString"
     },
@@ -730,12 +726,6 @@
     {
       "id": "DataFolderString",
       "description": "Enter the relative path to the data folder:",
-      "default": "datasets",
-      "type": "promptString"
-    },
-    {
-      "id": "SqlDataFolderString",
-      "description": "Enter the relative path to the sql data folder:",
       "default": "datasets",
       "type": "promptString"
     },
@@ -782,22 +772,10 @@
       "type": "promptString"
     },
     {
-      "id": "GeneratePermSet",
-      "description": "Set to True to generate and update the Permission Set for the Demo Brix",
-      "default": "True",
-      "type": "pickString",
-      "options": [
-        "True",
-        "False"
-      ]
-    },
-    {
       "id": "RobotFilePath",
       "description": "Enter the file path to the .robot file",
       "default": "",
       "type": "promptString"
     },
-
-
   ]
 }
