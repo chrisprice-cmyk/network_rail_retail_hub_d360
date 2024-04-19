@@ -385,6 +385,15 @@ jobs:
           max_attempts: 2
           command: |
             cci ${{ matrix.build_action_type }} run ${{ matrix.build_action }}  --org dev
+          on_retry_command: cci error info
+
+      - name: Running Validate 
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 1440
+          retry_on: error
+          max_attempts: 2
+          command: |
             cci flow run validate_qbrix  --org dev
           on_retry_command: cci error info
 
