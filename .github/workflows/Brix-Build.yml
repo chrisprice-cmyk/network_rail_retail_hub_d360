@@ -285,7 +285,7 @@ jobs:
 
         # Create a scratch org to attach - future use the org pool service
       - name: generate scratch org ${{ matrix.isscratch }}- if the evn variable to use a template is set to false - we fallback to org/dev.json - ${{ steps.qlab_config_settings.outputs.ORG_TARGET_USER }}
-        if: ((matrix.isscratch == 'true') && (steps.qlab_config_settings.outputs.ORG_TARGET_USER ==''))
+        if: matrix.isscratch == 'true' && steps.qlab_config_settings.outputs.ORG_TARGET_USER == ''
         uses: nick-fields/retry@v2
         with:
           timeout_minutes: 120
@@ -295,7 +295,7 @@ jobs:
             cci task run spin_request --maxwait 120 --mode SCRATCH --scratch_config orgs/dev.json --devhubuser DEVHUB_ACCT --cciorg dev --devhubconsumerkey ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }} --devhubjwtkeyfile devhub.key
 
       - name: generate production org ${{ matrix.isscratch }} - if the evn variable to use a template is set to true - we connect to the devhub that is enabled to provision an org - ${{ steps.qlab_config_settings.outputs.ORG_TARGET_USER }}
-        if: ((matrix.isscratch  == 'false' ) && (steps.qlab_config_settings.outputs.ORG_TARGET_USER ==''))
+        if: matrix.isscratch  == 'false'  && steps.qlab_config_settings.outputs.ORG_TARGET_USER == ''
         uses: nick-fields/retry@v2
         with:
           timeout_minutes: 120
@@ -469,6 +469,7 @@ jobs:
   setup_leafshake_steps:
     if: |
       always() && 
+      (github.event.pull_request.head.ref != '' || github.ref_name == 'main') &&
       needs.build_deployments.result == 'success' 
     needs: [build_deployments]
     runs-on: sfdc-qbranch-nextgen-ubuntu
@@ -526,7 +527,8 @@ jobs:
     needs: [setup_leafshake_steps]
     if: |
       always() && 
-      needs.setup_leafshake_steps.result == 'success' &&
+      (github.event.pull_request.head.ref != '' || github.ref_name == 'main') &&
+      (needs.setup_leafshake_steps.result == 'success' || needs.setup_leafshake_steps.result == 'skipped' )&&
       needs.setup_leafshake_steps.outputs.matrix!='{"include":[]}' && 
       needs.setup_leafshake_steps.outputs.matrix != ''
     runs-on: sfdc-qbranch-nextgen-ubuntu
