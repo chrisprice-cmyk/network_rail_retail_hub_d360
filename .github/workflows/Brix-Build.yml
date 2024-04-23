@@ -22,9 +22,11 @@ env:
   BUILD_SUFFIX: 
   REPO_NAME: 
   AUTOPUBLISH:
+  AUTODEPLOY_STATUS:
   CUMULUSCI_SERVICE_metadeploy: '{"url":"${{secrets.QBRIX_CUMULUSCI_SERVICE_METADEPLOY_URL}}","token": "${{secrets.QBRIX_CUMULUSCI_SERVICE_METADEPLOY_TOKEN}}"}'
   CUMULUSCI_SERVICE_github: ${{ secrets.QBRIX_CUMULUSCI_SERVICE_github }}
   REMOTE_CONTAINERS: True
+
   
 jobs:
 
@@ -169,6 +171,15 @@ jobs:
           echo "qlabs_accesstoken=$(jq '.result.accessToken' qlab_tmp.json -r)" >> "$GITHUB_OUTPUT"
 
        #Update the build Status to Running only on the main or master branch
+      - name: clear legacy build matrice results
+        if: github.ref_name == 'main' || github.ref_name == 'master'
+        run: |
+          curl --location --request DELETE 'https://qlabs-org.my.salesforce.com/services/apexrest/NGBrixBuildTrackingService' \
+          --header 'Content-Type: application/json' \
+          --header 'Authorization: Bearer ${{ steps.qlabs_accesstoken.outputs.qlabs_accesstoken }}' \
+          --data '{"brixname": "${{ env.REPO_NAME }}"}' 
+
+       #Update the build Status to Running only on the main or master branch
       - name: get the build matrices
         run: |
           curl --location 'https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixBuildMatrixService' \
@@ -179,6 +190,76 @@ jobs:
       - name: parse build matrices
         run: |
           jq '.builds' full_matrix.json > matrix_build.json
+
+      - name: Check file existence
+        id: collection_run_present
+        run: |
+          if [ -f matrix_build.json ]; then
+              echo "files_exists=true" >> "$GITHUB_OUTPUT"
+          else
+              echo "files_exists=false" >> "$GITHUB_OUTPUT"
+              echo '[{ "build": "", "build_action_type": "","build_action":"","isscratch":"false","description":"" }]' > matrix_build.json
+          fi
+
+      - name: load run matrix for the defined build matrix
+        id: set-build-matrix
+        run: |
+          echo "matrix={\"include\":$(jq -c '.' matrix_build.json -r)}" >> $GITHUB_OUTPUT
+
+  setup_hybrid_build_steps:
+    if: |
+      always() &&
+      (needs.qlabs_publish.result == 'success' || needs.qlabs_publish.result == 'skipped') 
+    needs: [qlabs_publish]
+    runs-on: sfdc-qbranch-nextgen-ubuntu
+    container:
+      image: "ghcr.io/${{ github.repository_owner }}/qbrix-base-container-quasar:latest"
+      credentials:
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.QBRIX_CONTAINER_PUBLISH_GITHUB_PAT}}
+    outputs:
+      matrix: ${{ steps.set-build-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set ENV variables
+        run: |
+          echo "::set-env name=REPO_NAME::${GITHUB_REPOSITORY#$GITHUB_REPOSITORY_OWNER/}"
+          
+      - name: Set ownership
+        id: set_ownership
+        run: |
+          # this is to fix GIT not liking owner of the checkout dir
+          chown -R $(id -u):$(id -g) $PWD
+
+      - name: Core Setup - key for jwt auth
+        run: |
+          echo '${{ secrets.QBRIX_DEVHUB_PRIVATE_KEY }}' > devhub.key
+
+      # We will use a common app with a common key -
+      - name: Create SFDX Session for QLABS Service Account
+        run: sf org login jwt -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
+
+      - name: Extract the accesstoken
+        run: sf org display -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} --json > qlab_tmp.json
+
+      - name: extract the accesstoken for qlabs
+        id: qlabs_accesstoken
+        run: |
+          jq '.result.accessToken' qlab_tmp.json -r
+          echo "qlabs_accesstoken=$(jq '.result.accessToken' qlab_tmp.json -r)" >> "$GITHUB_OUTPUT"
+
+       #Update the build Status to Running only on the main or master branch
+      - name: get the build matrices
+        run: |
+          curl --location 'https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixBuildMatrixService' \
+          --header 'Content-Type: application/json' \
+          --header 'Authorization: Bearer ${{ steps.qlabs_accesstoken.outputs.qlabs_accesstoken }}' \
+          --data '{"brixname": "${{ env.REPO_NAME }}"}' -o full_matrix.json
+
+      - name: parse build matrices
+        run: |
+          jq '.hybridbuilds' full_matrix.json > matrix_build.json
 
       - name: Check file existence
         id: collection_run_present
@@ -412,7 +493,7 @@ jobs:
         if: steps.check_validationresults_present.outputs.files_exists == 'true'
         id: read_validationresults_file
         run: |
-          echo "contents=$(cat validationresult.json)"
+          echo "read_validationresults_file=$(cat validationresult.json)" >> "$GITHUB_OUTPUT"
 
       - name: upload the validation results - if present
         if: ((github.ref_name == 'master' || github.ref_name == 'main') && steps.check_validationresults_present.outputs.files_exists == 'true')
@@ -420,7 +501,7 @@ jobs:
           curl --location 'https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixValidationService/${{ github.repository }}-${{ matrix.build }}-${{github.ref_name}}' \
           --header 'Content-Type: application/json' \
           --header 'Authorization: Bearer ${{ steps.qlabs_accesstoken.outputs.qlabs_accesstoken }}' \
-          --data '${{ steps.read_validationresults_file.outputs.contents }}'
+          --data '${{ steps.read_validationresults_file.outputs.read_validationresults_file }}'
 
       - name: clear existing validation results - not file present
         if: ((github.ref_name == 'master' || github.ref_name == 'main') && steps.check_validationresults_present.outputs.files_exists == 'false')
@@ -466,6 +547,280 @@ jobs:
               "details": "${{ steps.cci_failure_details_final.outputs.cci_failure_details_final }}"    
           }'   
 
+  hybrid_org_build_deployments:
+    if: |
+      always() && 
+      needs.setup_hybrid_build_steps.result == 'success' &&
+      needs.setup_hybrid_build_steps.outputs.matrix!='{"include":[]}' && 
+      needs.setup_hybrid_build_steps.outputs.matrix != ''
+    needs: [setup_hybrid_build_steps]
+    runs-on: sfdc-qbranch-nextgen-ubuntu
+    continue-on-error: true
+    container:
+      image: "ghcr.io/${{ github.repository_owner }}/qbrix-base-container-quasar:latest"
+      credentials:
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.QBRIX_CONTAINER_PUBLISH_GITHUB_PAT}}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.setup_hybrid_build_steps.outputs.matrix) }}
+      max-parallel: 250 #run in sequence
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update QX
+        run: qx update
+
+      - name: Set ENV variables
+        run: |
+          echo "::set-env name=REPO_NAME::${GITHUB_REPOSITORY#$GITHUB_REPOSITORY_OWNER/}"
+
+      - name: Set ownership
+        run: |
+          # this is to fix GIT not liking owner of the checkout dir
+          chown -R $(id -u):$(id -g) $PWD
+          # assume might have been updated
+        
+      - name: Download Repo for the matrix::${{matrix.reference_brix}} and setup runtime
+        id: qlabs_accesstoken
+        run: |
+          echo "::set-env name=BUILD_SUFFIX::${{ matrix.build }}"
+          pwd
+          ls -l
+          echo "${{ secrets.QBRIX_DEVHUB_PRIVATE_KEY }}" > devhub.key
+          sf org login jwt -o ${{ secrets.QBRIX_DEVHUB_USERACCOUNT }} -a DEVHUB_ACCT -d -f devhub.key -i '${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}'
+          sf org login jwt -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -d -f devhub.key -i '${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}'
+          sf org display -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} --json > qlab_tmp.json
+          jq '.result.accessToken' qlab_tmp.json -r
+          echo "qlabs_accesstoken=$(jq '.result.accessToken' qlab_tmp.json -r)" >> "$GITHUB_OUTPUT"
+
+      #Update the build Status to Running only on the main or master branch
+      - name: update build status to starting
+        if: (github.ref_name == 'master' || github.ref_name == 'main')
+        run: |
+          curl --location 'https://qlabs-org.my.salesforce.com/services/apexrest/NGBrixBuildTrackingService' \
+          --header 'Content-Type: application/json' \
+          --header 'Authorization: Bearer ${{ steps.qlabs_accesstoken.outputs.qlabs_accesstoken }}' \
+          --data '{
+              "github_repository_id": "${{ github.repository_id }}",
+              "brixname": "${{ github.repository }}",
+              "leafshakebrixbuildname": "${{ matrix.build }}",
+              "leafshakebrixname": "${{github.ref_name}}",
+              "buildstatus": "Running",
+              "details": ""
+            }'
+
+      #determine if there is a template or instance override defined in qlabs for this build config
+      - name: get qlabs config settings
+        id: qlab_config_settings
+        run: |
+          # call qlabs setting service for this qbrix -> get the json -> pipe to jq
+          curl --location --request GET 'https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixBuildServiceProperties?workflowconfigid=${{ env.REPO_NAME }}-${{ matrix.build }}&templateid=${{matrix.templateid}}' \
+          --header 'Content-Type: application/json' \
+          --header 'Authorization: Bearer ${{ steps.qlabs_accesstoken.outputs.qlabs_accesstoken }}' | jq > qlab_settings.json
+          echo "TEMPLATEID=$(jq '.templateid' qlab_settings.json -r)" >> "$GITHUB_OUTPUT"
+          echo "TEMPLATEID=$(jq '.templateid' qlab_settings.json -r)" >> "$GITHUB_ENV"
+          echo "TEMPLATE_INSTANCE=$(jq '.template_instance' qlab_settings.json -r)" >> "$GITHUB_OUTPUT"
+          echo "TEMPLATE_INSTANCE=$(jq '.template_instance' qlab_settings.json -r)" >> "$GITHUB_ENV"
+          echo "ORG_TARGET_USER=$(jq '.org_target_user' qlab_settings.json -r)" >> "$GITHUB_OUTPUT"
+          echo "ORG_TARGET_USER=$(jq '.org_target_user' qlab_settings.json -r)" >> "$GITHUB_ENV"
+          
+      - name: Set CCI DevHub Username
+        run: |
+          cci service connect devhub --username DEVHUB_ACCT
+
+      # CCI Service List - we should have all 3 connected now: persistant, github (via env var) and devhub
+      - name: All connected services
+        run: |
+          cci service list
+      
+      - name: Pre Check Command path
+        run: |
+          cci ${{ matrix.build_action_type }} info ${{ matrix.build_action }} 
+
+        # Create a scratch org to attach - future use the org pool service
+      - name: generate scratch org ${{ matrix.isscratch }}- if the evn variable to use a template is set to false - we fallback to org/dev.json - ${{ steps.qlab_config_settings.outputs.ORG_TARGET_USER }}
+        if: matrix.isscratch == 'true' && steps.qlab_config_settings.outputs.ORG_TARGET_USER == ''
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 120
+          max_attempts: 5
+          retry_on: error
+          command: |
+            cci task run spin_request --maxwait 120 --mode SCRATCH --scratch_config orgs/dev.json --devhubuser DEVHUB_ACCT --cciorg dev --devhubconsumerkey ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }} --devhubjwtkeyfile devhub.key
+
+      - name: generate production org ${{ matrix.isscratch }} - if the evn variable to use a template is set to true - we connect to the devhub that is enabled to provision an org - ${{ steps.qlab_config_settings.outputs.ORG_TARGET_USER }}
+        if: matrix.isscratch  == 'false'  && steps.qlab_config_settings.outputs.ORG_TARGET_USER == ''
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 120
+          max_attempts: 3
+          retry_on: error
+          command: |
+            cci task run spin_request --maxwait 120 --mode TEMPLATE --cciorg dev --devhubuser DEVHUB_ACCT --instance ${{steps.qlab_config_settings.outputs.TEMPLATE_INSTANCE}} --devhubconsumerkey ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }} --devhubjwtkeyfile devhub.key --templateid ${{ steps.qlab_config_settings.outputs.TEMPLATE_ID }}
+
+      - name: The central QLabs Settings has specified dedicated org/user to run against.
+        if: (${{ steps.qlab_config_settings.outputs.ORG_TARGET_USER }}!='')
+        run: |
+          sf org login jwt -o ${{ steps.qlab_config_settings.outputs.ORG_TARGET_USER }} -a dev_target_username -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
+          cci org import ${{steps.qlab_config_settings.outputs.ORG_TARGET_USER}} dev
+
+      - name: export cci session data
+        run: |
+          cci org info dev --json > targetdev.json
+          tail -n +1 targetdev.json
+          tail -n +1 targetdev.json > targetorg.json
+
+      - name: extract the target user
+        id: extrattargetorg
+        run: |
+          echo "extrattargetorg=$(jq '.username' targetorg.json -r)" >> "$GITHUB_OUTPUT"
+
+      - name: extract the target accesstoken
+        id: extrattargetaccesstoken
+        run: |
+          echo "extrattargetaccesstoken=$(jq '.access_token' targetorg.json -r)" >> "$GITHUB_OUTPUT"
+
+      - name: extract the target accesstoken
+        id: extrattargetinstanceurl
+        run: |
+          echo "extrattargetinstanceurl=$(jq '.instance_url' targetorg.json -r)" >> "$GITHUB_OUTPUT"
+
+      - name: set output target user
+        id: loadtargetorg
+        run: |
+          echo "target-org=${{ steps.extrattargetorg.outputs.extrattargetorg }}" >> $GITHUB_OUTPUT
+
+      - name: set output target access token
+        id: loadtargetaccesstoken
+        run: |
+          echo "target-accesstoken=${{ steps.extrattargetaccesstoken.outputs.extrattargetaccesstoken }}" >> $GITHUB_OUTPUT
+
+      - name: set output target instance url
+        id: loadtargetintanceurl
+        run: |
+          echo "target-instanceurl=${{ steps.extrattargetinstanceurl.outputs.extrattargetinstanceurl }}" >> $GITHUB_OUTPUT
+
+      - name: fail details
+        if: (failure() && ( github.ref_name == 'main' || github.ref_name == 'master'))
+        id: cci_failure_details
+        run: |
+          echo "cci_failure_details=$(cci error info | base64 -w 0)" >> "$GITHUB_OUTPUT"
+
+      - name: fail status
+        if: (failure() && ( github.ref_name == 'main' || github.ref_name == 'master'))
+        run: |
+          curl --location 'https://qlabs-org.my.salesforce.com/services/apexrest/NGBrixBuildTrackingService' \
+          --header 'Content-Type: application/json' \
+          --header 'Authorization: Bearer ${{ steps.qlabs_accesstoken.outputs.qlabs_accesstoken }}' \
+          --data '{
+              "github_repository_id": "${{ github.repository_id }}",
+              "brixname": "${{ github.repository }}",
+              "leafshakebrixbuildname": "${{ matrix.build }}",
+              "leafshakebrixname": "${{github.ref_name}}",
+              "buildstatus": "Failed",
+              "details": "${{ steps.cci_failure_details.outputs.cci_failure_details }}"
+          }'
+
+      - name: rfbrowser init setup
+        run: |
+          rfbrowser init
+
+      # CCI Service List - we should have all 3 connected now: persistant, github (via env var) and devhub
+      - name: All connected services
+        run: |
+          cci service list
+          cci org info dev
+
+      - name: Running ${{ matrix.description }} ${{ matrix.build_action }}::${{ matrix.build_action_type }}
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 1440
+          retry_on: error
+          max_attempts: 2
+          command: |
+            cci ${{ matrix.build_action_type }} run ${{ matrix.build_action }}  --org dev
+          on_retry_command: cci error info
+
+      - name: Running Validate 
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 1440
+          retry_on: error
+          max_attempts: 2
+          command: |
+            cci flow run validate_qbrix  --org dev
+          on_retry_command: cci error info
+
+      - name: Check file existence
+        id: check_validationresults_present
+        run: |
+          pwd
+          ls -la  
+          if test -f validationresult.json; then
+            echo "files_exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "files_exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Read Validation Results file - if present
+        if: steps.check_validationresults_present.outputs.files_exists == 'true'
+        id: read_validationresults_file
+        run: |
+          echo "read_validationresults_file=$(cat validationresult.json)" >> "$GITHUB_OUTPUT"
+
+      - name: upload the validation results - if present
+        if: ((github.ref_name == 'master' || github.ref_name == 'main') && steps.check_validationresults_present.outputs.files_exists == 'true')
+        run: |
+          curl --location 'https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixValidationService/${{ github.repository }}-${{ matrix.build }}-${{github.ref_name}}' \
+          --header 'Content-Type: application/json' \
+          --header 'Authorization: Bearer ${{ steps.qlabs_accesstoken.outputs.qlabs_accesstoken }}' \
+          --data '${{ steps.read_validationresults_file.outputs.read_validationresults_file }}'
+
+      - name: clear existing validation results - not file present
+        if: ((github.ref_name == 'master' || github.ref_name == 'main') && steps.check_validationresults_present.outputs.files_exists == 'false')
+        run: |
+          curl --location 'https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixValidationService/${{ github.repository }}-${{ matrix.build }}-${{github.ref_name}}' \
+          --header 'Content-Type: application/json' \
+          --header 'Authorization: Bearer ${{ steps.qlabs_accesstoken.outputs.qlabs_accesstoken }}' \
+          --data '{"results":[]}'
+
+      - name: success status
+        if: (success() && ( github.ref_name == 'main' || github.ref_name == 'master'))
+        run: |
+          curl --location 'https://qlabs-org.my.salesforce.com/services/apexrest/NGBrixBuildTrackingService' \
+          --header 'Content-Type: application/json' \
+          --header 'Authorization: Bearer ${{ steps.qlabs_accesstoken.outputs.qlabs_accesstoken }}' \
+          --data '{
+            "github_repository_id": "${{ github.repository_id }}",
+            "brixname": "${{ github.repository }}",
+            "leafshakebrixbuildname": "${{ matrix.build }}",
+            "leafshakebrixname": "${{github.ref_name}}",
+            "buildstatus": "Passed",
+            "details": ""
+                }'
+      
+      - name: fail details - final
+        if: (failure() && ( github.ref_name == 'main' || github.ref_name == 'master'))
+        id: cci_failure_details_final
+        run: |
+          echo "cci_failure_details_final=$(cci error info | base64 -w 0)" >> "$GITHUB_OUTPUT"
+
+      - name: fail status
+        if: (failure() && ( github.ref_name == 'main' || github.ref_name == 'master'))
+        run: |
+          curl --location 'https://qlabs-org.my.salesforce.com/services/apexrest/NGBrixBuildTrackingService' \
+          --header 'Content-Type: application/json' \
+          --header 'Authorization: Bearer ${{ steps.qlabs_accesstoken.outputs.qlabs_accesstoken }}' \
+          --data '{
+              "github_repository_id": "${{ github.repository_id }}",
+              "brixname": "${{ github.repository }}",
+              "leafshakebrixbuildname": "${{ matrix.build }}",
+              "leafshakebrixname": "${{github.ref_name}}",
+              "buildstatus": "Failed",
+              "details": "${{ steps.cci_failure_details_final.outputs.cci_failure_details_final }}"    
+          }'   
+          
   setup_leafshake_steps:
     if: |
       always() && 
@@ -864,81 +1219,83 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Update QX
-        if: matrix.targetusername!=''
+        if: matrix.targetusername!='' && matrix.ishybrid == 'false'
         run: qx update
 
       - name: Core Setup - key for jwt auth
-        if: matrix.targetusername!=''
+        if: matrix.targetusername!='' && matrix.ishybrid == 'false'
         run: echo "${{ secrets.QBRIX_DEVHUB_PRIVATE_KEY }}" > devhub.key
           
       # We will use a common app with a common key -
       - name: Create SFDX Session for QLABS Service Account
-        if: matrix.targetusername!=''
+        if: matrix.targetusername!='' && matrix.ishybrid == 'false'
         run: sf org login jwt -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
 
       - name: Extract the accesstoken
-        if: matrix.targetusername!=''
+        if: matrix.targetusername!='' && matrix.ishybrid == 'false'
         run: sf org display -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} --json > qlab_tmp.json
 
       - name: extract the accesstoken for qlabs
-        if: matrix.targetusername!=''
+        if: matrix.targetusername!='' && matrix.ishybrid == 'false'
         id: qlabs_accesstoken
         run: |
           echo "qlabs_accesstoken=$(jq '.result.accessToken' qlab_tmp.json -r)" >> "$GITHUB_OUTPUT"
 
       - name: The automated deploy matrix json contains the list of target org usernames (TSOs Ideally) to deploy against.
-        if: matrix.targetusername!=''
+        if: matrix.targetusername!='' && matrix.ishybrid == 'false'
         run: sf org login jwt -o ${{ matrix.targetusername }} -a dev_target_username -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
 
       - name: Set CCI DevHub Username
-        if: matrix.targetusername!=''
+        if: matrix.targetusername!='' && matrix.ishybrid == 'false'
         run: cci service connect devhub --username DEVHUB_ACCT
 
       - name: force an update
-        if: matrix.targetusername!=''
+        if: matrix.targetusername!='' && matrix.ishybrid == 'false'
         run: cci task run update_qbrix
 
       - name: rfbrowser init setup
-        if: matrix.targetusername!=''
+        if: matrix.targetusername!='' && matrix.ishybrid == 'false'
         run: rfbrowser init
 
       # CCI Service List - we should have all 3 connected now: persistant, github (via env var) and devhub
       - name: All connected services
-        if: matrix.targetusername!=''
+        if: matrix.targetusername!='' && matrix.ishybrid == 'false'
         run: cci service list
 
       - name: Import the target username into the cci runtime step
-        if: matrix.targetusername!=''
+        if: matrix.targetusername!='' && matrix.ishybrid == 'false'
         run: cci org import ${{ matrix.targetusername }} dev
 
       - name: Make sure session is valid
-        if: matrix.targetusername!=''
+        if: matrix.targetusername!='' && matrix.ishybrid == 'false'
         run: cci org info dev
 
       - name: Running ${{ matrix.description }} ${{ matrix.action }}::${{ matrix.target }}
-        if: matrix.targetusername!=''
+        if: matrix.targetusername!='' && matrix.ishybrid == 'false'
         uses: nick-fields/retry@v2
         with:
           timeout_minutes: 1440
           retry_on: error
           max_attempts: 2
           command: cci ${{ matrix.action }} run ${{ matrix.target }}  --org dev
-          on_retry_command: cci error info
+          on_retry_command: |
+            cci error info
 
       - name: fail details
-        if: ${{ matrix.targetusername!='' && failure() && ( github.ref_name == 'main' || github.ref_name == 'master') }}
+        if: matrix.targetusername!='' && failure() && ( github.ref_name == 'main' || github.ref_name == 'master') && matrix.ishybrid == 'false'
         id: cci_failure_details
         run: |
           echo "errorlog=$(cci error info | base64 -w 0)" >> $GITHUB_OUTPUT
 
       - name: fail status
-        if: ${{  matrix.targetusername!='' && failure() && ( github.ref_name == 'main' || github.ref_name == 'master') }}
+        if: matrix.targetusername!='' && failure() && ( github.ref_name == 'main' || github.ref_name == 'master') && matrix.ishybrid == 'false'
         run: |
           curl --location 'https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixAutoDeploySettings' \
           --header 'Content-Type: application/json' \
           --header 'Authorization: Bearer ${{ steps.qlabs_accesstoken.outputs.qlabs_accesstoken }}' \
           --data '{
             "qbrixid": "${{ github.event.repository.name }}",
+            "targetusername": "${{ matrix.targetusername }}",
             "status": "Failed",
             "notify": "${{ matrix.notify }}",
             "errorlog": "${{ steps.cci_failure_details.outputs.errorlog }}",
@@ -947,13 +1304,134 @@ jobs:
           }'
 
       - name: success status
-        if: ${{ matrix.targetusername!='' && success() && ( github.ref_name == 'main' || github.ref_name == 'master') }}
+        if: matrix.targetusername!='' && success() && ( github.ref_name == 'main' || github.ref_name == 'master') && matrix.ishybrid == 'false'
         run: |
           curl --location 'https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixAutoDeploySettings' \
           --header 'Content-Type: application/json' \
           --header 'Authorization: Bearer ${{ steps.qlabs_accesstoken.outputs.qlabs_accesstoken }}' \
           --data '{
             "qbrixid": "${{ github.event.repository.name }}",
+            "targetusername": "${{ matrix.targetusername }}",
+            "status": "Success",
+            "notify": "${{ matrix.notify }}",
+            "runurl": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+            "commit": ${{ toJSON(github.event.head_commit.message) }}
+          }'
+
+  hybrid_autodeploy_steps:
+    if: |
+      always() &&
+      (github.ref_name == 'main' || github.ref_name == 'master') &&
+      (needs.setup_autodeployment_steps.result == 'success' || needs.setup_autodeployment_steps.result != 'skipped') 
+    needs: [setup_autodeployment_steps]
+    runs-on: sfdc-qbranch-nextgen-ubuntu
+    continue-on-error: true
+    container:
+      image: "ghcr.io/${{ github.repository_owner }}/qbrix-base-container-quasar:latest"
+      credentials:
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.QBRIX_CONTAINER_PUBLISH_GITHUB_PAT}}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.setup_autodeployment_steps.outputs.matrix) }}
+      max-parallel: 250 #run in parrallel
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update QX
+        if: matrix.targetusername!='' && matrix.ishybrid == 'true'
+        run: qx update
+
+      - name: Core Setup - key for jwt auth
+        if: matrix.targetusername!='' && matrix.ishybrid == 'true'
+        run: echo "${{ secrets.QBRIX_DEVHUB_PRIVATE_KEY }}" > devhub.key
+          
+      # We will use a common app with a common key -
+      - name: Create SFDX Session for QLABS Service Account
+        if: matrix.targetusername!='' && matrix.ishybrid == 'true'
+        run: sf org login jwt -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
+
+      - name: Extract the accesstoken
+        if: matrix.targetusername!='' && matrix.ishybrid == 'true'
+        run: sf org display -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} --json > qlab_tmp.json
+
+      - name: extract the accesstoken for qlabs
+        if: matrix.targetusername!='' && matrix.ishybrid == 'true'
+        id: qlabs_accesstoken
+        run: |
+          echo "qlabs_accesstoken=$(jq '.result.accessToken' qlab_tmp.json -r)" >> "$GITHUB_OUTPUT"
+
+      - name: The automated deploy matrix json contains the list of target org usernames (TSOs Ideally) to deploy against.
+        if: matrix.targetusername!='' && matrix.ishybrid == 'true'
+        run: sf org login jwt -o ${{ matrix.targetusername }} -a dev_target_username -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
+
+      - name: Set CCI DevHub Username
+        if: matrix.targetusername!='' && matrix.ishybrid == 'true'
+        run: cci service connect devhub --username DEVHUB_ACCT
+
+      - name: force an update
+        if: matrix.targetusername!='' && matrix.ishybrid == 'true'
+        run: cci task run update_qbrix
+
+      - name: rfbrowser init setup
+        if: matrix.targetusername!='' && matrix.ishybrid == 'true'
+        run: rfbrowser init
+
+      # CCI Service List - we should have all 3 connected now: persistant, github (via env var) and devhub
+      - name: All connected services
+        if: matrix.targetusername!='' && matrix.ishybrid == 'true'
+        run: cci service list
+
+      - name: Import the target username into the cci runtime step
+        if: matrix.targetusername!='' && matrix.ishybrid == 'true'
+        run: cci org import ${{ matrix.targetusername }} dev
+
+      - name: Make sure session is valid
+        if: matrix.targetusername!='' && matrix.ishybrid == 'true'
+        run: cci org info dev
+
+      - name: Running ${{ matrix.description }} ${{ matrix.action }}::${{ matrix.target }}
+        if: matrix.targetusername!='' && matrix.ishybrid == 'true'
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 1440
+          retry_on: error
+          max_attempts: 2
+          command: cci ${{ matrix.action }} run ${{ matrix.target }}  --org dev
+          on_retry_command: |
+            cci error info
+
+      - name: fail details
+        if: matrix.targetusername!='' && failure() && ( github.ref_name == 'main' || github.ref_name == 'master') && matrix.ishybrid == 'true'
+        id: cci_failure_details
+        run: |
+          echo "errorlog=$(cci error info | base64 -w 0)" >> $GITHUB_OUTPUT
+
+      - name: fail status
+        if: matrix.targetusername!='' && failure()  && ( github.ref_name == 'main' || github.ref_name == 'master') && matrix.ishybrid == 'true'
+        run: |
+          curl --location 'https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixAutoDeploySettings' \
+          --header 'Content-Type: application/json' \
+          --header 'Authorization: Bearer ${{ steps.qlabs_accesstoken.outputs.qlabs_accesstoken }}' \
+          --data '{
+            "qbrixid": "${{ github.event.repository.name }}",
+            "targetusername": "${{ matrix.targetusername }}",
+            "status": "Failed",
+            "notify": "${{ matrix.notify }}",
+            "errorlog": "${{ steps.cci_failure_details.outputs.errorlog }}",
+            "runurl": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+            "commit": ${{ toJSON(github.event.head_commit.message) }}
+          }'
+
+      - name: success status
+        if: matrix.targetusername!='' && success() && ( github.ref_name == 'main' || github.ref_name == 'master') && matrix.ishybrid == 'true'
+        run: |
+          curl --location 'https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixAutoDeploySettings' \
+          --header 'Content-Type: application/json' \
+          --header 'Authorization: Bearer ${{ steps.qlabs_accesstoken.outputs.qlabs_accesstoken }}' \
+          --data '{
+            "qbrixid": "${{ github.event.repository.name }}",
+            "targetusername": "${{ matrix.targetusername }}",
             "status": "Success",
             "notify": "${{ matrix.notify }}",
             "runurl": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
