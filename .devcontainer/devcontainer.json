@@ -18,14 +18,16 @@
     "QSR_JWT_SIGNING_SECRET": "${localEnv:QSR_JWT_SIGNING_SECRET}",
     "NEXTGEN_GATE_KEEPER_AUTH_URL": "${localEnv:NEXTGEN_GATE_KEEPER_AUTH_URL}",
     "NEXTGEN_GATE_KEEPER_CONSUMER_KEY": "${localEnv:NEXTGEN_GATE_KEEPER_CONSUMER_KEY}",
-    "NEXTGEN_GATE_KEEPER_CONSUMER_SECRET": "${localEnv:NEXTGEN_GATE_KEEPER_CONSUMER_SECRET}"
+    "NEXTGEN_GATE_KEEPER_CONSUMER_SECRET": "${localEnv:NEXTGEN_GATE_KEEPER_CONSUMER_SECRET}",
+    "JAVA_HOME": "/usr/bin",
+    "REMOTE_CONTAINERS": "True"
   },
   "customizations": {
     // Configure properties specific to VS Code.
     "vscode": {
       // Set *default* container specific settings.json values on container create.
       "settings": {
-        "salesforcedx-vscode-apex.java.home": "/usr/lib/jvm/java-11-openjdk-amd64"
+        "salesforcedx-vscode-apex.java.home": "/usr/bin"
       },
 
       // Add the IDs of extensions you want installed when the container is created.
@@ -53,5 +55,6 @@
       "vncPort": "5901"
     }
   },
+  "initializeCommand":"docker pull ghcr.io/sfdc-qbranch-emu/qbrix-base-container-quasar:latest",
   "postStartCommand": "qx setup init-codespace"
 }
