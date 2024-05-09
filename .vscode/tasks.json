@@ -431,6 +431,20 @@
       }
     },
     {
+      "label": "UTILS: 🚑 Run Metadata Doctor (Connected Mode)",
+      "type": "shell",
+      "command": "qx utils doctor --org ${input:OrgAlias}",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "new"
+      }
+    },
+    {
       "label": "UPDATE: 🆕 Update Project Template",
       "type": "shell",
       "command": "cci task run update_qbrix",
@@ -630,7 +644,7 @@
       }
     },
     {
-      "label": "UTILS: 🔍 Find Metadata in your depencencies",
+      "label": "UTILS: 🔍 Find Metadata in your dependencies",
       "type": "shell",
       "command": "cci task run qbrix_metadata_checker --metadata_type ${input:MetadataType} --api_names ${input:ApiNames} --dependency_flow ${input:DependencyFlow}",
       "group": "build",
@@ -644,7 +658,7 @@
       }
     },
     {
-      "label": "UTILS: 🔍 Scan for duplicated Metadata in your depencencies",
+      "label": "UTILS: 🔍 Scan for duplicated Metadata in your dependencies",
       "type": "shell",
       "command": "cci task run qbrix_metadata_checker --dependency_flow ${input:DependencyFlow} --scan_mode True",
       "group": "build",
