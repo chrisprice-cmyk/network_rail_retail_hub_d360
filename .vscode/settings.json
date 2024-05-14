@@ -1,5 +1,10 @@
 {
-  "cSpell.words": ["cumulusci", "robotframework", "qbrix", "brix"],
+  "cSpell.words": [
+    "cumulusci",
+    "robotframework",
+    "qbrix",
+    "brix"
+  ],
   "robot.pythonpath": [
     "${workspaceFolder}",
     "${workspaceFolder}/qbrix_local",
@@ -8,7 +13,10 @@
   "[python]": {
     "editor.defaultFormatter": "ms-python.black-formatter"
   },
-  "python.defaultInterpreterPath": "~/.local/pipx/venvs/cumulusci/bin/python",
   "python.terminal.activateEnvironment": true,
-  "secrets.enabledFolders": ["default", "qbrix_secrets"]
+  "secrets.enabledFolders": [
+    "default",
+    "qbrix_secrets"
+  ],
+  "salesforcedx-vscode-apex.java.home": "/usr/lib/jvm/java-17-openjdk-amd64"
 }
