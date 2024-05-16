@@ -52,7 +52,7 @@
     {
       "label": "ORG: 💧 Connect to Pool Org",
       "type": "shell",
-      "command": "qx org pool --org ${input:OrgAlias}",
+      "command": "qx org pool --org '${input:OrgAlias}'",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -66,7 +66,7 @@
     {
       "label": "ORG: 🔗 Connect to Salesforce Production Org",
       "type": "shell",
-      "command": "qx org connect --org ${input:OrgAlias}",
+      "command": "qx org connect --org '${input:OrgAlias}'",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -80,7 +80,7 @@
     {
       "label": "ORG: 💫 Switch Default Org",
       "type": "shell",
-      "command": "qx org switch --org ${input:OrgAlias}",
+      "command": "qx org switch --org '${input:OrgAlias}'",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -94,7 +94,7 @@
     {
       "label": "ORG: 🗑 Logout/Disconnect from Salesforce Production Org",
       "type": "shell",
-      "command": "qx org logout --alias ${input:OrgAlias}",
+      "command": "qx org logout --alias '${input:OrgAlias}'",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -108,7 +108,7 @@
     {
       "label": "ORG: 🔗 Connect to Salesforce Sandbox or Scratch Org",
       "type": "shell",
-      "command": "qx org connect --org ${input:OrgAlias} --sandbox",
+      "command": "qx org connect --org '${input:OrgAlias}' --sandbox",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -122,7 +122,7 @@
     {
       "label": "ORG: 🛠️ Create a scratch org",
       "type": "shell",
-      "command": "qx org create --org ${input:OrgAlias}",
+      "command": "qx org create --org '${input:OrgAlias}'",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -153,7 +153,7 @@
     {
       "label": "ORG: 🌐 Open Salesforce Org in browser",
       "type": "shell",
-      "command": "qx org open --org ${input:OrgAlias}",
+      "command": "qx org open --org '${input:OrgAlias}'",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -181,7 +181,7 @@
     {
       "label": "RETRIEVE: 💾 Retrieve Changes from Salesforce Org",
       "type": "shell",
-      "command": "qx retrieve --org ${input:OrgAlias}",
+      "command": "qx retrieve --org '${input:OrgAlias}'",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -237,7 +237,7 @@
     {
       "label": "ORG: 🗑 Delete a Scratch Org",
       "type": "shell",
-      "command": "qx org delete ${input:OrgAlias}",
+      "command": "qx org delete '${input:OrgAlias}'",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -251,7 +251,7 @@
     {
       "label": "DEPLOY: 📤 Deploy Demo Brix to Salesforce Org",
       "type": "shell",
-      "command": "qx deploy --org ${input:OrgAlias} --flow_name ${input:FlowName} --generate_permission_set",
+      "command": "qx deploy --org '${input:OrgAlias}' --flow_name '${input:FlowName}'",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -279,7 +279,7 @@
     {
       "label": "RETRIEVE: 📦 Retrieve unmanaged package from Salesforce Org",
       "type": "shell",
-      "command": "qx migrate package --org ${input:OrgAlias} --package ${input:PackageName}",
+      "command": "qx migrate package --org '${input:OrgAlias}' --package '${input:PackageName}'",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -405,7 +405,7 @@
     {
       "label": "INFO: ℹ️ List installed Demo Brix",
       "type": "shell",
-      "command": "cci task run list_qbrix --org ${input:OrgAlias}",
+      "command": "cci task run list_qbrix --org '${input:OrgAlias}'",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -433,7 +433,7 @@
     {
       "label": "UTILS: 🚑 Run Metadata Doctor (Connected Mode)",
       "type": "shell",
-      "command": "qx utils doctor --org ${input:OrgAlias}",
+      "command": "qx utils doctor --org '${input:OrgAlias}'",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -475,7 +475,7 @@
     {
       "label": "BUILD: ⏱️ Snapshot Changes from now",
       "type": "shell",
-      "command": "cci task run snapshot_changes --org ${input:OrgAlias}",
+      "command": "cci task run snapshot_changes --org '${input:OrgAlias}'",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -489,7 +489,7 @@
     {
       "label": "INFO: ℹ️ Display information about Task",
       "type": "shell",
-      "command": "cci task info ${input:TaskName}",
+      "command": "cci task info '${input:TaskName}'",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -503,7 +503,7 @@
     {
       "label": "INFO: ℹ️ Display Information about Flow",
       "type": "shell",
-      "command": "cci flow info ${input:FlowName}",
+      "command": "cci flow info '${input:FlowName}'",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -517,7 +517,7 @@
     {
       "label": "INFO: ℹ️ Show Salesforce Org Information",
       "type": "shell",
-      "command": "cci org info ${input:OrgAlias}",
+      "command": "cci org info '${input:OrgAlias}'",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -531,7 +531,7 @@
     {
       "label": "RETRIEVE: ℹ️ Preview Changes Made in Salesforce Org",
       "type": "shell",
-      "command": "qx retrieve --preview --org ${input:OrgAlias} ",
+      "command": "qx retrieve --preview --org '${input:OrgAlias}' ",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -545,7 +545,7 @@
     {
       "label": "DATA: 📤 Deploy Data to Salesforce Org",
       "type": "shell",
-      "command": "cci flow run generate_qbrix_data --org ${input:OrgAlias}",
+      "command": "cci flow run generate_qbrix_data --org '${input:OrgAlias}'",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -559,7 +559,7 @@
     {
       "label": "DEPLOY: 📤 Deploy specific directory to specified org",
       "type": "shell",
-      "command": "cci task run deploy --path ${input:FolderString} --org ${input:OrgAlias}",
+      "command": "cci task run deploy --path ${input:FolderString} --org '${input:OrgAlias}'",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -573,7 +573,7 @@
     {
       "label": "RETRIEVE: 📈 Download Data for CRM Analytics Datasets",
       "type": "shell",
-      "command": "cci task run analytics_manager --mode d --org ${input:OrgAlias} --generate_metadata_desc True",
+      "command": "cci task run analytics_manager --mode d --org '${input:OrgAlias}' --generate_metadata_desc True",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -587,7 +587,7 @@
     {
       "label": "RETRIEVE: 📤 Retrieve specific Metadata from Specified Org",
       "type": "shell",
-      "command": "qx retrieve --metadata \"${input:MetadataString}\" --org ${input:OrgAlias}",
+      "command": "qx retrieve --metadata \"${input:MetadataString}\" --org '${input:OrgAlias}'",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -601,9 +601,9 @@
     {
       "label": "RETRIEVE: 📤 Retrieve ALL Project metadata from org",
       "type": "shell",
-      "command": "cp -r ./force-app ./backup && cci task run dx --command 'force:source:retrieve -p force-app' --org ${input:OrgAlias} && echo 'Check Custom Objects and Profiles if any as additional metadata may have been captured. Then remove backup folder.'",
+      "command": "cp -r ./force-app ./backup && cci task run dx --command 'force:source:retrieve -p force-app' --org '${input:OrgAlias}' && echo 'Check Custom Objects and Profiles if any as additional metadata may have been captured. Then remove backup folder.'",
       "windows": {
-        "command": "xcopy .\\force-app .\\backup /e && cci task run dx --command 'force:source:retrieve -p force-app' --org ${input:OrgAlias} && echo 'Check Custom Objects and Profiles if any as additional metadata may have been captured. Then remove backup folder.'"
+        "command": "xcopy .\\force-app .\\backup /e && cci task run dx --command 'force:source:retrieve -p force-app' --org '${input:OrgAlias}' && echo 'Check Custom Objects and Profiles if any as additional metadata may have been captured. Then remove backup folder.'"
       },
       "group": "build",
       "problemMatcher": [],
@@ -618,7 +618,7 @@
     {
       "label": "INFO: ℹ️ List Installed Packages in Org",
       "type": "shell",
-      "command": "cci task run dx --org ${input:OrgAlias} --command force:package:installed:list",
+      "command": "cci task run dx --org '${input:OrgAlias}' --command force:package:installed:list",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -674,7 +674,7 @@
     {
       "label": "ROBOT: 🤖 Launch Q Robot Sandbox",
       "type": "shell",
-      "command": "cci task run qbrix_robot_test --org ${input:OrgAlias} --start_url ${input:RobotStartURL}",
+      "command": "cci task run qbrix_robot_test --org '${input:OrgAlias}' --start_url ${input:RobotStartURL}",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -688,7 +688,7 @@
     {
       "label": "ROBOT: 🤖 Run robot file against org",
       "type": "shell",
-      "command": "cci task run robot --org ${input:OrgAlias} --suites ${input:RobotFilePath}",
+      "command": "cci task run robot --org '${input:OrgAlias}' --suites '${input:RobotFilePath}'",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -710,7 +710,7 @@
     {
       "id": "OrgAlias",
       "description": "Please provide the Salesforce org alias",
-      "default": "",
+      "default": "dev",
       "type": "promptString"
     },
     {

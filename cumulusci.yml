@@ -181,6 +181,10 @@ tasks:
     description: Aborts the install due to the when condition being met.
     class_path: qx.platform.cumulusci.tasks.qx_cci_orgconfig_hydrate.NGAbort
 
+  qx_wait:
+    description: Waits on a specific item
+    class_path: qx.platform.cumulusci.tasks.qx_cci_wait.WaitFor
+
   qbrix_shell_deploy_metadeploy:
     description: Runs the specified task or flow of the qbrix in a subprocess.
     class_path: qx.platform.cumulusci.tasks.qx_cci_legacy_deploy.Deploy
