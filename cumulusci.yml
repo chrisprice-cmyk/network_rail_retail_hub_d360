@@ -8,9 +8,9 @@ project:
   name: xDO-Template
   package:
     name: xDO-Template
-    api_version: "60.0"
+    api_version: '60.0'
   git:
-    default_branch: "main"
+    default_branch: main
     repo_url: https://github.com/sfdc-qbranch-emu/xDO-Template
   source_format: sfdx
 
@@ -22,12 +22,13 @@ project:
     # ADD YOUR DETAILS HERE FOR DEMO BRIX REGISTRATION
     # It is recommended you run "Setup New Demo Brix Project" from the VSCode Build Tasks to set these as it will also update other files
     # Guidance: https://confluence.internal.salesforce.com/display/QNEXTGENDEMOS/Setup+Qbrix+Task
-    qbrix_owner_name: "OWNER NAME HERE"
-    qbrix_owner_team: "OWNER TEAM HERE"
-    qbrix_publisher_name: "OWNER OR PUBLISHER NAME HERE"
-    qbrix_publisher_team: "OWNER OR PUBLISHER TEAM HERE"
-    qbrix_documentation_url: https://confluence.internal.salesforce.com/pages/viewpage.action?pageId=487362018
-    qbrix_description: "SHORT DESCRIPTION OF BRIX HERE"
+    qbrix_owner_name: OWNER NAME HERE
+    qbrix_owner_team: OWNER TEAM HERE
+    qbrix_publisher_name: OWNER OR PUBLISHER NAME HERE
+    qbrix_publisher_team: OWNER OR PUBLISHER TEAM HERE
+    qbrix_documentation_url: 
+      https://confluence.internal.salesforce.com/pages/viewpage.action?pageId=487362018
+    qbrix_description: SHORT DESCRIPTION OF BRIX HERE
 
     # Github Additional Information
     qbrix_repo_id: 0
@@ -35,15 +36,15 @@ project:
     # GLOBAL EXCLUSION LIST
     # Used by retrieve_changes and list_changes builtin CCI tasks
     exclude: &exclude-list
-      - FeatureParameter
-      - "AuraDefinition:"
-      - "SiteDotCom:"
-      - "ManagedTopics:"
-      - "LiveChatTranscript:"
-      - "ExperienceResource:"
-      - "AppMenu:"
-      - "Profile:"
-      - "FlowDefinition:"
+    - FeatureParameter
+    - 'AuraDefinition:'
+    - 'SiteDotCom:'
+    - 'ManagedTopics:'
+    - 'LiveChatTranscript:'
+    - 'ExperienceResource:'
+    - 'AppMenu:'
+    - 'Profile:'
+    - 'FlowDefinition:'
 
   #------------------------------------#
   # SALESFORCE PACKAGE DEPENDENCIES    #
@@ -76,9 +77,9 @@ tasks:
 
   load_dataset:
     options:
-      ignore_row_errors: True
-      drop_missing_schema: True
-      set_recently_viewed: True
+      ignore_row_errors: true
+      drop_missing_schema: true
+      set_recently_viewed: true
 
   deploy:
     options:
@@ -96,6 +97,9 @@ tasks:
   # Demo Brix Tasks                    #
   #------------------------------------#
   # CUSTOM TASKS ADDED FOR BRIX DEVELOPMENT
+
+  qbrix_installed:
+    class_path: qx.platform.salesforce_platform.qx_salesforce_utils.QBrixInstalled
 
   qbrix_robot_test:
     class_path: qx.qrobot.qx_robot_launch_sandbox.QRobotTestCapture
@@ -128,10 +132,11 @@ tasks:
     class_path: qx.platform.salesforce_platform.qx_salesforce_utils.QUpdateDependencies
 
   mass_qbrix_update:
-    class_path: qx.shared.utils.qx_cci_mass_ops.MassFileOps
+    class_path: qx.platform.cumulusci.tasks.qx_cci_mass_ops.MassFileOps
 
   deploy_settings:
-    description: Checks that Settings have been defined in force-app and deploys them if present
+    description: Checks that Settings have been defined in force-app and deploys them
+      if present
     class_path: cumulusci.tasks.salesforce.Deploy
     options:
       path: force-app/main/default/settings
@@ -202,7 +207,8 @@ tasks:
     class_path: qx.platform.cumulusci.tasks.qx_cci_metadata_checker.MetadataChecker
 
   orgconfig_hydrate:
-    description: injects additional context into the orgconfig that can be referenced downstream
+    description: injects additional context into the orgconfig that can be referenced
+      downstream
     class_path: qx.platform.cumulusci.tasks.qx_cci_orgconfig_hydrate.NGOrgConfig
 
   deploy_dx:
@@ -211,11 +217,13 @@ tasks:
       command: project deploy start --source-dir force-app/main/default --ignore-conflicts
 
   dustpan:
-    description: injects additional context into the orgconfig that can be referenced downstream
+    description: injects additional context into the orgconfig that can be referenced
+      downstream
     class_path: qx.platform.cumulusci.tasks.qx_cci_orgconfig_hydrate.NGBroom
 
   flow_wrapper:
-    description: Runs the specified task or flow of the qbrix in a subprocess in a single task. This allows us to use When against a flow.
+    description: Runs the specified task or flow of the qbrix in a subprocess in a
+      single task. This allows us to use When against a flow.
     class_path: qx.platform.cumulusci.tasks.qx_cci_legacy_deploy.Deploy
 
   qbrix_sfdx:
@@ -340,7 +348,7 @@ flows:
       5:
         task: qbrix_installer_tracking
         options:
-          explicitexit: True
+          explicitexit: true
 
   # Deploys the Demo Brix into a TSO or Production Org
   deploy_qbrix_tso:
@@ -364,7 +372,7 @@ flows:
       5:
         task: qbrix_installer_tracking
         options:
-          explicitexit: True
+          explicitexit: true
 
   # Deploys just the contents of this Demo Brix with any essential dependencies
   deploy_qbrix_min:
@@ -476,7 +484,7 @@ plans:
     slug: deployqbrix
     title: Deploy Demo Brix
     tier: primary
-    is_listed: True
+    is_listed: true
     steps:
       1:
         task: qbrix_shell_deploy_metadeploy
