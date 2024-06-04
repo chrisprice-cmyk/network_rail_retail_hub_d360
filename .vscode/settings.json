@@ -17,6 +17,5 @@
   "secrets.enabledFolders": [
     "default",
     "qbrix_secrets"
-  ],
-  "salesforcedx-vscode-apex.java.home": "/usr/lib/jvm/java-17-openjdk-amd64"
+  ]
 }
