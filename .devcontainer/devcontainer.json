@@ -56,5 +56,5 @@
     }
   },
   "initializeCommand":"docker container prune -f && docker image prune -f && docker volume prune -f && docker system prune -f && docker pull ghcr.io/sfdc-qbranch-emu/qbrix-base-container-quasar:latest",
-  "postStartCommand": "qx setup init-codespace"
+  "postStartCommand": "qx setup init-codespace && xrandr -s 1920x1080"
 }
