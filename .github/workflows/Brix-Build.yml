@@ -373,7 +373,7 @@ jobs:
           max_attempts: 5
           retry_on: error
           command: |
-            cci task run spin_request --maxwait 120 --mode SCRATCH --scratch_config orgs/dev.json --devhubuser DEVHUB_ACCT --cciorg dev --devhubconsumerkey ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }} --devhubjwtkeyfile devhub.key
+            cci task run spin_request --maxwait 120 --mode SCRATCH --scratch_config orgs/dev.json --devhubuser DEVHUB_ACCT --cciorg ninja --devhubconsumerkey ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }} --devhubjwtkeyfile devhub.key
 
       - name: generate production org ${{ matrix.isscratch }} - if the evn variable to use a template is set to true - we connect to the devhub that is enabled to provision an org - ${{ steps.qlab_config_settings.outputs.ORG_TARGET_USER }}
         if: matrix.isscratch  == 'false'  && steps.qlab_config_settings.outputs.ORG_TARGET_USER == ''
@@ -383,17 +383,17 @@ jobs:
           max_attempts: 3
           retry_on: error
           command: |
-            cci task run spin_request --maxwait 120 --mode TEMPLATE --cciorg dev --devhubuser DEVHUB_ACCT --instance ${{steps.qlab_config_settings.outputs.TEMPLATE_INSTANCE}} --devhubconsumerkey ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }} --devhubjwtkeyfile devhub.key --templateid ${{ steps.qlab_config_settings.outputs.TEMPLATE_ID }}
+            cci task run spin_request --maxwait 120 --mode TEMPLATE --cciorg ninja --devhubuser DEVHUB_ACCT --instance ${{steps.qlab_config_settings.outputs.TEMPLATE_INSTANCE}} --devhubconsumerkey ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }} --devhubjwtkeyfile devhub.key --templateid ${{ steps.qlab_config_settings.outputs.TEMPLATE_ID }}
 
       - name: The central QLabs Settings has specified dedicated org/user to run against.
         if: (${{ steps.qlab_config_settings.outputs.ORG_TARGET_USER }}!='')
         run: |
           sf org login jwt -o ${{ steps.qlab_config_settings.outputs.ORG_TARGET_USER }} -a dev_target_username -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
-          cci org import ${{steps.qlab_config_settings.outputs.ORG_TARGET_USER}} dev
+          cci org import ${{steps.qlab_config_settings.outputs.ORG_TARGET_USER}} ninja
 
       - name: export cci session data
         run: |
-          cci org info dev --json > targetdev.json
+          cci org info ninja --json > targetdev.json
           tail -n +1 targetdev.json
           tail -n +1 targetdev.json > targetorg.json
 
@@ -456,7 +456,7 @@ jobs:
       - name: All connected services
         run: |
           cci service list
-          cci org info dev
+          cci org info ninja
 
       - name: Running ${{ matrix.description }} ${{ matrix.build_action }}::${{ matrix.build_action_type }}
         uses: nick-fields/retry@v2
@@ -465,7 +465,7 @@ jobs:
           retry_on: error
           max_attempts: 2
           command: |
-            cci ${{ matrix.build_action_type }} run ${{ matrix.build_action }}  --org dev
+            cci ${{ matrix.build_action_type }} run ${{ matrix.build_action }}  --org ninja
           on_retry_command: cci error info
 
       - name: Running Validate 
@@ -475,7 +475,7 @@ jobs:
           retry_on: error
           max_attempts: 2
           command: |
-            cci flow run validate_qbrix  --org dev
+            cci flow run validate_qbrix  --org ninja
           on_retry_command: cci error info
 
       - name: Check file existence
@@ -647,7 +647,7 @@ jobs:
           max_attempts: 5
           retry_on: error
           command: |
-            cci task run spin_request --maxwait 120 --mode SCRATCH --scratch_config orgs/dev.json --devhubuser DEVHUB_ACCT --cciorg dev --devhubconsumerkey ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }} --devhubjwtkeyfile devhub.key
+            cci task run spin_request --maxwait 120 --mode SCRATCH --scratch_config orgs/dev.json --devhubuser DEVHUB_ACCT --cciorg ninja --devhubconsumerkey ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }} --devhubjwtkeyfile devhub.key
 
       - name: generate production org ${{ matrix.isscratch }} - if the evn variable to use a template is set to true - we connect to the devhub that is enabled to provision an org - ${{ steps.qlab_config_settings.outputs.ORG_TARGET_USER }}
         if: matrix.isscratch  == 'false'  && steps.qlab_config_settings.outputs.ORG_TARGET_USER == ''
@@ -657,17 +657,17 @@ jobs:
           max_attempts: 3
           retry_on: error
           command: |
-            cci task run spin_request --maxwait 120 --mode TEMPLATE --cciorg dev --devhubuser DEVHUB_ACCT --instance ${{steps.qlab_config_settings.outputs.TEMPLATE_INSTANCE}} --devhubconsumerkey ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }} --devhubjwtkeyfile devhub.key --templateid ${{ steps.qlab_config_settings.outputs.TEMPLATE_ID }}
+            cci task run spin_request --maxwait 120 --mode TEMPLATE --cciorg ninja --devhubuser DEVHUB_ACCT --instance ${{steps.qlab_config_settings.outputs.TEMPLATE_INSTANCE}} --devhubconsumerkey ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }} --devhubjwtkeyfile devhub.key --templateid ${{ steps.qlab_config_settings.outputs.TEMPLATE_ID }}
 
       - name: The central QLabs Settings has specified dedicated org/user to run against.
         if: (${{ steps.qlab_config_settings.outputs.ORG_TARGET_USER }}!='')
         run: |
           sf org login jwt -o ${{ steps.qlab_config_settings.outputs.ORG_TARGET_USER }} -a dev_target_username -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
-          cci org import ${{steps.qlab_config_settings.outputs.ORG_TARGET_USER}} dev
+          cci org import ${{steps.qlab_config_settings.outputs.ORG_TARGET_USER}} ninja
 
       - name: export cci session data
         run: |
-          cci org info dev --json > targetdev.json
+          cci org info ninja --json > targetdev.json
           tail -n +1 targetdev.json
           tail -n +1 targetdev.json > targetorg.json
 
@@ -730,7 +730,7 @@ jobs:
       - name: All connected services
         run: |
           cci service list
-          cci org info dev
+          cci org info ninja
 
       - name: Running ${{ matrix.description }} ${{ matrix.build_action }}::${{ matrix.build_action_type }}
         uses: nick-fields/retry@v2
@@ -739,7 +739,7 @@ jobs:
           retry_on: error
           max_attempts: 2
           command: |
-            cci ${{ matrix.build_action_type }} run ${{ matrix.build_action }}  --org dev
+            cci ${{ matrix.build_action_type }} run ${{ matrix.build_action }}  --org ninja
           on_retry_command: cci error info
 
       - name: Running Validate 
@@ -749,7 +749,7 @@ jobs:
           retry_on: error
           max_attempts: 2
           command: |
-            cci flow run validate_qbrix  --org dev
+            cci flow run validate_qbrix  --org ninja
           on_retry_command: cci error info
 
       - name: Check file existence
@@ -997,7 +997,7 @@ jobs:
           retry_on: error
           command: |
             cd ${{matrix.reference_brix}}
-            cci task run spin_request --maxwait 120 --mode SCRATCH --scratch_config orgs/dev.json --devhubuser DEVHUB_ACCT --cciorg dev --devhubconsumerkey ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }} --devhubjwtkeyfile devhub.key
+            cci task run spin_request --maxwait 120 --mode SCRATCH --scratch_config orgs/dev.json --devhubuser DEVHUB_ACCT --cciorg ninja --devhubconsumerkey ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }} --devhubjwtkeyfile devhub.key
 
       - name: generate production org ${{ matrix.isscratch }} - if the evn variable to use a template is set to true - we connect to the devhub that is enabled to provision an org - ${{ steps.qlab_config_settings.outputs.ORG_TARGET_USER }}
         if: ((matrix.isscratch  == 'false' ) && (steps.qlab_config_settings.outputs.ORG_TARGET_USER ==''))
@@ -1008,19 +1008,19 @@ jobs:
           retry_on: error
           command: |
             cd ${{matrix.reference_brix}}
-            cci task run spin_request --maxwait 120 --mode TEMPLATE --cciorg dev --devhubuser DEVHUB_ACCT --instance ${{steps.qlab_config_settings.outputs.TEMPLATE_INSTANCE}} --devhubconsumerkey ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }} --devhubjwtkeyfile devhub.key --templateid ${{ steps.qlab_config_settings.outputs.TEMPLATE_ID }}
+            cci task run spin_request --maxwait 120 --mode TEMPLATE --cciorg ninja --devhubuser DEVHUB_ACCT --instance ${{steps.qlab_config_settings.outputs.TEMPLATE_INSTANCE}} --devhubconsumerkey ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }} --devhubjwtkeyfile devhub.key --templateid ${{ steps.qlab_config_settings.outputs.TEMPLATE_ID }}
 
       - name: The central QLabs Settings has specified dedicated org/user to run against.
         if: (${{ steps.qlab_config_settings.outputs.ORG_TARGET_USER }}!='')
         run: |
           cd ${{matrix.reference_brix}}
           sf org login jwt -o ${{ steps.qlab_config_settings.outputs.ORG_TARGET_USER }} -a dev_target_username -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
-          cci org import ${{steps.qlab_config_settings.outputs.ORG_TARGET_USER}} dev
+          cci org import ${{steps.qlab_config_settings.outputs.ORG_TARGET_USER}} ninja
 
       - name: export cci session data
         run: |
           cd ${{matrix.reference_brix}}
-          cci org info dev --json > targetdev.json
+          cci org info ninja --json > targetdev.json
           tail -n +1 targetdev.json
           tail -n +1 targetdev.json > targetorg.json
 
@@ -1097,7 +1097,7 @@ jobs:
       - name: Make sure session is valid
         run: |
           cd ${{matrix.reference_brix}}
-          cci org info dev
+          cci org info ninja
 
       - name: Running ${{ matrix.description }} ${{ matrix.leaf_shake_action }}::${{ matrix.reference_brix }}
         uses: nick-fields/retry@v2
@@ -1107,7 +1107,7 @@ jobs:
           max_attempts: 2
           command: |
             cd ${{matrix.reference_brix}}
-            cci ${{ matrix.leaf_shake_action_type }} run ${{ matrix.leaf_shake_action }}  --org dev
+            cci ${{ matrix.leaf_shake_action_type }} run ${{ matrix.leaf_shake_action }}  --org ninja
           on_retry_command: cci error info
 
       - name: success status
@@ -1264,11 +1264,11 @@ jobs:
 
       - name: Import the target username into the cci runtime step
         if: matrix.targetusername!='' && matrix.ishybrid == 'false'
-        run: cci org import ${{ matrix.targetusername }} dev
+        run: cci org import ${{ matrix.targetusername }} ninja
 
       - name: Make sure session is valid
         if: matrix.targetusername!='' && matrix.ishybrid == 'false'
-        run: cci org info dev
+        run: cci org info ninja
 
       - name: Running ${{ matrix.description }} ${{ matrix.action }}::${{ matrix.target }}
         if: matrix.targetusername!='' && matrix.ishybrid == 'false'
@@ -1277,7 +1277,7 @@ jobs:
           timeout_minutes: 1440
           retry_on: error
           max_attempts: 2
-          command: cci ${{ matrix.action }} run ${{ matrix.target }}  --org dev
+          command: cci ${{ matrix.action }} run ${{ matrix.target }}  --org ninja
           on_retry_command: |
             cci error info
 
@@ -1384,11 +1384,11 @@ jobs:
 
       - name: Import the target username into the cci runtime step
         if: matrix.targetusername!='' && matrix.ishybrid == 'true'
-        run: cci org import ${{ matrix.targetusername }} dev
+        run: cci org import ${{ matrix.targetusername }} ninja
 
       - name: Make sure session is valid
         if: matrix.targetusername!='' && matrix.ishybrid == 'true'
-        run: cci org info dev
+        run: cci org info ninja
 
       - name: Running ${{ matrix.description }} ${{ matrix.action }}::${{ matrix.target }}
         if: matrix.targetusername!='' && matrix.ishybrid == 'true'
@@ -1397,7 +1397,7 @@ jobs:
           timeout_minutes: 1440
           retry_on: error
           max_attempts: 2
-          command: cci ${{ matrix.action }} run ${{ matrix.target }}  --org dev
+          command: cci ${{ matrix.action }} run ${{ matrix.target }}  --org ninja
           on_retry_command: |
             cci error info
 
