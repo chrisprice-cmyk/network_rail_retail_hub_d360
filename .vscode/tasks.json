@@ -237,7 +237,7 @@
     {
       "label": "ORG: 🗑 Delete a Scratch Org",
       "type": "shell",
-      "command": "qx org delete '${input:OrgAlias}'",
+      "command": "qx org delete --org '${input:OrgAlias}'",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
