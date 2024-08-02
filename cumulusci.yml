@@ -8,7 +8,7 @@ project:
   name: xDO-Template
   package:
     name: xDO-Template
-    api_version: '60.0'
+    api_version: "60.0"
   git:
     default_branch: main
     repo_url: https://github.com/sfdc-qbranch-emu/xDO-Template
@@ -26,8 +26,7 @@ project:
     qbrix_owner_team: OWNER TEAM HERE
     qbrix_publisher_name: OWNER OR PUBLISHER NAME HERE
     qbrix_publisher_team: OWNER OR PUBLISHER TEAM HERE
-    qbrix_documentation_url: 
-      https://confluence.internal.salesforce.com/pages/viewpage.action?pageId=487362018
+    qbrix_documentation_url: https://confluence.internal.salesforce.com/pages/viewpage.action?pageId=487362018
     qbrix_description: SHORT DESCRIPTION OF BRIX HERE
 
     # Github Additional Information
@@ -36,15 +35,15 @@ project:
     # GLOBAL EXCLUSION LIST
     # Used by retrieve_changes and list_changes builtin CCI tasks
     exclude: &exclude-list
-    - FeatureParameter
-    - 'AuraDefinition:'
-    - 'SiteDotCom:'
-    - 'ManagedTopics:'
-    - 'LiveChatTranscript:'
-    - 'ExperienceResource:'
-    - 'AppMenu:'
-    - 'Profile:'
-    - 'FlowDefinition:'
+      - FeatureParameter
+      - "AuraDefinition:"
+      - "SiteDotCom:"
+      - "ManagedTopics:"
+      - "LiveChatTranscript:"
+      - "ExperienceResource:"
+      - "AppMenu:"
+      - "Profile:"
+      - "FlowDefinition:"
 
   #------------------------------------#
   # SALESFORCE PACKAGE DEPENDENCIES    #
@@ -98,6 +97,9 @@ tasks:
   #------------------------------------#
   # CUSTOM TASKS ADDED FOR BRIX DEVELOPMENT
 
+  robot_runner:
+    class_path: qx.platform.cumulusci.tasks.qx_cci_robot_runner.RobotRunner
+
   qbrix_installed:
     class_path: qx.platform.salesforce_platform.qx_salesforce_utils.QBrixInstalled
 
@@ -135,7 +137,8 @@ tasks:
     class_path: qx.platform.cumulusci.tasks.qx_cci_mass_ops.MassFileOps
 
   deploy_settings:
-    description: Checks that Settings have been defined in force-app and deploys them
+    description:
+      Checks that Settings have been defined in force-app and deploys them
       if present
     class_path: cumulusci.tasks.salesforce.Deploy
     options:
@@ -207,7 +210,8 @@ tasks:
     class_path: qx.platform.cumulusci.tasks.qx_cci_metadata_checker.MetadataChecker
 
   orgconfig_hydrate:
-    description: injects additional context into the orgconfig that can be referenced
+    description:
+      injects additional context into the orgconfig that can be referenced
       downstream
     class_path: qx.platform.cumulusci.tasks.qx_cci_orgconfig_hydrate.NGOrgConfig
 
@@ -217,12 +221,14 @@ tasks:
       command: project deploy start --source-dir force-app/main/default --ignore-conflicts
 
   dustpan:
-    description: injects additional context into the orgconfig that can be referenced
+    description:
+      injects additional context into the orgconfig that can be referenced
       downstream
     class_path: qx.platform.cumulusci.tasks.qx_cci_orgconfig_hydrate.NGBroom
 
   flow_wrapper:
-    description: Runs the specified task or flow of the qbrix in a subprocess in a
+    description:
+      Runs the specified task or flow of the qbrix in a subprocess in a
       single task. This allows us to use When against a flow.
     class_path: qx.platform.cumulusci.tasks.qx_cci_legacy_deploy.Deploy
 
