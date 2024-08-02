@@ -1,6 +1,7 @@
 {
   "image": "ghcr.io/sfdc-qbranch-emu/qbrix-base-container-quasar:latest",
-  "forwardPorts": [7788, 1717, 6080],
+  "runArgs": ["--network=host"],
+  "forwardPorts": [7788, 1717, 6080, 16686,4317,4318],
   "portsAttributes": {
     "7788": {
       "label": "cci-auth-callback"
@@ -10,6 +11,15 @@
     },
     "6080": {
       "label": "qbrix robot vnc viewer"
+    },
+    "16686": {
+      "label": "local opentelemetry ui"
+    },
+    "4317": {
+      "label": "collecter http"
+    },
+    "4318": {
+      "label": "collecter gRPC"
     }
   },
   "remoteEnv": {
@@ -20,7 +30,10 @@
     "NEXTGEN_GATE_KEEPER_CONSUMER_KEY": "${localEnv:NEXTGEN_GATE_KEEPER_CONSUMER_KEY}",
     "NEXTGEN_GATE_KEEPER_CONSUMER_SECRET": "${localEnv:NEXTGEN_GATE_KEEPER_CONSUMER_SECRET}",
     "JAVA_HOME": "/usr/bin",
-    "REMOTE_CONTAINERS": "True"
+    "REMOTE_CONTAINERS": "True",
+    "OTEL_SDK_DISABLED": "true",
+    "OTEL_EXPORTER_OTLP_ENDPOINT": "http://localhost:4318",
+    "OTEL_EXPORTER_OTLP_PROTOCOL": "grpc"
   },
   "customizations": {
     // Configure properties specific to VS Code.
@@ -55,6 +68,6 @@
       "vncPort": "5901"
     }
   },
-  "initializeCommand":"docker container prune -f && docker image prune -f && docker volume prune -f && docker system prune -f && docker pull ghcr.io/sfdc-qbranch-emu/qbrix-base-container-quasar:latest",
+  "initializeCommand":"docker container prune -f && docker image prune -f && docker volume prune -f && docker system prune -f && docker pull ghcr.io/sfdc-qbranch-emu/qbrix-base-container-quasar:latest && docker run -d --network=host --name jaeger -e COLLECTOR_ZIPKIN_HOST_PORT=:9411 -p 4317:4317 -p 4318:4318 -p 5775:5775/udp -p 6831:6831/udp -p 6832:6832/udp -p 5778:5778 -p 16686:16686 -p 14268:14268 -p 14250:14250 -p 9411:9411 jaegertracing/all-in-one:latest || true ",
   "postStartCommand": "qx setup init-codespace && xrandr -s 1920x1080"
 }

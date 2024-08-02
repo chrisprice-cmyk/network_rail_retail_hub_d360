@@ -1,6 +1,6 @@
 name: Brix-Build
 on:
-  push:   
+  push:
   pull_request:
   workflow_dispatch:
 
@@ -19,22 +19,24 @@ env:
   QSR_JWT_SIGNING_SECRET: ${{ secrets.QSR_JWT_SIGNING_SECRET }}
   USER: ${{github.actor}}
   ORG_TARGET_USER:
-  BUILD_SUFFIX: 
-  REPO_NAME: 
+  BUILD_SUFFIX:
+  REPO_NAME:
   AUTOPUBLISH:
   AUTODEPLOY_STATUS:
   CUMULUSCI_SERVICE_metadeploy: '{"url":"${{secrets.QBRIX_CUMULUSCI_SERVICE_METADEPLOY_URL}}","token": "${{secrets.QBRIX_CUMULUSCI_SERVICE_METADEPLOY_TOKEN}}"}'
   CUMULUSCI_SERVICE_github: ${{ secrets.QBRIX_CUMULUSCI_SERVICE_github }}
   REMOTE_CONTAINERS: True
+  OTEL_EXPORTER_OTLP_ENDPOINT: ${{ vars.OTEL_EXPORTER_OTLP_ENDPOINT }}
+  NEW_RELIC_LICENSE_KEY: ${{ secrets.NEW_RELIC_LICENSE_KEY }}
+  ENABLE_FLOW_STATE_TRACKING: ${{ vars.ENABLE_FLOW_STATE_TRACKING }}
+  OTEL_SDK_DISABLED: ${{ vars.OTEL_SDK_DISABLED }}
 
-  
 jobs:
-
   qlabs_publish:
     if: (github.ref_name == 'master' || github.ref_name == 'main')
     runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
-      image: "ghcr.io/${{ github.repository_owner }}/qbrix-base-container-quasar:latest"
+      image: ${{vars.BUILD_BASE_CONTAINER}}
       credentials:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.QBRIX_CONTAINER_PUBLISH_GITHUB_PAT}}
@@ -130,11 +132,11 @@ jobs:
   setup_build_steps:
     if: |
       always() &&
-      (needs.qlabs_publish.result == 'success' || needs.qlabs_publish.result == 'skipped') 
+      (needs.qlabs_publish.result == 'success' || needs.qlabs_publish.result == 'skipped')
     needs: [qlabs_publish]
     runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
-      image: "ghcr.io/${{ github.repository_owner }}/qbrix-base-container-quasar:latest"
+      image: ${{vars.BUILD_BASE_CONTAINER}}
       credentials:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.QBRIX_CONTAINER_PUBLISH_GITHUB_PAT}}
@@ -146,7 +148,7 @@ jobs:
       - name: Set ENV variables
         run: |
           echo "::set-env name=REPO_NAME::${GITHUB_REPOSITORY#$GITHUB_REPOSITORY_OWNER/}"
-          
+
       - name: Set ownership
         id: set_ownership
         run: |
@@ -170,16 +172,16 @@ jobs:
           jq '.result.accessToken' qlab_tmp.json -r
           echo "qlabs_accesstoken=$(jq '.result.accessToken' qlab_tmp.json -r)" >> "$GITHUB_OUTPUT"
 
-       #Update the build Status to Running only on the main or master branch
+        #Update the build Status to Running only on the main or master branch
       - name: clear legacy build matrice results
         if: github.ref_name == 'main' || github.ref_name == 'master'
         run: |
           curl --location --request DELETE 'https://qlabs-org.my.salesforce.com/services/apexrest/NGBrixBuildTrackingService' \
           --header 'Content-Type: application/json' \
           --header 'Authorization: Bearer ${{ steps.qlabs_accesstoken.outputs.qlabs_accesstoken }}' \
-          --data '{"brixname": "${{ env.REPO_NAME }}"}' 
+          --data '{"brixname": "${{ env.REPO_NAME }}"}'
 
-       #Update the build Status to Running only on the main or master branch
+        #Update the build Status to Running only on the main or master branch
       - name: get the build matrices
         run: |
           curl --location 'https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixBuildMatrixService' \
@@ -209,11 +211,11 @@ jobs:
   setup_hybrid_build_steps:
     if: |
       always() &&
-      (needs.qlabs_publish.result == 'success' || needs.qlabs_publish.result == 'skipped') 
+      (needs.qlabs_publish.result == 'success' || needs.qlabs_publish.result == 'skipped')
     needs: [qlabs_publish]
     runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
-      image: "ghcr.io/${{ github.repository_owner }}/qbrix-base-container-quasar:latest"
+      image: ${{vars.BUILD_BASE_CONTAINER}}
       credentials:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.QBRIX_CONTAINER_PUBLISH_GITHUB_PAT}}
@@ -225,7 +227,7 @@ jobs:
       - name: Set ENV variables
         run: |
           echo "::set-env name=REPO_NAME::${GITHUB_REPOSITORY#$GITHUB_REPOSITORY_OWNER/}"
-          
+
       - name: Set ownership
         id: set_ownership
         run: |
@@ -249,7 +251,7 @@ jobs:
           jq '.result.accessToken' qlab_tmp.json -r
           echo "qlabs_accesstoken=$(jq '.result.accessToken' qlab_tmp.json -r)" >> "$GITHUB_OUTPUT"
 
-       #Update the build Status to Running only on the main or master branch
+        #Update the build Status to Running only on the main or master branch
       - name: get the build matrices
         run: |
           curl --location 'https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixBuildMatrixService' \
@@ -279,11 +281,11 @@ jobs:
   build_deployments:
     if: |
       always() && 
-      needs.setup_build_steps.result == 'success' 
+      needs.setup_build_steps.result == 'success'
     needs: [setup_build_steps]
     runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
-      image: "ghcr.io/${{ github.repository_owner }}/qbrix-base-container-quasar:latest"
+      image: ${{vars.BUILD_BASE_CONTAINER}}
       credentials:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.QBRIX_CONTAINER_PUBLISH_GITHUB_PAT}}
@@ -291,6 +293,8 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJSON(needs.setup_build_steps.outputs.matrix) }}
       max-parallel: 250 #run in sequence
+    name: 'Required: ${{matrix.description}} - ${{matrix.templateid}}'
+    
     steps:
       - uses: actions/checkout@v4
 
@@ -306,7 +310,7 @@ jobs:
           # this is to fix GIT not liking owner of the checkout dir
           chown -R $(id -u):$(id -g) $PWD
           # assume might have been updated
-        
+
       - name: Download Repo for the matrix::${{matrix.reference_brix}} and setup runtime
         id: qlabs_accesstoken
         run: |
@@ -350,7 +354,7 @@ jobs:
           echo "TEMPLATE_INSTANCE=$(jq '.template_instance' qlab_settings.json -r)" >> "$GITHUB_ENV"
           echo "ORG_TARGET_USER=$(jq '.org_target_user' qlab_settings.json -r)" >> "$GITHUB_OUTPUT"
           echo "ORG_TARGET_USER=$(jq '.org_target_user' qlab_settings.json -r)" >> "$GITHUB_ENV"
-          
+
       - name: Set CCI DevHub Username
         run: |
           cci service connect devhub --username DEVHUB_ACCT
@@ -359,10 +363,10 @@ jobs:
       - name: All connected services
         run: |
           cci service list
-      
+
       - name: Pre Check Command path
         run: |
-          cci ${{ matrix.build_action_type }} info ${{ matrix.build_action }} 
+          cci ${{ matrix.build_action_type }} info ${{ matrix.build_action }}
 
         # Create a scratch org to attach - future use the org pool service
       - name: generate scratch org ${{ matrix.isscratch }}- if the evn variable to use a template is set to false - we fallback to org/dev.json - ${{ steps.qlab_config_settings.outputs.ORG_TARGET_USER }}
@@ -468,7 +472,7 @@ jobs:
             cci ${{ matrix.build_action_type }} run ${{ matrix.build_action }}  --org ninja
           on_retry_command: cci error info
 
-      - name: Running Validate 
+      - name: Running Validate
         uses: nick-fields/retry@v2
         with:
           timeout_minutes: 1440
@@ -525,7 +529,7 @@ jobs:
             "buildstatus": "Passed",
             "details": ""
                 }'
-      
+
       - name: fail details - final
         if: (failure() && ( github.ref_name == 'main' || github.ref_name == 'master'))
         id: cci_failure_details_final
@@ -545,7 +549,7 @@ jobs:
               "leafshakebrixname": "${{github.ref_name}}",
               "buildstatus": "Failed",
               "details": "${{ steps.cci_failure_details_final.outputs.cci_failure_details_final }}"    
-          }'   
+          }'
 
   hybrid_org_build_deployments:
     if: |
@@ -557,7 +561,7 @@ jobs:
     runs-on: sfdc-qbranch-nextgen-ubuntu
     continue-on-error: true
     container:
-      image: "ghcr.io/${{ github.repository_owner }}/qbrix-base-container-quasar:latest"
+      image: ${{vars.BUILD_BASE_CONTAINER}}
       credentials:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.QBRIX_CONTAINER_PUBLISH_GITHUB_PAT}}
@@ -565,10 +569,11 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJSON(needs.setup_hybrid_build_steps.outputs.matrix) }}
       max-parallel: 250 #run in sequence
+    name: 'Optional: ${{matrix.description}} - ${{matrix.templateid}}'
     steps:
       - uses: actions/checkout@v4
 
-      - name: Update QX
+      - name: Update QX      
         run: qx update
 
       - name: Set ENV variables
@@ -580,7 +585,7 @@ jobs:
           # this is to fix GIT not liking owner of the checkout dir
           chown -R $(id -u):$(id -g) $PWD
           # assume might have been updated
-        
+
       - name: Download Repo for the matrix::${{matrix.reference_brix}} and setup runtime
         id: qlabs_accesstoken
         run: |
@@ -624,7 +629,7 @@ jobs:
           echo "TEMPLATE_INSTANCE=$(jq '.template_instance' qlab_settings.json -r)" >> "$GITHUB_ENV"
           echo "ORG_TARGET_USER=$(jq '.org_target_user' qlab_settings.json -r)" >> "$GITHUB_OUTPUT"
           echo "ORG_TARGET_USER=$(jq '.org_target_user' qlab_settings.json -r)" >> "$GITHUB_ENV"
-          
+
       - name: Set CCI DevHub Username
         run: |
           cci service connect devhub --username DEVHUB_ACCT
@@ -633,10 +638,10 @@ jobs:
       - name: All connected services
         run: |
           cci service list
-      
+
       - name: Pre Check Command path
         run: |
-          cci ${{ matrix.build_action_type }} info ${{ matrix.build_action }} 
+          cci ${{ matrix.build_action_type }} info ${{ matrix.build_action }}
 
         # Create a scratch org to attach - future use the org pool service
       - name: generate scratch org ${{ matrix.isscratch }}- if the evn variable to use a template is set to false - we fallback to org/dev.json - ${{ steps.qlab_config_settings.outputs.ORG_TARGET_USER }}
@@ -742,7 +747,7 @@ jobs:
             cci ${{ matrix.build_action_type }} run ${{ matrix.build_action }}  --org ninja
           on_retry_command: cci error info
 
-      - name: Running Validate 
+      - name: Running Validate
         uses: nick-fields/retry@v2
         with:
           timeout_minutes: 1440
@@ -799,7 +804,7 @@ jobs:
             "buildstatus": "Passed",
             "details": ""
                 }'
-      
+
       - name: fail details - final
         if: (failure() && ( github.ref_name == 'main' || github.ref_name == 'master'))
         id: cci_failure_details_final
@@ -819,17 +824,17 @@ jobs:
               "leafshakebrixname": "${{github.ref_name}}",
               "buildstatus": "Failed",
               "details": "${{ steps.cci_failure_details_final.outputs.cci_failure_details_final }}"    
-          }'   
-          
+          }'
+
   setup_leafshake_steps:
     if: |
       always() && 
       (github.event.pull_request.head.ref != '' || github.ref_name == 'main') &&
-      needs.build_deployments.result == 'success' 
+      needs.build_deployments.result == 'success'
     needs: [build_deployments]
     runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
-      image: "ghcr.io/${{ github.repository_owner }}/qbrix-base-container-quasar:latest"
+      image: ${{vars.BUILD_BASE_CONTAINER}}
       credentials:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.QBRIX_CONTAINER_PUBLISH_GITHUB_PAT}}
@@ -837,7 +842,7 @@ jobs:
       matrix: ${{ steps.set-leaf-shake-matrix.outputs.matrix }}
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set ENV variables
         run: |
           echo "::set-env name=REPO_NAME::${GITHUB_REPOSITORY#$GITHUB_REPOSITORY_OWNER/}"
@@ -865,19 +870,19 @@ jobs:
           jq '.result.accessToken' qlab_tmp.json -r
           echo "qlabs_accesstoken=$(jq '.result.accessToken' qlab_tmp.json -r)" >> "$GITHUB_OUTPUT"
 
-       #Update the build Status to Running only on the main or master branch
+        #Update the build Status to Running only on the main or master branch
       - name: get the build matrices
         run: |
           curl --location 'https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixBuildMatrixService' \
           --header 'Content-Type: application/json' \
           --header 'Authorization: Bearer ${{ steps.qlabs_accesstoken.outputs.qlabs_accesstoken }}' \
           --data '{"brixname": "${{ env.REPO_NAME }}"}' -o full_matrix.json
-     
+
       - name: load run matrix for the defined leaf shaking
         id: set-leaf-shake-matrix
         run: |
           echo "matrix={\"include\":$(jq -c '.leafshake' full_matrix.json -r)}" >> $GITHUB_OUTPUT
-      
+
   leaf_shake_deployments:
     needs: [setup_leafshake_steps]
     if: |
@@ -888,7 +893,7 @@ jobs:
       needs.setup_leafshake_steps.outputs.matrix != ''
     runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
-      image: "ghcr.io/${{ github.repository_owner }}/qbrix-base-container-quasar:latest"
+      image: ${{vars.BUILD_BASE_CONTAINER}}
       credentials:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.QBRIX_CONTAINER_PUBLISH_GITHUB_PAT}}
@@ -896,6 +901,7 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJSON(needs.setup_leafshake_steps.outputs.matrix) }}
       max-parallel: 250 #run in sequence
+    name: '${{matrix.reference_brix}} - ${{matrix.templateid}}'
     steps:
       #- uses: actions/checkout@v4
       - name: Clone Reference Brix for Leaf Shake Build
@@ -961,14 +967,13 @@ jobs:
           echo "TEMPLATE_INSTANCE=$(jq '.template_instance' qlab_settings.json -r)" >> "$GITHUB_ENV"
           echo "ORG_TARGET_USER=$(jq '.org_target_user' qlab_settings.json -r)" >> "$GITHUB_OUTPUT"
           echo "ORG_TARGET_USER=$(jq '.org_target_user' qlab_settings.json -r)" >> "$GITHUB_ENV"
-          
+
       - name: Set CCI DevHub Username
         run: |
           cd ${{matrix.reference_brix}}
           cci service connect devhub --username DEVHUB_ACCT
 
-      
-      - name: Drop Leaf 
+      - name: Drop Leaf
         run: |
           cd ${{matrix.reference_brix}}
           [ -e QUASAR_LEAF_SHAKE ] && rm QUASAR_LEAF_SHAKE
@@ -1125,7 +1130,7 @@ jobs:
             "buildstatus": "Passed",
             "details": ""
                 }'
-      
+
       - name: fail details - final
         if: (failure() && ( github.ref_name == 'main' || github.ref_name == 'master'))
         id: cci_failure_details_final
@@ -1147,17 +1152,17 @@ jobs:
               "leafshakebrixname": "${{matrix.reference_brix}}",
               "buildstatus": "Failed",
               "details": "${{ steps.cci_failure_details_final.outputs.cci_failure_details_final }}"    
-          }'   
+          }'
 
   setup_autodeployment_steps:
-    needs: [leaf_shake_deployments,build_deployments]
+    needs: [leaf_shake_deployments, build_deployments]
     if: |
       always() &&
       (github.ref_name == 'main' || github.ref_name == 'master') &&
-      (needs.leaf_shake_deployments.result == 'success' || needs.leaf_shake_deployments.result == 'skipped' || needs.leaf_shake_deployments.result == 'failed') 
+      (needs.leaf_shake_deployments.result == 'success' || needs.leaf_shake_deployments.result == 'skipped' || needs.leaf_shake_deployments.result == 'failed')
     runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
-      image: "ghcr.io/${{ github.repository_owner }}/qbrix-base-container-quasar:latest"
+      image: ${{vars.BUILD_BASE_CONTAINER}}
       credentials:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.QBRIX_CONTAINER_PUBLISH_GITHUB_PAT}}
@@ -1203,11 +1208,11 @@ jobs:
     if: |
       always() &&
       (github.ref_name == 'main' || github.ref_name == 'master') &&
-      (needs.setup_autodeployment_steps.result == 'success' || needs.setup_autodeployment_steps.result != 'skipped') 
+      (needs.setup_autodeployment_steps.result == 'success' || needs.setup_autodeployment_steps.result != 'skipped')
     needs: [setup_autodeployment_steps]
     runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
-      image: "ghcr.io/${{ github.repository_owner }}/qbrix-base-container-quasar:latest"
+      image: ${{vars.BUILD_BASE_CONTAINER}}
       credentials:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.QBRIX_CONTAINER_PUBLISH_GITHUB_PAT}}
@@ -1225,7 +1230,7 @@ jobs:
       - name: Core Setup - key for jwt auth
         if: matrix.targetusername!='' && matrix.ishybrid == 'false'
         run: echo "${{ secrets.QBRIX_DEVHUB_PRIVATE_KEY }}" > devhub.key
-          
+
       # We will use a common app with a common key -
       - name: Create SFDX Session for QLABS Service Account
         if: matrix.targetusername!='' && matrix.ishybrid == 'false'
@@ -1322,12 +1327,12 @@ jobs:
     if: |
       always() &&
       (github.ref_name == 'main' || github.ref_name == 'master') &&
-      (needs.setup_autodeployment_steps.result == 'success' || needs.setup_autodeployment_steps.result != 'skipped') 
+      (needs.setup_autodeployment_steps.result == 'success' || needs.setup_autodeployment_steps.result != 'skipped')
     needs: [setup_autodeployment_steps]
     runs-on: sfdc-qbranch-nextgen-ubuntu
     continue-on-error: true
     container:
-      image: "ghcr.io/${{ github.repository_owner }}/qbrix-base-container-quasar:latest"
+      image: ${{vars.BUILD_BASE_CONTAINER}}
       credentials:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.QBRIX_CONTAINER_PUBLISH_GITHUB_PAT}}
@@ -1345,7 +1350,7 @@ jobs:
       - name: Core Setup - key for jwt auth
         if: matrix.targetusername!='' && matrix.ishybrid == 'true'
         run: echo "${{ secrets.QBRIX_DEVHUB_PRIVATE_KEY }}" > devhub.key
-          
+
       # We will use a common app with a common key -
       - name: Create SFDX Session for QLABS Service Account
         if: matrix.targetusername!='' && matrix.ishybrid == 'true'
@@ -1444,10 +1449,10 @@ jobs:
       always() &&
       (github.ref_name == 'main' || github.ref_name == 'master') &&
       needs.build_deployments.result == 'success' &&
-      (needs.leaf_shake_deployments.result == 'success' || needs.leaf_shake_deployments.result == 'skipped' || needs.leaf_shake_deployments.result == 'failed') 
+      (needs.leaf_shake_deployments.result == 'success' || needs.leaf_shake_deployments.result == 'skipped' || needs.leaf_shake_deployments.result == 'failed')
     runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
-      image: "ghcr.io/${{ github.repository_owner }}/qbrix-base-container-quasar:latest"
+      image: ${{vars.BUILD_BASE_CONTAINER}}
       credentials:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.QBRIX_CONTAINER_PUBLISH_GITHUB_PAT}}
@@ -1462,8 +1467,8 @@ jobs:
           # this is to fix GIT not liking owner of the checkout dir
           chown -R $(id -u):$(id -g) $PWD
           echo '${{ secrets.QBRIX_DEVHUB_PRIVATE_KEY }}' > devhub.key
-          
-       # We will use a common app with a common key -
+
+        # We will use a common app with a common key -
       - name: Create SFDX Session for QLABS Service Account
         run: sf org login jwt -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
 
