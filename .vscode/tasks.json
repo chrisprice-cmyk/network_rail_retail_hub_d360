@@ -237,7 +237,7 @@
     {
       "label": "ORG: 🗑 Delete a Scratch Org",
       "type": "shell",
-      "command": "qx org delete --org '${input:OrgAlias}'",
+      "command": "qx org delete '${input:OrgAlias}'",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -461,7 +461,7 @@
     {
       "label": "PUBLISH: 📡 Publish to Metadeploy",
       "type": "shell",
-      "command": "cci task run metadeploy_publish --publish True --commit '${input:Commit}'",
+      "command": "cci task run metadeploy_publish --publish True --commit ${input:Commit}",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -646,7 +646,7 @@
     {
       "label": "UTILS: 🔍 Find Metadata in your dependencies",
       "type": "shell",
-      "command": "cci task run qbrix_metadata_checker --metadata_type '${input:MetadataType}' --api_names '${input:ApiNames}' --dependency_flow '${input:DependencyFlow}'",
+      "command": "cci task run qbrix_metadata_checker --metadata_type ${input:MetadataType} --api_names ${input:ApiNames} --dependency_flow ${input:DependencyFlow}",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -660,7 +660,7 @@
     {
       "label": "UTILS: 🔍 Scan for duplicated Metadata in your dependencies",
       "type": "shell",
-      "command": "cci task run qbrix_metadata_checker --dependency_flow '${input:DependencyFlow}' --scan_mode True",
+      "command": "cci task run qbrix_metadata_checker --dependency_flow ${input:DependencyFlow} --scan_mode True",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -674,7 +674,7 @@
     {
       "label": "ROBOT: 🤖 Launch Q Robot Sandbox",
       "type": "shell",
-      "command": "cci task run qbrix_robot_test --org '${input:OrgAlias}' --start_url '${input:RobotStartURL}'",
+      "command": "cci task run qbrix_robot_test --org '${input:OrgAlias}' --start_url ${input:RobotStartURL}",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -698,76 +698,6 @@
         "showReuseMessage": false,
         "panel": "new"
       }
-    },
-    {
-      "label": "UTILS: 🧰 Run Robot Keyword",
-      "type": "shell",
-      "command": "cci task run robot_runner --org '${input:OrgAlias}' --keyword '${input:RobotKeyword}' --keyword_parameters '${input:RobotKeywordParams}'",
-      "group": "build",
-      "problemMatcher": [],
-      "presentation": {
-        "revealProblems": "onProblem",
-        "focus": true,
-        "echo": false,
-        "showReuseMessage": false,
-        "panel": "new"
-      }
-    },
-    {
-      "label": "UTILS: 🧰 Trigger Export of CMS from Workspace",
-      "type": "shell",
-      "command": "cci task run robot_runner --org '${input:OrgAlias}' --keyword 'download_cms_content' --keyword_parameters '{\"workspace\":\"${input:RobotWorkspaceName}\"}'",
-      "group": "build",
-      "problemMatcher": [],
-      "presentation": {
-        "revealProblems": "onProblem",
-        "focus": true,
-        "echo": false,
-        "showReuseMessage": false,
-        "panel": "new"
-      }
-    },
-    {
-      "label": "UTILS: 🧰 Trigger Export of CMS from all workspaces",
-      "type": "shell",
-      "command": "cci task run robot_runner --org '${input:OrgAlias}' --keyword 'download_all_content'",
-      "group": "build",
-      "problemMatcher": [],
-      "presentation": {
-        "revealProblems": "onProblem",
-        "focus": true,
-        "echo": false,
-        "showReuseMessage": false,
-        "panel": "new"
-      }
-    },
-    {
-      "label": "UTILS: 🧰 Generate CMS Collection Export File",
-      "type": "shell",
-      "command": "cci task run robot_runner --org '${input:OrgAlias}' --keyword 'generate_managed_content_collection_file' --keyword_parameters '{\"experience_site_name\":\"${input:RobotExperienceCloudSite}\"}'",
-      "group": "build",
-      "problemMatcher": [],
-      "presentation": {
-        "revealProblems": "onProblem",
-        "focus": true,
-        "echo": false,
-        "showReuseMessage": false,
-        "panel": "new"
-      }
-    },
-    {
-      "label": "UTILS: 🧰 Download Featured Topic Images",
-      "type": "shell",
-      "command": "cci task run robot_runner --org '${input:OrgAlias}' --keyword 'download_featured_topic_images' --keyword_parameters '{\"experience_cloud_site_name\":\"${input:RobotExperienceCloudSite}\"}'",
-      "group": "build",
-      "problemMatcher": [],
-      "presentation": {
-        "revealProblems": "onProblem",
-        "focus": true,
-        "echo": false,
-        "showReuseMessage": false,
-        "panel": "new"
-      }
     }
   ],
   "inputs": [
@@ -780,7 +710,7 @@
     {
       "id": "OrgAlias",
       "description": "Please provide the Salesforce org alias",
-      "default": "",
+      "default": "dev",
       "type": "promptString"
     },
     {
@@ -861,29 +791,5 @@
       "default": "",
       "type": "promptString"
     },
-    {
-      "id": "RobotKeyword",
-      "description": "Enter the name of the keyword to run",
-      "default": "",
-      "type": "promptString"
-    },
-    {
-      "id": "RobotKeywordParams",
-      "description": "Enter Parameters for robot as a key:value dictionary",
-      "default": "",
-      "type": "promptString"
-    },
-    {
-      "id": "RobotExperienceCloudSite",
-      "description": "Enter the label or name for the Experience Cloud site",
-      "default": "",
-      "type": "promptString"
-    },
-    {
-      "id": "RobotWorkspaceName",
-      "description": "Enter the name of the Workspace to target",
-      "default": "",
-      "type": "promptString"
-    }
   ]
 }
