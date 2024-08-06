@@ -98,6 +98,9 @@ tasks:
   #------------------------------------#
   # CUSTOM TASKS ADDED FOR BRIX DEVELOPMENT
 
+  robot_runner:
+    class_path: qx.platform.cumulusci.tasks.qx_cci_robot_runner.RobotRunner
+
   qbrix_installed:
     class_path: qx.platform.salesforce_platform.qx_salesforce_utils.QBrixInstalled
 
