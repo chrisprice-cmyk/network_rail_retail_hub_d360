@@ -403,6 +403,20 @@
       }
     },
     {
+      "label": "VSCODE: 🛠️ Check Local VSCode Configuration",
+      "type": "shell",
+      "command": "qx setup vscode",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "new"
+      }
+    },
+    {
       "label": "UTILS: 🛠️ Setup new Brix Project",
       "type": "shell",
       "command": "cci task run setup_qbrix",

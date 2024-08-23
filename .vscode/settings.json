@@ -10,12 +10,16 @@
     "${workspaceFolder}/qbrix_local",
     "qx/qrobot/keywords"
   ],
+  "editor.trimAutoWhitespace": true,
+  "files.associations": {
+    "*.resource": "robotframework",
+    "*.robot": "robotframework"
+  },
   "[python]": {
     "editor.defaultFormatter": "ms-python.black-formatter"
   },
   "python.terminal.activateEnvironment": true,
-  "secrets.enabledFolders": [
-    "default",
-    "qbrix_secrets"
-  ]
+  "[yaml]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml"
+  },
 }

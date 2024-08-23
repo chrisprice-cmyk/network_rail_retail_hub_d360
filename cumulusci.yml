@@ -2,53 +2,33 @@ project:
   #------------------------------------#
   # DEMO BRIX CONFIG                   #
   #------------------------------------#
-  # Demo Brix Name, API Version and Repo URL are all set here. Name and Package > Name should be the same.
+  # Demo Brix Name, Metadata API Version and Repo URL are all set here. Name and Package > Name should be the same.
   # Find out more about this template here: https://qlabs-org.my.site.com/qverse/s/learn?name=Template-Overview
 
   name: xDO-Template
   package:
     name: xDO-Template
-    api_version: '60.0'
+    api_version: "60.0"
   git:
-    default_branch: main
     repo_url: https://github.com/sfdc-qbranch-emu/xDO-Template
-  source_format: sfdx
-
-  #------------------------------------#
-  # DEMO BRIX CUSTOM SETTINGS          #
-  #------------------------------------#
 
   custom:
-    # ADD YOUR DETAILS HERE FOR DEMO BRIX REGISTRATION
-    # It is recommended you run "Setup New Demo Brix Project" from the VSCode Build Tasks to set these as it will also update other files
+    #------------------------------------#
+    # DEMO BRIX REGISTRATION             #
+    #------------------------------------#
+    # You must run the "Setup New Demo Brix Project" task from the VSCode Build Tasks to set these as it will also update other files. Note: This does not affect existing config.
     # Guidance: https://confluence.internal.salesforce.com/display/QNEXTGENDEMOS/Setup+Qbrix+Task
     qbrix_owner_name: OWNER NAME HERE
     qbrix_owner_team: OWNER TEAM HERE
     qbrix_publisher_name: OWNER OR PUBLISHER NAME HERE
     qbrix_publisher_team: OWNER OR PUBLISHER TEAM HERE
-    qbrix_documentation_url: 
-      https://confluence.internal.salesforce.com/pages/viewpage.action?pageId=487362018
+    qbrix_documentation_url: https://confluence.internal.salesforce.com/pages/viewpage.action?pageId=487362018
     qbrix_description: SHORT DESCRIPTION OF BRIX HERE
-
-    # Github Additional Information
-    qbrix_repo_id: 0
-
-    # GLOBAL EXCLUSION LIST
-    # Used by retrieve_changes and list_changes builtin CCI tasks
-    exclude: &exclude-list
-    - FeatureParameter
-    - 'AuraDefinition:'
-    - 'SiteDotCom:'
-    - 'ManagedTopics:'
-    - 'LiveChatTranscript:'
-    - 'ExperienceResource:'
-    - 'AppMenu:'
-    - 'Profile:'
-    - 'FlowDefinition:'
 
   #------------------------------------#
   # SALESFORCE PACKAGE DEPENDENCIES    #
   #------------------------------------#
+  # Managed and Unmanaged Salesforce Packages can be defined here
   # Guidance: https://qlabs-org.my.site.com/qverse/s/learn?name=Template-Dependencies-and-Packages
 
   dependencies:
@@ -57,209 +37,18 @@ sources:
   #------------------------------------#
   # DEMO BRIX SOURCES                  #
   #------------------------------------#
+  # Here is where dependant brix are defined for this brix
   # Guidance: https://qlabs-org.my.site.com/qverse/s/learn?name=Template-Dependencies-and-Packages
-
-  base:
-    github: https://github.com/sfdc-qbranch-emu/QBrix-0-xDO-BaseConfig
 
   qbrix_register_base:
     github: https://github.com/sfdc-qbranch-emu/QBrix-1-xDO-Tool-QBrixRegister
 
 tasks:
-  #------------------------------------#
-  # CCI TASK DEFAULTS                  #
-  #------------------------------------#
-  # Guidance: https://qlabs-org.my.site.com/qverse/s/learn?name=Template-Defaults-and-Overrides
-
-  run_tests:
-    options:
-      required_org_code_coverage_percent: 75
-
-  load_dataset:
-    options:
-      ignore_row_errors: true
-      drop_missing_schema: true
-      set_recently_viewed: true
-
-  deploy:
-    options:
-      path: force-app
-
-  list_changes:
-    options:
-      exclude: *exclude-list
-
-  retrieve_changes:
-    options:
-      exclude: *exclude-list
 
   #------------------------------------#
-  # Demo Brix Tasks                    #
+  # CUSTOM TASK OVERRIDES & DEFAULTS   #
   #------------------------------------#
-  # CUSTOM TASKS ADDED FOR BRIX DEVELOPMENT
-
-  robot_runner:
-    class_path: qx.platform.cumulusci.tasks.qx_cci_robot_runner.RobotRunner
-
-  qbrix_installed:
-    class_path: qx.platform.salesforce_platform.qx_salesforce_utils.QBrixInstalled
-
-  qbrix_robot_test:
-    class_path: qx.qrobot.qx_robot_launch_sandbox.QRobotTestCapture
-
-  qbrix_trapdoor_add:
-    class_path: qx.platform.cumulusci.tasks.qx_cci_orgconfig_hydrate.NGTrapDoorInjector
-
-  precommit_check:
-    class_path: qx.platform.cumulusci.tasks.qx_cci_pre_commit.PreCommit
-
-  qbrix_landing:
-    class_path: qx.platform.cumulusci.tasks.qx_cci_landing.RunLanding
-
-  qbrix_preflight:
-    class_path: qx.platform.cumulusci.tasks.qx_cci_preflight.RunPreflight
-
-  health_check:
-    class_path: qx.platform.cumulusci.tasks.qx_cci_health_checker.HealthChecker
-
-  update_qbrix:
-    class_path: qx.platform.cumulusci.tasks.qx_cci_brix_update.BrixUpdater
-
-  setup_qbrix:
-    class_path: qx.platform.cumulusci.tasks.qx_cci_initial_setup.InitProject
-
-  list_qbrix:
-    class_path: qx.platform.salesforce_platform.qx_salesforce_utils.ListQBrix
-
-  q_update_dependencies:
-    class_path: qx.platform.salesforce_platform.qx_salesforce_utils.QUpdateDependencies
-
-  mass_qbrix_update:
-    class_path: qx.platform.cumulusci.tasks.qx_cci_mass_ops.MassFileOps
-
-  deploy_settings:
-    description: Checks that Settings have been defined in force-app and deploys them
-      if present
-    class_path: cumulusci.tasks.salesforce.Deploy
-    options:
-      path: force-app/main/default/settings
-
-  spin_request:
-    description: generate a spin
-    class_path: qx.platform.salesforce_platform.qx_salesforce_org_generator.Spin
-
-  upsert_favorite:
-    class_path: qx.platform.salesforce_platform.qx_salesforce_ui.UpsertFavorite
-
-  analytics_manager:
-    class_path: qx.platform.einstein.analytics.qx_analytics.AnalyticsManager
-
-  analytics_timeshift:
-    description: timeshifts the specified dataset and fields based on a date
-    class_path: qx.platform.einstein.analytics.qx_analytics.TimeShift
-
-  user_manager:
-    class_path: qx.platform.salesforce_platform.qx_salesforce_utils.CreateUser
-
-  omniscript_align:
-    class_path: qx.platform.omnistudio.qx_omniscript_chiro.OmniscriptAlign
-
-  validate_qbrix:
-    description: Validates the qbrix
-    class_path: cumulusci.tasks.robotframework.Robot
-    options:
-      suites: qbrix_local/robot/tests/validate.robot
-      vars: browser:headlesschrome
-      test: Validate Qbrix
-      options:
-        report: None
-        log: None
-        output: None
-
-  experience_manager:
-    class_path: qx.platform.digital_experience.qx_experience_manager.ExperienceManager
-
-  experience_file_asset_manager:
-    class_path: qx.platform.digital_experience.qx_experience_manager.ExperienceFileAssetManager
-
-  qbrix_installer_tracking:
-    class_path: qx.platform.cumulusci.tasks.qx_cci_tracking.InstallRecorder
-
-  abort_install:
-    description: Aborts the install due to the when condition being met.
-    class_path: qx.platform.cumulusci.tasks.qx_cci_orgconfig_hydrate.NGAbort
-
-  qx_wait:
-    description: Waits on a specific item
-    class_path: qx.platform.cumulusci.tasks.qx_cci_wait.WaitFor
-
-  qbrix_shell_deploy_metadeploy:
-    description: Runs the specified task or flow of the qbrix in a subprocess.
-    class_path: qx.platform.cumulusci.tasks.qx_cci_legacy_deploy.Deploy
-    options:
-      message: Runs the specified task or flow of the qbrix in a subprocess.
-      entrypoint: deploy_qbrix
-      entrypointtype: flow
-
-  qbrix_cache_add:
-    description: Run the datapack via apex in the new datamodel
-    class_path: qx.platform.cumulusci.tasks.qx_cci_orgconfig_hydrate.NGCacheAdd
-
-  qbrix_metadata_checker:
-    description: Demo Brix Metadata Scan for missing metadata tool
-    class_path: qx.platform.cumulusci.tasks.qx_cci_metadata_checker.MetadataChecker
-
-  orgconfig_hydrate:
-    description: injects additional context into the orgconfig that can be referenced
-      downstream
-    class_path: qx.platform.cumulusci.tasks.qx_cci_orgconfig_hydrate.NGOrgConfig
-
-  deploy_dx:
-    class_path: cumulusci.tasks.sfdx.SFDXOrgTask
-    options:
-      command: project deploy start --source-dir force-app/main/default --ignore-conflicts
-
-  dustpan:
-    description: injects additional context into the orgconfig that can be referenced
-      downstream
-    class_path: qx.platform.cumulusci.tasks.qx_cci_orgconfig_hydrate.NGBroom
-
-  flow_wrapper:
-    description: Runs the specified task or flow of the qbrix in a subprocess in a
-      single task. This allows us to use When against a flow.
-    class_path: qx.platform.cumulusci.tasks.qx_cci_legacy_deploy.Deploy
-
-  qbrix_sfdx:
-    class_path: cumulusci.tasks.sfdx.SFDXOrgTask
-
-  qbrix_upload_files:
-    class_path: qx.platform.salesforce_platform.qx_salesforce_utils.UploadFiles
-
-  qbrix_download_files:
-    class_path: qx.platform.salesforce_platform.qx_salesforce_utils.DownloadFiles
-
-  qbrix_glooop:
-    class_path: qx.platform.cumulusci.tasks.qx_cci_glooop.Glooop
-
-  qbrix_fart:
-    class_path: qx.platform.cumulusci.tasks.qx_cci_fart.FART
-
-  qbrix_purge_inactive_flows:
-    class_path: qx.platform.cumulusci.tasks.qx_cci_flow_cleaner.PurgeInactiveFlows
-
-  #------------------------------------#
-  # DATA TOOL INTEGRATION              #
-  #------------------------------------#
-  # Guide: https://qlabs-org.my.site.com/qverse/s/learn?name=Data-Tool-Overview
-
-  deploy_nextgen_data:
-    class_path: qx.data.qx_nextgen_datatool.RunDataTool
-
-  #------------------------------------#
-  # CUSTOM TASKS                       #
-  #------------------------------------#
-  # Add Your Custom Tasks and Robot Tasks below
-  # Robot Script Guidance: https://qlabs-org.my.site.com/qverse/s/learn?name=Robot-Script-Life-Hacks-01-Introduction
+  # Add custom task definitions and overrides here.
 
 flows:
   #------------------------------------#
@@ -286,13 +75,14 @@ flows:
     steps:
       1:
         flow: qbrix_register_base:deploy_qbrix
+        when: not org_config.is_qbrix_installed('QBrix-1-xDO-Tool-QBrixRegister')
         ui_options:
           name: Installs/Updates Demo Brix Register
 
   #------------------------------------#
   # STAGE 2 of 3: Demo BRIX DEPLOYMENT #
   #------------------------------------#
-  # MOVED TO DEFAULTS AREA BELOW - DEPLOY FLOWS SHOULD NOT NORMALLY BE CHANGED
+  # DEFAULT DEPLOY FLOW IS deploy_qbrix which runs here. If you need to override then define it here and add or override steps (Not recommended)
 
   #-------------------------------------------------#
   # STAGE 3 of 3 (OPTIONAL) POST DEPLOYMENT         #
@@ -304,11 +94,14 @@ flows:
       1:
         # Placeholder task, replace this with your custom steps
         task: None
+      #99:
+      # Placeholder task for data deployments
+      #flow: deploy_qbrix_data
 
   #------------------------------------#
   # DEMO BRIX TEST VALIDATION          #
   #------------------------------------#
-  # Add steps here to validate your org deployment through testing - "validate_qbrix" SHOULD ALWAYS BE DEFINED
+  # Add steps here to validate your org deployment through testing
   # Guide Here: https://confluence.internal.salesforce.com/display/QNEXTGENDEMOS/Validation+Methods
 
   validate_qbrix:
@@ -319,177 +112,13 @@ flows:
   #------------------------------------#
   # DEMO BRIX DATA                     #
   #------------------------------------#
-  # DEFINE DATA GENERATION FLOWS AND TASKS HERE
+  # Define steps to deploy data (if needed) here. Placeholder has been added for the NextGen Data Tool
   # Guide: https://confluence.internal.salesforce.com/display/QNEXTGENDEMOS/Data
-  # NOTE: "deploy_qbrix_data" SHOULD ALWAYS BE DEFINED
 
   deploy_qbrix_data:
     steps:
       1:
         # Placeholder task, replace this with your custom steps
-        # task: deploy_nextgen_data
-        task: None
-
-  #----------------------------------------#
-  # DEMO BRIX LEGACY FLOWS AND DEFAULTS    #
-  #----------------------------------------#
-  # NOTE: These flows should not need to be modified and allow for legacy integration and default overrides.
-
-  # Deploys the Demo Brix
-  deploy_qbrix:
-    steps:
-      1:
-        task: qbrix_installer_tracking
-      2:
-        flow: dependencies
-      3:
-        task: deploy
-        ui_options:
-          name: Deploying Demo Brix Metadata
-      4:
-        flow: post_qbrix_deploy
-      5:
-        task: qbrix_installer_tracking
-        options:
-          explicitexit: true
-
-  # Deploys the Demo Brix into a TSO or Production Org
-  deploy_qbrix_tso:
-    steps:
-      1:
-        flow: deploy_qbrix
-
-  # Deploys the Demo Brix without source dependencies (Used for stacking)
-  deploy_qbrix_without_dependencies:
-    steps:
-      1:
-        task: qbrix_installer_tracking
-      2:
-        flow: prepare_org
-      3:
-        task: deploy
-        ui_options:
-          name: Deploying Demo Brix Metadata
-      4:
-        flow: post_qbrix_deploy
-      5:
-        task: qbrix_installer_tracking
-        options:
-          explicitexit: true
-
-  # Deploys just the contents of this Demo Brix with any essential dependencies
-  deploy_qbrix_min:
-    steps:
-      1:
-        flow: deploy_qbrix_without_dependencies
-
-  # Legacy flow to redirect to the new flow for deploying data.
-  generate_qbrix_data:
-    steps:
-      1:
-        flow: deploy_qbrix_data
-
-  # Default Override of cci task
-  deploy_unmanaged_ee:
-    steps:
-      6:
-        task: None
-
-  # Default Override of cci task
-  deploy_unmanaged:
-    steps:
-      4:
-        task: None
-
-  dev_org:
-    steps:
-      1:
-        flow: deploy_qbrix
-      2:
-        task: None
-      3:
-        task: None
-      4:
-        task: snapshot_changes
-
-  qa_org:
-    steps:
-      1:
-        flow: deploy_qbrix
-      2:
-        task: None
-      3:
-        task: None
-      4:
-        task: snapshot_changes
-
-  dependencies:
-    steps:
-      1:
-        flow: prepare_org
-      2:
-        flow: source_dependencies
-
-  config_dev:
-    steps:
-      1:
-        task: None
-      2:
-        task: None
-      3:
-        flow: post_qbrix_deploy
-      90:
-        task: None
-
-  config_qa:
-    steps:
-      1:
-        task: None
-      2:
-        task: None
-      3:
-        flow: post_qbrix_deploy
-      90:
-        task: None
-
-orgs:
-  #------------------------------------#
-  # SCRATCH ORG CONFIG                 #
-  #------------------------------------#
-  # DEFAULT SETTINGS FOR SCRATCH ORGS. PREVIEW ORGS ARE DESIGNED TO LOAD ON NA135 WHICH IS AN R0 INSTANCE
-  # These should not need to be modified
-
-  scratch:
-    dev:
-      config_file: orgs/dev.json
-      days: 30
-      namespaced: false
-    dev_preview:
-      config_file: orgs/dev_preview.json
-      days: 30
-      namespaced: false
-    qa:
-      config_file: orgs/dev.json
-      days: 30
-      namespaced: false
-    qa_preview:
-      config_file: orgs/dev_preview.json
-      days: 30
-      namespaced: false
-
-plans:
-  #------------------------------------#
-  # METADEPLOY CONFIG                  #
-  #------------------------------------#
-  # DEFINE DEPLOY PLANS HERE FOR USE WITH METADEPLOY
-
-  deploy_q_brix_plan:
-    slug: deployqbrix
-    title: Deploy Demo Brix
-    tier: primary
-    is_listed: true
-    steps:
-      1:
-        task: qbrix_shell_deploy_metadeploy
-        ui_options:
-          name: Deploy Demo Brix
+        task: deploy_nextgen_data
+        #options:
+        #  data_keys:
