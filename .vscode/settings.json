@@ -21,6 +21,5 @@
   "python.terminal.activateEnvironment": true,
   "[yaml]": {
     "editor.defaultFormatter": "redhat.vscode-yaml"
-  },
-  "salesforcedx-vscode-apex.java.home": ""
+  }
 }
