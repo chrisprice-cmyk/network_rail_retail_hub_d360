@@ -134,7 +134,8 @@ jobs:
   setup_build_steps:
     if: |
       always() &&
-      (needs.qlabs_publish.result == 'success' || needs.qlabs_publish.result == 'skipped')
+      (needs.qlabs_publish.result == 'success' || needs.qlabs_publish.result == 'skipped') &&
+      ! contains(github.repository, '-7-')
     needs: [qlabs_publish]
     runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
@@ -213,7 +214,8 @@ jobs:
   setup_hybrid_build_steps:
     if: |
       always() &&
-      (needs.qlabs_publish.result == 'success' || needs.qlabs_publish.result == 'skipped')
+      (needs.qlabs_publish.result == 'success' || needs.qlabs_publish.result == 'skipped') &&
+      ! contains(github.repository, '-7-')
     needs: [qlabs_publish]
     runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
@@ -283,7 +285,8 @@ jobs:
   build_deployments:
     if: |
       always() && 
-      needs.setup_build_steps.result == 'success'
+      needs.setup_build_steps.result == 'success' &&
+      ! contains(github.repository, '-7-')
     needs: [setup_build_steps]
     runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
@@ -559,7 +562,8 @@ jobs:
       always() && 
       needs.setup_hybrid_build_steps.result == 'success' &&
       needs.setup_hybrid_build_steps.outputs.matrix!='{"include":[]}' && 
-      needs.setup_hybrid_build_steps.outputs.matrix != ''
+      needs.setup_hybrid_build_steps.outputs.matrix != '' &&
+      ! contains(github.repository, '-7-')
     needs: [setup_hybrid_build_steps]
     runs-on: sfdc-qbranch-nextgen-ubuntu
     continue-on-error: true
@@ -834,7 +838,8 @@ jobs:
     if: |
       always() && 
       (github.event.pull_request.head.ref != '' || github.ref_name == 'main') &&
-      needs.build_deployments.result == 'success'
+      needs.build_deployments.result == 'success' &&
+      ! contains(github.repository, '-7-')
     needs: [build_deployments]
     runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
@@ -894,7 +899,8 @@ jobs:
       (github.event.pull_request.head.ref != '' || github.ref_name == 'main') &&
       (needs.setup_leafshake_steps.result == 'success' || needs.setup_leafshake_steps.result == 'skipped' )&&
       needs.setup_leafshake_steps.outputs.matrix!='{"include":[]}' && 
-      needs.setup_leafshake_steps.outputs.matrix != ''
+      needs.setup_leafshake_steps.outputs.matrix != '' &&
+      ! contains(github.repository, '-7-')
     runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
       image: ${{vars.BUILD_BASE_CONTAINER}}
@@ -1164,7 +1170,8 @@ jobs:
     if: |
       always() &&
       (github.ref_name == 'main' || github.ref_name == 'master') &&
-      (needs.leaf_shake_deployments.result == 'success' || needs.leaf_shake_deployments.result == 'skipped' || needs.leaf_shake_deployments.result == 'failed')
+      (needs.leaf_shake_deployments.result == 'success' || needs.leaf_shake_deployments.result == 'skipped' || needs.leaf_shake_deployments.result == 'failed') &&
+      ! contains(github.repository, '-7-')
     runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
       image: ${{vars.BUILD_BASE_CONTAINER}}
@@ -1213,7 +1220,8 @@ jobs:
     if: |
       always() &&
       (github.ref_name == 'main' || github.ref_name == 'master') &&
-      (needs.setup_autodeployment_steps.result == 'success' || needs.setup_autodeployment_steps.result != 'skipped')
+      (needs.setup_autodeployment_steps.result == 'success' || needs.setup_autodeployment_steps.result != 'skipped') &&
+      ! contains(github.repository, '-7-')
     needs: [setup_autodeployment_steps]
     runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
@@ -1334,7 +1342,8 @@ jobs:
     if: |
       always() &&
       (github.ref_name == 'main' || github.ref_name == 'master') &&
-      (needs.setup_autodeployment_steps.result == 'success' || needs.setup_autodeployment_steps.result != 'skipped')
+      (needs.setup_autodeployment_steps.result == 'success' || needs.setup_autodeployment_steps.result != 'skipped') &&
+      ! contains(github.repository, '-7-')
     needs: [setup_autodeployment_steps]
     runs-on: sfdc-qbranch-nextgen-ubuntu
     continue-on-error: true
@@ -1458,7 +1467,8 @@ jobs:
       always() &&
       (github.ref_name == 'main' || github.ref_name == 'master') &&
       needs.build_deployments.result == 'success' &&
-      (needs.leaf_shake_deployments.result == 'success' || needs.leaf_shake_deployments.result == 'skipped' || needs.leaf_shake_deployments.result == 'failed')
+      (needs.leaf_shake_deployments.result == 'success' || needs.leaf_shake_deployments.result == 'skipped' || needs.leaf_shake_deployments.result == 'failed') &&
+      ! contains(github.repository, '-7-')
     runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
       image: ${{vars.BUILD_BASE_CONTAINER}}
