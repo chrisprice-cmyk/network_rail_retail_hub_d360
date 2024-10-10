@@ -90,6 +90,7 @@ jobs:
             }
             response = requests.request("DELETE", url, headers=headers, data=payload)
             response = requests.request("PUT", url, headers=headers, data=payload)
+            
 
           refreshQBrix('${{ github.event.repository.name }}')
           filepath='cumulusci.yml'
@@ -133,8 +134,7 @@ jobs:
   setup_build_steps:
     if: |
       always() &&
-      (needs.qlabs_publish.result == 'success' || needs.qlabs_publish.result == 'skipped') &&
-      ! contains(github.repository, '-7-')
+      (needs.qlabs_publish.result == 'success' || needs.qlabs_publish.result == 'skipped')
     needs: [qlabs_publish]
     runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
@@ -213,8 +213,7 @@ jobs:
   setup_hybrid_build_steps:
     if: |
       always() &&
-      (needs.qlabs_publish.result == 'success' || needs.qlabs_publish.result == 'skipped') &&
-      ! contains(github.repository, '-7-')
+      (needs.qlabs_publish.result == 'success' || needs.qlabs_publish.result == 'skipped')
     needs: [qlabs_publish]
     runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
@@ -283,9 +282,8 @@ jobs:
 
   build_deployments:
     if: |
-      always() &&
-      needs.setup_build_steps.result == 'success' &&
-      ! contains(github.repository, '-7-')
+      always() && 
+      needs.setup_build_steps.result == 'success'
     needs: [setup_build_steps]
     runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
@@ -298,7 +296,7 @@ jobs:
       matrix: ${{ fromJSON(needs.setup_build_steps.outputs.matrix) }}
       max-parallel: 250 #run in sequence
     name: 'Required: ${{matrix.description}} - ${{matrix.templateid}}'
-
+    
     steps:
       - uses: actions/checkout@v4
 
@@ -491,7 +489,7 @@ jobs:
         id: check_validationresults_present
         run: |
           pwd
-          ls -la
+          ls -la  
           if test -f validationresult.json; then
             echo "files_exists=true" >> "$GITHUB_OUTPUT"
           else
@@ -553,16 +551,15 @@ jobs:
               "leafshakebrixbuildname": "${{ matrix.build }}",
               "leafshakebrixname": "${{github.ref_name}}",
               "buildstatus": "Failed",
-              "details": "${{ steps.cci_failure_details_final.outputs.cci_failure_details_final }}"
+              "details": "${{ steps.cci_failure_details_final.outputs.cci_failure_details_final }}"    
           }'
 
   hybrid_org_build_deployments:
     if: |
-      always() &&
+      always() && 
       needs.setup_hybrid_build_steps.result == 'success' &&
-      needs.setup_hybrid_build_steps.outputs.matrix!='{"include":[]}' &&
-      needs.setup_hybrid_build_steps.outputs.matrix != '' &&
-      ! contains(github.repository, '-7-')
+      needs.setup_hybrid_build_steps.outputs.matrix!='{"include":[]}' && 
+      needs.setup_hybrid_build_steps.outputs.matrix != ''
     needs: [setup_hybrid_build_steps]
     runs-on: sfdc-qbranch-nextgen-ubuntu
     continue-on-error: true
@@ -579,7 +576,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Update QX
+      - name: Update QX      
         run: qx update
 
       - name: Set ENV variables
@@ -768,7 +765,7 @@ jobs:
         id: check_validationresults_present
         run: |
           pwd
-          ls -la
+          ls -la  
           if test -f validationresult.json; then
             echo "files_exists=true" >> "$GITHUB_OUTPUT"
           else
@@ -830,15 +827,14 @@ jobs:
               "leafshakebrixbuildname": "${{ matrix.build }}",
               "leafshakebrixname": "${{github.ref_name}}",
               "buildstatus": "Failed",
-              "details": "${{ steps.cci_failure_details_final.outputs.cci_failure_details_final }}"
+              "details": "${{ steps.cci_failure_details_final.outputs.cci_failure_details_final }}"    
           }'
 
   setup_leafshake_steps:
     if: |
-      always() &&
+      always() && 
       (github.event.pull_request.head.ref != '' || github.ref_name == 'main') &&
-      needs.build_deployments.result == 'success' &&
-      ! contains(github.repository, '-7-')
+      needs.build_deployments.result == 'success'
     needs: [build_deployments]
     runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
@@ -894,12 +890,11 @@ jobs:
   leaf_shake_deployments:
     needs: [setup_leafshake_steps]
     if: |
-      always() &&
+      always() && 
       (github.event.pull_request.head.ref != '' || github.ref_name == 'main') &&
       (needs.setup_leafshake_steps.result == 'success' || needs.setup_leafshake_steps.result == 'skipped' )&&
-      needs.setup_leafshake_steps.outputs.matrix!='{"include":[]}' &&
-      needs.setup_leafshake_steps.outputs.matrix != '' &&
-      ! contains(github.repository, '-7-')
+      needs.setup_leafshake_steps.outputs.matrix!='{"include":[]}' && 
+      needs.setup_leafshake_steps.outputs.matrix != ''
     runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
       image: ${{vars.BUILD_BASE_CONTAINER}}
@@ -1161,7 +1156,7 @@ jobs:
               "leafshakebrixbuildname": "${{ matrix.reference_brix_leafshake_build }}",
               "leafshakebrixname": "${{matrix.reference_brix}}",
               "buildstatus": "Failed",
-              "details": "${{ steps.cci_failure_details_final.outputs.cci_failure_details_final }}"
+              "details": "${{ steps.cci_failure_details_final.outputs.cci_failure_details_final }}"    
           }'
 
   setup_autodeployment_steps:
@@ -1169,8 +1164,7 @@ jobs:
     if: |
       always() &&
       (github.ref_name == 'main' || github.ref_name == 'master') &&
-      (needs.leaf_shake_deployments.result == 'success' || needs.leaf_shake_deployments.result == 'skipped' || needs.leaf_shake_deployments.result == 'failed') &&
-      ! contains(github.repository, '-7-')
+      (needs.leaf_shake_deployments.result == 'success' || needs.leaf_shake_deployments.result == 'skipped' || needs.leaf_shake_deployments.result == 'failed')
     runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
       image: ${{vars.BUILD_BASE_CONTAINER}}
@@ -1219,8 +1213,7 @@ jobs:
     if: |
       always() &&
       (github.ref_name == 'main' || github.ref_name == 'master') &&
-      (needs.setup_autodeployment_steps.result == 'success' || needs.setup_autodeployment_steps.result != 'skipped') &&
-      ! contains(github.repository, '-7-')
+      (needs.setup_autodeployment_steps.result == 'success' || needs.setup_autodeployment_steps.result != 'skipped')
     needs: [setup_autodeployment_steps]
     runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
@@ -1341,8 +1334,7 @@ jobs:
     if: |
       always() &&
       (github.ref_name == 'main' || github.ref_name == 'master') &&
-      (needs.setup_autodeployment_steps.result == 'success' || needs.setup_autodeployment_steps.result != 'skipped') &&
-      ! contains(github.repository, '-7-')
+      (needs.setup_autodeployment_steps.result == 'success' || needs.setup_autodeployment_steps.result != 'skipped')
     needs: [setup_autodeployment_steps]
     runs-on: sfdc-qbranch-nextgen-ubuntu
     continue-on-error: true
@@ -1466,8 +1458,7 @@ jobs:
       always() &&
       (github.ref_name == 'main' || github.ref_name == 'master') &&
       needs.build_deployments.result == 'success' &&
-      (needs.leaf_shake_deployments.result == 'success' || needs.leaf_shake_deployments.result == 'skipped' || needs.leaf_shake_deployments.result == 'failed') &&
-      ! contains(github.repository, '-7-')
+      (needs.leaf_shake_deployments.result == 'success' || needs.leaf_shake_deployments.result == 'skipped' || needs.leaf_shake_deployments.result == 'failed')
     runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
       image: ${{vars.BUILD_BASE_CONTAINER}}
