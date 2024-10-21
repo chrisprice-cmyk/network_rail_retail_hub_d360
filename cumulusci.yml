@@ -8,7 +8,7 @@ project:
   name: xDO-Template
   package:
     name: xDO-Template
-    api_version: "60.0"
+    api_version: "62.0"
   git:
     repo_url: https://github.com/sfdc-qbranch-emu/xDO-Template
 
@@ -44,6 +44,13 @@ sources:
     github: https://github.com/sfdc-qbranch-emu/QBrix-1-xDO-Tool-QBrixRegister
 
 tasks:
+  #------------------------------------#
+  # NextGen Data Tool                  #
+  #------------------------------------#
+  # NextGen Data Tool Integration - Add data keys below
+
+  deploy_nextgen_data:
+    class_path: qx.data.qx_nextgen_datatool.RunDataTool
 
   #------------------------------------#
   # CUSTOM TASK OVERRIDES & DEFAULTS   #

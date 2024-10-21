@@ -5,6 +5,8 @@
       "default": true
     }
   ],
-  "namespace": null,
-  "sourceApiVersion": "60.0"
+  "name": "brix",
+  "namespace": "",
+  "sfdcLoginUrl": "https://login.salesforce.com",
+  "sourceApiVersion": "62.0"
 }
