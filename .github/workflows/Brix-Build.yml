@@ -376,7 +376,7 @@ jobs:
         # Create a scratch org to attach - future use the org pool service
       - name: generate scratch org ${{ matrix.isscratch }}- if the evn variable to use a template is set to false - we fallback to org/dev.json - ${{ steps.qlab_config_settings.outputs.ORG_TARGET_USER }}
         if: matrix.isscratch == 'true' && steps.qlab_config_settings.outputs.ORG_TARGET_USER == ''
-        uses: nick-fields/retry@v2
+        uses: nick-fields/retry@v3
         with:
           timeout_minutes: 120
           max_attempts: 5
@@ -386,7 +386,7 @@ jobs:
 
       - name: generate production org ${{ matrix.isscratch }} - if the evn variable to use a template is set to true - we connect to the devhub that is enabled to provision an org - ${{ steps.qlab_config_settings.outputs.ORG_TARGET_USER }}
         if: matrix.isscratch  == 'false'  && steps.qlab_config_settings.outputs.ORG_TARGET_USER == ''
-        uses: nick-fields/retry@v2
+        uses: nick-fields/retry@v3
         with:
           timeout_minutes: 120
           max_attempts: 3
@@ -469,7 +469,7 @@ jobs:
           cci org info ninja
 
       - name: Running ${{ matrix.description }} ${{ matrix.build_action }}::${{ matrix.build_action_type }}
-        uses: nick-fields/retry@v2
+        uses: nick-fields/retry@v3
         with:
           timeout_minutes: 1440
           retry_on: error
@@ -479,7 +479,7 @@ jobs:
           on_retry_command: cci error info
 
       - name: Running Validate
-        uses: nick-fields/retry@v2
+        uses: nick-fields/retry@v3
         with:
           timeout_minutes: 1440
           retry_on: error
@@ -653,7 +653,7 @@ jobs:
         # Create a scratch org to attach - future use the org pool service
       - name: generate scratch org ${{ matrix.isscratch }}- if the evn variable to use a template is set to false - we fallback to org/dev.json - ${{ steps.qlab_config_settings.outputs.ORG_TARGET_USER }}
         if: matrix.isscratch == 'true' && steps.qlab_config_settings.outputs.ORG_TARGET_USER == ''
-        uses: nick-fields/retry@v2
+        uses: nick-fields/retry@v3
         with:
           timeout_minutes: 120
           max_attempts: 5
@@ -663,7 +663,7 @@ jobs:
 
       - name: generate production org ${{ matrix.isscratch }} - if the evn variable to use a template is set to true - we connect to the devhub that is enabled to provision an org - ${{ steps.qlab_config_settings.outputs.ORG_TARGET_USER }}
         if: matrix.isscratch  == 'false'  && steps.qlab_config_settings.outputs.ORG_TARGET_USER == ''
-        uses: nick-fields/retry@v2
+        uses: nick-fields/retry@v3
         with:
           timeout_minutes: 120
           max_attempts: 3
@@ -746,7 +746,7 @@ jobs:
           cci org info ninja
 
       - name: Running ${{ matrix.description }} ${{ matrix.build_action }}::${{ matrix.build_action_type }}
-        uses: nick-fields/retry@v2
+        uses: nick-fields/retry@v3
         with:
           timeout_minutes: 1440
           retry_on: error
@@ -756,7 +756,7 @@ jobs:
           on_retry_command: cci error info
 
       - name: Running Validate
-        uses: nick-fields/retry@v2
+        uses: nick-fields/retry@v3
         with:
           timeout_minutes: 1440
           retry_on: error
@@ -1005,7 +1005,7 @@ jobs:
         # Create a scratch org to attach - future use the org pool service
       - name: generate scratch org ${{ matrix.isscratch }}- if the evn variable to use a template is set to false - we fallback to org/dev.json - ${{ steps.qlab_config_settings.outputs.ORG_TARGET_USER }}
         if: ((matrix.isscratch == 'true') && (steps.qlab_config_settings.outputs.ORG_TARGET_USER ==''))
-        uses: nick-fields/retry@v2
+        uses: nick-fields/retry@v3
         with:
           timeout_minutes: 120
           max_attempts: 5
@@ -1016,7 +1016,7 @@ jobs:
 
       - name: generate production org ${{ matrix.isscratch }} - if the evn variable to use a template is set to true - we connect to the devhub that is enabled to provision an org - ${{ steps.qlab_config_settings.outputs.ORG_TARGET_USER }}
         if: ((matrix.isscratch  == 'false' ) && (steps.qlab_config_settings.outputs.ORG_TARGET_USER ==''))
-        uses: nick-fields/retry@v2
+        uses: nick-fields/retry@v3
         with:
           timeout_minutes: 120
           max_attempts: 3
@@ -1116,7 +1116,7 @@ jobs:
           cci org info ninja
 
       - name: Running ${{ matrix.description }} ${{ matrix.leaf_shake_action }}::${{ matrix.reference_brix }}
-        uses: nick-fields/retry@v2
+        uses: nick-fields/retry@v3
         with:
           timeout_minutes: 1440
           retry_on: error
@@ -1292,7 +1292,7 @@ jobs:
 
       - name: Running ${{ matrix.description }} ${{ matrix.action }}::${{ matrix.target }}
         if: matrix.targetusername!='' && matrix.ishybrid == 'false'
-        uses: nick-fields/retry@v2
+        uses: nick-fields/retry@v3
         with:
           timeout_minutes: 1440
           retry_on: error
@@ -1415,7 +1415,7 @@ jobs:
 
       - name: Running ${{ matrix.description }} ${{ matrix.action }}::${{ matrix.target }}
         if: matrix.targetusername!='' && matrix.ishybrid == 'true'
-        uses: nick-fields/retry@v2
+        uses: nick-fields/retry@v3
         with:
           timeout_minutes: 1440
           retry_on: error
@@ -1530,7 +1530,7 @@ jobs:
       - name: metadeploy publish - if applicable
         if: (env.AUTOPUBLISH == 'true' && ( github.ref_name == 'main' || github.ref_name == 'master'))
         continue-on-error: true
-        uses: nick-fields/retry@v2
+        uses: nick-fields/retry@v3
         with:
           timeout_minutes: 5
           retry_on: error
