@@ -19,6 +19,7 @@ project:
     # You must run the "Setup New Demo Brix Project" task from the VSCode Build Tasks to set these as it will also update other files. Note: This does not affect existing config.
     # Guidance: https://confluence.internal.salesforce.com/display/QNEXTGENDEMOS/Setup+Qbrix+Task
     qbrix_owner_name: OWNER NAME HERE
+    qbrix_owner_email: OWNER EMAIL HERE
     qbrix_owner_team: OWNER TEAM HERE
     qbrix_publisher_name: OWNER OR PUBLISHER NAME HERE
     qbrix_publisher_team: OWNER OR PUBLISHER TEAM HERE
