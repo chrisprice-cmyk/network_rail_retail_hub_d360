@@ -1,30 +1,30 @@
 {
-  "cSpell.words": [
-    "cumulusci",
-    "robotframework",
-    "qbrix",
-    "brix"
-  ],
-  "robot.pythonpath": [
-    "${workspaceFolder}",
-    "${workspaceFolder}/qbrix_local",
-    "qx/qrobot/keywords"
-  ],
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter"
+  },
+  "[yaml]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml"
+  },
   "editor.trimAutoWhitespace": true,
   "files.associations": {
     "*.resource": "robotframework",
     "*.robot": "robotframework"
   },
-  "[python]": {
-    "editor.defaultFormatter": "ms-python.black-formatter"
-  },
   "python.terminal.activateEnvironment": true,
-  "[yaml]": {
-    "editor.defaultFormatter": "redhat.vscode-yaml"
-  },
+  "robot.pythonpath": [
+    "${workspaceFolder}",
+    "${workspaceFolder}/qbrix_local",
+    "qx/qrobot/keywords"
+  ],
+  "git.branchProtection": [
+    "main",
+    "master"
+  ],
+  "salesforcedx-vscode-core.push-or-deploy-on-save.enabled": false,
   "search.exclude": {
-    "**/node_modules": true,
+    "**/.sf": true,
+    "**/.sfdx": true,
     "**/bower_components": true,
-    "**/.sfdx": true
+    "**/node_modules": true
   }
 }

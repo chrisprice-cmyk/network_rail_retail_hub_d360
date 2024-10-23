@@ -1,5 +1,4 @@
 {
-  "orgName": "xDO-Template - Dev org",
   "edition": "Enterprise",
   "features": [
     "addcustomapps:30",
@@ -77,16 +76,14 @@
     "workflowflowactionfeature",
     "workthankspref"
   ],
+  "orgName": "xDO-Template - Dev org",
   "settings": {
-    "lightningExperienceSettings": {
-      "enableS1DesktopEnabled": true
-    },
     "accountSettings": {
-      "enableRelateContactToMultipleAccounts": true,
-      "enableAccountTeams": true
+      "enableAccountTeams": true,
+      "enableRelateContactToMultipleAccounts": true
     },
-    "userEngagementSettings": {
-      "enableShowSalesforceUserAssist": false
+    "chatterSettings": {
+      "enableChatter": true
     },
     "communitiesSettings": {
       "enableNetworksEnabled": true
@@ -94,13 +91,16 @@
     "experienceBundleSettings": {
       "enableExperienceBundleMetadata": true
     },
-    "userManagementSettings": {
-      "enableEnhancedProfileMgmt": true,
-      "enableEnhancedPermsetMgmt": true,
-      "enableNewProfileUI": true
+    "lightningExperienceSettings": {
+      "enableS1DesktopEnabled": true
     },
-    "chatterSettings": {
-      "enableChatter": true
+    "userEngagementSettings": {
+      "enableShowSalesforceUserAssist": false
+    },
+    "userManagementSettings": {
+      "enableEnhancedPermsetMgmt": true,
+      "enableEnhancedProfileMgmt": true,
+      "enableNewProfileUI": true
     }
   }
 }

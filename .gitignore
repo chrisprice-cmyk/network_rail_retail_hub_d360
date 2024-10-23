@@ -9,6 +9,8 @@
 .vscode/*
 !.vscode/tasks.json
 !.vscode/settings.json
+.vscode-test
+*.code-workspace
 
 # JETBRAINS
 .idea/
@@ -35,6 +37,10 @@ src/
 # SALESFORCE DX
 .sfdx/
 .sf/
+.project
+.settings/
+.metadata
+build.properties
 **/lwc/jsconfig.json
 config/user/*
 generatedDelta/*
@@ -44,6 +50,7 @@ package/*
 coverage/
 .localdevserver/
 deploy-options.json
+apex-scripts/log
 force-app/main/default/profiles/
 force-app/main/default/appMenus/AppSwitcher.appMenu-meta.xml
 force-app/main/default/flexipages/LightningService_UtilityBar.flexipage-meta.xml
@@ -81,6 +88,8 @@ venv.bak/
 .VolumeIcon.icns
 .com.apple.timemachine.donotpresent
 ._*
+*.DS_Store
+Thumbs.db
 
 # WINDOWS
 Thumbs.db
@@ -101,14 +110,27 @@ logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+lerna-debug.log*
 *.key
 bin/dataloader/dataloader.jar
 testim-headless.zip
 .eslintcache
+.stylelintcache
 hardis-report/
 node_modules/
+IlluminatedCloud
 .npmrc
 package-lock.json
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+*.tsbuildinfo
+*.tgz
+dist/
+out/
+lib/
+tmp/
+
+# Jupyter Notebook
+.ipynb_checkpoints
 
 # ROBOT FRAMEWORK
 browser/
@@ -124,5 +146,5 @@ validationresult.json
 *.pyc
 .idea/*
 
-#Quasar 
+#Quasar
 QUASAR_LEAF_SHAKE
