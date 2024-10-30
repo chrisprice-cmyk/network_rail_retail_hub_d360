@@ -8,9 +8,9 @@
     "addinsightsquerylimit:30",
     "analyticsadminperms",
     "analyticsappembedded",
+    "accountinspection",
     "api",
-    "b2bcommerce",
-    "b2ccommercegmv",
+    "enableSetPasswordInApi",
     "caseclassification",
     "casewrapup",
     "chatbot",
@@ -18,29 +18,24 @@
     "communities",
     "connectedapptoolingapi",
     "contactstomultipleaccounts",
-    "cpq",
     "customercommunity",
     "customercommunitylogin",
     "customercommunityplus",
     "customercommunitypluslogin",
-    "datamaskuser",
+    "dataprocessingengine",
     "defaultworkflowuser",
     "developmentwave",
+    "docgen",
+    "docgenind",
     "documentchecklist",
     "einsteinanalyticsplus",
     "einsteinarticlerecommendations",
     "einsteinbuilderfree",
     "einsteinrecommendationbuilder",
+    "einsteinsearch",
     "enableprm",
     "entitlements",
     "fieldaudittrail",
-    "fieldservice:1",
-    "fieldserviceappointmentassistantuser:1",
-    "fieldservicedispatcheruser:1",
-    "fieldservicelastmileuser:1",
-    "fieldservicemobileextension",
-    "fieldservicemobileuser:1",
-    "fieldserviceschedulinguser:1",
     "firsttouchenablementdate",
     "flowsites",
     "highvelocitysales",
@@ -54,14 +49,14 @@
     "lightningscheduler",
     "lightningserviceconsole",
     "liveagent",
+    "livemessage",
     "macros",
     "marketinguser",
     "monthsofdatatosync",
-    "pardot",
     "partnercommunity",
     "personaccounts",
     "platformconnect:5",
-    "privateapi",
+    "platformcache",
     "processbuilder",
     "salescloudeinstein",
     "salesforcecontentuser",
@@ -72,18 +67,13 @@
     "sharedactivities",
     "socialcustomerservice",
     "waveplatform",
-    "workflow",
-    "workflowflowactionfeature",
-    "workthankspref"
+    "workflow"
   ],
   "orgName": "xDO-Template - Dev org",
   "settings": {
     "accountSettings": {
       "enableAccountTeams": true,
       "enableRelateContactToMultipleAccounts": true
-    },
-    "chatterSettings": {
-      "enableChatter": true
     },
     "communitiesSettings": {
       "enableNetworksEnabled": true
@@ -93,6 +83,9 @@
     },
     "lightningExperienceSettings": {
       "enableS1DesktopEnabled": true
+    },
+    "mobileSettings": {
+      "enableS1EncryptedStoragePref2": false
     },
     "userEngagementSettings": {
       "enableShowSalesforceUserAssist": false
