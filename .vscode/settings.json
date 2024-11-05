@@ -21,7 +21,6 @@
     "master"
   ],
   "salesforcedx-vscode-core.push-or-deploy-on-save.enabled": false,
-  "salesforcedx-vscode-apex.java.home": "",
   "search.exclude": {
     "**/.sf": true,
     "**/.sfdx": true,
@@ -54,5 +53,6 @@
     "**/package.json": true,
     "**/playwright.config.ts": true
   },
-  "explorer.excludeGitIgnore": true
+  "explorer.excludeGitIgnore": true,
+  "robot.language-server.python": "/usr/bin/python3"
 }
