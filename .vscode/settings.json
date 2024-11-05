@@ -21,6 +21,7 @@
     "master"
   ],
   "salesforcedx-vscode-core.push-or-deploy-on-save.enabled": false,
+  "salesforcedx-vscode-apex.java.home": "",
   "search.exclude": {
     "**/.sf": true,
     "**/.sfdx": true,
@@ -29,7 +30,7 @@
     "**/.devcontainer": true,
     "**/.github": true,
     "**/.vscode": true,
-    "**/.cci": true,
+    "**/.cci": true
   },
   "files.exclude": {
     "**/.sf": true,
@@ -51,7 +52,7 @@
     "**/.prettierrc": true,
     "**/jest.config.js": true,
     "**/package.json": true,
-    "**/playwright.config.ts": true,
+    "**/playwright.config.ts": true
   },
   "explorer.excludeGitIgnore": true
 }
