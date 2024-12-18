@@ -134,8 +134,7 @@ jobs:
   setup_build_steps:
     if: |
       always() &&
-      (needs.qlabs_publish.result == 'success' || needs.qlabs_publish.result == 'skipped') &&
-      ! contains(github.repository, '-7-')
+      (needs.qlabs_publish.result == 'success' || needs.qlabs_publish.result == 'skipped')
     needs: [qlabs_publish]
     runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
@@ -214,8 +213,7 @@ jobs:
   setup_hybrid_build_steps:
     if: |
       always() &&
-      (needs.qlabs_publish.result == 'success' || needs.qlabs_publish.result == 'skipped') &&
-      ! contains(github.repository, '-7-')
+      (needs.qlabs_publish.result == 'success' || needs.qlabs_publish.result == 'skipped')
     needs: [qlabs_publish]
     runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
@@ -285,8 +283,7 @@ jobs:
   build_deployments:
     if: |
       always() &&
-      needs.setup_build_steps.result == 'success' &&
-      ! contains(github.repository, '-7-')
+      needs.setup_build_steps.result == 'success'
     needs: [setup_build_steps]
     runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
@@ -562,8 +559,7 @@ jobs:
       always() &&
       needs.setup_hybrid_build_steps.result == 'success' &&
       needs.setup_hybrid_build_steps.outputs.matrix!='{"include":[]}' &&
-      needs.setup_hybrid_build_steps.outputs.matrix != '' &&
-      ! contains(github.repository, '-7-')
+      needs.setup_hybrid_build_steps.outputs.matrix != ''
     needs: [setup_hybrid_build_steps]
     runs-on: sfdc-qbranch-nextgen-ubuntu
     continue-on-error: true
@@ -838,8 +834,7 @@ jobs:
     if: |
       always() &&
       (github.event.pull_request.head.ref != '' || github.ref_name == 'main') &&
-      needs.build_deployments.result == 'success' &&
-      ! contains(github.repository, '-7-')
+      needs.build_deployments.result == 'success'
     needs: [build_deployments]
     runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
@@ -899,8 +894,7 @@ jobs:
       (github.event.pull_request.head.ref != '' || github.ref_name == 'main') &&
       (needs.setup_leafshake_steps.result == 'success' || needs.setup_leafshake_steps.result == 'skipped' )&&
       needs.setup_leafshake_steps.outputs.matrix!='{"include":[]}' &&
-      needs.setup_leafshake_steps.outputs.matrix != '' &&
-      ! contains(github.repository, '-7-')
+      needs.setup_leafshake_steps.outputs.matrix != ''
     runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
       image: ${{vars.BUILD_BASE_CONTAINER}}
@@ -1170,8 +1164,7 @@ jobs:
     if: |
       always() &&
       (github.ref_name == 'main' || github.ref_name == 'master') &&
-      (needs.leaf_shake_deployments.result == 'success' || needs.leaf_shake_deployments.result == 'skipped' || needs.leaf_shake_deployments.result == 'failed') &&
-      ! contains(github.repository, '-7-')
+      (needs.leaf_shake_deployments.result == 'success' || needs.leaf_shake_deployments.result == 'skipped' || needs.leaf_shake_deployments.result == 'failed')
     runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
       image: ${{vars.BUILD_BASE_CONTAINER}}
@@ -1207,7 +1200,7 @@ jobs:
         id: qlab_config_settings
         run: |
           # call qlabs setting service for this qbrix -> get the json -> pipe to jq
-           curl --location --request GET 'https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixAutoDeploySettings?qbrixid=${{ github.event.repository.name }}' \
+           curl --location --request GET 'https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixAutoDeploySettings?qbrixid=${{ github.event.repository.name }}&hybrid=false' \
            --header 'Content-Type: application/json' \
            --header 'Authorization: Bearer ${{ steps.qlabs_accesstoken.outputs.qlabs_accesstoken }}' | jq > automated_deploy.json
 
@@ -1220,8 +1213,7 @@ jobs:
     if: |
       always() &&
       (github.ref_name == 'main' || github.ref_name == 'master') &&
-      (needs.setup_autodeployment_steps.result == 'success' || needs.setup_autodeployment_steps.result != 'skipped') &&
-      ! contains(github.repository, '-7-')
+      (needs.setup_autodeployment_steps.result == 'success' || needs.setup_autodeployment_steps.result != 'skipped')
     needs: [setup_autodeployment_steps]
     runs-on: sfdc-qbranch-nextgen-ubuntu
     container:
@@ -1338,13 +1330,62 @@ jobs:
             "commit": ${{ toJSON(github.event.head_commit.message) }}
           }'
 
+  setup_hyrbid_autodeployment_steps:
+    needs: [leaf_shake_deployments, build_deployments]
+    if: |
+      always() &&
+      (github.ref_name == 'main' || github.ref_name == 'master') &&
+      (needs.leaf_shake_deployments.result == 'success' || needs.leaf_shake_deployments.result == 'skipped' || needs.leaf_shake_deployments.result == 'failed')
+    runs-on: sfdc-qbranch-nextgen-ubuntu
+    container:
+      image: ${{vars.BUILD_BASE_CONTAINER}}
+      credentials:
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.QBRIX_CONTAINER_PUBLISH_GITHUB_PAT}}
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set ownership
+        id: set_ownership
+        run: |
+          # this is to fix GIT not liking owner of the checkout dir
+          chown -R $(id -u):$(id -g) $PWD
+          echo '${{ secrets.QBRIX_DEVHUB_PRIVATE_KEY }}' > devhub.key
+
+      # We will use a common app with a common key -
+      - name: Create SFDX Session for QLABS Service Account
+        run: sf org login jwt -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
+
+      - name: Extract the accesstoken
+        run: sf org display -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} --json > qlab_tmp.json
+
+      - name: extract the accesstoken for qlabs
+        id: qlabs_accesstoken
+        run: |
+          echo "qlabs_accesstoken=$(jq '.result.accessToken' qlab_tmp.json -r)" >> "$GITHUB_OUTPUT"
+
+      #determine if there is a template or instance override defined in qlabs for this build config
+      - name: get qlabs auto deploy settings - pipe to jq to file
+        id: qlab_config_settings
+        run: |
+          # call qlabs setting service for this qbrix -> get the json -> pipe to jq
+           curl --location --request GET 'https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixAutoDeploySettings?qbrixid=${{ github.event.repository.name }}&hybrid=true' \
+           --header 'Content-Type: application/json' \
+           --header 'Authorization: Bearer ${{ steps.qlabs_accesstoken.outputs.qlabs_accesstoken }}' | jq > automated_deploy.json
+
+      - name: set the build job matrix for deployments
+        id: set-matrix
+        run: |
+          echo "matrix={\"include\":$(jq -c '.' automated_deploy.json -r)}" >> $GITHUB_OUTPUT
+
   hybrid_autodeploy_steps:
     if: |
       always() &&
       (github.ref_name == 'main' || github.ref_name == 'master') &&
-      (needs.setup_autodeployment_steps.result == 'success' || needs.setup_autodeployment_steps.result != 'skipped') &&
-      ! contains(github.repository, '-7-')
-    needs: [setup_autodeployment_steps]
+      (needs.setup_hyrbid_autodeployment_steps.result == 'success' || needs.setup_hyrbid_autodeployment_steps.result != 'skipped')
+    needs: [setup_hyrbid_autodeployment_steps]
     runs-on: sfdc-qbranch-nextgen-ubuntu
     continue-on-error: true
     container:
@@ -1354,7 +1395,7 @@ jobs:
         password: ${{ secrets.QBRIX_CONTAINER_PUBLISH_GITHUB_PAT}}
     strategy:
       fail-fast: false
-      matrix: ${{ fromJSON(needs.setup_autodeployment_steps.outputs.matrix) }}
+      matrix: ${{ fromJSON(needs.setup_hyrbid_autodeployment_steps.outputs.matrix) }}
       max-parallel: 250 #run in parrallel
     steps:
       - uses: actions/checkout@v4
@@ -1460,80 +1501,3 @@ jobs:
             "runurl": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
             "commit": ${{ toJSON(github.event.head_commit.message) }}
           }'
-
-  metadeploy_publish:
-    needs: [build_deployments, leaf_shake_deployments]
-    if: |
-      always() &&
-      (github.ref_name == 'main' || github.ref_name == 'master') &&
-      needs.build_deployments.result == 'success' &&
-      (needs.leaf_shake_deployments.result == 'success' || needs.leaf_shake_deployments.result == 'skipped' || needs.leaf_shake_deployments.result == 'failed') &&
-      ! contains(github.repository, '-7-') &&
-      ! contains(github.repository, '-99-')
-    runs-on: sfdc-qbranch-nextgen-ubuntu
-    container:
-      image: ${{vars.BUILD_BASE_CONTAINER}}
-      credentials:
-        username: ${{ github.repository_owner }}
-        password: ${{ secrets.QBRIX_CONTAINER_PUBLISH_GITHUB_PAT}}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Update QX
-        run: qx update
-
-      - name: Set ownership
-        run: |
-          # this is to fix GIT not liking owner of the checkout dir
-          chown -R $(id -u):$(id -g) $PWD
-          echo '${{ secrets.QBRIX_DEVHUB_PRIVATE_KEY }}' > devhub.key
-
-        # We will use a common app with a common key -
-      - name: Create SFDX Session for QLABS Service Account
-        run: sf org login jwt -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
-
-      - name: Extract the accesstoken
-        run: sf org display -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} --json > qlab_tmp.json
-
-      - name: extract the accesstoken for qlabs
-        id: qlabs_accesstoken
-        run: |
-          echo "qlabs_accesstoken=$(jq '.result.accessToken' qlab_tmp.json -r)" >> "$GITHUB_OUTPUT"
-
-      - name: Set ENV variables
-        run: |
-          echo "::set-env name=REPO_NAME::${GITHUB_REPOSITORY#$GITHUB_REPOSITORY_OWNER/}"
-
-      - name: get the build matrices
-        run: |
-          curl --location 'https://qlabs-org.my.salesforce.com/services/apexrest/NGQBrixBuildMatrixService' \
-          --header 'Content-Type: application/json' \
-          --header 'Authorization: Bearer ${{ steps.qlabs_accesstoken.outputs.qlabs_accesstoken }}' \
-          --data '{"brixname": "${{ env.REPO_NAME }}"}' -o auto_publish.json
-
-      - name: parse build matrices
-        id: qlab_config_settings
-        run: |
-          echo "AUTOPUBLISH=$(jq .auto_publish_brix_store auto_publish.json)" >> "$GITHUB_OUTPUT"
-          echo "AUTOPUBLISH=$(jq .auto_publish_brix_store auto_publish.json)" >> "$GITHUB_ENV"
-
-      #display cci version
-      - name: cci version
-        if: (env.AUTOPUBLISH == 'true' && ( github.ref_name == 'main' || github.ref_name == 'master'))
-        run: cci version
-
-      #CCI Service List
-      - name: cci service list
-        if: (env.AUTOPUBLISH == 'true' && ( github.ref_name == 'main' || github.ref_name == 'master'))
-        run: cci service list
-
-      - name: metadeploy publish - if applicable
-        if: (env.AUTOPUBLISH == 'true' && ( github.ref_name == 'main' || github.ref_name == 'master'))
-        continue-on-error: true
-        uses: nick-fields/retry@v3
-        with:
-          timeout_minutes: 5
-          retry_on: error
-          max_attempts: 1
-          command: SHORTSHA=$(git rev-parse --short HEAD ) && cci task run metadeploy_publish --commit $SHORTSHA --publish True
-          on_retry_command: cci error info
