@@ -458,13 +458,15 @@ jobs:
         run: |
           pip install protobuf==5.28.1 --force
           rfbrowser init
+          sf plugins
+          sf plugins install sfdmu
 
       # CCI Service List - we should have all 3 connected now: persistant, github (via env var) and devhub
       - name: All connected services
         run: |
           cci service list
           cci org info ninja
-
+          
       - name: Running ${{ matrix.description }} ${{ matrix.build_action }}::${{ matrix.build_action_type }}
         uses: nick-fields/retry@v3
         with:
@@ -734,6 +736,8 @@ jobs:
         run: |
           pip install protobuf==5.28.1 --force
           rfbrowser init
+          sf plugins
+          sf plugins install sfdmu
 
       # CCI Service List - we should have all 3 connected now: persistant, github (via env var) and devhub
       - name: All connected services
@@ -1097,6 +1101,8 @@ jobs:
           cd ${{matrix.reference_brix}}
           pip install protobuf==5.28.1 --force
           rfbrowser init
+          sf plugins
+          sf plugins install sfdmu
 
       # CCI Service List - we should have all 3 connected now: persistant, github (via env var) and devhub
       - name: All connected services
@@ -1108,7 +1114,7 @@ jobs:
         run: |
           cd ${{matrix.reference_brix}}
           cci org info ninja
-
+          
       - name: Running ${{ matrix.description }} ${{ matrix.leaf_shake_action }}::${{ matrix.reference_brix }}
         uses: nick-fields/retry@v3
         with:
@@ -1268,6 +1274,8 @@ jobs:
         run: |
           pip install protobuf==5.28.1 --force
           rfbrowser init
+          sf plugins
+          sf plugins install sfdmu
 
       # CCI Service List - we should have all 3 connected now: persistant, github (via env var) and devhub
       - name: All connected services
@@ -1440,6 +1448,8 @@ jobs:
         run: |
           pip install protobuf==5.28.1 --force
           rfbrowser init
+          sf plugins
+          sf plugins install sfdmu
 
       # CCI Service List - we should have all 3 connected now: persistant, github (via env var) and devhub
       - name: All connected services
