@@ -629,9 +629,9 @@
     {
       "label": "RETRIEVE: 📤 Retrieve ALL Project metadata from org",
       "type": "shell",
-      "command": "cp -r ./force-app ./backup && cci task run dx --command 'force:source:retrieve -p force-app' --org '${input:OrgAlias}' && echo 'Check Custom Objects and Profiles if any as additional metadata may have been captured. Then remove backup folder.'",
+      "command": "cp -r ./force-app ./backup && cci task run dx --command 'project retrieve start --source-dir force-app' --org '${input:OrgAlias}' && echo 'Check Custom Objects and Profiles if any as additional metadata may have been captured. Then remove backup folder.'",
       "windows": {
-        "command": "xcopy .\\force-app .\\backup /e && cci task run dx --command 'force:source:retrieve -p force-app' --org '${input:OrgAlias}' && echo 'Check Custom Objects and Profiles if any as additional metadata may have been captured. Then remove backup folder.'"
+        "command": "xcopy .\\force-app .\\backup /e && cci task run dx --command 'project retrieve start --source-dir force-app' --org '${input:OrgAlias}' && echo 'Check Custom Objects and Profiles if any as additional metadata may have been captured. Then remove backup folder.'"
       },
       "group": "build",
       "problemMatcher": [],
