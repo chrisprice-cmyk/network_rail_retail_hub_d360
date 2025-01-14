@@ -53,6 +53,5 @@
     "**/package.json": true,
     "**/playwright.config.ts": true
   },
-  // "explorer.excludeGitIgnore": true,
   "robot.language-server.python": "/usr/bin/python3"
 }
