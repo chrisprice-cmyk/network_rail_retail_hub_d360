@@ -5,6 +5,9 @@
 # Demo Brix
 .qbrix/
 
+#extensions
+.extensions/
+
 # VSCODE
 .vscode/*
 !.vscode/tasks.json
@@ -154,3 +157,6 @@ QUASAR_LEAF_SHAKE
 
 # b2c configuration
 dw.json
+
+#others
+.env

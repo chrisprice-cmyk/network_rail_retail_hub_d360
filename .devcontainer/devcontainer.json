@@ -1,5 +1,6 @@
 {
   "image": "ghcr.io/sfdc-qbranch-emu/qbrix-base-container-quasar:latest",
+  "runArgs": ["--env-file","${localWorkspaceFolder}/.devcontainer/.env"],
   "forwardPorts": [7788, 1717, 6080, 16686, 4317, 4318],
   "portsAttributes": {
     "7788": {
@@ -22,7 +23,7 @@
     }
   },
   "remoteEnv": {
-    // Use a GitHub Codespaces secret:
+    
     "QSR_ENDPOINT": "${localEnv:QSR_ENDPOINT}",
     "QSR_JWT_SIGNING_SECRET": "${localEnv:QSR_JWT_SIGNING_SECRET}",
     "NEXTGEN_GATE_KEEPER_AUTH_URL": "${localEnv:NEXTGEN_GATE_KEEPER_AUTH_URL}",
@@ -56,7 +57,8 @@
         "ms-toolsai.vscode-jupyter-slideshow",
         "Postman.postman-for-vscode",
         "pomdtr.secrets",
-        "ms-python.python"
+        "ms-python.python",
+        "adrianwilczynski.toggle-hidden"
       ]
     }
   },
@@ -67,6 +69,6 @@
       "vncPort": "5901"
     }
   },
-  "initializeCommand":"docker container prune -f && docker image prune -f && docker volume prune -f && docker system prune -f && docker pull ghcr.io/sfdc-qbranch-emu/qbrix-base-container-quasar:latest && docker run -d --name jaeger -e COLLECTOR_ZIPKIN_HOST_PORT=:9411 -p 4317:4317 -p 4318:4318 -p 5775:5775/udp -p 6831:6831/udp -p 6832:6832/udp -p 5778:5778 -p 16686:16686 -p 14268:14268 -p 14250:14250 -p 9411:9411 jaegertracing/all-in-one:latest || true ",
-  "postStartCommand": "qx setup init-codespace && xrandr -s 1920x1080 && pip install protobuf==5.28.1 --force --no-deps || true"
+  "initializeCommand":"bash .devcontainer/container_initialize.sh",
+  "postStartCommand": "bash .devcontainer/container_poststart.sh"
 }
