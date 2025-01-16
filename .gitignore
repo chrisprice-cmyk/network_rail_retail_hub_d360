@@ -148,3 +148,9 @@ validationresult.json
 
 #Quasar
 QUASAR_LEAF_SHAKE
+
+# dotenv config
+.env
+
+# b2c configuration
+dw.json
