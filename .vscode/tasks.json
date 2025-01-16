@@ -38,7 +38,7 @@
     {
       "label": "UTILS: 🧰 Install NextGen Dev Tools Extension",
       "type": "shell",
-      "command": ".devcontainer/extensions_install.sh",
+      "command": "bash .devcontainer/extensions_install.sh",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
