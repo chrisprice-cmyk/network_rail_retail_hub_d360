@@ -8,11 +8,11 @@
     "pomdtr.secrets",
     "redhat.vscode-xml",
     "redhat.vscode-yaml",
-    "robocorp.robotframework-lsp",
     "salesforce.codegenie",
     "salesforce.salesforce-vscode-slds",
     "salesforce.salesforcedx-vscode-expanded",
     "salesforce.salesforcedx-vscode-visualforce",
-    "visualstudioexptteam.vscodeintellicode"
+    "visualstudioexptteam.vscodeintellicode",
+    "d-biehl.robotcode"
   ]
 }

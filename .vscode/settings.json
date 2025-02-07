@@ -5,54 +5,55 @@
   "[yaml]": {
     "editor.defaultFormatter": "redhat.vscode-yaml"
   },
+  "[xml]": {
+    "editor.defaultFormatter": "redhat.vscode-xml"
+  },
   "editor.trimAutoWhitespace": true,
   "files.associations": {
     "*.resource": "robotframework",
     "*.robot": "robotframework"
   },
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/._*": true,
+    "**/.cci": true,
+    "**/.devcontainer": true,
+    "**/.eslintrc.json": true,
+    "**/.forceignore": true,
+    "**/.github": true,
+    "**/.gitignore": true,
+    "**/.prettierignore": true,
+    "**/.prettierrc": true,
+    "**/.qbrix": true,
+    "**/.sf": true,
+    "**/.sfdx": true,
+    "**/.vscode": true,
+    "**/*.pyc": true,
+    "**/bower_components": true,
+    "**/jest.config.js": true,
+    "**/node_modules": true,
+    "**/package.json": true,
+    "**/playwright.config.ts": true
+  },
+  "git.branchProtection": [
+    "main",
+    "master"
+  ],
   "python.terminal.activateEnvironment": true,
   "robot.pythonpath": [
     "${workspaceFolder}",
     "${workspaceFolder}/qbrix_local",
     "qx/qrobot/keywords"
   ],
-  "git.branchProtection": [
-    "main",
-    "master"
-  ],
   "salesforcedx-vscode-core.push-or-deploy-on-save.enabled": false,
   "search.exclude": {
-    "**/.sf": true,
-    "**/.sfdx": true,
-    "**/bower_components": true,
-    "**/node_modules": true,
-    "**/.devcontainer": true,
-    "**/.github": true,
-    "**/.vscode": true,
-    "**/.cci": true
-  },
-  "files.exclude": {
-    "**/.sf": true,
-    "**/.sfdx": true,
-    "**/bower_components": true,
-    "**/node_modules": true,
-    "**/.devcontainer": true,
-    "**/.github": true,
-    "**/.vscode": true,
     "**/.cci": true,
-    "**/.qbrix": true,
-    "**/._*": true,
-    "**/__pycache__": true,
-    "**/*.pyc": true,
-    "**/.gitignore": true,
-    "**/.eslintrc.json": true,
-    "**/.forceignore": true,
-    "**/.prettierignore": true,
-    "**/.prettierrc": true,
-    "**/jest.config.js": true,
-    "**/package.json": true,
-    "**/playwright.config.ts": true
-  },
-  "explorer.excludeGitIgnore": true,
-  "robot.language-server.python": "/usr/bin/python3"
+    "**/.devcontainer": true,
+    "**/.github": true,
+    "**/.sf": true,
+    "**/.sfdx": true,
+    "**/.vscode": true,
+    "**/bower_components": true,
+    "**/node_modules": true
+  }
 }
