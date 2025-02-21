@@ -78,6 +78,7 @@ venv.bak/
 **/__pycache__/
 **/.venv/
 **/venv/
+.pytest_cache/
 
 # MACOS
 .DS_Store
@@ -131,6 +132,7 @@ dist/
 out/
 lib/
 tmp/
+.codegenie/
 
 # Jupyter Notebook
 .ipynb_checkpoints
