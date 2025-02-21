@@ -5,6 +5,9 @@
   "[yaml]": {
     "editor.defaultFormatter": "redhat.vscode-yaml"
   },
+  "yaml.schemas": {
+    "https://qlabs-org.my.site.com/qverse/resource/1740162235000/cumulusci_jsonschema_json": "/*"
+  },
   "[xml]": {
     "editor.defaultFormatter": "redhat.vscode-xml"
   },
