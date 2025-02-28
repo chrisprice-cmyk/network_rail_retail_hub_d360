@@ -92,6 +92,34 @@
       }
     },
     {
+      "label": "ORG: 💧 Connect SDO Org to Brix",
+      "type": "shell",
+      "command": "qx org pool --sdo",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "new"
+      }
+    },
+    {
+      "label": "ORG: 💧 Connect CDO Org to Brix",
+      "type": "shell",
+      "command": "qx org pool --cdo",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "new"
+      }
+    },
+    {
       "label": "ORG: 🔗 Connect to Salesforce Production Org",
       "type": "shell",
       "command": "qx org connect --org '${input:OrgAlias}'",
@@ -162,12 +190,37 @@
       }
     },
     {
-      "label": "ORG: 🛠️ Create Development and Test Orgs",
+      "label": "ORG: 🛠️ Create Development and Test Scratch Orgs",
       "type": "shell",
       "command": "qx org create --org dev && qx org create --org qa --set_default false",
-      "windows": {
-        "command": "qx org create --org dev ; qx org create --org qa --set_default false"
-      },
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "new"
+      }
+    },
+    {
+      "label": "ORG: 🛠️ Create Development and Test SDO Orgs",
+      "type": "shell",
+      "command": "qx org pool --sdo --org qa && qx org pool --sdo --org dev",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "new"
+      }
+    },
+    {
+      "label": "ORG: 🛠️ Create Development and Test CDO Orgs",
+      "type": "shell",
+      "command": "qx org pool --cdo --org qa && qx org pool --sdo --cdo dev",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
