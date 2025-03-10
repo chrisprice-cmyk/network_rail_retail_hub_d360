@@ -900,11 +900,13 @@ jobs:
       needs.setup_leafshake_steps.outputs.matrix!='{"include":[]}' &&
       needs.setup_leafshake_steps.outputs.matrix != ''
     runs-on: sfdc-qbranch-nextgen-ubuntu
+    
     container:
       image: ${{vars.BUILD_BASE_CONTAINER}}
       credentials:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.QBRIX_CONTAINER_PUBLISH_GITHUB_PAT}}
+    continue-on-error: ${{matrix.continueonerror}}
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.setup_leafshake_steps.outputs.matrix) }}
