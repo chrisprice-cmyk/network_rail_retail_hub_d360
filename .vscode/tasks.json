@@ -713,7 +713,7 @@
     {
       "label": "INFO: ℹ️ List Installed Packages in Org",
       "type": "shell",
-      "command": "cci task run dx --org '${input:OrgAlias}' --command force:package:installed:list",
+      "command": "cci task run dx --org '${input:OrgAlias}' --command 'package installed list'",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
