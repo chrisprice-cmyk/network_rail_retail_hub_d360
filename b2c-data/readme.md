@@ -1,0 +1,1 @@
+Default Location for Commerce Cloud data packages. If you are not using Commerce Cloud packages within your brix, you can safely remove this directory.

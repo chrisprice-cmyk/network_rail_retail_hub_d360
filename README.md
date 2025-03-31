@@ -4,6 +4,7 @@
 
 - [About](#about)
 - [Getting Started](#getting_started)
+- [Development](#dev)
 - [Support](#support)
 
 ## About <a name = "about"></a>
@@ -12,14 +13,9 @@ Write a few words describing your Demo Brix.
 
 ## Getting Started <a name = "getting_started"></a>
 
-If you have not worked on Q Brix before, check out this guide: https://confluence.internal.salesforce.com/display/QNEXTGENDEMOS/Prerequisites
+If you have not worked on Brix before, please complete the Brix Builder Certification: https://qlabs.my.trailhead.com/content/developers/trails/brix-builder-certification
 
-### Prerequisites
-
-MacOS and Linux Users: https://confluence.internal.salesforce.com/display/QNEXTGENDEMOS/Required+Setup
-Windows Users: https://confluence.internal.salesforce.com/display/QNEXTGENDEMOS/Windows+Users
-
-### Development
+### Development <a name = "dev"></a>
 
 To work on this project in a scratch org:
 
