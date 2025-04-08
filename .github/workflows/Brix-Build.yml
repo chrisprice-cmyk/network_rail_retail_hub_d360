@@ -45,6 +45,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Get changed files
+        id: changed_files
+        uses: jitterbit/get-changed-files@v1
+
       - name: Core Setup - key for jwt auth
         run: echo "${{ secrets.QBRIX_DEVHUB_PRIVATE_KEY }}" > devhub.key
 
@@ -70,9 +74,12 @@ jobs:
           cat << EOF > qlab_publish.py
           import yaml
           import os
+          import re
           import requests
           import jwt
           import json
+          import base64
+          from markdown_it import MarkdownIt
           def getAuth(user:str):
             QSR_JWT_SIGNING_SECRET = os.environ.get('QSR_JWT_SIGNING_SECRET')
             encoded_jwt = jwt.encode({"sub": f"{user}", "external_id": f"{user}", "aud": f"{user}"},QSR_JWT_SIGNING_SECRET, algorithm="HS256")
@@ -95,6 +102,7 @@ jobs:
           refreshQBrix('${{ github.event.repository.name }}')
           filepath='cumulusci.yml'
           inputsfile = 'qbrix_local/inputs/required.json'
+          readme_file = 'README.md'
           if(os.path.isfile(filepath)):
               with open(filepath, 'r') as stream:
                 yamldata = yaml.safe_load(stream)
@@ -106,6 +114,27 @@ jobs:
                 payloaddic["github_repository_id"] = "${{ github.repository_id }}"
                 payloaddic["github_repository_url"] = "${{ github.repositoryUrl }}"
                 payloaddic["github_sha"] = "${{ github.sha }}"
+
+                # Check if README.md has changed
+                changed_files = "${{ steps.changed_files.outputs.all }}".split(' ')
+                if readme_file in changed_files:
+                    print("README.md has changed. Checking content...")
+                    with open(readme_file, "r", encoding="utf-8") as f:
+                        content = f.read()
+                        # Replace <a name="key"></a> with <a id="key"></a>
+                        content = re.sub(
+                            r'<a\s+name\s*=\s*["\']([^"\']+)["\']\s*></a>',
+                            r'<a id="\1"></a>',
+                            content
+                        )
+                        if content.startswith("# ${{ github.event.repository.name }}"):
+                            print("Sending the updated README.md to QLabs...")
+                            md = MarkdownIt().enable("table").enable("fence")
+                            html_content = md.render(content)
+                            # Base64 encode the HTML content to preserve all characters
+                            encoded_content = base64.b64encode(html_content.encode("utf-8")).decode("utf-8")
+                            payloaddic["content"] = encoded_content
+
                 payload=json.dumps(payloaddic)
 
                 #check for a required parameters object

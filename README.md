@@ -11,7 +11,7 @@
 
 Write a few words describing your Demo Brix.
 
-## Getting Started <a name = "getting_started"></a>
+## Getting Started <a name = "getting-started"></a>
 
 If you have not worked on Brix before, please complete the Brix Builder Certification: https://qlabs.my.trailhead.com/content/developers/trails/brix-builder-certification
 
