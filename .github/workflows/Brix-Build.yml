@@ -48,13 +48,15 @@ jobs:
       - name: Get changed files
         id: changed_files
         uses: jitterbit/get-changed-files@v1
+        with:
+          format: 'csv'
 
       - name: Core Setup - key for jwt auth
         run: echo "${{ secrets.QBRIX_DEVHUB_PRIVATE_KEY }}" > devhub.key
 
       # We will use a common app with a common key -
       - name: Create SFDX Session for QLABS Service Account
-        run: sf org login jwt -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
+        run: sf org login jwt -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -a QLABS -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
 
       - name: Extract the accesstoken
         run: sf org display -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} --json > qlab_tmp.json
@@ -116,24 +118,25 @@ jobs:
                 payloaddic["github_sha"] = "${{ github.sha }}"
 
                 # Check if README.md has changed
-                changed_files = "${{ steps.changed_files.outputs.all }}".split(' ')
+                changed_files = "${{ steps.changed_files.outputs.all }}".split(',')
                 if readme_file in changed_files:
-                    print("README.md has changed. Checking content...")
-                    with open(readme_file, "r", encoding="utf-8") as f:
-                        content = f.read()
-                        # Replace <a name="key"></a> with <a id="key"></a>
-                        content = re.sub(
-                            r'<a\s+name\s*=\s*["\']([^"\']+)["\']\s*></a>',
-                            r'<a id="\1"></a>',
-                            content
-                        )
-                        if content.startswith("# ${{ github.event.repository.name }}"):
-                            print("Sending the updated README.md to QLabs...")
-                            md = MarkdownIt().enable("table").enable("fence")
-                            html_content = md.render(content)
-                            # Base64 encode the HTML content to preserve all characters
-                            encoded_content = base64.b64encode(html_content.encode("utf-8")).decode("utf-8")
-                            payloaddic["content"] = encoded_content
+                    if (os.path.isfile(readme_file)):
+                      print("README.md has changed. Checking content...")
+                      with open(readme_file, "r", encoding="utf-8") as f:
+                          content = f.read()
+                          # Replace <a name="key"></a> with <a id="key"></a>
+                          content = re.sub(
+                              r'<a\s+name\s*=\s*["\']([^"\']+)["\']\s*></a>',
+                              r'<a id="\1"></a>',
+                              content
+                          )
+                          if content.startswith("# ${{ github.event.repository.name }}"):
+                              print("Sending the updated README.md to QLabs...")
+                              md = MarkdownIt().enable("table").enable("fence")
+                              html_content = md.render(content)
+                              # Base64 encode the HTML content to preserve all characters
+                              encoded_content = base64.b64encode(html_content.encode("utf-8")).decode("utf-8")
+                              payloaddic["content"] = encoded_content
 
                 payload=json.dumps(payloaddic)
 
@@ -192,7 +195,7 @@ jobs:
 
       # We will use a common app with a common key -
       - name: Create SFDX Session for QLABS Service Account
-        run: sf org login jwt -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
+        run: sf org login jwt -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -a QLABS -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
 
       - name: Extract the accesstoken
         run: sf org display -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} --json > qlab_tmp.json
@@ -271,7 +274,7 @@ jobs:
 
       # We will use a common app with a common key -
       - name: Create SFDX Session for QLABS Service Account
-        run: sf org login jwt -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
+        run: sf org login jwt -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -a QLABS -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
 
       - name: Extract the accesstoken
         run: sf org display -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} --json > qlab_tmp.json
@@ -350,7 +353,7 @@ jobs:
           ls -l
           echo "${{ secrets.QBRIX_DEVHUB_PRIVATE_KEY }}" > devhub.key
           sf org login jwt -o ${{ secrets.QBRIX_DEVHUB_USERACCOUNT }} -a DEVHUB_ACCT -d -f devhub.key -i '${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}'
-          sf org login jwt -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -d -f devhub.key -i '${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}'
+          sf org login jwt -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -a QLABS -d -f devhub.key -i '${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}'
           sf org display -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} --json > qlab_tmp.json
           jq '.result.accessToken' qlab_tmp.json -r
           echo "qlabs_accesstoken=$(jq '.result.accessToken' qlab_tmp.json -r)" >> "$GITHUB_OUTPUT"
@@ -628,7 +631,7 @@ jobs:
           ls -l
           echo "${{ secrets.QBRIX_DEVHUB_PRIVATE_KEY }}" > devhub.key
           sf org login jwt -o ${{ secrets.QBRIX_DEVHUB_USERACCOUNT }} -a DEVHUB_ACCT -d -f devhub.key -i '${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}'
-          sf org login jwt -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -d -f devhub.key -i '${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}'
+          sf org login jwt -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -a QLABS -d -f devhub.key -i '${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}'
           sf org display -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} --json > qlab_tmp.json
           jq '.result.accessToken' qlab_tmp.json -r
           echo "qlabs_accesstoken=$(jq '.result.accessToken' qlab_tmp.json -r)" >> "$GITHUB_OUTPUT"
@@ -896,7 +899,7 @@ jobs:
 
       # We will use a common app with a common key -
       - name: Create SFDX Session for QLABS Service Account
-        run: sf org login jwt -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
+        run: sf org login jwt -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -a QLABS -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
 
       - name: Extract the accesstoken
         run: sf org display -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} --json > qlab_tmp.json
@@ -969,7 +972,7 @@ jobs:
           ls -l
           echo "${{ secrets.QBRIX_DEVHUB_PRIVATE_KEY }}" > devhub.key
           sf org login jwt -o ${{ secrets.QBRIX_DEVHUB_USERACCOUNT }} -a DEVHUB_ACCT -d -f devhub.key -i '${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}'
-          sf org login jwt -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -d -f devhub.key -i '${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}'
+          sf org login jwt -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -a QLABS -d -f devhub.key -i '${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}'
           sf org display -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} --json > qlab_tmp.json
           jq '.result.accessToken' qlab_tmp.json -r
           echo "qlabs_accesstoken=$(jq '.result.accessToken' qlab_tmp.json -r)" >> "$GITHUB_OUTPUT"
@@ -1222,7 +1225,7 @@ jobs:
 
       # We will use a common app with a common key -
       - name: Create SFDX Session for QLABS Service Account
-        run: sf org login jwt -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
+        run: sf org login jwt -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -a QLABS -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
 
       - name: Extract the accesstoken
         run: sf org display -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} --json > qlab_tmp.json
@@ -1276,7 +1279,7 @@ jobs:
       # We will use a common app with a common key -
       - name: Create SFDX Session for QLABS Service Account
         if: matrix.targetusername!='' && matrix.ishybrid == 'false'
-        run: sf org login jwt -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
+        run: sf org login jwt -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -a QLABS -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
 
       - name: Extract the accesstoken
         if: matrix.targetusername!='' && matrix.ishybrid == 'false'
@@ -1395,7 +1398,7 @@ jobs:
 
       # We will use a common app with a common key -
       - name: Create SFDX Session for QLABS Service Account
-        run: sf org login jwt -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
+        run: sf org login jwt -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -a QLABS -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
 
       - name: Extract the accesstoken
         run: sf org display -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} --json > qlab_tmp.json
@@ -1450,7 +1453,7 @@ jobs:
       # We will use a common app with a common key -
       - name: Create SFDX Session for QLABS Service Account
         if: matrix.targetusername!='' && matrix.ishybrid == 'true'
-        run: sf org login jwt -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
+        run: sf org login jwt -o ${{ secrets.QBRIX_QLABS_SERVICE_ACCOUNT }} -a QLABS -d -f devhub.key -i ${{ secrets.QBRIX_DEVHUB_CONSUMER_KEY }}
 
       - name: Extract the accesstoken
         if: matrix.targetusername!='' && matrix.ishybrid == 'true'

@@ -1,6 +1,6 @@
 {
   "image": "ghcr.io/sfdc-qbranch-emu/qbrix-base-container-quasar:latest",
-  "runArgs": ["--env-file","${localWorkspaceFolder}/.devcontainer/.env"],
+  "runArgs": ["--env-file","${localWorkspaceFolder}/.devcontainer/.env","--network","bridge"],
   "forwardPorts": [7788, 1717, 6080, 16686, 4317, 4318],
   "portsAttributes": {
     "7788": {
@@ -32,7 +32,7 @@
     "JAVA_HOME": "/usr/bin",
     "REMOTE_CONTAINERS": "True",
     "OTEL_SDK_DISABLED": "true",
-    "OTEL_EXPORTER_OTLP_ENDPOINT": "http://localhost:4318",
+    "OTEL_EXPORTER_OTLP_ENDPOINT": "http://host.docker.internal:4318",
     "OTEL_EXPORTER_OTLP_PROTOCOL": "grpc"
   },
   "customizations": {
