@@ -23,5 +23,5 @@ if [ -f "$FILE" ]; then
   npm install
   npm run vscode:prepublish
   vsce package --out ./qbrixdev-vscode-ui.vsix
-  code --install-extension ./qbrixdev-vscode-ui.vsix --verbose
+  code --install-extension ./qbrixdev-vscode-ui.vsix --verbose || cursor --install-extension ./qbrixdev-vscode-ui.vsix --verbose
 fi
