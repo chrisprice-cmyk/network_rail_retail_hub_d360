@@ -12,6 +12,7 @@
 .vscode/*
 !.vscode/tasks.json
 !.vscode/settings.json
+!.vscode/brix.code-snippets
 .vscode-test
 *.code-workspace
 
