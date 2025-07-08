@@ -10,3 +10,5 @@
 .cci
 .qbrix
 coverage/
+.devcontainer/
+.github/

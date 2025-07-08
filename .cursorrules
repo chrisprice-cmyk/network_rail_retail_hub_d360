@@ -1,0 +1,234 @@
+# Cursor Project Rules for Brix Development
+
+## Technology Stack
+
+- **Salesforce API Version**: current default is 63.0 but you should always use the API version found in the cumulusci.yml file for all commands
+- **Framework**: CumulusCI for deployment automation
+- **Components**: Lightning Web Components (LWC), Aura, Wave Analytics
+- **Testing**: Jest for LWC testing, Playwright for E2E testing
+- **Code Quality**: ESLint, Prettier, Husky for git hooks
+
+## File Structure Conventions
+
+### Core Directories
+
+- `force-app/main/default/` - Main Salesforce metadata
+  - `aura/` - Aura components
+  - `lwc/` - Lightning Web Components
+  - `wave/` - Wave analytics dashboards
+- `qbrix/` - QBrix-specific configurations and tools
+- `qbrix_local/` - Local QBrix development files and robot files
+- `datasets/` - Data files for deployment
+- `unpackaged/` - Unmanaged package metadata
+- `orgs/` - Organization configuration files. The main scratch org template is orgs/dev.json which is used for both dev and qa scratch orgs.
+
+### Configuration Files
+
+- `cumulusci.yml` - Main deployment configuration
+- `sfdx-project.json` - Salesforce DX project configuration
+
+Note: API versions between the 2 files noted above must be the same. the cumulusci.yml is the master version
+
+## Coding Standards
+
+### Brix Development
+
+- Flows can have steps which support all cumulusci tasks. Reference documentation here: https://cumulusci.readthedocs.io/en/latest/cumulusci_tasks.html
+- Example code snippets can be found in .vscode/brix.code-snippets
+- Steps within a flow can use when statements, defined with a when key and then the clause which defines if the step should run. Up to date options can be found for this by running `cci task info orgconfig_hydrate` and reading the output. At this time, we have the following options:
+
+### When Clause Support
+
+Where Clause Options: (Note: Remember that you can add NOT in front of any of these and use joining words like AND or OR). When clauses are only supported if the task called orgconfig_hydrate has been defined within an earlier step within the same flow.
+
+    max_org_api_version: Returns current Salesforce Target Org API Version. e.g. where: org_config.max_org_api_version >= 58.0
+
+    is_qbrix_installed: Returns True if the target org has the demo brix installed. e.g. where: org_config.is_qbrix_installed('DemoBrixNameHere')
+
+    is_object_in_org: Returns True if the sObject API name is present within the target org e.g. where: org_config.is_object_in_org('ObjectAPINameHere')
+
+    is_psl_in_org: Returns True if the provided PSL is present in the target org. e.g. where: org_config.is_psl_in_org('PSLAPINameHere')
+
+    is_ps_in_org: Returns True if the provided Permission Set is present within the target Org. e.g. where: org_config.is_ps_in_org('PermissionSetApiNameHere')
+
+    is_namespace_installed: Returns True if the provided namespace is present within the target org. e.g. where: org_config.is_namespace_installed('NamespaceHere')
+
+    is_package_installed: Returns True if the provided package is present within the target org. e.g. where: org_config.is_package_installed('PackageNameHere')
+
+    is_psl_minimal_qty_available_in_org: Returns True if the provided required amount of licenses is available within the target org for a given PSL. e.g. where:
+    org_config.is_psl_minimal_qty_available_in_org('PSLNameHere', AmountRequiredHere)
+
+    is_data_present: Returns True if the provided data is present within the target org. e.g. where: org_config.is_data_present('sObjectApiNameHere', 'Filter Here')
+
+    is_scratch_org: Returns True if target org is a scratch org. e.g. where: org_config.is_scratch_org
+
+### Required Inputs
+
+Brix can support input parameters which we call required inputs. These are defined within /qbrix_local/inputs/required.json.
+
+Example Parameter:
+
+````{
+  "parameters": [
+    {
+      "friendly_name": "Marketing Cloud ID",
+      "name": "mc_mid",
+      "default": "",
+      "description": "The MID for the Business Unit which we want to deploy to"
+    },
+  ]
+}```
+
+### Salesforce Development
+
+- Use API version defined in cumulusci.yml file for all metadata
+- Follow Salesforce Lightning Design System (SLDS) patterns
+- Implement proper error handling in Apex classes
+- Use bulk patterns for data operations
+- Follow naming conventions: PascalCase for classes, camelCase for methods
+- Only deploy settings which need to be set or unset in the org. Settings files can contain multiple other settings but ideally you would slim these down to just the ones which are needed for the solution within the brix.
+
+### Lightning Web Components (LWC)
+
+- Use ES6+ syntax
+- Implement proper lifecycle hooks
+- Follow LWC best practices for data binding
+- Use @api decorators for public properties
+- Implement proper error boundaries
+
+### Aura Components
+
+- Use component events for communication
+- Implement proper attribute types
+- Follow Aura component lifecycle patterns
+
+### JavaScript/TypeScript
+
+- Use ES6+ features
+- Implement proper async/await patterns
+- Follow consistent naming conventions
+- Use TypeScript for better type safety where applicable
+
+## Development Workflow
+
+### Pre-commit Hooks
+
+- Code formatting with Prettier
+- Linting with ESLint for LWC and Aura
+- Automatic formatting on save
+
+### Testing
+
+- Unit tests for LWC components using Jest
+- E2E tests using Playwright
+- Robot Framework tests for validation
+
+### Deployment
+
+- Use CumulusCI flows for deployment
+- Follow the three-stage deployment process:
+  1. Pre-deployment (prepare_org, source_dependencies)
+  2. Main deployment (deploy_qbrix - deploys force-app/main/default)
+  3. Post-deployment (post_qbrix_deploy)
+- Main entry point for deployment to org is deploy_qbrix flow, which runs prepare_org, source_dependencies, deploy (task) and then post_qbrix_deploy in that order.
+- Use VSCode build tasks where possible. Tasks are found in .vscode/tasks.json
+
+## QBrix-Specific Guidelines
+
+### Configuration
+
+- Update QBrix owner information in `cumulusci.yml`
+- Set proper QBrix description and documentation URLs
+- Configure dependencies and sources as needed
+- Brix sources should be located in github at a location under https://github.com/sfdc-qbranch-emu/
+- source_dependencies flow is the main location where sources are actually deployed. They should be default have the when clause when: not org_config.is_qbrix_installed('RepoURLHere')
+- The repo URL for the brix can be found in the cumulusci.yml file under project > git > repo_url
+- project > name and project > package > name should be same. They should be the end of the repo url for the brix.
+- New brix projects need to have the setup task run `cci task run setup_qbrix`
+
+### Data Management
+
+- Use NextGen Data Tool for data deployments
+- Store data files in `datasets/` directory
+- Follow QBrix data deployment patterns
+
+### Validation
+
+- Implement proper validation flows
+- Use Robot Framework for automated testing
+- Follow QBrix validation standards
+
+## Code Quality Rules
+
+### General
+
+- Write self-documenting code with clear variable names
+- Add comments for complex business logic
+- Follow DRY (Don't Repeat Yourself) principles
+- Implement proper error handling
+
+### Performance
+
+- Use bulk patterns for data operations
+- Implement proper SOQL query optimization
+- Use platform events for asynchronous processing
+- Follow governor limit best practices
+
+### Security
+
+- By default salesforce field-level security can be open as the target is demo environments.
+
+## File Naming Conventions
+
+- **Apex Classes**: PascalCase (e.g., `AccountController.cls`)
+- **LWC Components**: kebab-case (e.g., `my-component.js`)
+- **Aura Components**: camelCase (e.g., `myComponent.cmp`)
+- **Metadata Files**: Follow Salesforce naming conventions
+- **Configuration Files**: lowercase with underscores (e.g., `cumulusci.yml`)
+
+## Dependencies and Packages
+
+- Manage Salesforce package dependencies in `cumulusci.yml`. Use the 18 character version of the package version id.
+- Use QBrix sources for dependent brix
+- Document all external dependencies
+- Ensure packages have a url within a comment above the -version_id entry which defines a URL where you can find new package updates.
+
+## Documentation
+
+- Maintain README files in each major directory
+- Document complex business logic
+- Keep deployment guides updated
+- Document QBrix-specific configurations
+
+## Environment Setup
+
+- Use Salesforce CLI for local development
+- Configure proper org aliases.
+- Set up scratch orgs for testing
+- Use CumulusCI for deployment automation
+
+## Troubleshooting
+
+- Check CumulusCI logs for deployment issues
+- Use Salesforce debug logs for runtime issues
+- Validate org configurations before deployment. If using a scratch org, then orgs/dev.json is where this is defined.
+- Deployment errors should be reviewed and then changes made before test deploying again.
+- Often running the qx metadata doctor can solve many common issues. This is done by running 'qx utils doctor'
+
+## Best Practices
+
+- Always test in a test salesforce org before production, which we refer to as a qa org.
+- Use version control for all changes
+- Implement proper backup strategies
+- Follow Salesforce release cycle planning
+- Keep dependencies updated
+- Monitor org performance regularly
+- Always update API version via deployment to a salesforce org, then update the api version in the cumulusci.yml and sfdx-project.json, then retrieve the project. Apex, Aura and LWC components can have API versions updated within the xml source files without having to deploy and retrieve, although its still recommended.
+
+## Local Testing and Development with Salesforce Orgs
+
+- We build in a 'dev' org, when created this will have an auto-updated alias which will start with dev\_ and then be a compressed version of the name of the project
+- If the project name contains -SDO- an SDO is the best org to use as a dev and qa org. To create these quickly you can run the command 'qa org pool --sdo --org dev' (--org dev for development org, --org qa for test/qa org)
+- If the project name contains -xdo- a CDO or Scratch org is the best org to use as a dev and qa org. To create these quickly you can run the command 'qa org pool --cdo --org dev' (--org dev for development org, --org qa for test/qa org) for a CDO (aka Clean Demo Org) or qa org create --org dev to create a scratch org. Remember that the scratch org will use the orgs/dev.json file as the scratch org definition file.
+- Changes should be retrieved from the dev org and test deployed to the qa org.
+````

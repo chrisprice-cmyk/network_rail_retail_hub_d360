@@ -52,5 +52,16 @@
 			"    ${2:test_step}"
 		],
 		"description": "Add a new robot file test case to *.robot file"
+	},
+	"Robot File Task": {
+		"prefix": "robot-file-task",
+		"body": [
+			"task: ${1:test_case_name}:",
+			"  options:",
+			"    suites: ${2:suite_file_location}",
+			"    test: ${3:test_name}",
+			"    vars: browser:headlesschrome"
+		],
+		"description": "Add a new robot test which is defined within a local robot file."
 	}
 }

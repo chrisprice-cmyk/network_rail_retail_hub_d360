@@ -1,5 +1,14 @@
 {
-  "trailingComma": "none",
+  "printWidth": 100,
+  "tabWidth": 2,
+  "useTabs": false,
+  "semi": true,
+  "singleQuote": true,
+  "trailingComma": "es5",
+  "bracketSpacing": true,
+  "bracketSameLine": false,
+  "arrowParens": "avoid",
+  "endOfLine": "lf",
   "plugins": [
     "prettier-plugin-apex",
     "@prettier/plugin-xml"
@@ -15,6 +24,13 @@
       "files": "*.{cmp,page,component}",
       "options": {
         "parser": "html"
+      }
+    },
+    {
+      "files": "*.{cls,trigger, apex}",
+      "options": {
+        "printWidth": 120,
+        "tabWidth": 4
       }
     }
   ]

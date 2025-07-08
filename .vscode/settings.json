@@ -21,6 +21,7 @@
     "**/__pycache__": true,
     "**/._*": true,
     "**/.cci": true,
+    "**/.cursorrules": true,
     "**/.devcontainer": true,
     "**/.eslintrc.json": true,
     "**/.forceignore": true,
