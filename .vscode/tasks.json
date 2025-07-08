@@ -554,20 +554,6 @@
       }
     },
     {
-      "label": "PUBLISH: 📡 Publish to Metadeploy",
-      "type": "shell",
-      "command": "cci task run metadeploy_publish --publish True --commit '${input:Commit}'",
-      "group": "build",
-      "problemMatcher": [],
-      "presentation": {
-        "revealProblems": "onProblem",
-        "focus": true,
-        "echo": false,
-        "showReuseMessage": false,
-        "panel": "new"
-      }
-    },
-    {
       "label": "BUILD: ⏱️ Snapshot Changes from now",
       "type": "shell",
       "command": "cci task run snapshot_changes --org '${input:OrgAlias}'",
