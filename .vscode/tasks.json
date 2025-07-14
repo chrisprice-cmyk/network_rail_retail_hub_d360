@@ -781,6 +781,20 @@
       }
     },
     {
+      "label": "ROBOT: 🤖 Run robot file test against org",
+      "type": "shell",
+      "command": "cci task run robot --org '${input:OrgAlias}' --suites '${input:RobotFilePath}' --test '${input:RobotTest}'",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "new"
+      }
+    },
+    {
       "label": "UTILS: 🧰 Run Robot Keyword",
       "type": "shell",
       "command": "cci task run robot_runner --org '${input:OrgAlias}' --keyword '${input:RobotKeyword}' --keyword_parameters '${input:RobotKeywordParams}'",
@@ -936,11 +950,17 @@
       "default": "/lightning/setup/SetupOneHome/home",
       "type": "promptString"
     },
-    {
-      "id": "RobotFilePath",
-      "description": "Enter the file path to the .robot file",
-      "default": "",
-      "type": "promptString"
-    },
+      {
+        "id": "RobotFilePath",
+        "description": "Enter the file path to the .robot file",
+        "default": "",
+        "type": "promptString"
+      },
+      {
+        "id": "RobotTest",
+        "description": "Enter the test name to run",
+        "default": "",
+        "type": "promptString"
+      }
   ]
 }
