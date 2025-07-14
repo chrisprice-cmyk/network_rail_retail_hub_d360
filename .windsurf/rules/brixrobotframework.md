@@ -1,0 +1,14 @@
+---
+trigger: model_decision
+description: This rule is for robotframework based tasks where robot automation is required as part of the brix development. It should be used when working in any *.robot file and also considered when working within the cumulusci.yml file
+globs:
+---
+
+## File Storage Location
+
+- .robot files must be stored within ./qbrix_local/robot or a sub-directory of ./qbrix_local/
+
+## Robot File Setup
+
+- Refer to code-snippets for template of robot files here .vscode/brix.code-snippets
+- Ensure that the resource is referenced qx/qrobot/keywords/QRobot.resource

@@ -33,6 +33,7 @@
     "**/.sf": true,
     "**/.sfdx": true,
     "**/.vscode": true,
+    "**/.windsurf": true,
     "**/*.pyc": true,
     "**/bower_components": true,
     "**/jest.config.js": true,
@@ -58,10 +59,12 @@
   "salesforcedx-vscode-core.push-or-deploy-on-save.enabled": false,
   "search.exclude": {
     "**/.cci": true,
+    "**/.cursorrules": false,
     "**/.devcontainer": true,
     "**/.github": true,
     "**/.sf": true,
     "**/.sfdx": true,
+    "**/.windsurf": false,
     "**/.vscode": true,
     "**/bower_components": true,
     "**/node_modules": true
