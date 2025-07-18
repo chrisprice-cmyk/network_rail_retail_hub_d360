@@ -863,6 +863,34 @@
         "showReuseMessage": false,
         "panel": "new"
       }
+    },
+    {
+      "label": "AI: 🗂️ Generate Brix Readme File",
+      "type": "shell",
+      "command": "qx ai docgen",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "new"
+      }
+    },
+    {
+      "label": "AI: 🤖 Generate Robot Script (BETA)",
+      "type": "shell",
+      "command": "qx ai robotgen --description '${input:RobotDescription}' --file-name '${input:RobotFileName}'",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "new"
+      }
     }
   ],
   "inputs": [
@@ -959,6 +987,18 @@
       {
         "id": "RobotTest",
         "description": "Enter the test name to run",
+        "default": "",
+        "type": "promptString"
+      },
+      {
+        "id": "RobotDescription",
+        "description": "Enter the description of the robot script",
+        "default": "",
+        "type": "promptString"
+      },
+      {
+        "id": "RobotFileName",
+        "description": "Enter the file name of the robot script",
         "default": "",
         "type": "promptString"
       }
