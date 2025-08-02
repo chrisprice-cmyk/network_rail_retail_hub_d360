@@ -3,6 +3,15 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+    inputs:
+      CCI_VERSION:
+        type: string
+        default: "quasar"
+        description: "The version of the CCI to use"
+      QX_VERSION:
+        type: string
+        default: "main"
+        description: "The version of the QX to use"
 
 env:
   CUMULUSCI_KEYCHAIN_CLASS: cumulusci.core.keychain.EnvironmentProjectKeychain
@@ -31,6 +40,8 @@ env:
   ENABLE_FLOW_STATE_TRACKING: ${{ vars.ENABLE_FLOW_STATE_TRACKING }}
   OTEL_SDK_DISABLED: ${{ vars.OTEL_SDK_DISABLED }}
   OTEL_EXPORTER_OTLP_PROTOCOL: ${{ vars.OTEL_EXPORTER_OTLP_PROTOCOL }}
+  CCI_VERSION: ${{ github.event.inputs.CCI_VERSION || vars.CCI_VERSION || 'quasar' }}
+  QX_VERSION: ${{ github.event.inputs.QX_VERSION || vars.QX_VERSION || 'main' }}  
 
 
 jobs:
@@ -334,7 +345,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Update QX
-        run: qx update
+        run: qx update --branch ${{ env.QX_VERSION }} --cci_version ${{ env.CCI_VERSION }}
 
       - name: Set ENV variables
         run: |
@@ -489,7 +500,6 @@ jobs:
 
       - name: rfbrowser init setup
         run: |
-          pip install protobuf==5.28.1 --force
           rfbrowser init
           sf plugins
           sf plugins install sfdmu
@@ -767,7 +777,6 @@ jobs:
 
       - name: rfbrowser init setup
         run: |
-          pip install protobuf==5.28.1 --force
           rfbrowser init
           sf plugins
           sf plugins install sfdmu
@@ -952,7 +961,7 @@ jobs:
           git clone https://${{ secrets.QBRIX_GITHUB_PAT}}:x-oauth-basic@github.com/${{github.repository_owner}}/${{matrix.reference_brix}}
 
       - name: Update QX
-        run: qx update
+        run: qx update --branch ${{ env.QX_VERSION }} --cci_version ${{ env.CCI_VERSION }}
 
       - name: Set ENV variables
         run: |
@@ -1134,7 +1143,6 @@ jobs:
       - name: rfbrowser init setup
         run: |
           cd ${{matrix.reference_brix}}
-          pip install protobuf==5.28.1 --force
           rfbrowser init
           sf plugins
           sf plugins install sfdmu
@@ -1271,7 +1279,7 @@ jobs:
 
       - name: Update QX
         if: matrix.targetusername!='' && matrix.ishybrid == 'false'
-        run: qx update
+        run: qx update --branch ${{ env.QX_VERSION }} --cci_version ${{ env.CCI_VERSION }}
 
       - name: Core Setup - key for jwt auth
         if: matrix.targetusername!='' && matrix.ishybrid == 'false'
@@ -1307,7 +1315,6 @@ jobs:
       - name: rfbrowser init setup
         if: matrix.targetusername!='' && matrix.ishybrid == 'false'
         run: |
-          pip install protobuf==5.28.1 --force
           rfbrowser init
           sf plugins
           sf plugins install sfdmu
@@ -1445,7 +1452,7 @@ jobs:
 
       - name: Update QX
         if: matrix.targetusername!='' && matrix.ishybrid == 'true'
-        run: qx update
+        run: qx update --branch ${{ env.QX_VERSION }} --cci_version ${{ env.CCI_VERSION }}
 
       - name: Core Setup - key for jwt auth
         if: matrix.targetusername!='' && matrix.ishybrid == 'true'
@@ -1481,7 +1488,6 @@ jobs:
       - name: rfbrowser init setup
         if: matrix.targetusername!='' && matrix.ishybrid == 'true'
         run: |
-          pip install protobuf==5.28.1 --force
           rfbrowser init
           sf plugins
           sf plugins install sfdmu
