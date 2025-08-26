@@ -400,9 +400,9 @@
       }
     },
     {
-      "label": "ORG: 🔗 Connect to NextGen DevHub",
+      "label": "ORG: 🔗 Connect/Reconnect to NextGen DevHub",
       "type": "shell",
-      "command": "qx config sfdx --connect_devhub",
+      "command": "cci service remove devhub default || true && sf org logout -o DevHub --no-prompt || true && qx config sfdx --connect_devhub && sf org list || true && cci service list || true",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
