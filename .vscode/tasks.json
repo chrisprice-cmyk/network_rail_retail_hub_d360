@@ -92,6 +92,62 @@
       }
     },
     {
+      "label": "ORG: 💾 Store Salesforce Org in DevHub",
+      "type": "shell",
+      "command": "qx org store --org '${input:OrgAlias}'",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "new"
+      }
+    },
+    {
+      "label": "ORG: 🔄 Import Salesforce Org from DevHub",
+      "type": "shell",
+      "command": "qx org import --org '${input:OrgAlias}'",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "new"
+      }
+    },
+    {
+      "label": "ORG: 🚑 Recover/Reconnect Salesforce Org",
+      "type": "shell",
+      "command": "qx org reconnect --org '${input:OrgAlias}'",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "new"
+      }
+    },
+    {
+      "label": "ORG: 📋 List Connected Salesforce Orgs",
+      "type": "shell",
+      "command": "qx org list",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "new"
+      }
+    },
+    {
       "label": "ORG: 💧 Connect SDO Org to Brix",
       "type": "shell",
       "command": "qx org pool --sdo",
