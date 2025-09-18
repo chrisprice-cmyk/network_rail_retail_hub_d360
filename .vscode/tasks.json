@@ -106,6 +106,20 @@
       }
     },
     {
+      "label": "ORG: 🔐 Generate and View Password for Scratch Org",
+      "type": "shell",
+      "command": "sf org generate password --target-org '${input:OrgAlias}' && sf org display user --target-org '${input:OrgAlias}'",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "new"
+      }
+    },
+    {
       "label": "ORG: 🔄 Import Salesforce Org from DevHub",
       "type": "shell",
       "command": "qx org import --org '${input:OrgAlias}'",
