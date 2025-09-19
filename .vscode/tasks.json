@@ -246,6 +246,20 @@
       }
     },
     {
+      "label": "ORG: 🔗 Quick Connect to Salesforce Org (aka Needlecast)",
+      "type": "shell",
+      "command": "qx org connect --org '${input:OrgAlias}' --skeleton_user ${input:ConnectUsername}",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "new"
+      }
+    },
+    {
       "label": "ORG: 🛠️ Create a scratch org",
       "type": "shell",
       "command": "qx org create --org '${input:OrgAlias}'",
@@ -1062,29 +1076,35 @@
       "default": "/lightning/setup/SetupOneHome/home",
       "type": "promptString"
     },
-      {
-        "id": "RobotFilePath",
-        "description": "Enter the file path to the .robot file",
-        "default": "",
-        "type": "promptString"
-      },
-      {
-        "id": "RobotTest",
-        "description": "Enter the test name to run",
-        "default": "",
-        "type": "promptString"
-      },
-      {
-        "id": "RobotDescription",
-        "description": "Enter the description of the robot script",
-        "default": "",
-        "type": "promptString"
-      },
-      {
-        "id": "RobotFileName",
-        "description": "Enter the file name of the robot script",
-        "default": "",
-        "type": "promptString"
-      }
+    {
+      "id": "RobotFilePath",
+      "description": "Enter the file path to the .robot file",
+      "default": "",
+      "type": "promptString"
+    },
+    {
+      "id": "RobotTest",
+      "description": "Enter the test name to run",
+      "default": "",
+      "type": "promptString"
+    },
+    {
+      "id": "RobotDescription",
+      "description": "Enter the description of the robot script",
+      "default": "",
+      "type": "promptString"
+    },
+    {
+      "id": "RobotFileName",
+      "description": "Enter the file name of the robot script",
+      "default": "",
+      "type": "promptString"
+    },
+    {
+      "id": "ConnectUsername",
+      "description": "Enter the username for the Salesforce org",
+      "default": "",
+      "type": "promptString"
+    }
   ]
 }
