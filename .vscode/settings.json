@@ -1,5 +1,7 @@
 {
   "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "eslint.validate": ["javascript", "javascriptreact"],
   "[python]": {
     "editor.defaultFormatter": "charliermarsh.ruff"
   },
@@ -19,12 +21,18 @@
   },
   "files.exclude": {
     "**/__pycache__": true,
+    "**/.mypy_cache": true,
+    "**/.cursor": true,
+    "**/.extensions": true,
+    "**/.pytest_cache": true,
     "**/._*": true,
     "**/.cci": true,
+    "**/.editorconfig": true,
     "**/.cursorrules": true,
     "**/.devcontainer": true,
     "**/.eslintrc.json": true,
     "**/.forceignore": true,
+    "**/.gitattributes": true,
     "**/.github": true,
     "**/.gitignore": true,
     "**/.prettierignore": true,
@@ -57,6 +65,7 @@
     "qx/qrobot/keywords"
   ],
   "salesforcedx-vscode-core.push-or-deploy-on-save.enabled": false,
+  "salesforcedx-vscode-core.retrieve-test-code-coverage": true,
   "search.exclude": {
     "**/.cci": true,
     "**/.cursorrules": false,

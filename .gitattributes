@@ -1,0 +1,4 @@
+* text=auto
+*.cls text diff
+*.trigger text diff
+*.apex text diff
