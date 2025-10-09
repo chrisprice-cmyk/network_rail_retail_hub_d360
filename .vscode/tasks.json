@@ -36,6 +36,20 @@
       }
     },
     {
+      "label": "UTILS: 🧰 Generate Brix Validation",
+      "type": "shell",
+      "command": "qx utils update-validation",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "new"
+      }
+    },
+    {
       "label": "UTILS: 🧰 Install NextGen Dev Tools Extension",
       "type": "shell",
       "command": "bash .devcontainer/extensions_install.sh",
