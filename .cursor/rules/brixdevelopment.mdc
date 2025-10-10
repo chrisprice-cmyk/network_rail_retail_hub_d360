@@ -195,8 +195,8 @@ Brix can support input parameters which we call required inputs. These are defin
 
 2. **Create QA Org for Testing:**
 
-   - For xDO projects: `qa org pool --cdo --org qa`
-   - For SDO projects: `qa org pool --sdo --org qa`
+   - For xDO projects: `qx org pool --cdo --org qa`
+   - For SDO projects: `qx org pool --sdo --org qa`
 
 3. **API Version Updates:**
 
