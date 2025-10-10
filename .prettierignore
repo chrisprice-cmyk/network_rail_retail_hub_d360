@@ -12,3 +12,4 @@
 coverage/
 .devcontainer/
 .github/
+sfdx-project.json

@@ -2,6 +2,7 @@
 # More information: https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_exclude_source.htm
 #
 
+# Standard metadata
 package.xml
 
 # LWC configuration files
@@ -11,6 +12,6 @@ package.xml
 # LWC Jest
 **/__tests__/**
 
+# TS configuration files
 **/tsconfig.json
-
 **/*.ts

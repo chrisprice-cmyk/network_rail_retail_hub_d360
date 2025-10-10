@@ -1,18 +1,36 @@
 {
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
+  "editor.insertSpaces": true,
+  "editor.tabSize": 4,
+  "editor.detectIndentation": false,
   "eslint.validate": ["javascript", "javascriptreact"],
   "[python]": {
-    "editor.defaultFormatter": "charliermarsh.ruff"
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true
   },
   "[yaml]": {
-    "editor.defaultFormatter": "redhat.vscode-yaml"
+    "editor.defaultFormatter": "redhat.vscode-yaml",
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
   },
   "yaml.schemas": {
     "https://qlabs-org.my.site.com/qverse/resource/1740162235000/cumulusci_jsonschema_json": "/*"
   },
   "[xml]": {
-    "editor.defaultFormatter": "redhat.vscode-xml"
+    "editor.defaultFormatter": "redhat.vscode-xml",
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true
+  },
+  "[robot]": {
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true
   },
   "editor.trimAutoWhitespace": true,
   "files.associations": {
@@ -48,7 +66,7 @@
     "**/node_modules": true,
     "**/package.json": true,
     "**/playwright.config.ts": true
-  },
+},
   "git.branchProtection": [
     "main",
     "master"
