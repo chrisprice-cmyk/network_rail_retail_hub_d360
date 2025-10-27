@@ -13,7 +13,7 @@
   "[yaml]": {
     "editor.defaultFormatter": "redhat.vscode-yaml",
     "editor.tabSize": 2,
-    "editor.insertSpaces": true,
+    "editor.insertSpaces": true
   },
   "yaml.schemas": {
     "https://qlabs-org.my.site.com/qverse/resource/1740162235000/cumulusci_jsonschema_json": "/*"
@@ -96,5 +96,10 @@
     "**/.vscode": true,
     "**/bower_components": true,
     "**/node_modules": true
-  }
+},
+"xml.preferences.showSchemaDocumentationType": "none",
+"salesforcedx-vscode-apex.languageServer.restartBehavior": "restart",
+"salesforcedx-vscode-core.experimental.enableSourceTrackingForDeployAndRetrieve": false,
+"salesforcedx-vscode-core.push-or-deploy-on-save.ignoreConflictsOnPush": true,
+"analyticsdx-vscode-core.CLI.checkForPlugin": false
 }
