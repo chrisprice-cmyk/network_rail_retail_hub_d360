@@ -4,6 +4,7 @@
 
 # Demo Brix
 .qbrix/
+.backup/
 
 #extensions
 .extensions/
