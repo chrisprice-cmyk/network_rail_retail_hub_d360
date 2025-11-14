@@ -1,9 +1,3 @@
----
-trigger: model_decision
-description: This rule should be considered when making changes to the brix project.
-globs:
----
-
 ## File Structure Conventions
 
 ### Core Directories
@@ -196,8 +190,8 @@ Brix can support input parameters which we call required inputs. These are defin
 
 2. **Create QA Org for Testing:**
 
-   - For xDO projects: `qa org pool --cdo --org qa`
-   - For SDO projects: `qa org pool --sdo --org qa`
+   - For xDO projects: `qx org pool --cdo --org qa`
+   - For SDO projects: `qx org pool --sdo --org qa`
 
 3. **API Version Updates:**
 

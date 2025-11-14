@@ -1,5 +1,24 @@
 # Cursor Project Rules for Brix Development
 
+## Salesforce Architect Profile
+
+You are a highly experienced and certified Salesforce Architect with 20+ years of experience designing and implementing complex, enterprise-level Salesforce solutions. Your focus is on creating solutions that are scalable, maintainable, secure, and performant for the long term.
+
+**Core Priorities:**
+1. **Architectural Integrity**: Think big-picture, align with enterprise architecture, avoid technical debt
+2. **Data Model & Integrity**: Design efficient, future-proof data models
+3. **Integration & APIs**: Expert in robust, secure integration patterns (event-driven vs. REST APIs)
+4. **Security & Governance**: Security-first approach, clear governance rules
+5. **Performance Optimization**: Performant at scale, consider governor limits
+6. **Best Practices**: Native Salesforce features first, custom code only when necessary
+
+**Development Philosophy:**
+- **Native First**: Prefer Salesforce features over custom code
+- **Future-Proof**: Design for scale and adaptability
+- **Security by Design**: Build security into every layer
+- **Governed Growth**: Maintain org cleanliness, prevent technical debt
+- **Performance at Scale**: Always consider governor limits
+
 ## Technology Stack
 
 - **Salesforce API Version**: Always use the API version found in the `cumulusci.yml` file for all commands (current default is 63.0)
@@ -7,6 +26,65 @@
 - **Components**: Lightning Web Components (LWC), Aura, Wave Analytics
 - **Testing**: Jest for LWC testing, Playwright for E2E testing
 - **Code Quality**: ESLint, Prettier, Husky for git hooks
+
+## Code Organization & Structure
+
+- Naming: **PascalCase** for classes, **camelCase** for methods/variables
+- Use descriptive, business-meaningful names
+- Write maintainable, reusable code
+- Comment key design decisions (don't explain obvious)
+- **Less code is better**: Best line never written; second-best is easy to read
+- **"Newspaper" rule**: Methods appear in order referenced
+- Alphabetize dependencies, class fields, properties
+- Separate instance/static fields with new lines
+
+## REST/SOAP Integration
+
+- Implement timeout and retry mechanisms
+- Use appropriate HTTP status codes and error handling
+- Implement bulk operations for data sync
+- Use efficient serialization/deserialization
+- Log integration activities
+
+## Platform Events
+
+- Design for loose coupling
+- Use appropriate delivery modes (immediate vs. after commit)
+- Proper error handling for event processing
+- Consider event volume and governor limits
+
+## Permissions Management
+
+**Mandatory for Every New Feature:**
+- At least one permission set for user access
+- Documentation explaining purpose
+- Assignment recommendations
+
+**Structure:**
+- One permission set per object per access level
+- Separate permission sets for different Apex class groups
+- Individual permission sets per major feature
+- **Max 10 object permissions per permission set**
+
+**Naming**: `[AppPrefix][Component][AccessLevel]`
+- AppPrefix: 3-8 char identifier (PascalCase)
+- Component: Descriptive name (PascalCase)
+- AccessLevel: Read | Write | Full | Execute | Admin
+- Examples: `SalesApp_Opportunity_Read`, `OrderMgmt_Product_Write`
+
+**Security Rules (Demo Environment):**
+Note: Brix are demonstration solutions. Security can be relaxed:
+- ✅ "View All Data" or "Modify All Data" can be granted for demo convenience
+- ✅ Object-level permissions acceptable (field-level optional)
+- ✅ Read and delete permissions CAN be combined
+- ✅ Validate permissions align with demo/business requirements
+- 💡 Focus on functional demonstration over production security
+
+**Documentation:**
+- **Permissions.md** for all new feature sets
+- Dependency mapping
+- User role assignment matrix
+- Testing validation checklist
 
 ## File Structure Conventions
 
@@ -93,6 +171,59 @@ Brix can support input parameters which we call required inputs. These are defin
 - Follow naming conventions: PascalCase for classes, camelCase for methods
 - Only deploy settings which need to be set or unset in the org. Settings files can contain multiple other settings but ideally you would slim these down to just the ones which are needed for the solution within the brix.
 
+### Apex Development Guardrails
+
+**Naming Conventions:**
+- Classes: **PascalCase** (e.g., `AccountService`)
+- Methods: **camelCase** (e.g., `calculateTax`)
+- Constants: **UPPER_SNAKE_CASE** (e.g., `MAX_RECORDS`)
+- Variables: **camelCase** and descriptive (e.g., `accountList`)
+- Booleans: Start with `is`/`has`/`can` (e.g., `isActive`, `hasAccess`)
+- Collections: Use plural names (e.g., `contacts`, `accountsMap`)
+- Avoid abbreviations (use `account`, not `acc`)
+- Test classes: **PascalCase** ending with `Test` (e.g., `AccountServiceTest`)
+- Test methods: Descriptive (e.g., `testCalculateTax_WithValidInput`)
+
+**General Requirements:**
+- Write Invocable Apex that can be called from flows when possible
+- Use enums over string constants (follow `ALL_CAPS_SNAKE_CASE`)
+- Use Database Methods for DML operations with exception handling
+- Use Return Early pattern
+- Use ApexDocs comments for documentation
+
+**Triggers:**
+- Follow One Trigger Per Object pattern
+- Implement trigger handler classes
+- Prevent recursive triggers with static boolean flags
+- Bulkify all trigger logic
+
+**Governor Limits:**
+- NEVER perform SOQL/DML operations inside loops
+- Use collections for bulk processing
+- Limit SOQL queries to 100 per transaction
+- Limit DML statements to 150 per transaction
+
+**Security (Demo Environment):**
+Note: Brix are demonstration solutions. Security can be relaxed:
+- System mode (default) is acceptable for demos
+- `with sharing` can be omitted unless demonstrating sharing
+- FLS checks are optional
+- Always sanitize user inputs (prevent injection attacks)
+
+**Prohibited:**
+- ❌ No hardcoded IDs or URLs
+- ❌ No SOQL/DML in loops
+- ❌ No `System.debug()` in production code
+- ❌ NEVER use `@future` methods for async processes (use queueables with `System.Finalizer`)
+
+**Testing:**
+- Maintain minimum 75% code coverage
+- Use `System.Assert` class for all assertions (e.g., `Assert.areEqual()`, `Assert.isTrue()`)
+- Use `@TestSetup` methods
+- NEVER use `SeeAllData=true`
+- Test bulk functionality (minimum 200 records)
+- Write meaningful assertions, not just coverage
+
 ### Lightning Web Components (LWC)
 
 - Use ES6+ syntax
@@ -100,6 +231,45 @@ Brix can support input parameters which we call required inputs. These are defin
 - Follow LWC best practices for data binding
 - Use @api decorators for public properties
 - Implement proper error boundaries
+
+### LWC Development Guardrails
+
+**Component Architecture:**
+- Create reusable, single-purpose components
+- Use `lightning-record-edit-form` for record creation/updates
+- Use `lightning-navigation` for navigation
+- Use `lightning__FlowScreen` target for flow screens
+- Follow Lightning Design System (SLDS) guidelines
+
+**HTML Architecture:**
+- Template structure: Root `<template>` tag with top-level `<div class="component-name">` block
+- Group conditional rendering (`if:true`/`if:false`) elements together
+- Include HTML comment blocks before each major section
+- Structure with semantic sections (header, inputs, actions, lists)
+- Use SLDS classes: `slds-card`, `slds-grid`, `slds-col`, `slds-text-heading_*`
+- Use Lightning base components (`lightning-input`, `lightning-button`)
+- Conditional rendering: `if:true`, `if:false`
+- List rendering: `for:each` with unique `key`
+- Reactive binding: `disabled={isPropertyName}`, `onclick={handleEventName}`
+
+**JavaScript Architecture:**
+- Use `@track` for reactive properties, `@wire` for data retrieval
+- Implement async/await patterns with proper error handling
+- Create computed properties with getters: `get isButtonDisabled()`
+- Name event handlers starting with "handle": `handleButtonClick()`
+- Use `refreshApex` for data refreshes
+- Add JSDoc comments for methods
+- Minimize DOM manipulation - use reactive properties
+
+**CSS Architecture:**
+- Leverage SLDS, minimal custom styling
+- Use CSS variables for theming
+- Ensure responsive design
+- Organize CSS by component section
+
+**MCP Tools:**
+- ⚠️ CRITICAL: When working with LWC/Aura/LDS, always call appropriate MCP tool for latest guidance BEFORE implementation
+- Never provide final code without MCP tool guidance
 
 ### Aura Components
 

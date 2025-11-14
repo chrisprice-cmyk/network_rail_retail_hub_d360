@@ -3,7 +3,10 @@
   "editor.insertSpaces": true,
   "editor.tabSize": 4,
   "editor.detectIndentation": false,
-  "eslint.validate": ["javascript", "javascriptreact"],
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact"
+  ],
   "[python]": {
     "editor.defaultFormatter": "charliermarsh.ruff",
     "editor.tabSize": 4,
@@ -39,6 +42,7 @@
   "files.exclude": {
     "**/__pycache__": true,
     "**/.mypy_cache": true,
+    "**/.claude": true,
     "**/.cursor": true,
     "**/.extensions": true,
     "**/.pytest_cache": true,
@@ -86,6 +90,7 @@
   "salesforce.einsteinForDevelopers.salesforceApiEnvironment": "Test",
   "search.exclude": {
     "**/.cci": true,
+    "**/.claude": false,
     "**/.cursorrules": false,
     "**/.devcontainer": true,
     "**/.github": true,
@@ -95,10 +100,11 @@
     "**/.vscode": true,
     "**/bower_components": true,
     "**/node_modules": true
-},
-"xml.preferences.showSchemaDocumentationType": "none",
-"salesforcedx-vscode-apex.languageServer.restartBehavior": "restart",
-"salesforcedx-vscode-core.experimental.enableSourceTrackingForDeployAndRetrieve": false,
-"salesforcedx-vscode-core.push-or-deploy-on-save.ignoreConflictsOnPush": true,
-"analyticsdx-vscode-core.CLI.checkForPlugin": false
+  },
+  "xml.preferences.showSchemaDocumentationType": "none",
+  "salesforcedx-vscode-apex.languageServer.restartBehavior": "restart",
+  "salesforcedx-vscode-core.experimental.enableSourceTrackingForDeployAndRetrieve": false,
+  "salesforcedx-vscode-core.push-or-deploy-on-save.ignoreConflictsOnPush": true,
+  "analyticsdx-vscode-core.CLI.checkForPlugin": false,
+  "salesforcedx-vscode-apex.java.home": "/usr/lib/jvm/zulu21-ca-arm64"
 }
