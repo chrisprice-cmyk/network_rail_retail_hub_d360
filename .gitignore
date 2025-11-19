@@ -20,6 +20,7 @@
 
 # JETBRAINS
 .idea/
+.illuminatedCloud/
 cmake-build-*/
 *.iws
 out/
