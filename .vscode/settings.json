@@ -43,6 +43,7 @@
     "**/__pycache__": true,
     "**/.mypy_cache": true,
     "**/.claude": true,
+    "**/.gemini": true,
     "**/.cursor": true,
     "**/.extensions": true,
     "**/.pytest_cache": true,
@@ -105,6 +106,5 @@
   "salesforcedx-vscode-apex.languageServer.restartBehavior": "restart",
   "salesforcedx-vscode-core.experimental.enableSourceTrackingForDeployAndRetrieve": false,
   "salesforcedx-vscode-core.push-or-deploy-on-save.ignoreConflictsOnPush": true,
-  "analyticsdx-vscode-core.CLI.checkForPlugin": false,
-  "salesforcedx-vscode-apex.java.home": "/usr/lib/jvm/zulu21-ca-arm64"
+  "analyticsdx-vscode-core.CLI.checkForPlugin": false
 }
