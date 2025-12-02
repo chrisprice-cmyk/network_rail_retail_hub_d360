@@ -11,6 +11,6 @@
     "redhat.vscode-yaml",
     "salesforce.salesforce-vscode-slds",
     "salesforce.salesforcedx-vscode-expanded",
-    "salesforce.salesforcedx-vscode-visualforce",
+    "salesforce.salesforcedx-vscode-visualforce"
   ]
 }

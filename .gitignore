@@ -21,6 +21,7 @@
 # JETBRAINS
 .idea/
 .illuminatedCloud/
+IlluminatedCloud
 cmake-build-*/
 *.iws
 out/
@@ -30,6 +31,9 @@ crashlytics.properties
 crashlytics-build.properties
 fabric.properties
 qbrix/.idea/workspace.xml
+target/
+**/tsconfig*.json
+**/graphql.config.yml
 
 # JUPYTERNOTEBOOKS
 .ipynb_checkpoints
@@ -127,7 +131,6 @@ testim-headless.zip
 .stylelintcache
 hardis-report/
 node_modules/
-IlluminatedCloud
 .npmrc
 package-lock.json
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
