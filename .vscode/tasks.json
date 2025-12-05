@@ -825,7 +825,7 @@
     {
       "label": "INFO: ℹ️ List Installed Packages in Org",
       "type": "shell",
-      "command": "cci task run dx --org '${input:OrgAlias}' --command 'package installed list'",
+      "command": "qx org package-list --org '${input:OrgAlias}'",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
