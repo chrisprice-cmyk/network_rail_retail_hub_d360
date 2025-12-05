@@ -400,6 +400,20 @@
       }
     },
     {
+      "label": "GITHUB: 📩 Publish Changes (Open PR)",
+      "type": "shell",
+      "command": "qx github publish --branch '${input:GitHubBranch}'",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "revealProblems": "onProblem",
+        "focus": true,
+        "echo": false,
+        "showReuseMessage": false,
+        "panel": "new"
+      }
+    },
+    {
       "label": "ORG: 🗑 Delete Development and Test orgs",
       "type": "shell",
       "command": "qx org delete --dev_orgs",
@@ -1008,20 +1022,20 @@
   "inputs": [
     {
       "id": "SearchString",
-      "description": "Please enter the search term",
+      "description": "Search Term:",
       "default": "",
       "type": "promptString"
     },
     {
       "id": "OrgAlias",
-      "description": "Please provide the Salesforce org alias",
+      "description": "Salesforce org alias:",
       "default": "dev",
       "type": "promptString"
     },
     {
       "id": "CommitMessage",
       "description": "Provide a short summary of your changes (less than 100 characters):",
-      "default": "Update",
+      "default": "New Updates",
       "type": "promptString"
     },
     {
@@ -1038,25 +1052,25 @@
     },
     {
       "id": "MetadataString",
-      "description": "Enter the sfdx formatted Metadata Type and api name of metadata object (e.g. CustomField:MyTestField__c):",
+      "description": "Metadata Type and api name of metadata object (e.g. CustomField:MyTestField__c):",
       "default": "",
       "type": "promptString"
     },
     {
       "id": "DataFolderString",
-      "description": "Enter the relative path to the data folder:",
+      "description": "Path to data folder:",
       "default": "datasets",
       "type": "promptString"
     },
     {
       "id": "PackageName",
-      "description": "Enter the api name of the unmanaged package:",
+      "description": "Unmanaged Package API Name:",
       "default": "",
       "type": "promptString"
     },
     {
       "id": "TaskName",
-      "description": "Enter the name of the task:",
+      "description": "Task Name:",
       "default": "",
       "type": "promptString"
     },
@@ -1092,13 +1106,13 @@
     },
     {
       "id": "RobotFilePath",
-      "description": "Enter the file path to the .robot file",
+      "description": "File path to the .robot file",
       "default": "",
       "type": "promptString"
     },
     {
       "id": "RobotTest",
-      "description": "Enter the test name to run",
+      "description": "Robot Test Title",
       "default": "",
       "type": "promptString"
     },
@@ -1110,14 +1124,20 @@
     },
     {
       "id": "RobotFileName",
-      "description": "Enter the file name of the robot script",
+      "description": "File Name for robot script",
       "default": "",
       "type": "promptString"
     },
     {
       "id": "ConnectUsername",
-      "description": "Enter the username for the Salesforce org",
+      "description": "Salesforce Username",
       "default": "",
+      "type": "promptString"
+    },
+    {
+      "id": "GitHubBranch",
+      "description": "Github branch name (Default is main)",
+      "default": "main",
       "type": "promptString"
     }
   ]
