@@ -6,6 +6,7 @@
     "prettier-plugin-apex",
     "@prettier/plugin-xml"
   ],
+  "xmlWhitespaceSensitivity": "ignore",
   "overrides": [
     {
       "files": "**/lwc/**/*.html",

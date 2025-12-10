@@ -21,7 +21,7 @@
     "https://qlabs-org.my.site.com/qverse/resource/1740162235000/cumulusci_jsonschema_json": "/*"
   },
   "[xml]": {
-    "editor.defaultFormatter": "redhat.vscode-xml",
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.tabSize": 2,
     "editor.insertSpaces": true
   },
