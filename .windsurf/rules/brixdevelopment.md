@@ -1,3 +1,13 @@
+## Communication Style
+
+When responding to users, maintain a tone that is:
+- **Friendly**: Be approachable and warm in your interactions
+- **Supportive**: Encourage users and validate their efforts, especially when troubleshooting issues
+- **Encouraging**: Celebrate wins (even small ones!) and motivate users through challenges
+- **Light-hearted**: Sprinkle in a small amount of humor where appropriate - a well-placed quip can make debugging feel less painful 🎉
+
+Remember: Brix development can be complex, so be the helpful colleague everyone wishes they had!
+
 ## File Structure Conventions
 
 ### Core Directories
@@ -230,6 +240,97 @@ For code quality analysis, use the Salesforce DX MCP Code Analyzer tools:
 - Main entry point for deployment to org is `deploy_qbrix` flow, which runs `prepare_org`, `source_dependencies`, `deploy` (task) and then `post_qbrix_deploy` in that order
 - Use VSCode build tasks where possible. Tasks are found in `.vscode/tasks.json`
 
+### Assigning Permissions During Deployment
+
+Permission Sets, Permission Set Licenses, and Permission Set Groups are assigned using CumulusCI tasks in the `post_qbrix_deploy` flow **before** any data is deployed.
+
+**Assign Permission Sets:**
+
+```yaml
+post_qbrix_deploy:
+    steps:
+        1:
+            task: assign_permission_sets
+            options:
+                api_names:
+                    - MyPermissionSetAPIName_1
+```
+
+**Other Tasks:** `assign_permission_set_licenses`, `assign_permission_set_groups`
+
+**Waiting for Permission Set Groups** (use `qx_wait` before assigning):
+
+```yaml
+post_qbrix_deploy:
+    steps:
+        1:
+            task: qx_wait
+            options:
+                permission_set_group_api: MyPermissionSetGroupAPIName
+        2:
+            task: assign_permission_set_groups
+            options:
+                api_names:
+                    - MyPermissionSetGroupAPIName
+```
+
+**Updating Existing Permission Sets** (use `permission_set_upsert`):
+
+```yaml
+post_qbrix_deploy:
+    steps:
+        1:
+            task: permission_set_upsert
+            options:
+                permission_set_name: namespace__PermissionSetAPIName
+                objects:
+                    - MyCustomObject__c
+                user_permissions:
+                    - ActivitiesAccess
+```
+
+**Note:** Always use the full API name including namespace.
+
+### Data Management with NextGen Data Tool
+
+Use the **NextGen Data Tool** for data deployments in brix.
+
+**Step 1: Configure Task in `cumulusci.yml`**
+
+```yaml
+tasks:
+    deploy_nextgen_data:
+        class_path: qbrix.tools.utils.qbrix_nextgen_datatool.RunDataTool
+        options:
+            data_keys:
+                - YOUR_DATA_VERSION_ID_HERE
+```
+
+**Step 2: Create Data Flow and Deploy in `post_qbrix_deploy`**
+
+```yaml
+deploy_qbrix_data:
+    steps:
+        1:
+            task: deploy_nextgen_data
+
+post_qbrix_deploy:
+    steps:
+        1:
+            flow: deploy_qbrix_data
+```
+
+**Finding Data Version IDs:** Log into NextGen Data Tool → Open data pack → Copy the unique ID.
+
+**Troubleshooting:** "Class path not found" error → Run `cci task run update_qbrix`.
+
+**Common Data Tool Issues:**
+- **Missing field**: Check Field Level Security in Object Manager (System Admin doesn't guarantee API access)
+- **No External_ID__c on parent**: Field missing, FLS issue, or "External ID" checkbox not enabled. Run `qx utils doctor` to fix naming issues
+- **No records**: Ensure org has records and query filters aren't excluding all data
+- **Lookup not editable**: Intended behavior - re-extract via new version
+- **Macros**: Supports Macros but NOT ExpressionFilter/ExpressionFilterCriteria; use user with minimal permissions
+
 ### General
 
 - Write self-documenting code with clear variable names
@@ -244,6 +345,77 @@ For code quality analysis, use the Salesforce DX MCP Code Analyzer tools:
 - Implement proper SOQL query optimization
 - Use platform events for asynchronous processing
 - Follow governor limit best practices
+
+## Remote Containers Setup
+
+The VS Code Remote – Containers extension (Dev Containers) integrates VS Code with Docker containers, allowing you to open any Brix project in a fully preconfigured development environment.
+
+### Prerequisites
+
+Install these tools in order:
+1. **Docker Desktop**: [Mac](https://www.docker.com/products/docker-desktop) • [Windows](https://www.docker.com/products/docker-desktop)
+2. **Visual Studio Code**: [Download](https://code.visualstudio.com/)
+3. **VS Code Extensions**: Dev Containers, Docker Extension
+4. **GitHub CLI (gh)**: [Download](https://cli.github.com/)
+5. **GitHub Desktop** (optional): [Install](https://desktop.github.com/)
+
+**Important**: Ensure you are connected to the Salesforce VPN (Zscaler) before proceeding.
+
+### Docker Setup
+
+1. Open Docker Desktop and sign in with your Salesforce account ("Continue with Google")
+2. Go to Settings → Resources and adjust:
+   - **CPU**: Max available
+   - **Memory**: Up to 16 GB (smaller OK if limited)
+   - **Swap**: Up to 1 GB
+   - **Disk**: Up to 512 GB
+3. Click **Apply & Restart**
+
+### GitHub CLI Authentication
+
+```bash
+gh auth login --hostname github.com --web --scopes read:packages
+```
+
+### Docker-GitHub Authentication
+
+Replace `{YOUR_GH_USERNAME}` with your GitHub username (ending with `_sfemu`):
+
+```bash
+echo $(gh auth token) | docker login ghcr.io -u {YOUR_GH_USERNAME} --password-stdin
+```
+
+### Pull Container Image
+
+```bash
+docker pull ghcr.io/sfdc-qbranch-emu/qbrix-base-container-quasar:latest
+```
+
+### Container Troubleshooting
+
+**General Reset/Rebuild**: Save work, close VSCode, connect to Zscaler, update Docker Desktop, delete all containers/images/volumes, restart device, re-authenticate.
+
+**Segmentation Fault**: Docker Desktop → Settings → General → Select "osxfs (Legacy)", uncheck "Use Virtualization Framework" → Apply & Restart.
+
+**GitHub Push Issues**: Use VSCode Build Tasks instead of GitHub Desktop:
+- Save/Push: `GITHUB: 💾 Save/Push local changes to GitHub`
+- Pull: `GITHUB: 📩 Get/Pull latest version from GitHub`
+
+**Robot Framework Errors**: Run `qx robot setup` to check, install, and update robot dependencies.
+
+### Brix Deprecation
+
+**Important**: Brix cannot be deleted, but they can be deprecated when no longer needed.
+
+**Step 1**: Complete initial checks - ensure no active dependencies, recipes, or references exist
+
+**Step 2**: Update GitHub Repository:
+1. Settings → Rename with `DEPRECATED-` prefix (e.g., `DEPRECATED-Qbrix-99-MyBrix`)
+2. Archive the repository from Settings page
+
+**Step 3**: Deprecate in QLabs:
+1. QLabs Org → NextGen Management app → Q Brix tab
+2. Open Brix record → Select **Deprecate Brix** → Provide updated GitHub URL
 
 ### Troubleshooting
 

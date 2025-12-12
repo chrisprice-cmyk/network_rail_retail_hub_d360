@@ -2,6 +2,16 @@
 
 > **Note**: This file consolidates rules from `.cursorrules` and `.cursor/rules/*.mdc` files.
 
+## Communication Style
+
+When responding to users, maintain a tone that is:
+- **Friendly**: Be approachable and warm in your interactions
+- **Supportive**: Encourage users and validate their efforts, especially when troubleshooting issues
+- **Encouraging**: Celebrate wins (even small ones!) and motivate users through challenges
+- **Light-hearted**: Sprinkle in a small amount of humor where appropriate - a well-placed quip can make debugging feel less painful 🎉
+
+Remember: Brix development can be complex, so be the helpful colleague everyone wishes they had!
+
 ## LLM Rule Synchronization (Required)
 
 When updating any LLM/tooling rules, keep these directories **synchronized**:
@@ -614,6 +624,53 @@ Main entry: `deploy_qbrix` flow
 
 Use VSCode build tasks from `.vscode/tasks.json` where possible.
 
+### Assigning Permissions During Deployment
+
+Assign permissions in `post_qbrix_deploy` **before** data deployment:
+
+**Permission Assignment Tasks:**
+- `assign_permission_sets` - Assign permission sets
+- `assign_permission_set_licenses` - Assign permission set licenses
+- `assign_permission_set_groups` - Assign permission set groups
+
+**Wait for Permission Set Groups** (use `qx_wait` with `permission_set_group_api` option before assigning)
+
+**Update Existing Permission Sets** (use `permission_set_upsert` with `permission_set_name`, `objects`, `user_permissions` options)
+
+**Note:** Always use full API name including namespace.
+
+### Data Management with NextGen Data Tool
+
+Use the **NextGen Data Tool** for data deployments in brix.
+
+**Configuration in `cumulusci.yml`:**
+```yaml
+tasks:
+    deploy_nextgen_data:
+        class_path: qbrix.tools.utils.qbrix_nextgen_datatool.RunDataTool
+        options:
+            data_keys:
+                - YOUR_DATA_VERSION_ID_HERE
+
+deploy_qbrix_data:
+    steps:
+        1:
+            task: deploy_nextgen_data
+```
+
+**Deploy in `post_qbrix_deploy`:** `flow: deploy_qbrix_data`
+
+**Finding Data Version IDs:** Log into NextGen Data Tool → Open data pack → Copy unique ID.
+
+**Troubleshooting:** "Class path not found" → Run `cci task run update_qbrix`.
+
+**Common Data Tool Issues:**
+- **Missing field**: Check FLS in Object Manager (System Admin doesn't guarantee API access)
+- **No External_ID__c**: Field missing, FLS issue, or "External ID" checkbox not enabled. Run `qx utils doctor` to fix
+- **No records**: Ensure org has records; check query filters
+- **Lookup not editable**: Re-extract via new version
+- **Macros**: NOT supported: ExpressionFilter/ExpressionFilterCriteria; use user with minimal permissions
+
 ### Pre-commit Hooks
 
 - Code formatting with Prettier
@@ -794,6 +851,60 @@ project:
 ### Security
 
 - Field-level security can be open (demo environment target)
+
+## Remote Containers Setup
+
+The VS Code Remote – Containers extension (Dev Containers) integrates VS Code with Docker containers for fully preconfigured Brix development environments.
+
+### Prerequisites
+
+1. **Docker Desktop**: [Mac](https://www.docker.com/products/docker-desktop) • [Windows](https://www.docker.com/products/docker-desktop)
+2. **Visual Studio Code** with Dev Containers and Docker extensions
+3. **GitHub CLI (gh)**: [Download](https://cli.github.com/)
+4. Must be connected to **Salesforce VPN (Zscaler)**
+
+### Setup Commands
+
+**GitHub CLI Authentication:**
+```bash
+gh auth login --hostname github.com --web --scopes read:packages
+```
+
+**Docker-GitHub Authentication** (replace `{YOUR_GH_USERNAME}`):
+```bash
+echo $(gh auth token) | docker login ghcr.io -u {YOUR_GH_USERNAME} --password-stdin
+```
+
+**Pull Container Image:**
+```bash
+docker pull ghcr.io/sfdc-qbranch-emu/qbrix-base-container-quasar:latest
+```
+
+### Docker Settings
+
+Configure Docker Desktop → Settings → Resources:
+- CPU: Max, Memory: Up to 16GB, Swap: 1GB, Disk: 512GB
+
+### Container Troubleshooting
+
+**General Reset**: Close VSCode, connect to Zscaler, delete all containers/images/volumes in Docker Desktop, restart device, re-authenticate.
+
+**Segmentation Fault**: Docker Desktop → Settings → General → Select "osxfs (Legacy)", uncheck "Use Virtualization Framework".
+
+**GitHub Push Issues**: Use VSCode Build Tasks:
+- Save: `GITHUB: 💾 Save/Push local changes to GitHub`
+- Pull: `GITHUB: 📩 Get/Pull latest version from GitHub`
+
+**Robot Framework Errors**: Run `qx robot setup` to fix robot dependencies.
+
+## Brix Deprecation
+
+**Important**: Brix cannot be deleted, but they can be deprecated.
+
+**Process:**
+1. **Initial Checks**: Ensure no active dependencies, recipes, or references exist
+2. **GitHub**: Rename repo with `DEPRECATED-` prefix → Archive repository
+3. **QLabs**: NextGen Management app → Q Brix tab → Open record → **Deprecate Brix** → Provide updated GitHub URL
 
 ## Troubleshooting
 
