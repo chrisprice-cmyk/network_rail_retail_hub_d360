@@ -3,9 +3,9 @@
 ### Core Directories
 
 - `force-app/main/default/` - Main Salesforce metadata
-  - `aura/` - Aura components
-  - `lwc/` - Lightning Web Components
-  - `wave/` - Wave analytics dashboards
+    - `aura/` - Aura components
+    - `lwc/` - Lightning Web Components
+    - `wave/` - Wave analytics dashboards
 - `qbrix/` - QBrix-specific configurations and tools
 - `qbrix_local/` - Local QBrix development files and robot files
 - `datasets/` - Data files for deployment
@@ -51,37 +51,38 @@ As we are building brix on top of a template which supports CumulusCI and Salesf
 
 In addition to CumulusCI tasks, we have custom extension tasks that extend CumulusCI and SalesforceDX functionality:
 
-| Task Name | Description |
-|-----------|-------------|
-| `abort_install` | Stop deployment with/without exception based on a when clause. Used to stop deployments when target org contains conflicting metadata or packages. |
-| `analytics_fart` | Set and update placeholders within Experience Cloud sites for Analytics Dashboards. |
-| `analytics_manager` | Download/upload dataset data for CRM Analytics, set sharing rules for Apps. |
-| `analytics_timeshift` | Adjust dates in a CSV file to align with a new target date. |
-| `community_publisher` | Publish all active communities or specific communities in the target org. |
-| `display_banner` | Display banner text in terminal to aid tracking execution progress. |
-| `display_project` | Display current brix details in terminal at runtime. |
-| `dustpan` | Remove a file or glob pattern match from the brix stack. |
-| `experience_manager` | Run additional setup tasks against an Experience Cloud site. |
-| `load_sfdmu` | Run SFDMU data loads. |
-| `named_credential_import` | Create a Named Credential in target Salesforce org from a definition. |
-| `omniscript_align` | Repair known issues with OmniScript LWC components. Must run before LWC deployment (prepare_org flow). |
-| `orgconfig_hydrate` | Add options to org_config object with information about connected Salesforce org. Used for when clauses in flow steps. |
-| `populate_recently_viewed` | Add records to Recently Viewed list view for a given object. |
-| `qbrix_fart` | Find and Replace Text tool (FART) - find/replace placeholder text or inject text into files at runtime. |
-| `qbrix_cache_add` | Access runtime variables, add to cache for passing values to other tasks. Can read data from org via SOQL. |
-| `qbrix_installer_tracking` | Log brix deployments. Data saved to QLabs org for deployment reporting and issue tracing. |
-| `qbrix_upload_files` | Upload files to Salesforce. |
-| `qbrix_user_action_runner` | Run actions against the user REST API endpoint. |
-| `qx_wait` | Wait for an item to become available (SOQL result, Permission Set status, etc.). |
-| `robot_runner` | Run robot keywords with/without parameters without creating a .robot file. |
-| `run_apex_and_wait` | Execute Apex in target Salesforce org and wait for completion. |
-| `run_perfect_date_wizard` | Send request to start Perfect Date Wizard in target Salesforce org. |
-| `upsert_favourite` | Set a favourite/bookmark within Salesforce. |
-| `user_manager` | Create Users and set permissions, roles, profile images, etc. |
+| Task Name                  | Description                                                                                                                                        |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `abort_install`            | Stop deployment with/without exception based on a when clause. Used to stop deployments when target org contains conflicting metadata or packages. |
+| `analytics_fart`           | Set and update placeholders within Experience Cloud sites for Analytics Dashboards.                                                                |
+| `analytics_manager`        | Download/upload dataset data for CRM Analytics, set sharing rules for Apps.                                                                        |
+| `analytics_timeshift`      | Adjust dates in a CSV file to align with a new target date.                                                                                        |
+| `community_publisher`      | Publish all active communities or specific communities in the target org.                                                                          |
+| `display_banner`           | Display banner text in terminal to aid tracking execution progress.                                                                                |
+| `display_project`          | Display current brix details in terminal at runtime.                                                                                               |
+| `dustpan`                  | Remove a file or glob pattern match from the brix stack.                                                                                           |
+| `experience_manager`       | Run additional setup tasks against an Experience Cloud site.                                                                                       |
+| `load_sfdmu`               | Run SFDMU data loads.                                                                                                                              |
+| `named_credential_import`  | Create a Named Credential in target Salesforce org from a definition.                                                                              |
+| `omniscript_align`         | Repair known issues with OmniScript LWC components. Must run before LWC deployment (prepare_org flow).                                             |
+| `orgconfig_hydrate`        | Add options to org_config object with information about connected Salesforce org. Used for when clauses in flow steps.                             |
+| `populate_recently_viewed` | Add records to Recently Viewed list view for a given object.                                                                                       |
+| `qbrix_fart`               | Find and Replace Text tool (FART) - find/replace placeholder text or inject text into files at runtime.                                            |
+| `qbrix_cache_add`          | Access runtime variables, add to cache for passing values to other tasks. Can read data from org via SOQL.                                         |
+| `qbrix_installer_tracking` | Log brix deployments. Data saved to QLabs org for deployment reporting and issue tracing.                                                          |
+| `qbrix_upload_files`       | Upload files to Salesforce.                                                                                                                        |
+| `qbrix_user_action_runner` | Run actions against the user REST API endpoint.                                                                                                    |
+| `qx_wait`                  | Wait for an item to become available (SOQL result, Permission Set status, etc.).                                                                   |
+| `robot_runner`             | Run robot keywords with/without parameters without creating a .robot file.                                                                         |
+| `run_apex_and_wait`        | Execute Apex in target Salesforce org and wait for completion.                                                                                     |
+| `run_perfect_date_wizard`  | Send request to start Perfect Date Wizard in target Salesforce org.                                                                                |
+| `upsert_favourite`         | Set a favourite/bookmark within Salesforce.                                                                                                        |
+| `user_manager`             | Create Users and set permissions, roles, profile images, etc.                                                                                      |
 
 ## LLM Rule Synchronization (Required)
 
 When updating any LLM/tooling rules, keep these directories **synchronized**:
+
 - Cursor: `.cursor/rules/*` and `.cursorrules`
 - Claude: `.claude/*` (notably `.claude/memory.md`)
 - Gemini: `.gemini/rules/*`
@@ -101,7 +102,7 @@ When clauses are used within flows in `cumulusci.yml` to decide whether a step s
 
 - One `when` clause per step (you can combine multiple checks in that one expression).
 - Supported boolean logic: `not`, `AND`, `OR`, and parentheses.
-  - Example: `(Test1() AND (Test2() OR Test3()))`
+    - Example: `(Test1() AND (Test2() OR Test3()))`
 - Supported comparisons (for methods that return values): `>`, `>=`, `<`, `<=`, `==`, `!=`
 - If comparing to a value containing spaces, wrap it in single quotes: `'my value with spaces'`
 - Always prefer the definitive list from `cci task info orgconfig_hydrate` (method names are exact).
@@ -110,27 +111,27 @@ When clauses are used within flows in `cumulusci.yml` to decide whether a step s
 
 ```yaml
 source_dependencies:
-  steps:
-    1:
-      # Brix System Task - Leave in place
-      task: orgconfig_hydrate
-    2:
-      # Deploy the requirements for Brix Registration in target org
-      flow: qbrix_register_base:deploy_qbrix
-      when: not org_config.is_qbrix_installed('QBrix-1-xDO-Tool-QBrixRegister')
+    steps:
+        1:
+            # Brix System Task - Leave in place
+            task: orgconfig_hydrate
+        2:
+            # Deploy the requirements for Brix Registration in target org
+            flow: qbrix_register_base:deploy_qbrix
+            when: not org_config.is_qbrix_installed('QBrix-1-xDO-Tool-QBrixRegister')
 ```
 
 **Supported when-clause methods (current at time of writing)**
 
 - `env_present`: `when: org_config.env_present('ENV_NAME')`
-- `max_org_api_version`: `when: org_config.max_org_api_version() >= 64.0`
+- `max_org_api_version`: `when: org_config.max_org_api_version() >= 65.0`
 - `is_file`: `when: org_config.is_file('path/to/file')`
 - `is_customer_org`: `when: org_config.is_customer_org()`
 - `is_file_glob`: `when: org_config.is_file_glob('**/*.robot')`
 - `is_dir`: `when: org_config.is_dir('path/to/dir')`
 - `is_qbrix_installed`:
-  - `when: org_config.is_qbrix_installed('qbrix_name_here')`
-  - `when: org_config.is_qbrix_installed('qbrix_name_here', nameonly=True)`
+    - `when: org_config.is_qbrix_installed('qbrix_name_here')`
+    - `when: org_config.is_qbrix_installed('qbrix_name_here', nameonly=True)`
 - `is_object_in_org`: `when: org_config.is_object_in_org('Account')`
 - `is_org_identifier`: `when: org_config.is_org_identifier('q_key_here')`
 - `is_psl_in_org`: `when: org_config.is_psl_in_org('PSL Name')`
@@ -155,14 +156,14 @@ Brix can support input parameters which we call required inputs. These are defin
 
 ```json
 {
-  "parameters": [
-    {
-      "friendly_name": "Marketing Cloud ID",
-      "name": "mc_mid",
-      "default": "",
-      "description": "The MID for the Business Unit which we want to deploy to"
-    }
-  ]
+    "parameters": [
+        {
+            "friendly_name": "Marketing Cloud ID",
+            "name": "mc_mid",
+            "default": "",
+            "description": "The MID for the Business Unit which we want to deploy to"
+        }
+    ]
 }
 ```
 
@@ -194,6 +195,7 @@ Brix can support input parameters which we call required inputs. These are defin
 ### Code Analyzer MCP Tools
 
 For code quality analysis, use the Salesforce DX MCP Code Analyzer tools:
+
 - **`run_code_analyzer`**: Performs static analysis of code using Salesforce Code Analyzer. Validates best practices, checks for security vulnerabilities, and identifies performance issues.
 - **`describe_code_analyzer_rule`**: Gets the description of a Salesforce Code Analyzer rule, including the engine, severity, and associated tags.
 
@@ -222,9 +224,9 @@ For code quality analysis, use the Salesforce DX MCP Code Analyzer tools:
 
 - Use CumulusCI flows for deployment
 - Follow the three-stage deployment process:
-  1. Pre-deployment (`prepare_org`, `source_dependencies`)
-  2. Main deployment (`deploy_qbrix` - deploys `force-app/main/default`)
-  3. Post-deployment (`post_qbrix_deploy`)
+    1. Pre-deployment (`prepare_org`, `source_dependencies`)
+    2. Main deployment (`deploy_qbrix` - deploys `force-app/main/default`)
+    3. Post-deployment (`post_qbrix_deploy`)
 - Main entry point for deployment to org is `deploy_qbrix` flow, which runs `prepare_org`, `source_dependencies`, `deploy` (task) and then `post_qbrix_deploy` in that order
 - Use VSCode build tasks where possible. Tasks are found in `.vscode/tasks.json`
 
@@ -255,17 +257,20 @@ For code quality analysis, use the Salesforce DX MCP Code Analyzer tools:
 ### Common Deployment Errors and Solutions
 
 #### 1. Missing Dependencies
+
 **Error messages like:**
+
 - "Method does not exist or incorrect signature"
 - "Variable does not exist"
 - "System.NullPointerException: Attempt to de-reference a null object"
-- "Field Discount_Approved__c does not exist. Check spelling" (formula fields)
-- "Field FOO__c not found for permission set XYZ" (profiles/permission sets)
-- "Field FOO__c does not exist on layout Account-Account Layout" (page layouts)
+- "Field Discount_Approved\_\_c does not exist. Check spelling" (formula fields)
+- "Field FOO\_\_c not found for permission set XYZ" (profiles/permission sets)
+- "Field FOO\_\_c does not exist on layout Account-Account Layout" (page layouts)
 
 **Solution:** Check that the identified dependency is stored within the brix and being deployed. If not, retrieve the missing metadata from the Salesforce org where it was created.
 
 #### 2. API Compatibility Problems
+
 **Error message:** "Property 'namesegment' not valid in version 57.0"
 
 **Cause:** Metadata was retrieved on a different API version than the brix target API version in `cumulusci.yml`.
@@ -273,22 +278,27 @@ For code quality analysis, use the Salesforce DX MCP Code Analyzer tools:
 **Solution:** Pull the metadata again from a source Salesforce org, or revert to an earlier commit. Ensure metadata is first deployed to a Salesforce org, then update the API version in both `cumulusci.yml` and `sfdx-project.json`, then retrieve again.
 
 #### 3. External ID Field Not Found
+
 **Error:** External ID field was not found or not accessible.
 
 **Solution:** Check that the External ID field has been deployed to the target org and that its type is set to "External ID".
 
 #### 4. Features Not Enabled in Target Org
+
 **Symptom:** Standard object fields being deployed don't exist in the target org.
 
 **Solution:** These fields might use features not enabled in the target org. Remove them from the deployment or enable the required features in the target org.
 
 #### 5. Salesforce Platform Error
+
 **Error:** "An unexpected error occurred. Please include this ErrorID if you contact support"
 
 **Solution:** Check with the nextgen support team on Slack, check [Salesforce Trust](https://status.salesforce.com/) for outages, or search for the error in GUS.
 
 #### 6. Code Syntax Issues
+
 **Error messages like:**
+
 - "Expecting 'x' but was: 'y'"
 - "Missing ';' at 'y'"
 - "Unexpected token 'x'"
@@ -296,6 +306,7 @@ For code quality analysis, use the Salesforce DX MCP Code Analyzer tools:
 **Solution:** Identify the file (usually XML) from the error message with file reference and line number. Direct user to check and fix the file. Tools like SonarLint can help analyze code for bugs and vulnerabilities.
 
 #### 7. Admin Operation Already In Progress
+
 **Error:** "Admin operation already in progress"
 
 **Cause:** A background process is locking admin functions.
@@ -303,26 +314,32 @@ For code quality analysis, use the Salesforce DX MCP Code Analyzer tools:
 **Solution:** Check Apex Jobs, Apex Flex Queue, or Background Jobs in Setup. Wait for the job to complete and try again.
 
 #### 8. Missing Permission Issues
+
 **Cause:** The deploying user lacks necessary permissions.
 
 **Solution:** Review user permissions. Assign System Administrator profile if not already assigned. Check for required Permission Set Licenses and user checkboxes (e.g., Knowledge User, Service Cloud User).
 
 #### 9. Client Timeout
+
 **Solution:**
+
 - Update SF CLI and QX if running locally: `qx update`
 - Check for admin operations in progress
 - Wait a few minutes and try again
 
 #### 10. Dependent Class Needs Recompilation
+
 **Error:** "Dependent class is invalid and needs recompilation"
 
 **Solution:**
+
 1. Open the stack trace in the target org
 2. Go to Setup > Apex Classes or Apex Triggers
 3. Click "Compile all classes/triggers" hyperlink
 4. Wait for results (can take time)
 
 #### 11. Org Lock / Exclusive Access Error
+
 **Error:** "Error: unable to obtain exclusive access to this record"
 
 **Cause:** Administrative lock from multiple simultaneous changes to the org.
@@ -330,6 +347,7 @@ For code quality analysis, use the Salesforce DX MCP Code Analyzer tools:
 **Solution:** Wait 10-15 minutes, ensure no other users are making Setup changes, then redeploy.
 
 #### 12. Quasar Artifact Hash Error
+
 **Error:** Message contains "Error: 'x-quasar-artifact-hash'"
 
 **Cause:** An issue with our internal Quasar tool.
@@ -362,6 +380,7 @@ qx utils feature-search 'my search term here'
 Replace `'my search term here'` with your search term (e.g., `accounting`). Search terms with spaces require quotes.
 
 **Search Results Include:**
+
 - **Features** (first column): Keywords to add to the `features` section of `orgs/dev.json`
 - **Related Licenses** (third column): Must be enabled in any TSOs that might use this brix
 - **Notes**: Additional features or permissions that may need to be added
@@ -380,56 +399,49 @@ https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_de
 **If no Salesforce org is currently connected and deployment testing is needed:**
 
 1. **Determine Org Type Based on Project Name:**
-
-   - If project name contains `-xdo-`: Use CDO (Clean Demo Org) for testing
-   - If project name contains `-sdo-`: Use SDO (Salesforce Demo Org) for testing
-   - For other org types where `-xdo-` and `-sdo-` are not present in the project name (found in the `cumulusci.yml` file under `project > name`), request an alias from the user for the org you are creating (i.e. dev or qa) and then run `qx org pool --org AliasHere` with the alias provided. Read the returned table of results which are the different org types they can create and request which one they want, the list should be generated from the 2nd column of the results table
+    - If project name contains `-xdo-`: Use CDO (Clean Demo Org) for testing
+    - If project name contains `-sdo-`: Use SDO (Salesforce Demo Org) for testing
+    - For other org types where `-xdo-` and `-sdo-` are not present in the project name (found in the `cumulusci.yml` file under `project > name`), request an alias from the user for the org you are creating (i.e. dev or qa) and then run `qx org pool --org AliasHere` with the alias provided. Read the returned table of results which are the different org types they can create and request which one they want, the list should be generated from the 2nd column of the results table
 
 2. **Create QA Org for Testing:**
-
-   - For xDO projects: `qx org pool --cdo --org qa`
-   - For SDO projects: `qx org pool --sdo --org qa`
+    - For xDO projects: `qx org pool --cdo --org qa`
+    - For SDO projects: `qx org pool --sdo --org qa`
 
 3. **API Version Updates:**
-
-   - When API version updates are needed, always test deploy to a QA org first
-   - Use the appropriate org type based on project naming convention
-   - After successful deployment, update API version in `cumulusci.yml` and `sfdx-project.json` to the given version (e.g., 64.0)
-   - Retrieve the updated project metadata by running: `sf project retrieve start --source-dir force-app --target-org OrgAliasGoesHere` (replace `OrgAliasGoesHere` with the org alias in use, or remove `--target-org` if none provided to use the project default org)
+    - When API version updates are needed, always test deploy to a QA org first
+    - Use the appropriate org type based on project naming convention
+    - After successful deployment, update API version in `cumulusci.yml` and `sfdx-project.json` to the given version (e.g., 65.0)
+    - Retrieve the updated project metadata by running: `sf project retrieve start --source-dir force-app --target-org OrgAliasGoesHere` (replace `OrgAliasGoesHere` with the org alias in use, or remove `--target-org` if none provided to use the project default org)
 
 4. **Deployment Testing Workflow:**
-
-   - Create QA org using appropriate command based on project type
-   - Deploy to QA org for testing: `qx deploy --org qa`
-   - Validate deployment: `cci flow run validate_qbrix --org qa`
-   - If successful, proceed with dev org deployment
-   - If issues found, fix and retest in QA org before proceeding
+    - Create QA org using appropriate command based on project type
+    - Deploy to QA org for testing: `qx deploy --org qa`
+    - Validate deployment: `cci flow run validate_qbrix --org qa`
+    - If successful, proceed with dev org deployment
+    - If issues found, fix and retest in QA org before proceeding
 
 5. **Org Lifecycle Management:**
-
-   - Dev and QA orgs can be created and used for the duration unless they need to be recreated
-   - To remove or logout of an org, use: `qx org logout --org OrgAliasHere`
-   - Replace `OrgAliasHere` with the alias of the Salesforce org
+    - Dev and QA orgs can be created and used for the duration unless they need to be recreated
+    - To remove or logout of an org, use: `qx org logout --org OrgAliasHere`
+    - Replace `OrgAliasHere` with the alias of the Salesforce org
 
 6. **Handling Missing Metadata:**
-
-   - When running test deployments, review errors (if any) and make updates to the files
-   - If certain metadata is missing, request the alias of the org where the missing source metadata could be sourced from
-   - If given, retrieve the metadata using: `qx retrieve --metadata 'MetadataTypeHere:MetadataAPINameHere' --target-org OrgAliasHere`
-   - Replace `MetadataTypeHere:MetadataAPINameHere` with the Salesforce metadata API naming conventions (metadata type then `:` then the API name)
-   - The API name can be omitted if you want to retrieve everything of a specific type
-   - Example for specific metadata: `CustomObject:My_Custom_Object__c`
-   - Once retrieved, test deploy to a QA org and review any deployment errors again
+    - When running test deployments, review errors (if any) and make updates to the files
+    - If certain metadata is missing, request the alias of the org where the missing source metadata could be sourced from
+    - If given, retrieve the metadata using: `qx retrieve --metadata 'MetadataTypeHere:MetadataAPINameHere' --target-org OrgAliasHere`
+    - Replace `MetadataTypeHere:MetadataAPINameHere` with the Salesforce metadata API naming conventions (metadata type then `:` then the API name)
+    - The API name can be omitted if you want to retrieve everything of a specific type
+    - Example for specific metadata: `CustomObject:My_Custom_Object__c`
+    - Once retrieved, test deploy to a QA org and review any deployment errors again
 
 7. **Checking Brix Installation:**
-
-   - To check if a brix (aka qbrix) is installed in a target Salesforce org, run: `cci task run list_qbrix --org OrgAliasHere`
-   - Add the org alias at the end of the command
-   - Parse the results to look for the specific brix name
+    - To check if a brix (aka qbrix) is installed in a target Salesforce org, run: `cci task run list_qbrix --org OrgAliasHere`
+    - Add the org alias at the end of the command
+    - Parse the results to look for the specific brix name
 
 8. **Analytics CRM Metadata:**
-   - If working with Analytics CRM metadata, defined by the `force-app/main/default/wave` directory being present, then run the command `cci task run analytics_manager --mode d --generate_metadata_desc True --org OrgAliasHere` with the org alias at the end, to download the data associated with any analytics datasets which have been retrieved
-   - If no analytics datasets are present, then this can be omitted
+    - If working with Analytics CRM metadata, defined by the `force-app/main/default/wave` directory being present, then run the command `cci task run analytics_manager --mode d --generate_metadata_desc True --org OrgAliasHere` with the org alias at the end, to download the data associated with any analytics datasets which have been retrieved
+    - If no analytics datasets are present, then this can be omitted
 
 ## Dependencies and Packages
 
