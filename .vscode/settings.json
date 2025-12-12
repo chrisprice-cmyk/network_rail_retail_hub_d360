@@ -69,7 +69,11 @@
     "**/jest.config.js": true,
     "**/node_modules": true,
     "**/package.json": true,
-    "**/playwright.config.ts": true
+    "**/playwright.config.ts": true,
+    "**/tsconfig.json": true,
+    "**/eslint.config.js": true,
+    "Makefile": true,
+    "package-lock.json": true
 },
   "git.branchProtection": [
     "main",

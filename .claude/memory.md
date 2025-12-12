@@ -1,6 +1,14 @@
 # Project Memory: xDO-Template-emu Brix Development
 
-> **Note**: This file consolidates rules from `.cursorrules` and `.cursor/rules/*.mdc` files. When updating this file, ensure corresponding Cursor rules files are also updated to maintain consistency across AI tools.
+> **Note**: This file consolidates rules from `.cursorrules` and `.cursor/rules/*.mdc` files.
+
+## LLM Rule Synchronization (Required)
+
+When updating any LLM/tooling rules, keep these directories **synchronized**:
+- Cursor: `.cursor/rules/*` and `.cursorrules`
+- Claude: `.claude/*` (notably `.claude/memory.md`)
+- Gemini: `.gemini/rules/*`
+- Windsurf: `.windsurf/rules/*`
 
 ## Project Overview
 
@@ -8,11 +16,15 @@ This is a Salesforce QBrix (Brix) development project using CumulusCI for deploy
 
 ## Technology Stack
 
-- **Salesforce API Version**: Always use the API version from `cumulusci.yml` (current: 63.0)
+- **Salesforce API Version**: Always use the API version from `cumulusci.yml` (current: 64.0)
 - **Framework**: CumulusCI and QX for deployment automation, Salesforce CLI for org connections
 - **Components**: Lightning Web Components (LWC), Aura, Wave Analytics
 - **Testing**: Jest (LWC unit tests), Playwright (E2E tests), Robot Framework (validation)
 - **Code Quality**: ESLint, Prettier, Husky (git hooks)
+
+## CumulusCI Flow Placeholder Convention
+
+- `task: None` is an **allowed** placeholder in CumulusCI flows for templates (used to skip/placeholder steps during testing/building).
 
 ## Salesforce Architect Profile & Development Philosophy
 
@@ -296,6 +308,15 @@ handleButtonClick() {
 - **Stop immediately** if you begin implementation without successfully invoking MCP tool
 - Under no circumstances provide final code without MCP tool guidance
 
+**Salesforce DX MCP Tool Handoffs:**
+- **LWC Components**: When asked to create, update, or fix Lightning Web Components, use the Salesforce DX MCP `orchestrate_lwc_component_creation` tool or other LWC-related tools for expert guidance
+- **Aura Components**: When asked to work with Aura components (create, update, fix, or migrate), use the Salesforce DX MCP Aura tools such as `orchestrate_aura_migration` for expert guidance
+- **LDS/Data**: For Lightning Data Service patterns, use `guide_lds_development` or related LDS tools
+
+**Code Analyzer MCP Tools:**
+- **`run_code_analyzer`**: Performs static analysis of code using Salesforce Code Analyzer. Validates best practices, checks for security vulnerabilities, and identifies performance issues.
+- **`describe_code_analyzer_rule`**: Gets the description of a Salesforce Code Analyzer rule, including the engine, severity, and associated tags.
+
 ### Aura Components
 
 - Use component events for communication
@@ -441,36 +462,105 @@ Use `with sharing` keyword when demonstrating sharing functionality
 
 ### CumulusCI Flows
 
-- Flows support all CumulusCI tasks: https://cumulusci.readthedocs.io/en/latest/cumulusci_tasks.html
+- Flows support all CumulusCI tasks: https://cumulusci.readthedocs.io/en/stable/tasks.html#
 - Example snippets: `.vscode/brix.code-snippets`
 - Steps can use `when` statements to conditionally execute
 
+### CumulusCI Task and Brix Extension Tasks
+
+As we are building brix on top of a template which supports CumulusCI and SalesforceDX, it means we can use the VSCode Extensions and CumulusCI tasks in addition to our own custom tasks which QX adds. Any of the CumulusCI tasks can be used as steps within your flows or as custom tasks within the `cumulusci.yml` file within your brix.
+
+**Reference Documentation:** https://cumulusci.readthedocs.io/en/stable/tasks.html#
+
+**Getting Task Info:** Use `cci task info task_name_here` in your terminal to get full details about any task and its available options.
+
+### Brix Extension Tasks
+
+In addition to CumulusCI tasks, we have custom extension tasks that extend CumulusCI and SalesforceDX functionality:
+
+| Task Name | Description |
+|-----------|-------------|
+| `abort_install` | Stop deployment with/without exception based on a when clause. Used to stop deployments when target org contains conflicting metadata or packages. |
+| `analytics_fart` | Set and update placeholders within Experience Cloud sites for Analytics Dashboards. |
+| `analytics_manager` | Download/upload dataset data for CRM Analytics, set sharing rules for Apps. |
+| `analytics_timeshift` | Adjust dates in a CSV file to align with a new target date. |
+| `community_publisher` | Publish all active communities or specific communities in the target org. |
+| `display_banner` | Display banner text in terminal to aid tracking execution progress. |
+| `display_project` | Display current brix details in terminal at runtime. |
+| `dustpan` | Remove a file or glob pattern match from the brix stack. |
+| `experience_manager` | Run additional setup tasks against an Experience Cloud site. |
+| `load_sfdmu` | Run SFDMU data loads. |
+| `named_credential_import` | Create a Named Credential in target Salesforce org from a definition. |
+| `omniscript_align` | Repair known issues with OmniScript LWC components. Must run before LWC deployment (prepare_org flow). |
+| `orgconfig_hydrate` | Add options to org_config object with information about connected Salesforce org. Used for when clauses in flow steps. |
+| `populate_recently_viewed` | Add records to Recently Viewed list view for a given object. |
+| `qbrix_fart` | Find and Replace Text tool (FART) - find/replace placeholder text or inject text into files at runtime. |
+| `qbrix_cache_add` | Access runtime variables, add to cache for passing values to other tasks. Can read data from org via SOQL. |
+| `qbrix_installer_tracking` | Log brix deployments. Data saved to QLabs org for deployment reporting and issue tracing. |
+| `qbrix_upload_files` | Upload files to Salesforce. |
+| `qbrix_user_action_runner` | Run actions against the user REST API endpoint. |
+| `qx_wait` | Wait for an item to become available (SOQL result, Permission Set status, etc.). |
+| `robot_runner` | Run robot keywords with/without parameters without creating a .robot file. |
+| `run_apex_and_wait` | Execute Apex in target Salesforce org and wait for completion. |
+| `run_perfect_date_wizard` | Send request to start Perfect Date Wizard in target Salesforce org. |
+| `upsert_favourite` | Set a favourite/bookmark within Salesforce. |
+| `user_manager` | Create Users and set permissions, roles, profile images, etc. |
+
 ### When Clause Support
 
-When clauses require `orgconfig_hydrate` task in earlier flow step. Available options (can use NOT, AND, OR):
+When clauses are used within flows in `cumulusci.yml` to decide whether a step should **run** (when evaluates to True) or **skip** (when evaluates to False).
 
-- `max_org_api_version`: Current Salesforce org API version
-  ```yaml
-  when: org_config.max_org_api_version >= 58.0
-  ```
-- `is_qbrix_installed`: Check if brix is installed
-  ```yaml
-  when: org_config.is_qbrix_installed('DemoBrixNameHere')
-  ```
-- `is_object_in_org`: Check if sObject exists
-  ```yaml
-  when: org_config.is_object_in_org('ObjectAPINameHere')
-  ```
-- `is_psl_in_org`: Check if PSL exists
-- `is_ps_in_org`: Check if Permission Set exists
-- `is_namespace_installed`: Check if namespace exists
-- `is_package_installed`: Check if package exists
-- `is_psl_minimal_qty_available_in_org`: Check PSL availability
-- `is_data_present`: Check if data exists
-  ```yaml
-  when: org_config.is_data_present('sObjectApiNameHere', 'Filter Here')
-  ```
-- `is_scratch_org`: Check if target is scratch org
+**Prerequisite**: `orgconfig_hydrate` must be defined in an earlier step in the **same flow** before any step that uses `when`. It’s OK to have more than one `orgconfig_hydrate` step.
+
+**Syntax basics**
+
+- One `when` clause per step (you can combine multiple checks in that one expression).
+- Supported boolean logic: `not`, `AND`, `OR`, and parentheses.
+  - Example: `(Test1() AND (Test2() OR Test3()))`
+- Supported comparisons (for methods that return values): `>`, `>=`, `<`, `<=`, `==`, `!=`
+- If comparing to a value containing spaces, wrap it in single quotes: `'my value with spaces'`
+- Always prefer the definitive list from `cci task info orgconfig_hydrate` (method names are exact).
+
+**Common example (deploy only if a brix isn’t already installed)**
+
+```yaml
+source_dependencies:
+  steps:
+    1:
+      # Brix System Task - Leave in place
+      task: orgconfig_hydrate
+    2:
+      # Deploy the requirements for Brix Registration in target org
+      flow: qbrix_register_base:deploy_qbrix
+      when: not org_config.is_qbrix_installed('QBrix-1-xDO-Tool-QBrixRegister')
+```
+
+**Supported when-clause methods (current at time of writing)**
+
+- `env_present`: `when: org_config.env_present('ENV_NAME')`
+- `max_org_api_version`: `when: org_config.max_org_api_version() >= 64.0`
+- `is_file`: `when: org_config.is_file('path/to/file')`
+- `is_customer_org`: `when: org_config.is_customer_org()`
+- `is_file_glob`: `when: org_config.is_file_glob('**/*.robot')`
+- `is_dir`: `when: org_config.is_dir('path/to/dir')`
+- `is_qbrix_installed`:
+  - `when: org_config.is_qbrix_installed('qbrix_name_here')`
+  - `when: org_config.is_qbrix_installed('qbrix_name_here', nameonly=True)`
+- `is_object_in_org`: `when: org_config.is_object_in_org('Account')`
+- `is_org_identifier`: `when: org_config.is_org_identifier('q_key_here')`
+- `is_psl_in_org`: `when: org_config.is_psl_in_org('PSL Name')`
+- `is_ps_in_org`: `when: org_config.is_ps_in_org('PermissionSetApiName')`
+- `is_namespace_installed`: `when: org_config.is_namespace_installed('namespace')`
+- `is_package_installed`: `when: org_config.is_package_installed('Package Name')`
+- `is_psl_minimal_qty_availiable_in_org`: `when: org_config.is_psl_minimal_qty_availiable_in_org('PSL Name', 5)`
+- `is_data_present`: `when: org_config.is_data_present('ObjectApiNameHere', 'Name = \\'Acme\\'')`
+- `is_scratch_org`: `when: org_config.is_scratch_org()`
+- `is_running_headless`: `when: org_config.is_running_headless()`
+- `is_running_in_github_action`: `when: org_config.is_running_in_github_action()`
+- `qbrix_cache_get`: `when: org_config.qbrix_cache_get('cached_key') == 'expected_value'`
+- `soql_result`: `when: org_config.soql_result('SELECT Id FROM Account', has_records=True)`
+- `tooling_soql_result`: `when: org_config.tooling_soql_result('SELECT Id FROM ApexClass', has_records=True)`
+- `was_brix_ordered_in_last`: `when: org_config.was_brix_ordered_in_last('brix_name_here')`
 
 ### Source Dependencies
 
@@ -531,6 +621,30 @@ This is an **xDO project** (contains `-xdo-` in project name):
 - **Dev org**: Auto-alias starts with `dev_` + compressed project name
 - **QA org**: Used for testing before deploying to dev
 
+### Scratch Org Features
+
+The default template adds multiple features to the default "dev" scratch org definition which can be found in the `orgs/dev.json` file. There will be times where additional features need to be added to enable licenses, Permission Set Licenses (PSLs), and features within the resulting scratch org.
+
+**Important**: Take note of features added to the scratch org definition, as TSOs (Target Salesforce Orgs) which use your brix will need those same licenses enabled in BlackTab.
+
+**Searching for Features:**
+
+To search for scratch org features (including non-public features), use the terminal command:
+
+```bash
+qx utils feature-search 'my search term here'
+```
+
+Replace `'my search term here'` with your search term (e.g., `accounting`). Search terms with spaces require quotes.
+
+**Search Results Include:**
+- **Features** (first column): Keywords to add to the `features` section of `orgs/dev.json`
+- **Related Licenses** (third column): Must be enabled in any TSOs that might use this brix
+- **Notes**: Additional features or permissions that may need to be added
+
+**Public Scratch Org Features Reference:**
+https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_scratch_orgs_def_file_config_values.htm
+
 ### Check Current Org Connection
 
 ```bash
@@ -572,7 +686,7 @@ qx org create --org dev        # Uses orgs/dev.json
 
 **Critical workflow**:
 1. Test deploy to QA org first
-2. Update API version in `cumulusci.yml` and `sfdx-project.json` (e.g., 63.0)
+2. Update API version in `cumulusci.yml` and `sfdx-project.json` (e.g., 64.0)
 3. Retrieve updated metadata:
    ```bash
    sf project retrieve start --source-dir force-app --target-org OrgAliasGoesHere
@@ -612,11 +726,30 @@ Downloads data for analytics datasets. Skip if no analytics datasets present.
 
 ## Dependencies and Packages
 
-- Manage in `cumulusci.yml` using 18-character version IDs
-- If given 15-char version ID: Add to `cumulusci.yml`, then run `qx utils doctor`
+Package dependencies are defined in `cumulusci.yml` under the `project > dependencies` section.
+
+### Package Dependency Syntax
+
+```yaml
+project:
+    dependencies:
+        # Unmanaged Package using version_id (the 04t ID from the install URL)
+        - version_id: 04t2E000003VsuMQAS
+
+        # Managed packages can use version_id (like above) or namespace + version
+        - namespace: custom_namespace
+          version: 1.2.3
+```
+
+### Package Dependency Guidelines
+
+- **Unmanaged Packages**: Use `version_id` with the 18-character package version ID (starts with `04t`)
+- **Managed Packages**: Can use either `version_id` OR `namespace` + `version` combination
+- Use the 18-character version of the package version ID
+- If adding a 15-char version ID, run `qx utils doctor` to convert it to 18-char format
 - Use QBrix sources for dependent brix
-- Document external dependencies
-- Include URL comment above `-version_id` entry for finding updates
+- Document all external dependencies
+- Include a URL comment above the `version_id` entry pointing to where package updates can be found
 
 ## Code Quality
 
@@ -646,6 +779,54 @@ Downloads data for analytics datasets. Skip if no analytics datasets present.
 4. Review deployment errors before retrying
 5. Run `qx utils doctor` to solve common metadata issues
 6. If qx configuration issues: `qx update` then `qx setup vscode`
+
+### Common Deployment Errors and Solutions
+
+#### 1. Missing Dependencies
+**Error messages:** "Method does not exist", "Variable does not exist", "Field X does not exist", "Field not found for permission set"
+
+**Solution:** Check that dependencies are in the brix. Retrieve missing metadata from the source Salesforce org.
+
+#### 2. API Compatibility Problems
+**Error:** "Property 'X' not valid in version Y"
+
+**Solution:** Pull metadata again from source org. Update API version in `cumulusci.yml` and `sfdx-project.json`, then retrieve again.
+
+#### 3. External ID Field Not Found
+**Solution:** Ensure External ID field is deployed and type is set to "External ID".
+
+#### 4. Features Not Enabled in Target Org
+**Solution:** Remove fields using unavailable features or enable required features in target org.
+
+#### 5. Salesforce Platform Error
+**Error:** "An unexpected error occurred. Please include this ErrorID..."
+
+**Solution:** Check nextgen support on Slack, [Salesforce Trust](https://status.salesforce.com/), or GUS.
+
+#### 6. Code Syntax Issues
+**Errors:** "Expecting 'x' but was: 'y'", "Missing ';'", "Unexpected token"
+
+**Solution:** Check the file and line number in error message. Use tools like SonarLint.
+
+#### 7. Admin Operation Already In Progress
+**Solution:** Check Apex Jobs/Flex Queue/Background Jobs in Setup. Wait and retry.
+
+#### 8. Missing Permission Issues
+**Solution:** Review user permissions. Assign System Administrator profile. Check Permission Set Licenses.
+
+#### 9. Client Timeout
+**Solution:** Run `qx update`, check for admin operations in progress, wait and retry.
+
+#### 10. Dependent Class Needs Recompilation
+**Solution:** Go to Setup > Apex Classes/Triggers > Click "Compile all" hyperlink.
+
+#### 11. Org Lock / Exclusive Access Error
+**Solution:** Wait 10-15 minutes, ensure no other Setup changes, then redeploy.
+
+#### 12. Quasar Artifact Hash Error
+**Error:** Message contains "Error: 'x-quasar-artifact-hash'"
+
+**Solution:** Wait 10-15 minutes and then try to deploy again (internal Quasar tool issue).
 
 ## Robot Framework (Automation Testing)
 

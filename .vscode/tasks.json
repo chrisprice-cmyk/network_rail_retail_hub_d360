@@ -318,7 +318,7 @@
     {
       "label": "ORG: 🛠️ Create Development and Test CDO Orgs",
       "type": "shell",
-      "command": "qx org pool --cdo --org qa && qx org pool --sdo --cdo dev",
+      "command": "qx org pool --cdo --org qa && qx org pool --cdo --org dev",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
