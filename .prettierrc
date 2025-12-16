@@ -1,24 +1,28 @@
 {
-  "trailingComma": "none",
-  "singleQuote": true,
-  "tabWidth": 4,
-  "plugins": [
-    "prettier-plugin-apex",
-    "@prettier/plugin-xml"
-  ],
-  "xmlWhitespaceSensitivity": "ignore",
-  "overrides": [
-    {
-      "files": "**/lwc/**/*.html",
-      "options": {
-        "parser": "lwc"
-      }
-    },
-    {
-      "files": "*.{cmp,page,component}",
-      "options": {
-        "parser": "html"
-      }
-    }
-  ]
+    "trailingComma": "none",
+    "singleQuote": true,
+    "tabWidth": 4,
+    "plugins": ["prettier-plugin-apex", "@prettier/plugin-xml"],
+    "xmlWhitespaceSensitivity": "ignore",
+    "overrides": [
+        {
+            "files": "**/lwc/**/*.html",
+            "options": {
+                "parser": "lwc"
+            }
+        },
+        {
+            "files": "*.{cmp,page,component}",
+            "options": {
+                "parser": "html"
+            }
+        },
+        {
+            "files": "*.xml",
+            "options": {
+                "printWidth": 1000,
+                "xmlSelfClosingSpace": true
+            }
+        }
+    ]
 }
