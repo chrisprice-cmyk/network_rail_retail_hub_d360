@@ -46,6 +46,7 @@
     "**/.gemini": true,
     "**/.cursor": true,
     "**/.extensions": true,
+    "**/.plugins": true,
     "**/.pytest_cache": true,
     "**/._*": true,
     "**/.cci": true,

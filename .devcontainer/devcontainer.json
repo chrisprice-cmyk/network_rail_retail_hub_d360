@@ -59,7 +59,9 @@
         "Postman.postman-for-vscode",
         "pomdtr.secrets",
         "ms-python.python",
-        "adrianwilczynski.toggle-hidden"
+        "adrianwilczynski.toggle-hidden",
+        "${containerWorkspaceFolder}/.plugins/agentforce-assistant-universal.vsix",
+        "${containerWorkspaceFolder}/.plugins/qbrixdev-vscode-universal.vsix"
       ]
     }
   },

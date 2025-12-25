@@ -172,3 +172,8 @@ dw.json
 
 #others
 .env
+
+
+#plugins
+.plugins
+*.vsix

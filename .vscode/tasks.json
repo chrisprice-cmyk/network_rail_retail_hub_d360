@@ -50,7 +50,7 @@
       }
     },
     {
-      "label": "UTILS: 🧰 Install NextGen Dev Tools Extension",
+      "label": "UTILS: 🧰 Install NextGen Extension",
       "type": "shell",
       "command": "bash .devcontainer/extensions_install.sh",
       "group": "build",
