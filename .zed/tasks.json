@@ -1,0 +1,138 @@
+[
+    {
+        "label": "Check Project Configuration with Template",
+        "command": "if [ \"${PWD##*/}\" != \"xDO-Template\" ]; then cci task run update_qbrix; fi"
+    },
+    {
+        "label": "UTILS: \ud83e\uddf0 Generate Brix Validation",
+        "command": "qx utils update-validation"
+    },
+    {
+        "label": "UTILS: \ud83e\uddf0 Show Utilities Menu",
+        "command": "qx utils list"
+    },
+    {
+        "label": "UTILS: \ud83e\uddf0 Describe Scratch Org Features",
+        "command": "qx utils describe_features"
+    },
+    {
+        "label": "ORG: \ud83d\udca7 Connect to Pool Org",
+        "command": "qx org pool --org 'dev'"
+    },
+    {
+        "label": "ORG: \ud83d\udccb List Connected Salesforce Orgs",
+        "command": "qx org list"
+    },
+    {
+        "label": "ORG: \ud83d\udca7 Connect SDO Org to Brix",
+        "command": "qx org pool --sdo"
+    },
+    {
+        "label": "ORG: \ud83d\udca7 Connect CDO Org to Brix",
+        "command": "qx org pool --cdo"
+    },
+    {
+        "label": "ORG: \ud83d\udd17 Connect to Salesforce Production Org",
+        "command": "qx org connect --org 'dev'"
+    },
+    {
+        "label": "ORG: \ud83d\udee0\ufe0f Create a scratch org",
+        "command": "qx org create"
+    },
+    {
+        "label": "ORG: \ud83d\udee0\ufe0f Create Development and Test Scratch Orgs",
+        "command": "qx org create --org dev && qx org create --org qa --set_default false"
+    },
+    {
+        "label": "ORG: \ud83d\udee0\ufe0f Create Development and Test SDO Orgs",
+        "command": "qx org pool --sdo --org qa && qx org pool --sdo --org dev"
+    },
+    {
+        "label": "ORG: \ud83d\udee0\ufe0f Create Development and Test CDO Orgs",
+        "command": "qx org pool --cdo --org qa && qx org pool --cdo --org dev"
+    },
+    {
+        "label": "ORG: \ud83c\udf10 Open Default Org in browser",
+        "command": "qx org open"
+    },
+    {
+        "label": "RETRIEVE: \ud83d\udcbe Retrieve Changes from Salesforce Org",
+        "command": "echo 'qx retrieve --org OrgAliasHere'"
+    },
+    {
+        "label": "GITHUB: \ud83d\udcbe Save/Push local changes to GitHub",
+        "command": "qx github push --commit_message 'Brix Updates'"
+    },
+    {
+        "label": "GITHUB: \ud83d\udce9 Get/Pull latest version from GitHub",
+        "command": "qx github pull"
+    },
+    {
+        "label": "ORG: \ud83d\uddd1 Delete Development and Test orgs",
+        "command": "qx org delete --dev_orgs"
+    },
+    {
+        "label": "ORG: \ud83d\uddd1 Delete a Scratch Org",
+        "command": "echo 'qx org delete --org OrgAlias'"
+    },
+    {
+        "label": "DEPLOY: \ud83d\udce4 Deploy Demo Brix to Dev Org",
+        "command": "qx deploy --org 'dev' --flow_name 'deploy_qbrix'"
+    },
+    {
+        "label": "RETRIEVE: \ud83d\udce6 Retrieve unmanaged package from Salesforce Org",
+        "command": "echo 'qx migrate package --org OrgAlias --package PackageName'"
+    },
+    {
+        "label": "UTILS: \ud83d\udd0d Search Qverse",
+        "command": "echo 'qx qverse search SearchTermHere'"
+    },
+    {
+        "label": "UTILS: \ud83d\udd0d Search Scratch Org Features Database",
+        "command": "echo 'qx utils feature-search SearchTermHere'"
+    },
+    {
+        "label": "ORG: \ud83d\udd17 Connect/Reconnect to NextGen DevHub",
+        "command": "cci service remove devhub default || true && sf org logout -o DevHub --no-prompt || true && qx config sfdx --connect_devhub && sf org list || true && cci service list || true"
+    },
+    {
+        "label": "UPDATE: \ud83d\udd04 Check and Install Updates",
+        "command": "qx update"
+    },
+    {
+        "label": "QX: \ud83d\udd04 Install and Update CumulusCI (Demo Brix Edition)",
+        "command": "qx setup cci"
+    },
+    {
+        "label": "UTILS: \ud83d\udee0\ufe0f Setup new Brix Project",
+        "command": "cci task run setup_qbrix"
+    },
+    {
+        "label": "UTILS: \ud83d\ude91 Run Metadata Doctor",
+        "command": "qx utils doctor"
+    },
+    {
+        "label": "UTILS: \ud83d\ude91 Run Metadata Doctor (Connected Mode)",
+        "command": "echo 'qx utils doctor --org OrgAliasHere'"
+    },
+    {
+        "label": "UTILS: \ud83e\uddf9\ufe0f Run Brix Cleanup",
+        "command": "qx utils brix_cleanup"
+    },
+    {
+        "label": "UPDATE: \ud83c\udd95 Update Project Template",
+        "command": "cci task run update_qbrix"
+    },
+    {
+        "label": "INFO: \u2139\ufe0f List Installed Packages in Org",
+        "command": "echo 'qx org package-list --org OrgAlias'"
+    },
+    {
+        "label": "PUBLISH: \u2139\ufe0f Show Latest Commit Hash (For Metadeploy)",
+        "command": "git rev-parse --short HEAD"
+    },
+    {
+        "label": "AI: \ud83d\uddc2\ufe0f Generate Brix Readme File",
+        "command": "qx ai docgen"
+    }
+]

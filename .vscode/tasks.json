@@ -456,20 +456,6 @@
       }
     },
     {
-      "label": "MIGRATE: 🔀 Migrate Demo Brix to QX Format",
-      "type": "shell",
-      "command": "qx migrate legacy-qbrix",
-      "group": "build",
-      "problemMatcher": [],
-      "presentation": {
-        "revealProblems": "onProblem",
-        "focus": true,
-        "echo": false,
-        "showReuseMessage": false,
-        "panel": "new"
-      }
-    },
-    {
       "label": "RETRIEVE: 📦 Retrieve unmanaged package from Salesforce Org",
       "type": "shell",
       "command": "qx migrate package --org '${input:OrgAlias}' --package '${input:PackageName}'",
