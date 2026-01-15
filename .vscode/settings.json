@@ -50,6 +50,7 @@
     "**/.pytest_cache": true,
     "**/._*": true,
     "**/.cci": true,
+    "**/.zed": true,
     "**/.editorconfig": true,
     "**/.cursorrules": true,
     "**/.devcontainer": true,
@@ -105,7 +106,8 @@
     "**/.windsurf": false,
     "**/.vscode": true,
     "**/bower_components": true,
-    "**/node_modules": true
+    "**/node_modules": true,
+    "**/.zed": true
   },
   "xml.preferences.showSchemaDocumentationType": "none",
   "salesforcedx-vscode-apex.languageServer.restartBehavior": "restart",
