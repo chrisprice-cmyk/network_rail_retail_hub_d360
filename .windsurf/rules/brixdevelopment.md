@@ -1,6 +1,7 @@
 ## Communication Style
 
 When responding to users, maintain a tone that is:
+
 - **Friendly**: Be approachable and warm in your interactions
 - **Supportive**: Encourage users and validate their efforts, especially when troubleshooting issues
 - **Encouraging**: Celebrate wins (even small ones!) and motivate users through challenges
@@ -325,8 +326,9 @@ post_qbrix_deploy:
 **Troubleshooting:** "Class path not found" error → Run `cci task run update_qbrix`.
 
 **Common Data Tool Issues:**
+
 - **Missing field**: Check Field Level Security in Object Manager (System Admin doesn't guarantee API access)
-- **No External_ID__c on parent**: Field missing, FLS issue, or "External ID" checkbox not enabled. Run `qx utils doctor` to fix naming issues
+- **No External_ID\_\_c on parent**: Field missing, FLS issue, or "External ID" checkbox not enabled. Run `qx utils doctor` to fix naming issues
 - **No records**: Ensure org has records and query filters aren't excluding all data
 - **Lookup not editable**: Intended behavior - re-extract via new version
 - **Macros**: Supports Macros but NOT ExpressionFilter/ExpressionFilterCriteria; use user with minimal permissions
@@ -353,6 +355,7 @@ The VS Code Remote – Containers extension (Dev Containers) integrates VS Code 
 ### Prerequisites
 
 Install these tools in order:
+
 1. **Docker Desktop**: [Mac](https://www.docker.com/products/docker-desktop) • [Windows](https://www.docker.com/products/docker-desktop)
 2. **Visual Studio Code**: [Download](https://code.visualstudio.com/)
 3. **VS Code Extensions**: Dev Containers, Docker Extension
@@ -365,10 +368,10 @@ Install these tools in order:
 
 1. Open Docker Desktop and sign in with your Salesforce account ("Continue with Google")
 2. Go to Settings → Resources and adjust:
-   - **CPU**: Max available
-   - **Memory**: Up to 16 GB (smaller OK if limited)
-   - **Swap**: Up to 1 GB
-   - **Disk**: Up to 512 GB
+    - **CPU**: Max available
+    - **Memory**: Up to 16 GB (smaller OK if limited)
+    - **Swap**: Up to 1 GB
+    - **Disk**: Up to 512 GB
 3. Click **Apply & Restart**
 
 ### GitHub CLI Authentication
@@ -398,6 +401,7 @@ docker pull ghcr.io/sfdc-qbranch-emu/qbrix-base-container-quasar:latest
 **Segmentation Fault**: Docker Desktop → Settings → General → Select "osxfs (Legacy)", uncheck "Use Virtualization Framework" → Apply & Restart.
 
 **GitHub Push Issues**: Use VSCode Build Tasks instead of GitHub Desktop:
+
 - Save/Push: `GITHUB: 💾 Save/Push local changes to GitHub`
 - Pull: `GITHUB: 📩 Get/Pull latest version from GitHub`
 
@@ -410,10 +414,12 @@ docker pull ghcr.io/sfdc-qbranch-emu/qbrix-base-container-quasar:latest
 **Step 1**: Complete initial checks - ensure no active dependencies, recipes, or references exist
 
 **Step 2**: Update GitHub Repository:
+
 1. Settings → Rename with `DEPRECATED-` prefix (e.g., `DEPRECATED-Qbrix-99-MyBrix`)
 2. Archive the repository from Settings page
 
 **Step 3**: Deprecate in QLabs:
+
 1. QLabs Org → NextGen Management app → Q Brix tab
 2. Open Brix record → Select **Deprecate Brix** → Provide updated GitHub URL
 
@@ -531,8 +537,8 @@ docker pull ghcr.io/sfdc-qbranch-emu/qbrix-base-container-quasar:latest
 ### Org Setup and Naming Conventions
 
 - We build in a 'dev' org, when created this will have an auto-updated alias which will start with `dev_` and then be a compressed version of the name of the project
-- If the project name contains `-SDO-` an SDO is the best org to use as a dev and qa org. To create these quickly you can run the command `qa org pool --sdo --org dev` (--org dev for development org, --org qa for test/qa org)
-- If the project name contains `-xdo-` a CDO or Scratch org is the best org to use as a dev and qa org. To create these quickly you can run the command `qa org pool --cdo --org dev` (--org dev for development org, --org qa for test/qa org) for a CDO (aka Clean Demo Org) or `qa org create --org dev` to create a scratch org. Remember that the scratch org will use the `orgs/dev.json` file as the scratch org definition file
+- If the project name contains `-SDO-` an SDO is the best org to use as a dev and qa org. To create these quickly you can run the command `qx org pool --sdo --org dev` (--org dev for development org, --org qa for test/qa org)
+- If the project name contains `-xdo-` a CDO or Scratch org is the best org to use as a dev and qa org. To create these quickly you can run the command `qx org pool --cdo --org dev` (--org dev for development org, --org qa for test/qa org) for a CDO (aka Clean Demo Org) or `qa org create --org dev` to create a scratch org. Remember that the scratch org will use the `orgs/dev.json` file as the scratch org definition file
 - Changes should be retrieved from the dev org and test deployed to the qa org
 
 ### Scratch Org Features

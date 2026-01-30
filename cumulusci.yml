@@ -8,7 +8,7 @@ project:
   name: xDO-Template
   package:
     name: xDO-Template
-    api_version: "65.0"
+    api_version: '65.0'
   git:
     repo_url: https://github.com/sfdc-qbranch-emu/xDO-Template
 
@@ -84,7 +84,8 @@ flows:
       2:
         # Deploy the requirements for Brix Registration in target org
         flow: qbrix_register_base:deploy_qbrix
-        when: not org_config.is_qbrix_installed('QBrix-1-xDO-Tool-QBrixRegister')
+        when: not 
+          org_config.is_qbrix_installed('QBrix-1-xDO-Tool-QBrixRegister')
 
   #------------------------------------#
   # STAGE 2 of 3: Demo BRIX DEPLOYMENT #

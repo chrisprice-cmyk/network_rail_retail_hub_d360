@@ -113,5 +113,6 @@
   "salesforcedx-vscode-apex.languageServer.restartBehavior": "restart",
   "salesforcedx-vscode-core.experimental.enableSourceTrackingForDeployAndRetrieve": false,
   "salesforcedx-vscode-core.push-or-deploy-on-save.ignoreConflictsOnPush": true,
-  "analyticsdx-vscode-core.CLI.checkForPlugin": false
+  "analyticsdx-vscode-core.CLI.checkForPlugin": false,
+  "salesforcedx-vscode-apex.java.home": "/usr/lib/jvm/zulu21-ca-arm64"
 }
