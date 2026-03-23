@@ -8,7 +8,10 @@ project:
   name: xDO-Template
   package:
     name: xDO-Template
-    api_version: '65.0'
+
+    # Metadata API Version (Remember to update this when you update the API version in the sfdx-project.json file)
+    api_version: "65.0"
+
   git:
     repo_url: https://github.com/sfdc-qbranch-emu/xDO-Template
 
@@ -17,7 +20,7 @@ project:
     # DEMO BRIX REGISTRATION             #
     #------------------------------------#
     # You must run the "UTILS: Setup New Brix Project" task from the VSCode Build Tasks (Cmd + Shift + b on MacOS) to set these as it will also update other files.
-    # Note: This does not affect existing config and can be run multiple times.
+    # Note: This does not affect existing config and can be run multiple times and must be run before checking in changes to Github.
     qbrix_owner_name: OWNER NAME HERE
     qbrix_owner_email: OWNER EMAIL HERE
     qbrix_owner_team: OWNER TEAM HERE
@@ -41,6 +44,7 @@ sources:
   # Here is where dependant brix are defined for this brix
   # Guidance: https://qlabs-org.my.site.com/qverse/s/learn?name=Template-Dependencies-and-Packages
 
+  # Brix Registration Base
   qbrix_register_base:
     github: https://github.com/sfdc-qbranch-emu/QBrix-1-xDO-Tool-QBrixRegister
 
@@ -48,7 +52,7 @@ tasks:
   #------------------------------------#
   # NextGen Data Tool                  #
   #------------------------------------#
-  # NextGen Data Tool Integration - Add data keys below
+  # NextGen Data Tool Integration - Add data keys below or within the flow step
 
   deploy_nextgen_data:
     class_path: qx.data.qx_nextgen_datatool.RunDataTool
@@ -82,29 +86,19 @@ flows:
         # Brix System Task - Leave in place
         task: orgconfig_hydrate
       2:
-        # Deploy the requirements for Brix Registration in target org
+        # Deploy the requirements for Brix Registration in target Salesforce org
         flow: qbrix_register_base:deploy_qbrix
-        when: not 
-          org_config.is_qbrix_installed('QBrix-1-xDO-Tool-QBrixRegister')
+        when: not org_config.is_qbrix_installed('QBrix-1-xDO-Tool-QBrixRegister')
 
   #------------------------------------#
   # STAGE 2 of 3: Demo BRIX DEPLOYMENT #
   #------------------------------------#
   # DEFAULT DEPLOY FLOW IS deploy_qbrix which runs here. If you need to override then define it here and add or override steps (Not recommended)
-
-  #-------------------------------------------------#
-  # STAGE 3 of 3 (OPTIONAL) POST DEPLOYMENT         #
-  #-------------------------------------------------#
-  # ADD POST DEPLOYMENT STEPS HERE (post_qbrix_deploy should always be defined)
-
-  post_qbrix_deploy:
-    steps:
-      1:
-        # Placeholder task, replace this with your custom steps
-        task: None
-      #99:
-      # Placeholder task for data deployments
-      #flow: deploy_qbrix_data
+  # BY DEFAULT deploy_qbrix runs (With tracing enabled):
+  # 1. prepare_org flow
+  # 2. source_dependencies flow
+  # 3. deploy task (force-app/main/default)
+  # 4. post_qbrix_deploy flow
 
   #------------------------------------#
   # DEMO BRIX TEST VALIDATION          #
@@ -128,5 +122,3 @@ flows:
       1:
         # Placeholder task, replace this with your custom steps
         task: deploy_nextgen_data
-        #options:
-        #  data_keys:
