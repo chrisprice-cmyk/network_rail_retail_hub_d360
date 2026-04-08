@@ -10,7 +10,7 @@ project:
     name: xDO-Template
 
     # Metadata API Version (Remember to update this when you update the API version in the sfdx-project.json file)
-    api_version: "65.0"
+    api_version: "66.0"
 
   git:
     repo_url: https://github.com/sfdc-qbranch-emu/xDO-Template

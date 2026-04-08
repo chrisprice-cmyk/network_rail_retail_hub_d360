@@ -76,7 +76,11 @@
     "**/eslint.config.js": true,
     "Makefile": true,
     "package-lock.json": true,
-    ".mcp.json": true
+    ".mcp.json": true,
+    "SUPPORT.md": true,
+    "CODE_OF_CONDUCT.md": true,
+    "SECURITY.md": true,
+    "LICENSE.md": true
 },
   "git.branchProtection": [
     "main",
@@ -114,5 +118,6 @@
   "salesforcedx-vscode-core.push-or-deploy-on-save.ignoreConflictsOnPush": true,
   "analyticsdx-vscode-core.CLI.checkForPlugin": false,
 "salesforcedx-vscode-apex.java.home": "/usr/lib/jvm/zulu21-ca-arm64",
-"salesforce.einsteinForDevelopers.enable": false
+"salesforce.einsteinForDevelopers.enable": false,
+"xml.preferences.showSchemaDocumentationType": "none"
 }
