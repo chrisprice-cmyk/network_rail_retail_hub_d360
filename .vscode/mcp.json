@@ -1,19 +1,23 @@
 {
-  "mcpServers": {
-    "Salesforce DX": {
-      "command": "npx",
-      "args": ["-y", "@salesforce/mcp",
-      "--orgs", "DEFAULT_TARGET_ORG",
-      "--dynamic-tools",
-      "--allow-non-ga-tools"]
-    },
-    "qx-mcp": {
-      "command": "uvx",
-      "args": [
-      "--from",
-      "git+https://github.com/sfdc-qbranch-emu/qx_mcp@main",
-      "qx-mcp"
-      ]
+    "mcpServers": {
+        "Salesforce DX": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@salesforce/mcp",
+                "--orgs",
+                "DEFAULT_TARGET_ORG",
+                "--dynamic-tools",
+                "--allow-non-ga-tools"
+            ]
+        },
+        "qx-mcp": {
+            "command": "uvx",
+            "args": [
+                "--from",
+                "git+https://github.com/sfdc-qbranch-emu/qx_mcp@main",
+                "qx-mcp"
+            ]
+        }
     }
-  }
 }

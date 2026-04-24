@@ -446,7 +446,6 @@ Use `with sharing` keyword when demonstrating sharing functionality
 
 - ❌ No hardcoded IDs or URLs
 - ❌ No SOQL/DML operations in loops
-- ❌ No `System.debug()` statements in production code
 - ❌ No `@future` methods from batch jobs
 - ❌ No recursive triggers
 - ❌ **NEVER use or suggest `@future` methods for async processes**. Use queueables and always suggest implementing `System.Finalizer` methods

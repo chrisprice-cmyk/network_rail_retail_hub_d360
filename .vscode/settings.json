@@ -1,123 +1,157 @@
 {
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "editor.insertSpaces": true,
-  "editor.tabSize": 4,
-  "editor.detectIndentation": false,
-  "eslint.validate": [
-    "javascript",
-    "javascriptreact"
-  ],
-  "[python]": {
-    "editor.defaultFormatter": "charliermarsh.ruff",
-    "editor.tabSize": 4,
-    "editor.insertSpaces": true
-  },
-  "[yaml]": {
-    "editor.defaultFormatter": "redhat.vscode-yaml",
-    "editor.tabSize": 2,
-    "editor.insertSpaces": true
-  },
-  "yaml.schemas": {
-    "https://qlabs-org.my.site.com/qverse/resource/1740162235000/cumulusci_jsonschema_json": "/*"
-  },
-  "[xml]": {
+    // =========================================================================
+    // Editor
+    // =========================================================================
     "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.tabSize": 2,
-    "editor.insertSpaces": true
-  },
-  "[json]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.tabSize": 2,
-    "editor.insertSpaces": true
-  },
-  "[robot]": {
+    "editor.detectIndentation": false,
+    "editor.insertSpaces": true,
     "editor.tabSize": 4,
-    "editor.insertSpaces": true
-  },
-  "editor.trimAutoWhitespace": true,
-  "files.associations": {
-    "*.resource": "robotframework",
-    "*.robot": "robotframework"
-  },
-  "files.exclude": {
-    "**/__pycache__": true,
-    "**/.mypy_cache": true,
-    "**/.claude": true,
-    "**/.gemini": true,
-    "**/.cursor": true,
-    "**/.extensions": true,
-    "**/.plugins": true,
-    "**/.pytest_cache": true,
-    "**/._*": true,
-    "**/.cci": true,
-    "**/.zed": true,
-    "**/.editorconfig": true,
-    "**/.cursorrules": true,
-    "**/.devcontainer": true,
-    "**/.eslintrc.json": true,
-    "**/.forceignore": true,
-    "**/.gitattributes": true,
-    "**/.github": true,
-    "**/.gitignore": true,
-    "**/.prettierignore": true,
-    "**/.prettierrc": true,
-    "**/.qbrix": true,
-    "**/.sf": true,
-    "**/.sfdx": true,
-    "**/.vscode": true,
-    "**/.windsurf": true,
-    "**/*.pyc": true,
-    "**/bower_components": true,
-    "**/jest.config.js": true,
-    "**/node_modules": true,
-    "**/package.json": true,
-    "**/playwright.config.ts": true,
-    "**/tsconfig.json": true,
-    "**/eslint.config.js": true,
-    "Makefile": true,
-    "package-lock.json": true,
-    ".mcp.json": true,
-    "SUPPORT.md": true,
-    "CODE_OF_CONDUCT.md": true,
-    "SECURITY.md": true,
-    "LICENSE.md": true
-},
-  "git.branchProtection": [
-    "main",
-    "master"
-  ],
-  "python.terminal.activateEnvironment": true,
-  "robot.pythonpath": [
-    "${workspaceFolder}",
-    "${workspaceFolder}/qbrix_local",
-    "qx/qrobot/keywords"
-  ],
-  "robotcode.robot.pythonPath": [
-    "${workspaceFolder}",
-    "${workspaceFolder}/qbrix_local",
-    "qx/qrobot/keywords"
-  ],
-  "salesforcedx-vscode-core.push-or-deploy-on-save.enabled": false,
-  "salesforcedx-vscode-core.retrieve-test-code-coverage": true,
-  "search.exclude": {
-    "**/.cci": true,
-    "**/.claude": false,
-    "**/.cursorrules": false,
-    "**/.devcontainer": true,
-    "**/.github": true,
-    "**/.sf": true,
-    "**/.sfdx": true,
-    "**/.windsurf": false,
-    "**/.vscode": true,
-    "**/bower_components": true,
-    "**/node_modules": true,
-    "**/.zed": true
-  },
-  "salesforcedx-vscode-apex.languageServer.restartBehavior": "restart",
-  "salesforcedx-vscode-core.experimental.enableSourceTrackingForDeployAndRetrieve": false,
-  "salesforcedx-vscode-core.push-or-deploy-on-save.ignoreConflictsOnPush": true,
-  "analyticsdx-vscode-core.CLI.checkForPlugin": false,
-"salesforcedx-vscode-apex.java.home": "/usr/lib/jvm/zulu21-ca-arm64",
-"salesforce.einsteinForDevelopers.enable": false,
-"xml.preferences.showSchemaDocumentationType": "none"
+    "editor.trimAutoWhitespace": true,
+    // =========================================================================
+    // Language-specific overrides
+    // =========================================================================
+    "[json]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.insertSpaces": true,
+        "editor.tabSize": 2
+    },
+    "[python]": {
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.insertSpaces": true,
+        "editor.tabSize": 4
+    },
+    "[robot]": {
+        "editor.insertSpaces": true,
+        "editor.tabSize": 4
+    },
+    "[xml]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.insertSpaces": true,
+        "editor.tabSize": 2
+    },
+    "[yaml]": {
+        "editor.defaultFormatter": "redhat.vscode-yaml",
+        "editor.insertSpaces": true,
+        "editor.tabSize": 2
+    },
+    // =========================================================================
+    // ESLint
+    // =========================================================================
+    "eslint.validate": [
+        "javascript",
+        "javascriptreact"
+    ],
+    // =========================================================================
+    // Files — associations & exclusions
+    // =========================================================================
+    "files.associations": {
+        "*.resource": "robotframework",
+        "*.robot": "robotframework"
+    },
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/.mypy_cache": true,
+        "**/.claude": true,
+        "**/.gemini": true,
+        "**/.cursor": true,
+        "**/.extensions": true,
+        "**/.plugins": true,
+        "**/.pytest_cache": true,
+        "**/._*": true,
+        "**/.cci": true,
+        "**/.zed": true,
+        "**/.editorconfig": true,
+        "**/.cursorrules": true,
+        "**/.devcontainer": true,
+        "**/.eslintrc.json": true,
+        "**/.forceignore": true,
+        "**/.gitattributes": true,
+        "**/.github": true,
+        "**/.gitignore": true,
+        "**/.prettierignore": true,
+        "**/.prettierrc": true,
+        "**/.qbrix": true,
+        "**/.sf": true,
+        "**/.sfdx": true,
+        "**/.vscode": true,
+        "**/.windsurf": true,
+        "**/*.pyc": true,
+        "**/bower_components": true,
+        "**/jest.config.js": true,
+        "**/node_modules": true,
+        "**/package.json": true,
+        "**/playwright.config.ts": true,
+        "**/tsconfig.json": true,
+        "**/eslint.config.js": true,
+        "Makefile": true,
+        "package-lock.json": true,
+        ".mcp.json": true,
+        "SUPPORT.md": true,
+        "CODE_OF_CONDUCT.md": true,
+        "SECURITY.md": true,
+        "LICENSE.md": true,
+        "CLAUDE.md": true
+    },
+    // =========================================================================
+    // Search
+    // =========================================================================
+    "search.exclude": {
+        "**/.cci": true,
+        "**/.claude": false,
+        "**/.cursorrules": false,
+        "**/.devcontainer": true,
+        "**/.github": true,
+        "**/.sf": true,
+        "**/.sfdx": true,
+        "**/.vscode": true,
+        "**/.windsurf": false,
+        "**/.zed": true,
+        "**/bower_components": true,
+        "**/node_modules": true
+    },
+    // =========================================================================
+    // Git
+    // =========================================================================
+    "git.branchProtection": [
+        "main",
+        "master"
+    ],
+    // =========================================================================
+    // Python & Robot Framework
+    // =========================================================================
+    "python.terminal.activateEnvironment": true,
+    "robot.pythonpath": [
+        "${workspaceFolder}",
+        "${workspaceFolder}/qbrix_local",
+        "qx/qrobot/keywords"
+    ],
+    "robotcode.robot.pythonPath": [
+        "${workspaceFolder}",
+        "${workspaceFolder}/qbrix_local",
+        "qx/qrobot/keywords"
+    ],
+    // =========================================================================
+    // Salesforce DX
+    // =========================================================================
+    "salesforce.einsteinForDevelopers.enable": false,
+    "salesforcedx-vscode-apex.java.home": "/usr/lib/jvm/zulu21-ca-arm64",
+    "salesforcedx-vscode-apex.languageServer.restartBehavior": "restart",
+    "salesforcedx-vscode-core.experimental.enableSourceTrackingForDeployAndRetrieve": false,
+    "salesforcedx-vscode-core.push-or-deploy-on-save.enabled": false,
+    "salesforcedx-vscode-core.push-or-deploy-on-save.ignoreConflictsOnPush": true,
+    "salesforcedx-vscode-core.retrieve-test-code-coverage": true,
+    // =========================================================================
+    // Analytics DX
+    // =========================================================================
+    "analyticsdx-vscode-core.CLI.checkForPlugin": false,
+    // =========================================================================
+    // YAML
+    // =========================================================================
+    "yaml.schemas": {
+        "https://qlabs-org.my.site.com/qverse/resource/1740162235000/cumulusci_jsonschema_json": "/*"
+    },
+    // =========================================================================
+    // XML
+    // =========================================================================
+    "xml.preferences.showSchemaDocumentationType": "none"
 }

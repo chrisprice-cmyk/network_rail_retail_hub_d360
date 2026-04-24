@@ -1,26 +1,26 @@
-project:
-  #------------------------------------#
-  # DEMO BRIX CONFIG                   #
-  #------------------------------------#
-  # Demo Brix Name, Metadata API Version and Repo URL are all set here. Name and Package > Name must be the same.
-  # Guidance: https://qlabs-org.my.site.com/qverse/s/learn?name=Template-Overview
+# =============================================================================
+# DEMO BRIX CONFIG
+# =============================================================================
+# Main configuration for this Brix. Name and package.name must match.
+# Guidance: https://qlabs-org.my.site.com/qverse/s/learn?name=Template-Overview
 
+project:
   name: xDO-Template
+
   package:
     name: xDO-Template
-
-    # Metadata API Version (Remember to update this when you update the API version in the sfdx-project.json file)
+    # Metadata API Version — keep in sync with sfdx-project.json
     api_version: "66.0"
 
   git:
     repo_url: https://github.com/sfdc-qbranch-emu/xDO-Template
 
+  # ---------------------------------------------------------------------------
+  # Brix registration
+  # ---------------------------------------------------------------------------
+  # Run "UTILS: Setup New Brix Project" (Cmd+Shift+B on macOS) to populate.
+  # Safe to re-run; must be completed before checking in changes to GitHub.
   custom:
-    #------------------------------------#
-    # DEMO BRIX REGISTRATION             #
-    #------------------------------------#
-    # You must run the "UTILS: Setup New Brix Project" task from the VSCode Build Tasks (Cmd + Shift + b on MacOS) to set these as it will also update other files.
-    # Note: This does not affect existing config and can be run multiple times and must be run before checking in changes to Github.
     qbrix_owner_name: OWNER NAME HERE
     qbrix_owner_email: OWNER EMAIL HERE
     qbrix_owner_team: OWNER TEAM HERE
@@ -29,96 +29,107 @@ project:
     qbrix_documentation_url: https://qlabs-org.my.site.com/qverse/s/
     qbrix_description: SHORT DESCRIPTION OF BRIX HERE
 
-  #------------------------------------#
-  # SALESFORCE PACKAGE DEPENDENCIES    #
-  #------------------------------------#
-  # Managed and Unmanaged Salesforce Packages can be defined here
+  # ---------------------------------------------------------------------------
+  # Salesforce package dependencies
+  # ---------------------------------------------------------------------------
+  # Managed and unmanaged Salesforce packages.
   # Guidance: https://qlabs-org.my.site.com/qverse/s/learn?name=Template-Dependencies-and-Packages
-
   dependencies:
 
-sources:
-  #------------------------------------#
-  # DEMO BRIX SOURCES                  #
-  #------------------------------------#
-  # Here is where dependant brix are defined for this brix
-  # Guidance: https://qlabs-org.my.site.com/qverse/s/learn?name=Template-Dependencies-and-Packages
+    # =============================================================================
+    # SOURCES
+    # =============================================================================
+    # Dependent Brix used by this Brix.
+    # Guidance: https://qlabs-org.my.site.com/qverse/s/learn?name=Template-Dependencies-and-Packages
 
-  # Brix Registration Base
+sources:
+  # Brix Registration base
   qbrix_register_base:
     github: https://github.com/sfdc-qbranch-emu/QBrix-1-xDO-Tool-QBrixRegister
 
-tasks:
-  #------------------------------------#
-  # NextGen Data Tool                  #
-  #------------------------------------#
-  # NextGen Data Tool Integration - Add data keys below or within the flow step
+# =============================================================================
+# TASKS
+# =============================================================================
 
+tasks:
+  # NextGen Data Tool integration — add data keys here or inline within a flow step
   deploy_nextgen_data:
     class_path: qx.data.qx_nextgen_datatool.RunDataTool
+  # Add custom task definitions and overrides below.
 
-  #------------------------------------#
-  # CUSTOM TASK OVERRIDES & DEFAULTS   #
-  #------------------------------------#
-  # Add custom task definitions and overrides here.
+
+  # =============================================================================
+  # FLOWS — Deployment lifecycle
+  # =============================================================================
+  # deploy_qbrix (defined elsewhere) runs these stages in order, with tracing:
+  #   1. prepare_org          (pre-deploy)
+  #   2. source_dependencies  (pre-deploy)
+  #   3. deploy               (force-app/main/default — defined elsewhere)
+  #   4. post_qbrix_deploy    (post-deploy)
+  #
+  # Override deploy_qbrix here only if you must (not recommended).
 
 flows:
-  #------------------------------------#
-  # STAGE 1 of 3: PRE DEPLOYMENT       #
-  #------------------------------------#
-  # Define steps to prepare the org and deploy other dependencies in this section. prepare_org and source_dependencies should always be defined
+
+  # ---------------------------------------------------------------------------
+  # Stage 1 — Pre-deploy
+  # ---------------------------------------------------------------------------
 
   prepare_org:
     steps:
       1:
-        # Brix System Task - Leave in place
+        # Brix system task — leave in place
         task: orgconfig_hydrate
       2:
-        # Pre-Deploy Settings in force-app/main/default (if any)
+        # Pre-deploy settings in force-app/main/default (if any)
         task: deploy_settings
       3:
-        # Deploy Packages from Dependencies section above
+        # Deploy packages declared in project.dependencies
         task: update_dependencies
 
   source_dependencies:
     steps:
       1:
-        # Brix System Task - Leave in place
+        # Brix system task — leave in place
         task: orgconfig_hydrate
       2:
-        # Deploy the requirements for Brix Registration in target Salesforce org
+        # Install Brix Registration requirements in the target org
         flow: qbrix_register_base:deploy_qbrix
         when: not org_config.is_qbrix_installed('QBrix-1-xDO-Tool-QBrixRegister')
 
-  #------------------------------------#
-  # STAGE 2 of 3: Demo BRIX DEPLOYMENT #
-  #------------------------------------#
-  # DEFAULT DEPLOY FLOW IS deploy_qbrix which runs here. If you need to override then define it here and add or override steps (Not recommended)
-  # BY DEFAULT deploy_qbrix runs (With tracing enabled):
-  # 1. prepare_org flow
-  # 2. source_dependencies flow
-  # 3. deploy task (force-app/main/default)
-  # 4. post_qbrix_deploy flow
+  # ---------------------------------------------------------------------------
+  # Stage 3 — Post-deploy
+  # ---------------------------------------------------------------------------
+  # Replace the placeholder step with real post-deploy work as needed.
 
-  #------------------------------------#
-  # DEMO BRIX TEST VALIDATION          #
-  #------------------------------------#
-  # Add steps here to validate your org deployment through testing
-  # Guide Here: https://confluence.internal.salesforce.com/display/QNEXTGENDEMOS/Validation+Methods
+  post_qbrix_deploy:
+    steps:
+      1:
+        task: None
+
+  # ===========================================================================
+  # Auxiliary flows
+  # ===========================================================================
+
+  # ---------------------------------------------------------------------------
+  # Test validation
+  # ---------------------------------------------------------------------------
+  # Validate org deployment through testing.
+  # Guide: https://confluence.internal.salesforce.com/display/QNEXTGENDEMOS/Validation+Methods
 
   validate_qbrix:
     steps:
       1:
         task: validate_qbrix
 
-  #------------------------------------#
-  # DEMO BRIX DATA                     #
-  #------------------------------------#
-  # Define steps to deploy data (if needed) here. Placeholder has been added for the NextGen Data Tool
+  # ---------------------------------------------------------------------------
+  # Data
+  # ---------------------------------------------------------------------------
+  # Deploy data as needed. Placeholder wired to the NextGen Data Tool.
   # Guide: https://confluence.internal.salesforce.com/display/QNEXTGENDEMOS/Data
 
   deploy_qbrix_data:
     steps:
       1:
-        # Placeholder task, replace this with your custom steps
+        # Placeholder — replace with your custom steps
         task: deploy_nextgen_data

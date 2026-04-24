@@ -1,13 +1,13 @@
 {
-  "recommendations": [
-    "charliermarsh.ruff",
-    "d-biehl.robotcode",
-    "dbaeumer.vscode-eslint",
-    "esbenp.prettier-vscode",
-    "ms-vscode-remote.vscode-remote-extensionpack",
-    "pomdtr.secrets",
-    "salesforce.salesforce-vscode-slds",
-    "salesforce.salesforcedx-vscode-expanded",
-    "salesforce.salesforcedx-vscode-visualforce"
-  ]
+    "recommendations": [
+        "charliermarsh.ruff",
+        "d-biehl.robotcode",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "ms-vscode-remote.vscode-remote-extensionpack",
+        "pomdtr.secrets",
+        "salesforce.salesforce-vscode-slds",
+        "salesforce.salesforcedx-vscode-expanded",
+        "salesforce.salesforcedx-vscode-visualforce"
+    ]
 }
