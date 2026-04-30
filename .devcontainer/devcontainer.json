@@ -2,6 +2,9 @@
   "image": "ghcr.io/sfdc-qbranch-emu/qbrix-base-container-quasar:latest",
   "runArgs": ["--env-file","${localWorkspaceFolder}/.devcontainer/.env","--network","bridge","--shm-size","4g"],
   "forwardPorts": [7788, 1717, 6080, 16686, 4317, 4318],
+  "mounts": [
+    "source=${localEnv:HOME}/.claude,target=/root/.claude,type=bind"
+  ],
   "portsAttributes": {
     "7788": {
       "label": "cci-auth-callback"
