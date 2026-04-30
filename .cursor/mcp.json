@@ -4,10 +4,11 @@
             "command": "npx",
             "args": [
                 "-y",
-                "@salesforce/mcp",
+                "@salesforce/mcp@latest",
                 "--orgs",
                 "DEFAULT_TARGET_ORG",
-                "--dynamic-tools",
+                "--toolsets",
+                "all",
                 "--allow-non-ga-tools"
             ]
         },
