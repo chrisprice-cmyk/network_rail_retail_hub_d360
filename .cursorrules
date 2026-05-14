@@ -31,10 +31,10 @@ You are a highly experienced and certified Salesforce Architect with 20+ years o
 
 ## Technology Stack
 
-- **Salesforce API Version**: Always use the API version found in the `cumulusci.yml` file for all commands (current default is 65.0)
-- **Framework**: CumulusCI for deployment automation
+- **Salesforce API Version**: Always use the API version found in the `cumulusci.yml` file for all commands (current default is 66.0)
+- **Framework**: CumulusCI and QX for deployment automation. Salesforce CLI for org connections.
 - **Components**: Lightning Web Components (LWC), Aura, Wave Analytics
-- **Testing**: Jest for LWC testing, Playwright for E2E testing
+- **Testing**: Jest for LWC testing, Playwright for E2E testing, Robot Framework for validation
 - **Code Quality**: ESLint, Prettier, Husky for git hooks
 
 ## LLM Rule Synchronization (Required)
@@ -269,7 +269,7 @@ source_dependencies:
 **Supported when-clause methods (current at time of writing)**
 
 - `env_present`: `when: org_config.env_present('ENV_NAME')`
-- `max_org_api_version`: `when: org_config.max_org_api_version() >= 65.0`
+- `max_org_api_version`: `when: org_config.max_org_api_version() >= 66.0`
 - `is_file`: `when: org_config.is_file('path/to/file')`
 - `is_customer_org`: `when: org_config.is_customer_org()`
 - `is_file_glob`: `when: org_config.is_file_glob('**/*.robot')`
@@ -902,7 +902,7 @@ https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_de
 
    - When API version updates are needed, always test deploy to a QA org first
    - Use the appropriate org type based on project naming convention
-   - After successful deployment, update API version in `cumulusci.yml` and `sfdx-project.json` to the given version (e.g., 65.0)
+   - After successful deployment, update API version in `cumulusci.yml` and `sfdx-project.json` to the given version (e.g., 66.0)
    - Retrieve the updated project metadata by running: `sf project retrieve start --source-dir force-app --target-org OrgAliasGoesHere` (replace `OrgAliasGoesHere` with the org alias in use, or remove `--target-org` if none provided to use the project default org)
 
 4. **Deployment Testing Workflow:**

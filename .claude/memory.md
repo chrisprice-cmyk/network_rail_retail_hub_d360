@@ -27,7 +27,7 @@ This is a Salesforce QBrix (Brix) development project using CumulusCI for deploy
 
 ## Technology Stack
 
-- **Salesforce API Version**: Always use the API version from `cumulusci.yml` (current: 65.0)
+- **Salesforce API Version**: Always use the API version from `cumulusci.yml` (current: 66.0)
 - **Framework**: CumulusCI and QX for deployment automation, Salesforce CLI for org connections
 - **Components**: Lightning Web Components (LWC), Aura, Wave Analytics
 - **Testing**: Jest (LWC unit tests), Playwright (E2E tests), Robot Framework (validation)
@@ -565,7 +565,7 @@ source_dependencies:
 **Supported when-clause methods (current at time of writing)**
 
 - `env_present`: `when: org_config.env_present('ENV_NAME')`
-- `max_org_api_version`: `when: org_config.max_org_api_version() >= 65.0`
+- `max_org_api_version`: `when: org_config.max_org_api_version() >= 66.0`
 - `is_file`: `when: org_config.is_file('path/to/file')`
 - `is_customer_org`: `when: org_config.is_customer_org()`
 - `is_file_glob`: `when: org_config.is_file_glob('**/*.robot')`
@@ -765,7 +765,7 @@ qx org create --org dev        # Uses orgs/dev.json
 **Critical workflow**:
 
 1. Test deploy to QA org first
-2. Update API version in `cumulusci.yml` and `sfdx-project.json` (e.g., 65.0)
+2. Update API version in `cumulusci.yml` and `sfdx-project.json` (e.g., 66.0)
 3. Retrieve updated metadata:
     ```bash
     sf project retrieve start --source-dir force-app --target-org OrgAliasGoesHere

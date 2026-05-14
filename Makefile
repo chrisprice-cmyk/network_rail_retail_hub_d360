@@ -69,6 +69,53 @@ check-rules-sync:
 			exit 2; \
 		fi; \
 	done
+	@# Ensure hardcoded API-version guidance matches the project config.
+	@api_version="$$(sed -n 's/^[[:space:]]*api_version:[[:space:]]*"\{0,1\}\([^"]*\)"\{0,1\}[[:space:]]*$$/\1/p' cumulusci.yml | head -n 1)"; \
+	source_api_version="$$(sed -n 's/.*"sourceApiVersion":[[:space:]]*"\([^"]*\)".*/\1/p' sfdx-project.json | head -n 1)"; \
+	if [ -z "$$api_version" ] || [ -z "$$source_api_version" ]; then \
+		printf "%s\n" "ERROR: Unable to read API versions from cumulusci.yml and sfdx-project.json"; \
+		exit 2; \
+	fi; \
+	if [ "$$api_version" != "$$source_api_version" ]; then \
+		printf "%s\n" "ERROR: API version mismatch: cumulusci.yml=$$api_version sfdx-project.json=$$source_api_version"; \
+		exit 2; \
+	fi; \
+	for f in .cursorrules .claude/memory.md .cursor/rules/brixdevelopment.mdc .cursor/rules/brixtechnology.mdc .gemini/rules/brix_development.md .gemini/rules/brix_technology.md .windsurf/rules/brixdevelopment.md .windsurf/rules/brixtechnology.md; do \
+		if ! grep -q "$$api_version" "$$f"; then \
+			printf "%s\n" "ERROR: Expected API version $$api_version in $$f"; \
+			exit 2; \
+		fi; \
+	done
+	@# Ensure mirrored split rules have identical content after stripping tool metadata.
+	@normalize_rule() { awk 'NR==1 && $$0=="---"{fm=1; next} fm && $$0=="---"{fm=0; next} !fm{print}' "$$1" | sed '/./,$$!d'; }; \
+	for mapping in \
+		apexdevelopment:apexdevelopment:apex_development \
+		brixdevelopment:brixdevelopment:brix_development \
+		brixrobotframework:brixrobotframework:brix_robot_framework \
+		brixtechnology:brixtechnology:brix_technology \
+		generaldevelopment:generaldevelopment:general_development \
+		lwcdevelopment:lwcdevelopment:lwc_development; do \
+		cursor="$${mapping%%:*}"; \
+		rest="$${mapping#*:}"; \
+		windsurf="$${rest%%:*}"; \
+		gemini="$${rest#*:}"; \
+		tmp_cursor="$$(mktemp)"; \
+		tmp_other="$$(mktemp)"; \
+		normalize_rule ".cursor/rules/$$cursor.mdc" > "$$tmp_cursor"; \
+		normalize_rule ".windsurf/rules/$$windsurf.md" > "$$tmp_other"; \
+		if ! diff -q "$$tmp_cursor" "$$tmp_other" >/dev/null; then \
+			printf "%s\n" "ERROR: Rule drift between .cursor/rules/$$cursor.mdc and .windsurf/rules/$$windsurf.md"; \
+			rm -f "$$tmp_cursor" "$$tmp_other"; \
+			exit 2; \
+		fi; \
+		normalize_rule ".gemini/rules/$$gemini.md" > "$$tmp_other"; \
+		if ! diff -q "$$tmp_cursor" "$$tmp_other" >/dev/null; then \
+			printf "%s\n" "ERROR: Rule drift between .cursor/rules/$$cursor.mdc and .gemini/rules/$$gemini.md"; \
+			rm -f "$$tmp_cursor" "$$tmp_other"; \
+			exit 2; \
+		fi; \
+		rm -f "$$tmp_cursor" "$$tmp_other"; \
+	done
 
 # -----------------------
 # Node/npm (optional)

@@ -101,7 +101,7 @@ When updating any LLM/tooling rules, keep these directories **synchronized**:
 
 - Cursor: `.cursor/rules/*` and `.cursorrules`
 - Claude: `.claude/*` (notably `.claude/memory.md`)
-- Gemini: `.gemini/rules/*` (this file)
+- Gemini: `.gemini/rules/*`
 - Windsurf: `.windsurf/rules/*`
 
 ## CumulusCI Flow Placeholder Convention
@@ -140,7 +140,7 @@ source_dependencies:
 **Supported when-clause methods (current at time of writing)**
 
 - `env_present`: `when: org_config.env_present('ENV_NAME')`
-- `max_org_api_version`: `when: org_config.max_org_api_version() >= 64.0`
+- `max_org_api_version`: `when: org_config.max_org_api_version() >= 66.0`
 - `is_file`: `when: org_config.is_file('path/to/file')`
 - `is_customer_org`: `when: org_config.is_customer_org()`
 - `is_file_glob`: `when: org_config.is_file_glob('**/*.robot')`
@@ -593,7 +593,7 @@ https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_de
 3. **API Version Updates:**
     - When API version updates are needed, always test deploy to a QA org first
     - Use the appropriate org type based on project naming convention
-    - After successful deployment, update API version in `cumulusci.yml` and `sfdx-project.json` to the given version (e.g., 64.0)
+    - After successful deployment, update API version in `cumulusci.yml` and `sfdx-project.json` to the given version (e.g., 66.0)
     - Retrieve the updated project metadata by running: `sf project retrieve start --source-dir force-app --target-org OrgAliasGoesHere` (replace `OrgAliasGoesHere` with the org alias in use, or remove `--target-org` if none provided to use the project default org)
 
 4. **Deployment Testing Workflow:**

@@ -1,5 +1,25 @@
 {
     "mcpServers": {
+        "brix": {
+            "type": "stdio",
+            "command": "npx",
+            "args": [
+                "-y",
+                "@sfdc-qbranch-emu/mcp-brix@1.1.8"
+            ],
+            "env": {
+                "QBRIX_CORE_ENDPOINT": "https://brix-core-agentforce-524980201703.herokuapp.com",
+                "QVERSE_ENDPOINT": "https://qverse-internal-53031cf63b83.herokuapp.com/graphql",
+                "LOAD_ONLY_TOOLS": "*",
+                "LOAD_ONLY_PROMPTS": "*",
+                "LOAD_ONLY_RESOURCES": "*",
+                "MCP_STATELESS_MODE": "FALSE",
+                "OTEL_DOTNET_AUTO_INSTRUMENTATION_ENABLED": "true",
+                "OTEL_EXPORTER_OTLP_ENDPOINT": "http://localhost:4317",
+                "OTEL_EXPORTER_OTLP_PROTOCOL": "http",
+                "OTEL_SDK_DISABLED": "false"
+            }
+        },
         "Salesforce DX": {
             "command": "npx",
             "args": [
