@@ -73,7 +73,7 @@ In addition to CumulusCI tasks, we have custom extension tasks that extend Cumul
 | `display_project`          | Display current brix details in terminal at runtime.                                                                                               |
 | `dustpan`                  | Remove a file or glob pattern match from the brix stack.                                                                                           |
 | `experience_manager`       | Run additional setup tasks against an Experience Cloud site.                                                                                       |
-| `load_sfdmu`               | Run SFDMU data loads.                                                                                                                              |
+| `load_sfdmu`               | Legacy SFDMU data-load task. Do not use by default; prefer NextGen Data Tool or CSV files compatible with Salesforce CLI `sf data` commands.       |
 | `named_credential_import`  | Create a Named Credential in target Salesforce org from a definition.                                                                              |
 | `omniscript_align`         | Repair known issues with OmniScript LWC components. Must run before LWC deployment (prepare_org flow).                                             |
 | `orgconfig_hydrate`        | Add options to org_config object with information about connected Salesforce org. Used for when clauses in flow steps.                             |
@@ -96,8 +96,28 @@ When updating any LLM/tooling rules, keep these directories **synchronized**:
 
 - Cursor: `.cursor/rules/*` and `.cursorrules`
 - Claude: `.claude/*` (notably `.claude/memory.md`)
+- Codex: `AGENTS.md` and `codex/rules/*`
 - Gemini: `.gemini/rules/*`
 - Windsurf: `.windsurf/rules/*`
+
+## Installed Salesforce Skills and Local Brix Responsibility
+
+Assume the Salesforce skills from `https://github.com/forcedotcom/sf-skills` are automatically installed.
+
+Use the installed Salesforce skills for artifact-specific implementation and review, including Apex, LWC, Flow, metadata, permissions, Agentforce, integrations, SOQL, testing, and deployment details.
+
+Use this repo's local Brix rules and bundled skills for template-specific responsibilities:
+
+- CumulusCI/QX lifecycle wiring
+- dependent brix and package sequencing
+- required inputs and secret-safe runtime values
+- data packaging and deployment
+- permission assignment in `post_qbrix_deploy`
+- non-browser validation assets and recommended `validate_qbrix` checks
+- org capability planning for scratch/CDO/SDO targets
+- solution-completion checks before handoff
+
+Do not duplicate generic Salesforce skill guidance in local Brix rules; route to the installed Salesforce skill and then package the result as a reusable Brix.
 
 ## CumulusCI Flow Placeholder Convention
 
@@ -228,8 +248,10 @@ For code quality analysis, use the Salesforce DX MCP Code Analyzer tools:
 ### Testing
 
 - Unit tests for LWC components using Jest
-- E2E tests using Playwright
-- Robot Framework tests for validation
+- Salesforce CLI data/metadata checks for Brix behavior where practical
+- `validate_qbrix` is recommended when an org is available, but may be skipped for demo solution builds
+- Do not add Playwright, browser-based Robot, or other browser automation unless the user explicitly requests it
+- Ask the end user to inspect visible UI paths and confirm they are happy with the result
 
 ### Deployment
 
@@ -292,16 +314,16 @@ post_qbrix_deploy:
 
 **Note:** Always use the full API name including namespace.
 
-### Data Management with NextGen Data Tool
+### Data Management with NextGen Data Tool or Salesforce CLI CSV
 
-Use the **NextGen Data Tool** for data deployments in brix.
+Use only the **NextGen Data Tool** or CSV files compatible with Salesforce CLI `sf data` commands for data deployments in brix. Do not use SFDMU by default.
 
 **Step 1: Configure Task in `cumulusci.yml`**
 
 ```yaml
 tasks:
     deploy_nextgen_data:
-        class_path: qbrix.tools.utils.qbrix_nextgen_datatool.RunDataTool
+        class_path: qx.data.qx_nextgen_datatool.RunDataTool
         options:
             data_keys:
                 - YOUR_DATA_VERSION_ID_HERE

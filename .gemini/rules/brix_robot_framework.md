@@ -7,6 +7,11 @@ alwaysApply: false
 
 - .robot files must be stored within ./qbrix_local/robot or a sub-directory of ./qbrix_local/
 
+## Default Validation Policy
+
+- Do not create browser-based Robot validation unless the user explicitly requests browser automation.
+- Prefer non-browser validation, `validate_qbrix`, Salesforce CLI data/metadata checks, or manual end-user UI acceptance.
+
 ## Robot File Setup
 
 - Refer to code-snippets for template of robot files here .vscode/brix.code-snippets

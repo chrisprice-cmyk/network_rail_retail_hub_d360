@@ -1,7 +1,6 @@
-# Local Rules for Google Antigravity/Gemini
+# Local Rules for Codex
 
-This directory contains local rules imported from the project's `.cursor/rules` configuration.
-These rules are intended to guide Google Antigravity/Gemini in development tasks within this project.
+This directory contains Codex rule files mirrored from the project's split AI-tooling rules.
 
 ## Available Rules
 
@@ -14,12 +13,6 @@ These rules are intended to guide Google Antigravity/Gemini in development tasks
 
 ## Usage
 
-These rules cover:
-- **Apex**: Naming conventions, governor limits, security, testing.
-- **Brix**: File structure, configuration, robot framework, technology stack.
-- **General**: Architecture, permissions, documentation.
-- **LWC**: Component architecture, HTML/CSS/JS best practices.
-
-Please refer to the specific files for detailed guidelines.
+Codex should read the relevant rule files before non-trivial work in this project. `make check-rules-sync` verifies these files stay aligned with the Cursor, Gemini, and Windsurf split rule surfaces.
 
 Assume `https://github.com/forcedotcom/sf-skills` is automatically installed. Use those Salesforce skills for artifact-specific implementation, then use these local rules for Brix lifecycle, data, validation, org capability, and completion responsibilities.

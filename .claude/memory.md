@@ -18,8 +18,28 @@ When updating any LLM/tooling rules, keep these directories **synchronized**:
 
 - Cursor: `.cursor/rules/*` and `.cursorrules`
 - Claude: `.claude/*` (notably `.claude/memory.md`)
+- Codex: `AGENTS.md` and `codex/rules/*`
 - Gemini: `.gemini/rules/*`
 - Windsurf: `.windsurf/rules/*`
+
+## Installed Salesforce Skills and Local Brix Responsibility
+
+Assume the Salesforce skills from `https://github.com/forcedotcom/sf-skills` are automatically installed.
+
+Use the installed Salesforce skills for artifact-specific implementation and review, including Apex, LWC, Flow, metadata, permissions, Agentforce, integrations, SOQL, testing, and deployment details.
+
+Use this repo's local Brix rules and bundled skills for template-specific responsibilities:
+
+- CumulusCI/QX lifecycle wiring
+- dependent brix and package sequencing
+- required inputs and secret-safe runtime values
+- data packaging and deployment
+- permission assignment in `post_qbrix_deploy`
+- non-browser validation assets and recommended `validate_qbrix` checks
+- org capability planning for scratch/CDO/SDO targets
+- solution-completion checks before handoff
+
+Do not duplicate generic Salesforce skill guidance in local Brix rules; route to the installed Salesforce skill and then package the result as a reusable Brix.
 
 ## Project Overview
 
@@ -30,7 +50,7 @@ This is a Salesforce QBrix (Brix) development project using CumulusCI for deploy
 - **Salesforce API Version**: Always use the API version from `cumulusci.yml` (current: 66.0)
 - **Framework**: CumulusCI and QX for deployment automation, Salesforce CLI for org connections
 - **Components**: Lightning Web Components (LWC), Aura, Wave Analytics
-- **Testing**: Jest (LWC unit tests), Playwright (E2E tests), Robot Framework (validation)
+- **Testing**: Jest (LWC unit tests), Salesforce CLI data/metadata checks, recommended `validate_qbrix`, and manual end-user UI acceptance by default
 - **Code Quality**: ESLint, Prettier, Husky (git hooks)
 
 ## CumulusCI Flow Placeholder Convention
@@ -64,6 +84,14 @@ You are a highly experienced and certified Salesforce Architect with 20+ years o
 - **Security by Design**: Build security into every layer
 - **Governed Growth**: Maintain org cleanliness and prevent technical debt
 - **Performance at Scale**: Always consider governor limits and optimization
+
+## Secrets and Sensitive Data
+
+- Never store real secrets in this project: API keys, OAuth tokens, session IDs, passwords, client secrets, private keys, non-public certificate material, auth URLs, frontdoor URLs, org credentials, or customer-sensitive data.
+- Redact sensitive values in examples, docs, generated files, logs, screenshots, and code comments with placeholders such as `<REDACTED_API_KEY>` or `<REDACTED_TOKEN>`.
+- If a secret-like value is found in a file, remove or redact it before finishing the task and tell the user that the real credential may need rotation.
+- Use ignored local files, environment variables, Salesforce Named Credentials, External Credentials, protected metadata, or deploy-time required inputs instead of committed secret values.
+- Do not put real credentials into `qbrix_local/inputs/*.json`, `cumulusci.yml`, source metadata, test fixtures, Robot files, Playwright artifacts, or documentation.
 
 ## Code Organization & Structure
 
@@ -516,7 +544,7 @@ In addition to CumulusCI tasks, we have custom extension tasks that extend Cumul
 | `display_project`          | Display current brix details in terminal at runtime.                                                                                               |
 | `dustpan`                  | Remove a file or glob pattern match from the brix stack.                                                                                           |
 | `experience_manager`       | Run additional setup tasks against an Experience Cloud site.                                                                                       |
-| `load_sfdmu`               | Run SFDMU data loads.                                                                                                                              |
+| `load_sfdmu`               | Legacy SFDMU data-load task. Do not use by default; prefer NextGen Data Tool or CSV files compatible with Salesforce CLI `sf data` commands.       |
 | `named_credential_import`  | Create a Named Credential in target Salesforce org from a definition.                                                                              |
 | `omniscript_align`         | Repair known issues with OmniScript LWC components. Must run before LWC deployment (prepare_org flow).                                             |
 | `orgconfig_hydrate`        | Add options to org_config object with information about connected Salesforce org. Used for when clauses in flow steps.                             |
@@ -640,13 +668,13 @@ Assign permissions in `post_qbrix_deploy` **before** data deployment:
 
 ### Data Management with NextGen Data Tool
 
-Use the **NextGen Data Tool** for data deployments in brix.
+Use only the **NextGen Data Tool** or CSV files compatible with Salesforce CLI `sf data` commands for data deployments in brix. Do not use SFDMU by default.
 
 **Configuration in `cumulusci.yml`:**
 ```yaml
 tasks:
     deploy_nextgen_data:
-        class_path: qbrix.tools.utils.qbrix_nextgen_datatool.RunDataTool
+        class_path: qx.data.qx_nextgen_datatool.RunDataTool
         options:
             data_keys:
                 - YOUR_DATA_VERSION_ID_HERE
@@ -679,8 +707,9 @@ deploy_qbrix_data:
 ### Testing
 
 - Unit tests for LWC components using Jest
-- E2E tests using Playwright
-- Robot Framework tests for validation
+- Salesforce CLI data/metadata checks where practical
+- `validate_qbrix` is recommended when an org is available, but may be skipped for demo solution builds
+- Manual end-user UI acceptance by default; do not add browser automation unless explicitly requested
 
 ## Salesforce Org Management
 

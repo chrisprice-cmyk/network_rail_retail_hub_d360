@@ -8,10 +8,11 @@ Detailed project rules live in **`.claude/memory.md`** — load that file before
 
 ### Rule sync is enforced
 
-The same ruleset is mirrored across four LLM tool surfaces. `make check-rules-sync` (part of `make precommit`) fails if any are missing or drift. When you change rules, update **all four**:
+The same ruleset is mirrored across five LLM tool surfaces. `make check-rules-sync` (part of `make precommit`) fails if any are missing or drift. When you change rules, update **all five**:
 
 - `.cursorrules` and `.cursor/rules/*.mdc`
 - `.claude/memory.md`
+- `AGENTS.md` and `codex/rules/*.md`
 - `.gemini/rules/*.md`
 - `.windsurf/rules/*.md`
 
@@ -20,6 +21,14 @@ Each file must contain an `LLM Rule Synchronization (Required)` section — the 
 ## Repository shape
 
 This is a **QBrix (Brix) template** — a Salesforce demo-org deployment package built on **CumulusCI + QX + Salesforce DX**. It is not production code; the target is CDO (Clean Demo Orgs) and scratch orgs, and the rules in `.claude/memory.md` explicitly relax FLS/sharing expectations accordingly.
+
+## Embedded skills and agents
+
+Claude skills live under `.claude/skills/`, with helper agents under `.claude/agents/`. They were reviewed from `se-ai-framework-soma` and trimmed to this template's scope: Salesforce solution creation, deployment, and testing for demo/PoC brix work.
+
+Use the embedded skills for brix-oriented build work instead of importing broader account-research, pitch, onboarding, or narrative-only workflows. The included skill set covers brix solution build routing, CumulusCI/QX lifecycle wiring, data packaging, validation authoring, org capability planning, Agentforce Brix packaging, solution-completion checks, Salesforce metadata and permissions follow-through, Experience Cloud LWR/branding, deploy/validation, UI verification, demo-prep automation, UX review, and diagnostics.
+
+Assume the Salesforce skills from `https://github.com/forcedotcom/sf-skills` are automatically installed. Use those installed Salesforce skills for artifact-specific work such as Apex, LWC, Flow, metadata, permissions, Agentforce, integration, and testing. Use this repo's bundled skills for Brix-specific packaging: CumulusCI/QX lifecycle wiring, data packaging, validation assets, org capability planning, Agentforce Brix packaging, and solution-completion checks.
 
 ### Config that must stay in sync
 
@@ -96,7 +105,7 @@ qx utils feature-search '<term>'     # find scratch-org features (including non-
 qx utils doctor                      # fix common metadata/config issues
 ```
 
-**Recommended QA→dev deployment loop**: deploy to a QA org first, run `validate_qbrix`, fix issues, then deploy to dev. Never test-deploy directly to dev.
+**Recommended QA→dev deployment loop**: deploy to a QA org first, run `validate_qbrix` when appropriate, fix issues, then deploy to dev. `validate_qbrix` can be skipped for demo solution builds when speed is more important. Never test-deploy directly to dev.
 
 ## What not to do
 

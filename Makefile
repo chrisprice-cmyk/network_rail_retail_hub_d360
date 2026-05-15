@@ -10,7 +10,7 @@ help:
 	"  make lockfiles              Regenerate lockfiles (currently: npm package-lock.json if package.json exists)" \
 	"  make check-lockfiles-clean  Fail if regenerated lockfiles are not staged (prevents committing without lockfile updates)" \
 	"  make check-tools            Verify required CLI tools are installed (sf, cci, qx)" \
-	"  make check-rules-sync       Verify LLM rule surfaces exist (Cursor/Claude/Gemini/Windsurf)" \
+	"  make check-rules-sync       Verify LLM rule surfaces exist (Cursor/Claude/Codex/Gemini/Windsurf)" \
 	"" \
 	"Node/npm (only runs if package.json exists):" \
 	"  make npm-lock               Update package-lock.json (does not install node_modules)" \
@@ -56,14 +56,14 @@ check-tools:
 
 check-rules-sync:
 	@# Ensure the expected project-level rule surfaces exist.
-	@for p in .cursorrules .cursor/rules .claude/memory.md .gemini/rules .windsurf/rules; do \
+	@for p in .cursorrules .cursor/rules .claude/memory.md AGENTS.md codex/rules .gemini/rules .windsurf/rules; do \
 		if [ ! -e "$$p" ]; then \
 			printf "%s\n" "ERROR: Expected rules path missing: $$p"; \
 			exit 2; \
 		fi; \
 	done
 	@# Ensure the repo-specific synchronization section exists where expected (keeps humans honest).
-	@for f in .cursorrules .cursor/rules/brixdevelopment.mdc .claude/memory.md .gemini/rules/brix_development.md .windsurf/rules/brixdevelopment.md; do \
+	@for f in .cursorrules .cursor/rules/brixdevelopment.mdc .claude/memory.md AGENTS.md codex/rules/brix_development.md .gemini/rules/brix_development.md .windsurf/rules/brixdevelopment.md; do \
 		if ! grep -q "LLM Rule Synchronization (Required)" "$$f"; then \
 			printf "%s\n" "ERROR: Missing 'LLM Rule Synchronization (Required)' section in $$f"; \
 			exit 2; \
@@ -80,7 +80,7 @@ check-rules-sync:
 		printf "%s\n" "ERROR: API version mismatch: cumulusci.yml=$$api_version sfdx-project.json=$$source_api_version"; \
 		exit 2; \
 	fi; \
-	for f in .cursorrules .claude/memory.md .cursor/rules/brixdevelopment.mdc .cursor/rules/brixtechnology.mdc .gemini/rules/brix_development.md .gemini/rules/brix_technology.md .windsurf/rules/brixdevelopment.md .windsurf/rules/brixtechnology.md; do \
+	for f in .cursorrules .claude/memory.md .cursor/rules/brixdevelopment.mdc .cursor/rules/brixtechnology.mdc codex/rules/brix_development.md codex/rules/brix_technology.md .gemini/rules/brix_development.md .gemini/rules/brix_technology.md .windsurf/rules/brixdevelopment.md .windsurf/rules/brixtechnology.md; do \
 		if ! grep -q "$$api_version" "$$f"; then \
 			printf "%s\n" "ERROR: Expected API version $$api_version in $$f"; \
 			exit 2; \
@@ -111,6 +111,12 @@ check-rules-sync:
 		normalize_rule ".gemini/rules/$$gemini.md" > "$$tmp_other"; \
 		if ! diff -q "$$tmp_cursor" "$$tmp_other" >/dev/null; then \
 			printf "%s\n" "ERROR: Rule drift between .cursor/rules/$$cursor.mdc and .gemini/rules/$$gemini.md"; \
+			rm -f "$$tmp_cursor" "$$tmp_other"; \
+			exit 2; \
+		fi; \
+		normalize_rule "codex/rules/$$gemini.md" > "$$tmp_other"; \
+		if ! diff -q "$$tmp_cursor" "$$tmp_other" >/dev/null; then \
+			printf "%s\n" "ERROR: Rule drift between .cursor/rules/$$cursor.mdc and codex/rules/$$gemini.md"; \
 			rm -f "$$tmp_cursor" "$$tmp_other"; \
 			exit 2; \
 		fi; \
