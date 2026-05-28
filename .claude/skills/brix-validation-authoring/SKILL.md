@@ -1,6 +1,6 @@
 ---
 name: brix-validation-authoring
-description: Turns Brix acceptance criteria into non-browser reusable validation assets such as `validate_qbrix` flow steps, local test commands, Salesforce CLI data checks, and metadata/data assertions. Use when a solution needs repeatable proof beyond one-off deploy success.
+description: Turns Brix acceptance criteria into non-browser reusable validation assets such as `validate_qbrix` flow steps, local test commands, Salesforce CLI data checks, and metadata/data assertions. Use when a solution needs repeatable proof beyond one-off deploy success. Also triggers on "add validate_qbrix step", "write a brix validation", "non-browser check for this brix", "prove the data loaded", "metadata/deploy assertion", "reusable check before handoff". Do NOT use for: writing one-off Apex/LWC tests (use installed sf-skills test skills such as generating-apex-test or running-apex-tests); browser-based UI verification or Playwright automation (out of scope by default — ask the user first); presenter reset/seed actions (use demo-prep); completion checklist (use brix-solution-completion).
 ---
 
 # Brix Validation Authoring

@@ -1,6 +1,6 @@
 ---
 name: experience-cloud-lwr
-description: Guides Enhanced/LWR Experience Cloud site work in a brix project, including DigitalExperienceBundle retrieval, route/view edits, page shell changes, static-resource references, deploy, publish, and validation. Use for Experience Cloud structure or runtime changes, not pure branding.
+description: Guides Enhanced/LWR Experience Cloud site work in a brix project, including DigitalExperienceBundle retrieval, route/view edits, page shell changes, static-resource references, deploy, publish, and validation. Use for Experience Cloud structure or runtime changes, not pure branding. Also triggers on "add a route to this site", "build an LWR page", "DigitalExperienceBundle retrieve", "publish the experience site", "spin up a new community shell for the brix". Do NOT use for: pure color/theme/branding-set edits (use experience-cloud-branding); Aura ExperienceBundle sites (out of scope unless user explicitly confirms); LWC component implementation inside the site (use installed sf-skills such as generating-lwc-components); branding-only refresh after a build (use experience-cloud-branding).
 ---
 
 # Experience Cloud LWR
@@ -30,6 +30,17 @@ Use `experience-cloud-branding` for pure visual branding or theme polish on an e
 7. Package reusable assets as static resources and keep provenance clear.
 8. Wire publish or refresh steps into `post_qbrix_deploy` with `community_publisher`, `experience_manager`, or another existing brix task when the site must be reusable after deploy.
 9. Use non-browser checks where practical, then ask the user to inspect the site and confirm they are happy with the result.
+
+## Output Format
+
+End with:
+
+- site name, API name, site type (Enhanced/LWR confirmed)
+- DigitalExperienceBundle members touched (routes, views, theme layout, navigation) with paths
+- static resources added or referenced and provenance note
+- deploy and publish wiring (`post_qbrix_deploy` step or recommended flow)
+- non-browser checks performed and what remains for manual user acceptance
+- next safe step for the user
 
 ## Guardrails
 

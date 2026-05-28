@@ -1,6 +1,6 @@
 ---
 name: salesforce-metadata
-description: Applies Brix-specific follow-through around Salesforce metadata work after installed Salesforce skills create or inspect artifacts. Use for source placement, app-shell bundling, permission/data/validation impacts, and CumulusCI/QX lifecycle implications for custom objects, fields, rules, record types, apps, tabs, FlexiPages, and related metadata.
+description: Applies Brix-specific follow-through around Salesforce metadata work after installed Salesforce skills create or inspect artifacts. Use for source placement, app-shell bundling, permission/data/validation impacts, and CumulusCI/QX lifecycle implications for custom objects, fields, rules, record types, apps, tabs, FlexiPages, and related metadata. Also triggers on "where does this metadata live in the brix", "bundle the app shell", "force-app/main/default placement", "unpackaged/pre vs post", "what else needs to change for this metadata to ship". Do NOT use for: net-new artifact authoring (use the matching installed sf-skill such as metadata-generator, generating-custom-object, generating-custom-field, flexipage-generator, or generating-validation-rule); access/permission grant authoring (use field-level-security); flow YAML wiring (use brix-cumulusci-qx-lifecycle).
 ---
 
 # Salesforce Metadata

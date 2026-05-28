@@ -1,6 +1,6 @@
 ---
 name: salesforce-ui-verification
-description: Prepares manual end-user UI acceptance for Brix changes and non-browser corroboration where useful. Use when a visible Lightning, Experience Cloud, or Agentforce path should be checked by the user rather than automated browser verification.
+description: Prepares manual end-user UI acceptance for Brix changes and non-browser corroboration where useful. Use when a visible Lightning, Experience Cloud, or Agentforce path should be checked by the user rather than automated browser verification. Also triggers on "ask the user to confirm the UI", "manual acceptance", "App Launcher path", "is the demo path actually working", "presenter ready check". Do NOT use for: Playwright/Robot browser automation (out of scope unless explicitly requested); deploy execution (use salesforce-deploy); reusable validation asset authoring (use brix-validation-authoring); root-cause diagnosis when the UI fails (use diagnostic-refresh).
 ---
 
 # Salesforce UI Verification

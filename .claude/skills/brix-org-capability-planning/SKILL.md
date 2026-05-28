@@ -1,6 +1,6 @@
 ---
 name: brix-org-capability-planning
-description: Plans Brix org capabilities before build or deploy, including scratch org features, CDO/SDO choice, package dependencies, permission set licenses, settings, target-org assumptions, and BlackTab/TSO readiness. Use when a solution needs org features, licenses, packages, or setup dependencies.
+description: Plans Brix org capabilities before build or deploy, including scratch org features, CDO/SDO choice, package dependencies, permission set licenses, settings, target-org assumptions, and BlackTab/TSO readiness. Use when a solution needs org features, licenses, packages, or setup dependencies. Also triggers on "what features do I need in the org", "update orgs/dev.json", "PSL licenses", "managed package dependency", "brix dependency", "BlackTab readiness", "TSO needs". Do NOT use for: provisioning a new org (use get-demo-org or org-builder); writing CumulusCI flow steps that consume the capabilities (use brix-cumulusci-qx-lifecycle).
 ---
 
 # Brix Org Capability Planning
@@ -25,6 +25,18 @@ description: Plans Brix org capabilities before build or deploy, including scrat
 4. Use `qx utils feature-search '<term>'` when feature names are uncertain.
 5. Put automatable setup in `prepare_org` or `source_dependencies`.
 6. Verify with a QA deploy before treating capability assumptions as stable.
+
+## Output Format
+
+End with:
+
+- required org capabilities (clouds, features, packages, dependent brix)
+- recommended dev/QA org type (CDO / SDO / scratch / explicit BYO)
+- changes made to `orgs/dev.json` (and `orgs/dev_preview.json` if applicable)
+- `cumulusci.yml` dependencies and `sources` updates
+- permission set licenses and user flags required
+- BlackTab / TSO readiness gaps the user must arrange manually
+- next safe step (typically a QA deploy) before treating capability assumptions as stable
 
 ## Guardrails
 

@@ -1,6 +1,6 @@
 ---
 name: brix-cumulusci-qx-lifecycle
-description: Authors and reviews CumulusCI/QX lifecycle wiring for Brix projects. Use when editing `cumulusci.yml`, adding pre-deploy/deploy/post-deploy steps, dependencies, `when` clauses, QX tasks, permission assignment, data flows, publish steps, or validation flows.
+description: Authors and reviews CumulusCI/QX lifecycle wiring for Brix projects. Use when editing `cumulusci.yml`, adding pre-deploy/deploy/post-deploy steps, dependencies, `when` clauses, QX tasks, permission assignment, data flows, publish steps, or validation flows. Also triggers on "wire this into deploy_qbrix", "add a post-deploy step", "guard with when:", "orgconfig_hydrate", "task: None", "deploy_qbrix_data", "validate_qbrix flow". Do NOT use for: one-off ad hoc deploy commands (use salesforce-deploy); data file authoring (use brix-data-packaging); validation asset content (use brix-validation-authoring).
 ---
 
 # Brix CumulusCI/QX Lifecycle
@@ -24,6 +24,18 @@ description: Authors and reviews CumulusCI/QX lifecycle wiring for Brix projects
 7. For Experience Cloud publish steps, place repeatable post-deploy work in `post_qbrix_deploy` and keep manual Builder/Admin gaps explicit.
 8. For Agentforce, deploy assets and document a manual activation checkpoint after the user is happy with the result; do not automate activation by default.
 9. Run `make check-rules-sync` after rule changes. Treat `cci flow run validate_qbrix --org <alias>` as recommended when an org is available, but skippable for demo solution builds.
+
+## Output Format
+
+End with:
+
+- flow/phase touched (`prepare_org`, `source_dependencies`, `deploy`, `post_qbrix_deploy`, `deploy_qbrix_data`, `validate_qbrix`)
+- specific YAML keys/steps added or changed in `cumulusci.yml`
+- `when:` guards added and confirmation that `orgconfig_hydrate` precedes them
+- API version impact (and matching `sfdx-project.json` change if applicable)
+- dependent brix sources added under `sources`
+- validation result if `cci flow run validate_qbrix` was run, or explicit skip note
+- next safe step for the user
 
 ## Guardrails
 

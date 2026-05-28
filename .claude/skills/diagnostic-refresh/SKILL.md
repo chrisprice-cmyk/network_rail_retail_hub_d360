@@ -1,6 +1,6 @@
 ---
 name: diagnostic-refresh
-description: Runs root-cause analysis and durable remediation for Salesforce brix bugs, failed CumulusCI/QX deploys, broken validation flows, Apex/LWC regressions, Experience Cloud publish issues, or org-specific deployment failures. Use when a simple fix failed or proof is required.
+description: Runs root-cause analysis and durable remediation for Salesforce brix bugs, failed CumulusCI/QX deploys, broken validation flows, Apex/LWC regressions, Experience Cloud publish issues, or org-specific deployment failures. Use when a simple fix failed or proof is required. Also triggers on "diagnose this brix failure", "validate_qbrix is broken", "find the root cause", "why did the post-deploy step fail", "this regressed after refresh", "deploy keeps retrying". Do NOT use for: first-pass artifact-level deploy failures (use sfdx-deploy-doctor or deploying-metadata first); writing one-off Apex/LWC tests (use installed sf-skills generating-apex-test or running-apex-tests); authoring reusable validation assets after the fix is in (use brix-validation-authoring); brand-new feature build (use brix-solution-build).
 ---
 
 # Diagnostic Refresh
@@ -23,6 +23,17 @@ description: Runs root-cause analysis and durable remediation for Salesforce bri
 4. Apply the smallest durable fix after the cause is confirmed.
 5. Re-run the failing path and one adjacent regression check.
 6. Report root cause, fix, evidence, and residual risk.
+
+## Output Format
+
+End with:
+
+- failing path isolated (deploy / dependency / permission / data / validation / publish / runtime)
+- root cause confirmed by evidence (which check proved it)
+- durable fix applied and where it lives in source (metadata / `cumulusci.yml` / inputs / validation asset)
+- re-run result on the failing path plus one adjacent regression check
+- residual risk and what remains unverified
+- next safe step (and whether to hand off to `brix-validation-authoring` to lock in proof)
 
 ## Guardrails
 

@@ -1,6 +1,6 @@
 ---
 name: experience-cloud-branding
-description: Guides metadata-backed Experience Cloud branding and theming in a brix project. Use when changing community/site colors, theme references, branding sets, asset references, or CSS/theme metadata that must deploy through Salesforce DX and CumulusCI.
+description: Guides metadata-backed Experience Cloud branding and theming in a brix project. Use when changing community/site colors, theme references, branding sets, asset references, or CSS/theme metadata that must deploy through Salesforce DX and CumulusCI. Also triggers on "rebrand this site", "update the community theme", "swap the branding set", "apply customer colors to the experience site", "publish branding refresh". Do NOT use for: routes/views/page-shell/runtime structure (use experience-cloud-lwr); net-new site provisioning beyond branding (use experience-cloud-lwr); generic Salesforce branding outside an Experience Cloud site; Builder-only changes that cannot be retrieved as source.
 ---
 
 # Experience Cloud Branding
@@ -26,6 +26,18 @@ Use `experience-cloud-lwr` instead for routes, views, page shell structure, runt
 6. Keep edits narrow and source-controlled. If Builder is the only safe source of truth, make or request one minimal Builder change, retrieve, and inspect the diff before automating more.
 7. Deploy through `deploy_qbrix` or a scoped validation path, then publish/refresh the site with the appropriate CumulusCI/QX task when required.
 8. Use non-browser checks where practical, then ask the user to inspect the site and confirm they are happy with the result. Note any Builder-side publish step that still needs manual confirmation.
+
+## Output Format
+
+End with:
+
+- target site, site type, and source-of-truth verdict (metadata-backed / Builder-only / mixed)
+- branding metadata files changed (theme, branding set, asset references, CSS) with paths
+- static resources added or updated
+- deploy command/flow run (or recommended) and target org
+- publish/refresh status and any manual Builder step still required
+- non-browser checks performed
+- user acceptance status (path to inspect + cues to confirm)
 
 ## Guardrails
 

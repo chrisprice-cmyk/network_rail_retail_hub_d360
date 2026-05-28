@@ -2,24 +2,37 @@
 # If you are not using git, you can delete this file. For more information see: https://git-scm.com/docs/gitignore
 # For useful gitignore templates see: https://github.com/github/gitignore
 
-# Demo Brix
+# =============================================================================
+# DEMO BRIX / Q-BRIX
+# =============================================================================
 .qbrix/
 .backup/
 
-#extensions
+# =============================================================================
+# EXTENSIONS
+# =============================================================================
 .extensions/
 
+# =============================================================================
 # VSCODE
+# Allow shared tasks, settings, snippets and MCP config; ignore personal/local.
+# =============================================================================
 .vscode/*
 !.vscode/tasks.json
 !.vscode/settings.json
 !.vscode/brix.code-snippets
 !.vscode/mcp.json
+# [ADDED] Per-user local setting overrides should never be committed.
+.vscode/settings.local.json
 .vscode-test
 *.code-workspace
 
-# JETBRAINS
+# =============================================================================
+# JETBRAINS (IntelliJ, IDEA, Illuminated Cloud, etc.)
+# =============================================================================
 .idea/
+# [ADDED] Illuminated Cloud 2 generates a separate directory too
+.illuminatedCloud2/
 .illuminatedCloud/
 IlluminatedCloud
 cmake-build-*/
@@ -35,18 +48,43 @@ target/
 **/tsconfig*.json
 !tsconfig.json
 **/graphql.config.yml
+# [ADDED] JetBrains shelf (local stash), shelf/, and workspace.xml are user-local
+.idea/workspace.xml
+.idea/shelf/
+# [ADDED] JetBrains httpClient environment with secrets
+.idea/httpRequests/http-client.private.env.json
 
-# JUPYTERNOTEBOOKS
+# =============================================================================
+# JUPYTER NOTEBOOKS
+# =============================================================================
 .ipynb_checkpoints
 */.ipynb_checkpoints/*
 profile_default/
 ipython_config.py
 
+# =============================================================================
+# MARIMO (reactive Python notebooks)
+# =============================================================================
+marimo/_static/
+marimo/_lsp/
+__marimo__/
+
+# =============================================================================
 # CUMULUSCI
+# .cci/ holds local project state (scratch org aliases, source tracking, etc.)
+# ~/.cumulusci/ holds global AES-encrypted keychains — already outside repo.
+# src/ is the legacy mdapi source directory used by some CCI project templates.
+# =============================================================================
 .cci/
 src/
+# [ADDED] CumulusCI robot/test result artefacts
+robot_results/
+# [ADDED] CumulusCI local dataset snapshots (generated, not source)
+datasets/generated/
 
-# SALESFORCE DX
+# =============================================================================
+# SALESFORCE DX  (sf CLI / sfdx)
+# =============================================================================
 .sfdx/
 .sf/
 .project
@@ -61,13 +99,48 @@ package/*
 **/__tests__/**
 coverage/
 .localdevserver/
+.localdev
 deploy-options.json
 apex-scripts/log
 force-app/main/default/profiles/
 force-app/main/default/appMenus/AppSwitcher.appMenu-meta.xml
 force-app/main/default/flexipages/LightningService_UtilityBar.flexipage-meta.xml
+# [ADDED] Salesforce Code Analyzer / Scanner results (generated output)
+sca-results.csv
+sfca_results.json
+# [ADDED] JWT / certificate private keys used for CI auth (NEVER commit)
+server.key
+*.key
+certs/
+# [ADDED] B2C Commerce / Commerce Cloud credentials file
+dw.json
+# [ADDED] sf CLI temp files
+.sf/tmp/
+# [ADDED] Manifest folder generated during retrieve/deploy workflows
+manifest/
 
+# =============================================================================
+# SENSITIVE CREDENTIALS & SECRETS  (belt-and-braces catch-all)
+# =============================================================================
+!qbrix/certs/
+*.pem
+!qbrix/certs/salesforce-ca-bundle.pem
+*.p12
+*.pfx
+*.cer
+*.crt
+.env
+.env.*
+.env.local
+.env.*.local
+secrets/
+sfdxAuthUrl.txt
+authFile.json
+connected-app.json
+
+# =============================================================================
 # PYTHON
+# =============================================================================
 __pycache__/
 __pypackages__/
 *.py[cod]
@@ -89,8 +162,19 @@ venv.bak/
 **/venv/
 .pytest_cache/
 .mypy_cache/
+.uv/
+uv.lock
+.ruff_cache/
+.poetry/
+poetry.lock
+.pdm.toml
+.pdm-python
+.hatch/
+.python-version
 
+# =============================================================================
 # MACOS
+# =============================================================================
 .DS_Store
 .AppleDouble
 .LSOverride
@@ -103,9 +187,10 @@ venv.bak/
 .com.apple.timemachine.donotpresent
 ._*
 *.DS_Store
-Thumbs.db
 
+# =============================================================================
 # WINDOWS
+# =============================================================================
 Thumbs.db
 Thumbs.db:encryptable
 ehthumbs.db
@@ -115,39 +200,41 @@ $RECYCLE.BIN/
 *.stackdump
 *.lnk
 
+# =============================================================================
 # LINUX
+# =============================================================================
 .Trash-*
 
-# OTHER CACHE
-logs
+# =============================================================================
+# LOGS, CACHES & BUILD ARTEFACTS
+# =============================================================================
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
-*.key
-bin/dataloader/dataloader.jar
-testim-headless.zip
 .eslintcache
 .stylelintcache
 hardis-report/
 node_modules/
 .npmrc
-package-lock.json
-!package-lock.json
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 *.tsbuildinfo
 *.tgz
 dist/
-out/
 lib/
 tmp/
 .codegenie/
+.pnpm-store/
+bun.lockb
+.turbo/
+.nx/cache/
+.nx/workspace-data/
 
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# ROBOT FRAMEWORK
+# =============================================================================
+# ROBOT FRAMEWORK / PLAYWRIGHT / E2E TESTS
+# =============================================================================
 browser/
 playwright-log.txt
 log.html
@@ -159,36 +246,63 @@ validationresult.json
 /playwright-report/
 /playwright/.cache/
 *.pyc
-.idea/*
+playwright/.auth/
+**/.auth/
 
-#Quasar
+# =============================================================================
+# QUASAR
+# =============================================================================
 QUASAR_LEAF_SHAKE
 
-# dotenv config
-.env
+# =============================================================================
+# CURSOR (AI code editor)
+# .cursorignore and .cursorindexingignore control what Cursor indexes — these
+# are personal preferences and should NOT be committed.
+# Ref: https://docs.cursor.com/context/ignore-files
+# =============================================================================
+.cursorignore
+.cursorindexingignore
+.cursor/mcp.json
 
-# b2c configuration
-dw.json
+# =============================================================================
+# CLAUDE (Anthropic Claude Code)
+# .claude/settings.json  → COMMIT  (shared team config, MCP servers, permissions)
+# .claude/settings.local.json → IGNORE (personal allow/deny overrides)
+# CLAUDE.md              → COMMIT  (shared project instructions)
+# =============================================================================
+.claude/settings.local.json
+.claude/todos/
 
-#others
-.env
+# =============================================================================
+# CODEX (OpenAI Codex CLI)
+# .codex/config.toml     → COMMIT  (shared project config)
+# .codex/config.local.toml → IGNORE (personal overrides)
+# AGENTS.md              → COMMIT  (shared agent instructions)
+# AGENTS.override.md     → IGNORE  (personal instruction overrides)
+# Ref: https://developers.openai.com/codex/config-advanced
+# =============================================================================
+.codex/config.local.toml
+AGENTS.override.md
+.codex/history/
+.codex/logs/
 
+# =============================================================================
+# MISC TOOL FILES
+# =============================================================================
+bin/dataloader/dataloader.jar
+testim-headless.zip
+dataloader-encrypted-password.txt
+.cache/
+hardis-report/
+.sfdx-hardis.yml
 
-#plugins
+# =============================================================================
+# PLUGINS & EXTENSIONS (local installs)
+# =============================================================================
 .plugins
 *.vsix
 
-# Cursor
-#  Cursor is an AI-powered code editor. `.cursorignore` specifies files/directories to
-#  exclude from AI features like autocomplete and code analysis. Recommended for sensitive data
-#  refer to https://docs.cursor.com/context/ignore-files
-.cursorignore
-.cursorindexingignore
-
-# Marimo
-marimo/_static/
-marimo/_lsp/
-__marimo__/
-
-# Claude
-.claude/settings.local.json
+# =============================================================================
+# COMPILED / GENERATED OUTPUT
+# =============================================================================
+out/

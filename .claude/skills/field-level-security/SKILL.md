@@ -1,6 +1,6 @@
 ---
 name: field-level-security
-description: Applies Brix-specific access follow-through after installed Salesforce permission skills define grants. Use for permission-set source placement, object/field/tab/app visibility, permission set licenses, permission set groups, and CumulusCI post-deploy assignment for brix features.
+description: Applies Brix-specific access follow-through after installed Salesforce permission skills define grants. Use for permission-set source placement, object/field/tab/app visibility, permission set licenses, permission set groups, and CumulusCI post-deploy assignment for brix features. Also triggers on "assign this permset post-deploy", "make sure the demo user can see X", "wire permission set assignment into post_qbrix_deploy", "tab/app visibility for the presenter", "permission set group for this brix", "field is hidden — fix access". Do NOT use for: net-new permission set authoring (use installed sf-skill generating-permission-set); profile changes (template ignores retrieved profiles by default); schema/object/field design (use metadata-generator); broad org sharing model design.
 ---
 
 # Field Level Security
@@ -23,6 +23,18 @@ description: Applies Brix-specific access follow-through after installed Salesfo
    - `applicationVisibilities`
 6. Ensure `post_qbrix_deploy` assigns the permission sets, permission set licenses, or permission set groups needed for the demo/PoC user.
 7. Report changed access metadata, deployment assignment impact, and verification needed.
+
+## Output Format
+
+End with:
+
+- access metadata changed (permission sets, permission set groups, PSLs) with paths
+- coverage matrix per surface (object, field, tab, app, class/flow, custom permission)
+- `post_qbrix_deploy` assignment step wired (task name + target user/permission set)
+- demo user and permission context (which user the presenter logs in as, what they can now reach)
+- verification needed and handoff (e.g., `salesforce-ui-verification` for visible UI access, `salesforce-deploy` for assignment proof)
+- residual gaps (anything left manual or unverified)
+- next safe step for the user
 
 ## Guardrails
 

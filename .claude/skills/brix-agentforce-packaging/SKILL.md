@@ -1,6 +1,6 @@
 ---
 name: brix-agentforce-packaging
-description: Packages Agentforce agents, topics/actions, Prompt Builder assets, permissions, org capability assumptions, manual activation checkpoints, and validation into a reusable Brix after installed Agentforce skills define or build the agent artifacts. Use when Agentforce is part of a demo/PoC solution stored in this repo.
+description: Packages Agentforce agents, topics/actions, Prompt Builder assets, permissions, org capability assumptions, manual activation checkpoints, and validation into a reusable Brix after installed Agentforce skills define or build the agent artifacts. Use when Agentforce is part of a demo/PoC solution stored in this repo. Also triggers on "package the agent as a brix", "wire the agent into deploy_qbrix", "agent permissions and activation", "make the agent reusable across orgs". Do NOT use for: agent design, .agent file authoring, topics/actions definition, or prompt template authoring (use installed Agentforce skills such as developing-agentforce); test spec authoring (use testing-agentforce).
 ---
 
 # Brix Agentforce Packaging
@@ -19,6 +19,18 @@ description: Packages Agentforce agents, topics/actions, Prompt Builder assets, 
 4. Validate deployable assets technically where practical.
 5. Add reusable validation through `brix-validation-authoring` when the agent behavior must survive template reuse.
 6. End with what is packaged, what must be manually activated, and what target org capabilities are required.
+
+## Output Format
+
+End with:
+
+- packaged metadata (paths under `force-app/main/default/` and any `unpackaged/*` placement)
+- required inputs added (`qbrix_local/inputs/*.json`) and what each substitutes
+- target org capabilities and licenses (handoff to `brix-org-capability-planning`)
+- permission set assignment wired into `post_qbrix_deploy`
+- manual activation checkpoint for the user
+- validation assets added or deferred (handoff to `brix-validation-authoring`)
+- next safe step for the user
 
 ## Guardrails
 

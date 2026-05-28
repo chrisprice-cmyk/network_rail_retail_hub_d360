@@ -1,6 +1,6 @@
 ---
 name: salesforce-deploy
-description: Validates and deploys Salesforce brix changes with CumulusCI/QX lifecycle discipline after installed Salesforce deploy skills handle artifact-level concerns. Use for deploy planning, validate_qbrix, pre/deploy/post-deploy sequencing, publish/data/permission follow-through, and post-deploy proof.
+description: Validates and deploys Salesforce brix changes with CumulusCI/QX lifecycle discipline after installed Salesforce deploy skills handle artifact-level concerns. Use for deploy planning, validate_qbrix, pre/deploy/post-deploy sequencing, publish/data/permission follow-through, and post-deploy proof. Also triggers on "deploy this brix", "run deploy_qbrix", "validate_qbrix", "qx deploy", "post-deploy verification", "deploy to QA org first". Do NOT use for: ad hoc one-off `sf project deploy start` not packaged through CumulusCI/QX (use deploying-metadata or sfdx-deploy-doctor); diagnosing a failed deploy after retries (use diagnostic-refresh); CumulusCI YAML authoring without a deploy in scope (use brix-cumulusci-qx-lifecycle); manual UI acceptance check authoring (use salesforce-ui-verification).
 ---
 
 # Salesforce Deploy

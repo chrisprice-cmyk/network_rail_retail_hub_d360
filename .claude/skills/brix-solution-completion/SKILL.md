@@ -1,6 +1,6 @@
 ---
 name: brix-solution-completion
-description: Checks whether a Salesforce demo/PoC solution is actually complete as a reusable Brix. Use before handoff, PR, commit, or demo readiness to verify source, lifecycle wiring, permissions, data, recommended validation, deploy proof, org assumptions, manual UI acceptance, and secret hygiene.
+description: Checks whether a Salesforce demo/PoC solution is actually complete as a reusable Brix. Use before handoff, PR, commit, or demo readiness to verify source, lifecycle wiring, permissions, data, recommended validation, deploy proof, org assumptions, manual UI acceptance, and secret hygiene. Also triggers on "is this brix done", "completion check", "ready for handoff", "ready for demo", "PR ready", "demo readiness review". Do NOT use for: pre-completion build orchestration (use brix-solution-build); fixing failed builds or durable bug remediation (use diagnostic-refresh); authoring new validation assets (use brix-validation-authoring).
 ---
 
 # Brix Solution Completion

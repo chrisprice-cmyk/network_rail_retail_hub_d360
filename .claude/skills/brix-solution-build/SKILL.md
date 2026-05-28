@@ -1,6 +1,6 @@
 ---
 name: brix-solution-build
-description: Orchestrates Salesforce demo/PoC solution creation inside a Brix template using installed Salesforce skills for artifact implementation and local Brix skills for CumulusCI/QX lifecycle, data, validation, org capability, and completion packaging. Use when building or modifying custom apps, tabs, LWC, Apex, Flow, Agentforce, metadata, Experience Cloud assets, demo data, validation assets, or pre/deploy/post-deploy automation.
+description: Orchestrates Salesforce demo/PoC solution creation inside a Brix template using installed Salesforce skills for artifact implementation and local Brix skills for CumulusCI/QX lifecycle, data, validation, org capability, and completion packaging. Use when building or modifying a multi-artifact brix solution that spans several of: custom apps, tabs, LWC, Apex, Flow, Agentforce, metadata, Experience Cloud assets, validation assets, or pre/deploy/post-deploy automation. Also triggers on "build this solution as a brix", "wire up the whole feature", "end-to-end brix change", "stand up the demo in this template". Do NOT use for: single-artifact authoring (use the matching installed sf-skill plus the relevant child brix skill); presenter reset/seed/stream demo data and presenter utility actions (use demo-prep); pure lifecycle YAML edits (use brix-cumulusci-qx-lifecycle); pure data work (use brix-data-packaging).
 ---
 
 # Brix Solution Build
@@ -36,6 +36,20 @@ description: Orchestrates Salesforce demo/PoC solution creation inside a Brix te
 7. Add permission sets and post-deploy assignment steps for new user-facing features.
 8. Validate incrementally with the smallest useful non-browser checks. Run `validate_qbrix` when an org is available and the work is not a demo-only solution build; otherwise report that it was skipped.
 9. End by running the `brix-solution-completion` checklist or explicitly reporting which completion gates remain open.
+
+## Output Format
+
+End with:
+
+- artifacts touched (`force-app/main/default/`, `unpackaged/{pre,post}/`, `qbrix_local/inputs/`, `cumulusci.yml`)
+- installed sf-skills used per artifact, with what each produced
+- local Brix skills handed off to and what each was responsible for
+- lifecycle phase wiring summary (`prepare_org` / `source_dependencies` / `deploy` / `post_qbrix_deploy` / `deploy_qbrix_data`)
+- API version alignment confirmation
+- permission/access path for the demo-critical launch surface
+- validation status (`validate_qbrix` result or explicit skip)
+- which `brix-solution-completion` gates pass and which remain open
+- next safe step for the user
 
 ## Guardrails
 

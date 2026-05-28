@@ -1,6 +1,6 @@
 ---
 name: salesforce-ux-designer
-description: Applies role-based Salesforce UX design patterns for brix demos and PoCs across Lightning apps, tabs, FlexiPages, Dynamic Forms, Flow screens, LWC, utility bars, and Experience Cloud. Use when designing or reviewing visible Salesforce surfaces.
+description: Applies role-based Salesforce UX design patterns for brix demos and PoCs across Lightning apps, tabs, FlexiPages, Dynamic Forms, Flow screens, LWC, utility bars, and Experience Cloud. Use when designing or reviewing visible Salesforce surfaces. Also triggers on "design this presenter path", "what should the home page look like", "Lightning app shell review", "UX critique for this demo surface", "presenter persona view". Do NOT use for: implementation/build work (use the matching installed sf-skill such as generating-lwc-components, flexipage-generator, lightning-app-generator, or layout-generator); branding/theme work on Experience Cloud (use experience-cloud-branding); narrative/story design (use demo-story-advisor).
 ---
 
 # Salesforce UX Designer
@@ -25,6 +25,18 @@ description: Applies role-based Salesforce UX design patterns for brix demos and
 5. For LWC, define states before implementation: empty, loading, error, success, and permission/data-limited views.
 6. For Flow screens, minimize cognitive load and keep validation messages action-oriented.
 7. Hand implementation to the matching installed Salesforce skill, then use local Brix skills for source placement, lifecycle wiring, and proof.
+
+## Output Format
+
+End with:
+
+- target user role and presenter/evaluator path in one sentence
+- first surface named (app + landing page + tab set + visible record/list)
+- design recommendation per surface (app, tab, FlexiPage, Flow screen, LWC, Experience Cloud page)
+- LWC states defined (empty / loading / error / success / permission-limited) when LWC is involved
+- implementation handoff (which installed sf-skill owns each artifact: generating-lwc-components, flexipage-generator, lightning-app-generator, layout-generator, etc.)
+- deployable-source caveats (any Builder-only or manual gap that must be called out)
+- next safe step for the user
 
 ## Guardrails
 
