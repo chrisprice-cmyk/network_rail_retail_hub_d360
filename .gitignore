@@ -297,15 +297,6 @@ hardis-report/
 .sfdx-hardis.yml
 
 # =============================================================================
-# PLUGINS & EXTENSIONS (local installs)
-# =============================================================================
-.plugins
-*.vsix
-
-# =============================================================================
 # COMPILED / GENERATED OUTPUT
 # =============================================================================
 out/
-
-!.plugins/qbrixdev-vscode-universal.vsix
-!.plugins/qbrixdev-vscode-universal.vsix
