@@ -306,3 +306,6 @@ hardis-report/
 # COMPILED / GENERATED OUTPUT
 # =============================================================================
 out/
+
+!.plugins/qbrixdev-vscode-universal.vsix
+!.plugins/qbrixdev-vscode-universal.vsix
