@@ -26,7 +26,7 @@ This is a **QBrix (Brix) template** — a Salesforce demo-org deployment package
 
 Claude skills live under `.claude/skills/`, with helper agents under `.claude/agents/`. They were reviewed from `se-ai-framework-soma` and trimmed to this template's scope: Salesforce solution creation, deployment, and testing for demo/PoC brix work.
 
-Use the embedded skills for brix-oriented build work instead of importing broader account-research, pitch, onboarding, or narrative-only workflows. The included skill set covers brix solution build routing, CumulusCI/QX lifecycle wiring, data packaging, validation authoring, org capability planning, Agentforce Brix packaging, solution-completion checks, Salesforce metadata and permissions follow-through, Experience Cloud LWR/branding, deploy/validation, UI verification, demo-prep automation, UX review, and diagnostics.
+Use the embedded skills for brix-oriented build work instead of importing broader account-research, pitch, onboarding, or narrative-only workflows. The included skill set covers brix solution build routing, CumulusCI/QX lifecycle wiring, data packaging, validation authoring, org capability planning, Agentforce Brix packaging, solution-completion checks, Salesforce metadata and permissions follow-through, Experience Cloud LWR/branding, deploy/validation, UI verification, demo-prep automation, and diagnostics. UX-direction review is handled by the `ui-designer` helper agent under `.claude/agents/`, not by an embedded skill.
 
 Assume the Salesforce skills from `https://github.com/forcedotcom/sf-skills` are automatically installed. Use those installed Salesforce skills for artifact-specific work such as Apex, LWC, Flow, metadata, permissions, Agentforce, integration, and testing. Use this repo's bundled skills for Brix-specific packaging: CumulusCI/QX lifecycle wiring, data packaging, validation assets, org capability planning, Agentforce Brix packaging, and solution-completion checks.
 
@@ -42,7 +42,7 @@ The entry point is the `deploy_qbrix` flow, which runs three stages in order:
 
 1. **`prepare_org`** — `orgconfig_hydrate` → `deploy_settings` → `update_dependencies`
 2. **`source_dependencies`** — installs dependent brix (guarded by `when: not org_config.is_qbrix_installed(...)`)
-3. **`deploy`** → **`post_qbrix_deploy`** — deploys `force-app/main/default`, then assigns permissions and runs `deploy_qbrix_data`
+3. **`deploy`** → **`post_qbrix_deploy`** — deploys `force-app/main/default`, then runs post-deploy work. In this template `post_qbrix_deploy` is a `task: None` placeholder and `deploy_qbrix_data` is wired to the `deploy_nextgen_data` placeholder; fill them in as the brix grows.
 
 `orgconfig_hydrate` **must** appear before any step that uses a `when:` clause in the same flow — `when:` methods live on `org_config` and are populated by that task. See `.claude/memory.md` for the full list of supported `when:` methods.
 
@@ -74,7 +74,7 @@ Single Playwright test: `npx playwright test path/to/spec.ts -g "<name>"`.
 ### Precommit / tooling checks
 
 ```bash
-make precommit           # lockfiles + check-tools + check-rules-sync + npm-lint + npm-test
+make precommit           # lockfiles + check-lockfiles-clean + check-tools + check-rules-sync + npm-lint + npm-test
 make check-tools         # verifies sf, cci, qx are installed
 make check-rules-sync    # fails if LLM rule files are missing or drifted
 make lockfiles           # regenerate package-lock.json
@@ -111,6 +111,6 @@ qx utils doctor                      # fix common metadata/config issues
 
 - Do not use `@future` in Apex — use Queueable + `System.Finalizer` (per `.claude/memory.md`).
 - Do not add SOQL/DML inside loops; bulkify everything.
-- Do not hand-edit one LLM rule file without syncing the other three — CI will fail.
-- Do not bump `cumulusci.yml` api_version without also bumping `sfdx-project.json` `sourceApiVersion`.
+- Do not hand-edit one LLM rule file without syncing the others — CI (`check-rules-sync`) will fail.
+- Do not bump `cumulusci.yml` api_version without also updating `sfdx-project.json` `sourceApiVersion` **and** the version string inside every rule file — `check-rules-sync` greps each rule file for the literal API version.
 - `task: None` is a **valid** placeholder in CumulusCI flows — do not "fix" it.

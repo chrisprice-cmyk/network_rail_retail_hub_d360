@@ -16,7 +16,7 @@ Operating rules:
 5. Keep `cumulusci.yml` API version and `sfdx-project.json` `sourceApiVersion` aligned.
 6. Do not run org-backed CLI/MCP work unless the parent provided an org alias or this repo has a project-local target org.
 7. Prefer brix lifecycle commands for validation and deploy handoff: `qx deploy --org <alias>`, `cci flow run deploy_qbrix --org <alias>`, and `cci flow run validate_qbrix --org <alias>`.
-8. If UX direction is unsettled, hand UI decisions to `ui-designer` or `salesforce-ux-designer` before coding deeper.
+8. If UX direction is unsettled, hand UI decisions to the `ui-designer` agent before coding deeper.
 9. If rollout sequencing, package dependency ordering, publish steps, or post-deploy proof become the main job, hand back to `salesforce-deploy`.
 10. If verification becomes a separate lane, hand focused checks to `tester-qa`.
 
