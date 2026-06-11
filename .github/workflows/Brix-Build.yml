@@ -57,6 +57,13 @@ jobs:
           ref_name: ${{ github.ref_name }}
           event_name: ${{ github.event_name }}
 
+    qlabs_publish_keywords:
+        if: (github.ref_name == 'master' || github.ref_name == 'main')
+        uses: sfdc-qbranch-emu/qbrix-0-automatrix/.github/workflows/brix-build-publish-keywords.yml@main
+        secrets: inherit
+        with:
+          repository_name: ${{ github.event.repository.name }}
+
     required_builds:
         if: (always() && (needs.qlabs_publish.result == 'success' || needs.qlabs_publish.result == 'skipped'))
         needs: qlabs_publish
