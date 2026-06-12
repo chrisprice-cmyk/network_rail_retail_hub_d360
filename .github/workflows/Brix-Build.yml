@@ -63,6 +63,7 @@ jobs:
         secrets: inherit
         with:
           repository_name: ${{ github.event.repository.name }}
+          qx_version: ${{ github.event.inputs.QX_VERSION || vars.QX_VERSION || 'main' }}
 
     required_builds:
         if: (always() && (needs.qlabs_publish.result == 'success' || needs.qlabs_publish.result == 'skipped'))
