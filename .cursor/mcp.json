@@ -5,7 +5,7 @@
             "command": "npx",
             "args": [
                 "-y",
-                "@sfdc-qbranch-emu/mcp-brix@1.1.8"
+                "@sfdc-qbranch-emu/mcp-brix@1.1.11"
             ],
             "env": {
                 "QBRIX_CORE_ENDPOINT": "https://brix-core-agentforce-524980201703.herokuapp.com",
@@ -40,12 +40,6 @@
                 "git+https://github.com/sfdc-qbranch-emu/qx_mcp@main",
                 "qx-mcp"
             ]
-        },
-        "brix-mcp-from-docker": {
-            "url": "https://api.salesforce.com/sse"
-        },
-        "brix-mcp-from-local": {
-            "url": "http://localhost:7200/sse"
         }
     }
 }
