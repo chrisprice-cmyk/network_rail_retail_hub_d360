@@ -1,11 +1,11 @@
 {
     "mcpServers": {
-        "brix": {
+        "brix-mcp": {
             "type": "stdio",
             "command": "npx",
             "args": [
                 "-y",
-                "@sfdc-qbranch-emu/mcp-brix@1.1.11"
+                "@sfdc-qbranch-emu/mcp-brix@1.1.12"
             ],
             "env": {
                 "QBRIX_CORE_ENDPOINT": "https://brix-core-agentforce-524980201703.herokuapp.com",
