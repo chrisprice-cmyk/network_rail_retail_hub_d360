@@ -15,4 +15,4 @@ echo "@sfdc-qbranch-emu:registry=https://npm.pkg.github.com" >> ~/.npmrc && \
 echo "//npm.pkg.github.com/:_authToken=${TOKEN}" >> ~/.npmrc && \
 echo "✓ ~/.npmrc configured for @sfdc-qbranch-emu"
 
-npx @sfdc-qbranch-emu/mcp-brix --install-skills -y
+npx -y @sfdc-qbranch-emu/mcp-brix --install-skills
