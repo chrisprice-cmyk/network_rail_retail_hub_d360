@@ -6,11 +6,11 @@
     <dataConnector>SalesforceDotCom_Home</dataConnector>
     <dataConnectorType>SalesforceDotCom</dataConnectorType>
     <dataExtractMethods>FULL_REFRESH</dataExtractMethods>
-    <dataPlatformDataSetItemName>RetailUnit__c</dataPlatformDataSetItemName>
+    <dataPlatformDataSetItemName>SFDC</dataPlatformDataSetItemName>
     <dataSource>Salesforce_Home</dataSource>
     <isLimitedToNewFiles>false</isLimitedToNewFiles>
     <isMissingFileFailure>false</isMissingFileFailure>
-    <masterLabel>RetailUnit_Home</masterLabel>
-    <mktDataLakeObject>RetailUnit_Home__dll</mktDataLakeObject>
-    <mktDataTranObject>RetailUnit_Home</mktDataTranObject>
+    <masterLabel>ComplianceCheck__c_Home</masterLabel>
+    <mktDataLakeObject>ComplianceCheck_c_Home__dll</mktDataLakeObject>
+    <mktDataTranObject>ComplianceCheck_c_Home</mktDataTranObject>
 </DataStreamDefinition>

@@ -6,11 +6,11 @@
     <dataConnector>SalesforceDotCom_Home</dataConnector>
     <dataConnectorType>SalesforceDotCom</dataConnectorType>
     <dataExtractMethods>FULL_REFRESH</dataExtractMethods>
-    <dataPlatformDataSetItemName>FootfallRecord__c</dataPlatformDataSetItemName>
+    <dataPlatformDataSetItemName>SFDC</dataPlatformDataSetItemName>
     <dataSource>Salesforce_Home</dataSource>
     <isLimitedToNewFiles>false</isLimitedToNewFiles>
     <isMissingFileFailure>false</isMissingFileFailure>
-    <masterLabel>FootfallRecord_Home</masterLabel>
-    <mktDataLakeObject>FootfallRecord_Home__dll</mktDataLakeObject>
-    <mktDataTranObject>FootfallRecord_Home</mktDataTranObject>
+    <masterLabel>FootfallRecord__c_Home</masterLabel>
+    <mktDataLakeObject>FootfallRecord_c_Home__dll</mktDataLakeObject>
+    <mktDataTranObject>FootfallRecord_c_Home</mktDataTranObject>
 </DataStreamDefinition>

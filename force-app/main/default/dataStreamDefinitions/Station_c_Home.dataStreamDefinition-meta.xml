@@ -6,11 +6,11 @@
     <dataConnector>SalesforceDotCom_Home</dataConnector>
     <dataConnectorType>SalesforceDotCom</dataConnectorType>
     <dataExtractMethods>FULL_REFRESH</dataExtractMethods>
-    <dataPlatformDataSetItemName>Station__c</dataPlatformDataSetItemName>
+    <dataPlatformDataSetItemName>SFDC</dataPlatformDataSetItemName>
     <dataSource>Salesforce_Home</dataSource>
     <isLimitedToNewFiles>false</isLimitedToNewFiles>
     <isMissingFileFailure>false</isMissingFileFailure>
-    <masterLabel>Station_Home</masterLabel>
-    <mktDataLakeObject>Station_Home__dll</mktDataLakeObject>
-    <mktDataTranObject>Station_Home</mktDataTranObject>
+    <masterLabel>Station__c_Home</masterLabel>
+    <mktDataLakeObject>Station_c_Home__dll</mktDataLakeObject>
+    <mktDataTranObject>Station_c_Home</mktDataTranObject>
 </DataStreamDefinition>
