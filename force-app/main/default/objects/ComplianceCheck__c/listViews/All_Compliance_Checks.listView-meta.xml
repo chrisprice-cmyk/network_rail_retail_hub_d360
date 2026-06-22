@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>All_Compliance_Checks</fullName>
+    <filterScope>Everything</filterScope>
+    <label>All Compliance Checks</label>
+    <columns>NAME</columns>
+    <columns>Station__c</columns>
+    <columns>CheckType__c</columns>
+    <columns>Status__c</columns>
+    <columns>Score__c</columns>
+    <columns>NextDueDate__c</columns>
+    <columns>OutstandingActions__c</columns>
+    <sharedTo>
+        <allInternalUsers/>
+    </sharedTo>
+</ListView>
