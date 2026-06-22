@@ -1,4 +1,68 @@
-# AGENTS.md
+# AGENTS.md — network_rail_retail_hub_d360
+
+## Project context
+
+**Customer:** Network Rail — Commercial Property / Retail Hub  
+**Unique ref:** retail_hub_d360  
+**Template:** Live xDO clone from sfdc-qbranch-emu/xDO-Template  
+**Demo date:** 15 July 2026, Waterloo (2 hours — show & tell + requirements/Q&A)
+
+## What this brix is
+
+A Tableau Next (embedded analytics) demo powered by Data Cloud (D360) for Network Rail's Retail Hub team. Shows a unified station compliance and commercial dashboard across NR's 19 managed stations, with a view to scaling to ~200 under GBR.
+
+**Agentforce demo (policy search, retailer onboarding, web-to-case) is owned by Richard Steer — NOT in scope here.** This brix covers the Data Cloud → Tableau Next analytics layer only.
+
+## Key stakeholders
+
+- **Vince** — NR Commercial Property lead (exec sponsor)
+- **Kieran** — Retail Hub Product Owner (day-to-day contact)
+- **Ashleigh Jordan** — Salesforce AE (ashleigh.jordan@salesforce.com)
+- **Neil Hutchinson** — SE lead on analytics (nhutchinson@salesforce.com)
+- **Richard Steer** — SE on Agentforce (rsteer@salesforce.com)
+- **Chris Price** — SE assigned to Tableau Next / D360 analytics piece
+
+## Demo story
+
+NR already has Retail Hub built on Salesforce and Data Cloud licensed. The demo shows:
+1. Data Cloud unifying Retail Hub Salesforce data + footfall data into a single station profile
+2. Tableau Next dashboard — Statutory Compliance pillar as lead (Pillar 1), Revenue/Commercial secondary
+3. Station-level slicing by: Station Type (Cat A/B/C), Geographic Region, Risk Profile
+
+## Pillars in scope
+
+**Primary — Statutory Compliance**
+- Overall Station Compliance Score (%)
+- EICR Validity Rate
+- Fire Risk Assessment Status (days to next / outstanding actions)
+- Fire Alarm & Sprinkler Testing Compliance Rate
+- COSHH Risk Assessment Completion Rate
+- Cleaning Standard Pass Rate
+
+**Secondary — Revenue & Commercial**
+- Revenue per Square Foot
+- Retail Unit Vacancy Rate (%)
+- Footfall-to-Revenue Conversion Rate
+- Lease Renewal Conversion Rate
+
+## Data model (synthetic)
+
+- `Station__c` — profile (name, type Cat A/B/C, region, managed_by)
+- `ComplianceCheck__c` — inspection records (station lookup, type, status, due date, score)
+- `RetailUnit__c` — commercial units (sqft, tenant, lease expiry, revenue)
+- `FootfallRecord__c` — daily/weekly footfall counts per station
+
+These feed Data Cloud DMOs for unified analytics.
+
+## Known constraints
+
+- PSS removed from NR shelfware — compliance tracking uses custom objects, not PSS module
+- Org access TBC — may be NR sandbox (D360 already licensed) or SDO with D360 enabled
+- Tableau Next vs CRM Analytics to confirm against what's licensed in target org
+- Synthetic data required until NR sandbox access confirmed
+- Microsoft Copilot competitor thread (HSSE) is separate — not relevant to this analytics brix
+
+---
 
 This file provides guidance to Codex when working with code in this repository.
 

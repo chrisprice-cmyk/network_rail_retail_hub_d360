@@ -1,35 +1,42 @@
-# Demo Brix Template (xDO-Template)
+# Network Rail Retail Hub — Tableau Next + Data Cloud Demo
 
-This repository is a **template** for Brix (QBrix) projects using **Salesforce DX + CumulusCI/QX**, designed to work cleanly in **VSCode**, **Cursor**, and with multiple LLM assistants.
+Salesforce demo project for Network Rail's Commercial Property / Retail Hub team.
 
-## Getting Started
+**Demo date:** 15 July 2026, Waterloo  
+**Owner:** Chris Price (chrisprice@salesforce.com)  
+**Team:** Neil Hutchinson, Richard Steer, Ashleigh Jordan
 
-- **Primary project config**: `cumulusci.yml`
-- **Salesforce API version (source of truth)**: `cumulusci.yml > project > package > api_version` (and must match `sfdx-project.json > sourceApiVersion`)
-- **VSCode tasks**: `.vscode/tasks.json` (recommended workflow entry point)
+## What this is
 
-If you have not worked on Brix before, complete the [Brix Builder Certification](https://qlabs.my.trailhead.com/content/developers/trails/brix-builder-certification).
+A Tableau Next analytics demo powered by Data Cloud (D360), showing a unified station compliance and commercial dashboard across Network Rail's 19 managed stations — with a view to scaling to ~200 under Great British Railways.
 
-## Scratch Org Definitions (`orgs/`)
+## Demo story
 
-- **`orgs/dev.json`**: Default scratch org definition used for most development.\n+  - Includes additional features (including Einstein Generative Services feature flags) needed by some demos.\n+- **`orgs/dev_preview.json`**: Optional definition for preview/pinned-instance scenarios.\n+  - Includes an `instance` key and may omit some features present in `dev.json`.\n+\n+If you change one, either **keep them intentionally different and document why**, or align them to reduce template confusion.
+1. Data Cloud unifies Retail Hub Salesforce data + footfall data into a single station profile
+2. Tableau Next dashboard — Statutory Compliance as lead pillar, Revenue/Commercial secondary
+3. Station-level slicing by Station Type (Cat A/B/C), Geographic Region, and Risk Profile
 
-## Cache / Temp Directories
+## Repo structure
 
-These folders are **intentionally excluded from Git** and safe to delete when troubleshooting:
+```
+force-app/main/default/   Salesforce metadata (objects, fields, permission sets)
+data/                     Synthetic CSV data for demo seeding
+sfdx-project.json         Salesforce DX config
+```
 
-- **`.qbrix/`**: QX/Brix cache + temp workspace (Playwright tests may use this as their `testDir`).\n+- **`browser/traces/temp/`**: transient traces/cache (safe to clear).
+## Deploy
 
-## JS Tooling (Jest + Playwright)
+```bash
+sf org login web --alias nr-demo
+sf project deploy start --target-org nr-demo
+sf data import tree --files data/Station__c.json --target-org nr-demo
+```
 
-This repo includes Jest/Playwright configs (`jest.config.js`, `playwright.config.ts`). Use:
+## Key objects
 
-- Install deps: `npm install`\n+- LWC tests: `npm run test:lwc`\n+- E2E tests: `npm run test:e2e`
-
-## Required Inputs (`qbrix_local/inputs/`)
-
-- **Default required inputs** are defined in `qbrix_local/inputs/required.json`.\n+- If using Marketing Cloud, `qbrix_local/inputs/mc_template_required.json` is provided as a starting point (copy/rename into `required.json` as needed).
-
-## Support
-
-The current owner of the Demo Brix is noted in `cumulusci.yml` next to `qbrix_owner_name`.
+| Object | Purpose |
+|---|---|
+| `Station__c` | Station profile — name, type (Cat A/B/C), region |
+| `ComplianceCheck__c` | Inspection records — type, status, score, due date |
+| `RetailUnit__c` | Commercial units — sqft, tenant, lease expiry, revenue |
+| `FootfallRecord__c` | Daily/weekly footfall counts per station |

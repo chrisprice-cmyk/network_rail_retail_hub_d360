@@ -1,5 +1,0 @@
-# Required Inputs
-
-Required inputs directory, for use with inputs.json file which defines required inputs that Demo Store and Demo Wizard should request and then inject at runtime.
-
-Note: If you are using Marketing Cloud, then there is a template called mc_template_required.json which can be either used for referenced or renamed to required.json to provide the default required inputs for brix which deploy marketing cloud packages.
