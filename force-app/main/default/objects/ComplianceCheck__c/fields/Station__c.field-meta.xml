@@ -5,6 +5,7 @@
     <referenceTo>Station__c</referenceTo>
     <relationshipLabel>Compliance Checks</relationshipLabel>
     <relationshipName>ComplianceChecks</relationshipName>
+    <deleteConstraint>Restrict</deleteConstraint>
     <required>true</required>
     <type>Lookup</type>
 </CustomField>

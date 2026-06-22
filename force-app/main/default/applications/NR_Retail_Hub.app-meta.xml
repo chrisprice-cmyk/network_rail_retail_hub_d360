@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomApplication xmlns="http://soap.sforce.com/2006/04/metadata">
+    <defaultLandingTab>standard-home</defaultLandingTab>
+    <description>Network Rail Retail Hub — station compliance and commercial analytics demo.</description>
+    <isNavAutoTempTabsDisabled>false</isNavAutoTempTabsDisabled>
+    <isNavPersonalizationDisabled>false</isNavPersonalizationDisabled>
+    <label>NR Retail Hub</label>
+    <navType>Standard</navType>
+    <tabs>Station__c</tabs>
+    <tabs>ComplianceCheck__c</tabs>
+    <tabs>RetailUnit__c</tabs>
+    <tabs>FootfallRecord__c</tabs>
+    <formFactors>Large</formFactors>
+    <formFactors>Small</formFactors>
+    <uiType>Lightning</uiType>
+    <utilityBar/>
+</CustomApplication>

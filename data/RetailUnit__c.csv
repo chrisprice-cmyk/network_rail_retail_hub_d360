@@ -1,0 +1,21 @@
+Name,Station__r.ExternalId__c,Tenant__c,SizesqFt__c,AnnualRent__c,LeaseExpiry__c,UnitStatus__c
+WLO-R01,STN-001,M&S Simply Food,2800,420000,2028-03-25,Occupied
+WLO-R02,STN-001,Costa Coffee,950,185000,2027-06-30,Occupied
+WLO-R03,STN-001,WHSmith,1200,210000,2029-12-31,Occupied
+WLO-R04,STN-001,,750,0,,Vacant
+KGX-R01,STN-002,Wasabi,680,145000,2027-09-30,Occupied
+KGX-R02,STN-002,Pret A Manger,820,172000,2028-01-31,Occupied
+KGX-R03,STN-002,Boots,1100,198000,2030-06-30,Occupied
+KGX-R04,STN-002,,450,0,,Under Refurbishment
+PAD-R01,STN-003,Caffe Ritazza,760,138000,2026-12-31,Occupied
+PAD-R02,STN-003,Hungry Eats,550,98000,2027-03-31,Occupied
+PAD-R03,STN-003,,900,0,,Vacant
+VIC-R01,STN-004,Upper Crust,620,112000,2027-06-30,Occupied
+VIC-R02,STN-004,,480,0,,Vacant
+VIC-R03,STN-004,,380,0,,Vacant
+LST-R01,STN-005,Leon,740,155000,2029-09-30,Occupied
+LST-R02,STN-005,Paperchase,860,162000,2028-06-30,Occupied
+LBG-R01,STN-006,Krispy Kreme,320,78000,2026-09-30,Occupied
+LBG-R02,STN-006,,510,0,,Vacant
+MAN-R01,STN-009,Greggs,420,72000,2027-12-31,Occupied
+MAN-R02,STN-009,Yo! Sushi,680,118000,2028-03-31,Occupied

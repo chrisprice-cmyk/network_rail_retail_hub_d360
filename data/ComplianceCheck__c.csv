@@ -1,0 +1,21 @@
+Station__r.ExternalId__c,CheckType__c,Status__c,Score__c,CheckDate__c,NextDueDate__c,OutstandingActions__c
+STN-001,Fire Risk Assessment,Pass,96.0,2026-03-15,2027-03-15,0
+STN-001,EICR Fixed Wire Testing,Pass,98.0,2025-11-01,2030-11-01,0
+STN-001,Cleaning Standards Audit,Pass with Actions,88.5,2026-05-20,2026-08-20,2
+STN-002,Fire Risk Assessment,Pass with Actions,91.0,2026-02-10,2027-02-10,3
+STN-002,Security Inspection,Pass,94.5,2026-04-01,2026-10-01,0
+STN-002,COSHH Risk Assessment,Pass,90.0,2026-01-15,2027-01-15,0
+STN-003,Fire Risk Assessment,Pass with Actions,85.0,2026-01-20,2027-01-20,5
+STN-003,EICR Fixed Wire Testing,Pass,92.0,2024-06-01,2029-06-01,0
+STN-003,Sprinkler System Test,Overdue,0.0,2025-12-01,2026-03-01,1
+STN-004,Fire Risk Assessment,Pass with Actions,81.0,2026-02-28,2027-02-28,7
+STN-004,Cleaning Standards Audit,Fail,61.0,2026-05-01,2026-06-01,12
+STN-004,Security Inspection,Pass,89.0,2026-03-01,2026-09-01,0
+STN-005,Fire Risk Assessment,Pass,97.5,2026-04-10,2027-04-10,0
+STN-005,EICR Fixed Wire Testing,Pass,99.0,2025-09-01,2030-09-01,0
+STN-006,Fire Risk Assessment,Fail,58.0,2026-04-15,2026-05-15,14
+STN-006,EICR Fixed Wire Testing,Overdue,0.0,2021-01-01,2026-01-01,1
+STN-006,Cleaning Standards Audit,Pass with Actions,79.0,2026-05-10,2026-08-10,4
+STN-010,Fire Risk Assessment,Fail,52.0,2026-03-01,2026-04-01,18
+STN-010,EICR Fixed Wire Testing,Overdue,0.0,2020-06-01,2025-06-01,1
+STN-010,Sprinkler System Test,Fail,45.0,2026-02-01,2026-03-01,9

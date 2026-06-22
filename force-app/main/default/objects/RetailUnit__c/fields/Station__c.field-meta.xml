@@ -5,6 +5,7 @@
     <referenceTo>Station__c</referenceTo>
     <relationshipLabel>Retail Units</relationshipLabel>
     <relationshipName>RetailUnits</relationshipName>
+    <deleteConstraint>Restrict</deleteConstraint>
     <required>true</required>
     <type>Lookup</type>
 </CustomField>

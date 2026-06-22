@@ -5,6 +5,7 @@
     <referenceTo>Station__c</referenceTo>
     <relationshipLabel>Footfall Records</relationshipLabel>
     <relationshipName>FootfallRecords</relationshipName>
+    <deleteConstraint>Restrict</deleteConstraint>
     <required>true</required>
     <type>Lookup</type>
 </CustomField>
