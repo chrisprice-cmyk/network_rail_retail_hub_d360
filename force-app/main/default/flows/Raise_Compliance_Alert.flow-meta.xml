@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>66.0</apiVersion>
+    <assignments>
+        <name>Assign_StationName</name>
+        <label>Assign Station Name</label>
+        <locationX>176</locationX>
+        <locationY>158</locationY>
+        <assignmentItems>
+            <assignToReference>stationName</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>Get_Station.Name</elementReference>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Screen_AlertDetails</targetReference>
+        </connector>
+    </assignments>
+    <choices>
+        <name>Choice_FireRisk</name>
+        <choiceText>Fire Risk Assessment</choiceText>
+        <dataType>String</dataType>
+        <value><stringValue>Fire Risk Assessment</stringValue></value>
+    </choices>
+    <choices>
+        <name>Choice_EICR</name>
+        <choiceText>EICR — Fixed Wire Testing</choiceText>
+        <dataType>String</dataType>
+        <value><stringValue>EICR Fixed Wire Testing</stringValue></value>
+    </choices>
+    <choices>
+        <name>Choice_Sprinkler</name>
+        <choiceText>Sprinkler / Fire Suppression</choiceText>
+        <dataType>String</dataType>
+        <value><stringValue>Sprinkler System Test</stringValue></value>
+    </choices>
+    <choices>
+        <name>Choice_Cleaning</name>
+        <choiceText>Cleaning Standards</choiceText>
+        <dataType>String</dataType>
+        <value><stringValue>Cleaning Standards Audit</stringValue></value>
+    </choices>
+    <choices>
+        <name>Choice_COSHH</name>
+        <choiceText>COSHH Risk Assessment</choiceText>
+        <dataType>String</dataType>
+        <value><stringValue>COSHH Risk Assessment</stringValue></value>
+    </choices>
+    <choices>
+        <name>Choice_Revenue</name>
+        <choiceText>Revenue / Commercial Shortfall</choiceText>
+        <dataType>String</dataType>
+        <value><stringValue>Revenue Commercial</stringValue></value>
+    </choices>
+    <choices>
+        <name>Choice_Vacancy</name>
+        <choiceText>Retail Vacancy</choiceText>
+        <dataType>String</dataType>
+        <value><stringValue>Retail Vacancy</stringValue></value>
+    </choices>
+    <choices>
+        <name>Choice_Other</name>
+        <choiceText>Other</choiceText>
+        <dataType>String</dataType>
+        <value><stringValue>Other</stringValue></value>
+    </choices>
+    <choices>
+        <name>Choice_Critical</name>
+        <choiceText>Critical — immediate action required</choiceText>
+        <dataType>String</dataType>
+        <value><stringValue>Critical</stringValue></value>
+    </choices>
+    <choices>
+        <name>Choice_High</name>
+        <choiceText>High — action within 7 days</choiceText>
+        <dataType>String</dataType>
+        <value><stringValue>High</stringValue></value>
+    </choices>
+    <choices>
+        <name>Choice_Medium</name>
+        <choiceText>Medium — action within 30 days</choiceText>
+        <dataType>String</dataType>
+        <value><stringValue>Medium</stringValue></value>
+    </choices>
+    <description>Triggered from the Station record page. Captures alert type, priority, and description then creates a follow-up Task linked to the station.</description>
+    <interviewLabel>Raise Compliance Alert {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Raise Compliance Alert</label>
+    <processType>Flow</processType>
+    <recordCreates>
+        <name>Create_Task</name>
+        <label>Create Follow-up Task</label>
+        <locationX>176</locationX>
+        <locationY>518</locationY>
+        <connector>
+            <targetReference>Screen_Success</targetReference>
+        </connector>
+        <inputAssignments>
+            <field>Description</field>
+            <value><elementReference>Input_Description</elementReference></value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>OwnerId</field>
+            <value><elementReference>$User.Id</elementReference></value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Priority</field>
+            <value><elementReference>Input_Priority</elementReference></value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Status</field>
+            <value><stringValue>Not Started</stringValue></value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Subject</field>
+            <value><elementReference>Task_Subject</elementReference></value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>WhatId</field>
+            <value><elementReference>recordId</elementReference></value>
+        </inputAssignments>
+        <object>Task</object>
+    </recordCreates>
+    <recordLookups>
+        <name>Get_Station</name>
+        <label>Get Station</label>
+        <locationX>176</locationX>
+        <locationY>38</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Assign_StationName</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value><elementReference>recordId</elementReference></value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Station__c</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <runInMode>DefaultMode</runInMode>
+    <screens>
+        <name>Screen_AlertDetails</name>
+        <label>Raise Compliance Alert</label>
+        <locationX>176</locationX>
+        <locationY>278</locationY>
+        <allowBack>false</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <connector>
+            <targetReference>Screen_Confirm</targetReference>
+        </connector>
+        <fields>
+            <name>Header_Text</name>
+            <fieldText>&lt;p&gt;&lt;strong&gt;Station: {!stationName}&lt;/strong&gt;&lt;/p&gt;&lt;p&gt;An insight has been identified in the Tableau Next dashboard. Complete the details below to log a compliance alert and assign a follow-up action.&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+        </fields>
+        <fields>
+            <name>Input_AlertType</name>
+            <choiceReferences>Choice_FireRisk</choiceReferences>
+            <choiceReferences>Choice_EICR</choiceReferences>
+            <choiceReferences>Choice_Sprinkler</choiceReferences>
+            <choiceReferences>Choice_Cleaning</choiceReferences>
+            <choiceReferences>Choice_COSHH</choiceReferences>
+            <choiceReferences>Choice_Revenue</choiceReferences>
+            <choiceReferences>Choice_Vacancy</choiceReferences>
+            <choiceReferences>Choice_Other</choiceReferences>
+            <dataType>String</dataType>
+            <fieldText>Alert Type</fieldText>
+            <fieldType>DropdownBox</fieldType>
+            <inputsOnNextNavToAssocScrn>UseStoredValues</inputsOnNextNavToAssocScrn>
+            <isRequired>true</isRequired>
+        </fields>
+        <fields>
+            <name>Input_Priority</name>
+            <choiceReferences>Choice_Critical</choiceReferences>
+            <choiceReferences>Choice_High</choiceReferences>
+            <choiceReferences>Choice_Medium</choiceReferences>
+            <dataType>String</dataType>
+            <fieldText>Priority</fieldText>
+            <fieldType>DropdownBox</fieldType>
+            <inputsOnNextNavToAssocScrn>UseStoredValues</inputsOnNextNavToAssocScrn>
+            <isRequired>true</isRequired>
+        </fields>
+        <fields>
+            <name>Input_Description</name>
+            <dataType>String</dataType>
+            <fieldText>Describe the insight or issue identified in the dashboard</fieldText>
+            <fieldType>LargeTextArea</fieldType>
+            <inputsOnNextNavToAssocScrn>UseStoredValues</inputsOnNextNavToAssocScrn>
+            <isRequired>true</isRequired>
+        </fields>
+    </screens>
+    <screens>
+        <name>Screen_Confirm</name>
+        <label>Confirm Alert</label>
+        <locationX>176</locationX>
+        <locationY>398</locationY>
+        <allowBack>true</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <connector>
+            <targetReference>Create_Task</targetReference>
+        </connector>
+        <fields>
+            <name>Confirm_Text</name>
+            <fieldText>&lt;p&gt;&lt;strong&gt;Confirm alert for {!stationName}&lt;/strong&gt;&lt;/p&gt;&lt;p&gt;Type: {!Input_AlertType}&lt;br/&gt;Priority: {!Input_Priority}&lt;br/&gt;Detail: {!Input_Description}&lt;/p&gt;&lt;p&gt;Submitting will create a follow-up task assigned to you.&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+        </fields>
+    </screens>
+    <screens>
+        <name>Screen_Success</name>
+        <label>Alert Raised</label>
+        <locationX>176</locationX>
+        <locationY>638</locationY>
+        <allowBack>false</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <fields>
+            <name>Success_Text</name>
+            <fieldText>&lt;p&gt;&lt;strong&gt;Compliance alert raised for {!stationName}.&lt;/strong&gt;&lt;/p&gt;&lt;p&gt;A follow-up task has been created and assigned to you.&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+        </fields>
+    </screens>
+    <start>
+        <locationX>50</locationX>
+        <locationY>38</locationY>
+        <connector>
+            <targetReference>Get_Station</targetReference>
+        </connector>
+    </start>
+    <status>Active</status>
+    <textTemplates>
+        <name>Task_Subject</name>
+        <isViewedAsPlainText>true</isViewedAsPlainText>
+        <text>Compliance Alert — {!Input_AlertType} at {!stationName}</text>
+    </textTemplates>
+    <variables>
+        <name>recordId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>stationName</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+</Flow>
