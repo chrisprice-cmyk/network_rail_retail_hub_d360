@@ -96,6 +96,32 @@ Two dashboards embedded in the NR Retail Hub Lightning app:
 
 Both dashboards connect to Data Cloud via Tableau Next's native D360 connector — no intermediate extract or CRMA dataset needed.
 
+### Layer 4 — Station record page (to build)
+
+Each Station record page will surface a condensed view of the same metrics from layers 2 and 3, scoped to that individual station. The intent is that a user can navigate from the estate-level dashboard down to a single station record and see the same KPIs in context — no rebuilding vizzes from scratch, just reusing the same Tableau Next published views filtered to the station in context.
+
+**Right column — three embedded Tableau Next vizzes:**
+- **Compliance score gauge** — reused from the Compliance Dashboard, filtered to this station. Shows overall score, risk profile colour, and trend vs last quarter.
+- **Footfall trend sparkline** — reused from the Commercial Dashboard. Last 8 weeks of weekly footfall for this station only.
+- **Retail vacancy snapshot** — reused from the Commercial Dashboard. Unit count, vacancy rate, and next lease expiry for this station.
+
+**Left column — standard record detail plus:**
+- Related list: Compliance Checks (most recent first)
+- Related list: Retail Units
+
+**Action: Raise Compliance Alert (to build)**
+
+A "Raise Compliance Alert" button on the Station record page (and triggerable from the dashboard). When a user spots an insight in Tableau Next — a station whose compliance score has dropped, an overdue check, a vacancy spike — they click the action, which opens a guided screen flow:
+
+1. **Alert details** — pick alert type (Fire Risk / EICR / Sprinkler / Cleaning / COSHH / Revenue / Vacancy / Other), set priority (Critical / High / Medium), describe the insight in free text.
+2. **Confirm** — review before submitting.
+3. **Submit** — creates a follow-up Task linked to the Station record, assigned to the current user, with subject "Compliance Alert — [type] at [station name]".
+
+This closes the "insight to action" loop in the demo: you see a problem in the dashboard, you don't just look at it — you raise it, own it, and track it.
+
+**Demo narrative for this moment:**
+> "Here's Birmingham New Street. You've already seen it at the bottom of the estate compliance ranking in the dashboard — three failing checks, 18 outstanding actions. Now I'm on the station record. I can see the same compliance score and footfall trend I had in the dashboard, scoped to just this station. And I can see the related checks that are failing. From here I hit 'Raise Compliance Alert' — this is the moment where the insight becomes an action. I pick the check type, set it to Critical, describe what I'm seeing, and submit. That creates a task on this record, assigned to me, so it lives in Salesforce alongside everything else. The dashboard told me there was a problem. The record page told me the detail. The action made sure someone owns it."
+
 ---
 
 ## Demo flow (Waterloo, 15 July)
@@ -103,8 +129,10 @@ Both dashboards connect to Data Cloud via Tableau Next's native D360 connector �
 1. **Open the app** — land on the Compliance Dashboard. Vince and Kieran see the estate at a glance.
 2. **Filter to London stations** — show the regional view, call out the two stations with Critical risk.
 3. **Drill into Birmingham New Street** — three failing/overdue checks, 18 outstanding actions. This is the "burning platform" moment.
-4. **Flip to Commercial Dashboard** — show vacancy rate sitting at 15% across the estate, footfall-to-revenue gap at underperforming stations.
-5. **The ask** — "This is one unified view of your estate. Today it runs on synthetic data; in a real deployment it connects directly to your Salesforce Retail Hub and footfall feeds. The next step is a scoping conversation with Kieran's team."
+4. **Navigate to the station record** — click through from the dashboard to the Birmingham New Street record page. The same compliance score and footfall trend appear in the right column, scoped to this station. The related compliance checks confirm the failures.
+5. **Raise a Compliance Alert** — hit the action button, walk through the flow: pick EICR as the type, set Critical priority, describe the overdue test. Submit. Show the Task created on the record. "The dashboard found it. The record confirmed it. The action owns it."
+6. **Flip to Commercial Dashboard** — show vacancy rate sitting at 15% across the estate, footfall-to-revenue gap at underperforming stations.
+7. **The ask** — "This is one unified view of your estate — compliance, commercial, and footfall, all in one place, with action built in. Today it runs on synthetic data; in a real deployment it connects directly to your Salesforce Retail Hub and footfall feeds. The next step is a scoping conversation with Kieran's team."
 
 ---
 
@@ -126,7 +154,10 @@ network_rail_retail_hub_d360/
 │   ├── objects/             # Station__c, ComplianceCheck__c, RetailUnit__c, FootfallRecord__c
 │   ├── tabs/                # Custom tabs for each object
 │   ├── permissionsets/      # NR_Retail_Hub_Demo
-│   └── profiles/            # Admin profile (app + tab visibility)
+│   ├── profiles/            # Admin profile (app + tab visibility)
+│   ├── flexipages/          # Station__c record page (to build)
+│   ├── flows/               # Raise_Compliance_Alert screen flow (to build)
+│   └── quickActions/        # Station__c.Raise_Compliance_Alert (to build)
 ├── data/
 │   ├── Station__c.json      # 12 stations (sf data import tree)
 │   ├── ComplianceCheck__c.csv  # 20 records (sf data import bulk)
