@@ -1,0 +1,124 @@
+{
+  "records": [
+    {
+      "attributes": { "type": "Station__c", "referenceId": "StationRef1" },
+      "Name": "London Waterloo",
+      "ExternalId__c": "STN-001",
+      "StationType__c": "Category A",
+      "Region__c": "London & South East",
+      "RiskProfile__c": "Low",
+      "OverallComplianceScore__c": 94.2,
+      "ManagedSince__c": "2010-04-01"
+    },
+    {
+      "attributes": { "type": "Station__c", "referenceId": "StationRef2" },
+      "Name": "London King's Cross",
+      "ExternalId__c": "STN-002",
+      "StationType__c": "Category A",
+      "Region__c": "London & South East",
+      "RiskProfile__c": "Low",
+      "OverallComplianceScore__c": 91.7,
+      "ManagedSince__c": "2012-01-01"
+    },
+    {
+      "attributes": { "type": "Station__c", "referenceId": "StationRef3" },
+      "Name": "London Paddington",
+      "ExternalId__c": "STN-003",
+      "StationType__c": "Category A",
+      "Region__c": "London & South East",
+      "RiskProfile__c": "Medium",
+      "OverallComplianceScore__c": 87.5,
+      "ManagedSince__c": "2011-06-01"
+    },
+    {
+      "attributes": { "type": "Station__c", "referenceId": "StationRef4" },
+      "Name": "London Victoria",
+      "ExternalId__c": "STN-004",
+      "StationType__c": "Category A",
+      "Region__c": "London & South East",
+      "RiskProfile__c": "Medium",
+      "OverallComplianceScore__c": 83.1,
+      "ManagedSince__c": "2010-04-01"
+    },
+    {
+      "attributes": { "type": "Station__c", "referenceId": "StationRef5" },
+      "Name": "London Liverpool Street",
+      "ExternalId__c": "STN-005",
+      "StationType__c": "Category A",
+      "Region__c": "London & South East",
+      "RiskProfile__c": "Low",
+      "OverallComplianceScore__c": 96.0,
+      "ManagedSince__c": "2013-03-01"
+    },
+    {
+      "attributes": { "type": "Station__c", "referenceId": "StationRef6" },
+      "Name": "London Bridge",
+      "ExternalId__c": "STN-006",
+      "StationType__c": "Category A",
+      "Region__c": "London & South East",
+      "RiskProfile__c": "High",
+      "OverallComplianceScore__c": 74.8,
+      "ManagedSince__c": "2014-09-01"
+    },
+    {
+      "attributes": { "type": "Station__c", "referenceId": "StationRef7" },
+      "Name": "London Cannon Street",
+      "ExternalId__c": "STN-007",
+      "StationType__c": "Category B",
+      "Region__c": "London & South East",
+      "RiskProfile__c": "Medium",
+      "OverallComplianceScore__c": 85.3,
+      "ManagedSince__c": "2015-01-01"
+    },
+    {
+      "attributes": { "type": "Station__c", "referenceId": "StationRef8" },
+      "Name": "London Charing Cross",
+      "ExternalId__c": "STN-008",
+      "StationType__c": "Category B",
+      "Region__c": "London & South East",
+      "RiskProfile__c": "Low",
+      "OverallComplianceScore__c": 89.4,
+      "ManagedSince__c": "2010-04-01"
+    },
+    {
+      "attributes": { "type": "Station__c", "referenceId": "StationRef9" },
+      "Name": "Manchester Piccadilly",
+      "ExternalId__c": "STN-009",
+      "StationType__c": "Category A",
+      "Region__c": "North West & Central",
+      "RiskProfile__c": "Medium",
+      "OverallComplianceScore__c": 88.9,
+      "ManagedSince__c": "2011-01-01"
+    },
+    {
+      "attributes": { "type": "Station__c", "referenceId": "StationRef10" },
+      "Name": "Birmingham New Street",
+      "ExternalId__c": "STN-010",
+      "StationType__c": "Category A",
+      "Region__c": "North West & Central",
+      "RiskProfile__c": "Critical",
+      "OverallComplianceScore__c": 68.2,
+      "ManagedSince__c": "2013-07-01"
+    },
+    {
+      "attributes": { "type": "Station__c", "referenceId": "StationRef11" },
+      "Name": "Leeds",
+      "ExternalId__c": "STN-011",
+      "StationType__c": "Category A",
+      "Region__c": "Eastern",
+      "RiskProfile__c": "Medium",
+      "OverallComplianceScore__c": 82.6,
+      "ManagedSince__c": "2012-04-01"
+    },
+    {
+      "attributes": { "type": "Station__c", "referenceId": "StationRef12" },
+      "Name": "Edinburgh Waverley",
+      "ExternalId__c": "STN-012",
+      "StationType__c": "Category A",
+      "Region__c": "Scotland",
+      "RiskProfile__c": "Low",
+      "OverallComplianceScore__c": 93.1,
+      "ManagedSince__c": "2010-04-01"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "records": [
+    { "attributes": { "type": "FootfallRecord__c", "referenceId": "FFRef1" }, "Station__r": { "ExternalId__c": "STN-001" }, "WeekStartDate__c": "2026-06-02", "FootfallCount__c": 1842000 },
+    { "attributes": { "type": "FootfallRecord__c", "referenceId": "FFRef2" }, "Station__r": { "ExternalId__c": "STN-001" }, "WeekStartDate__c": "2026-05-26", "FootfallCount__c": 1795000 },
+    { "attributes": { "type": "FootfallRecord__c", "referenceId": "FFRef3" }, "Station__r": { "ExternalId__c": "STN-001" }, "WeekStartDate__c": "2026-05-19", "FootfallCount__c": 1820000 },
+    { "attributes": { "type": "FootfallRecord__c", "referenceId": "FFRef4" }, "Station__r": { "ExternalId__c": "STN-002" }, "WeekStartDate__c": "2026-06-02", "FootfallCount__c": 1520000 },
+    { "attributes": { "type": "FootfallRecord__c", "referenceId": "FFRef5" }, "Station__r": { "ExternalId__c": "STN-002" }, "WeekStartDate__c": "2026-05-26", "FootfallCount__c": 1490000 },
+    { "attributes": { "type": "FootfallRecord__c", "referenceId": "FFRef6" }, "Station__r": { "ExternalId__c": "STN-002" }, "WeekStartDate__c": "2026-05-19", "FootfallCount__c": 1505000 },
+    { "attributes": { "type": "FootfallRecord__c", "referenceId": "FFRef7" }, "Station__r": { "ExternalId__c": "STN-003" }, "WeekStartDate__c": "2026-06-02", "FootfallCount__c": 1380000 },
+    { "attributes": { "type": "FootfallRecord__c", "referenceId": "FFRef8" }, "Station__r": { "ExternalId__c": "STN-003" }, "WeekStartDate__c": "2026-05-26", "FootfallCount__c": 1340000 },
+    { "attributes": { "type": "FootfallRecord__c", "referenceId": "FFRef9" }, "Station__r": { "ExternalId__c": "STN-004" }, "WeekStartDate__c": "2026-06-02", "FootfallCount__c": 1210000 },
+    { "attributes": { "type": "FootfallRecord__c", "referenceId": "FFRef10" }, "Station__r": { "ExternalId__c": "STN-004" }, "WeekStartDate__c": "2026-05-26", "FootfallCount__c": 1185000 },
+    { "attributes": { "type": "FootfallRecord__c", "referenceId": "FFRef11" }, "Station__r": { "ExternalId__c": "STN-005" }, "WeekStartDate__c": "2026-06-02", "FootfallCount__c": 1650000 },
+    { "attributes": { "type": "FootfallRecord__c", "referenceId": "FFRef12" }, "Station__r": { "ExternalId__c": "STN-005" }, "WeekStartDate__c": "2026-05-26", "FootfallCount__c": 1620000 },
+    { "attributes": { "type": "FootfallRecord__c", "referenceId": "FFRef13" }, "Station__r": { "ExternalId__c": "STN-006" }, "WeekStartDate__c": "2026-06-02", "FootfallCount__c": 980000 },
+    { "attributes": { "type": "FootfallRecord__c", "referenceId": "FFRef14" }, "Station__r": { "ExternalId__c": "STN-006" }, "WeekStartDate__c": "2026-05-26", "FootfallCount__c": 955000 },
+    { "attributes": { "type": "FootfallRecord__c", "referenceId": "FFRef15" }, "Station__r": { "ExternalId__c": "STN-009" }, "WeekStartDate__c": "2026-06-02", "FootfallCount__c": 920000 },
+    { "attributes": { "type": "FootfallRecord__c", "referenceId": "FFRef16" }, "Station__r": { "ExternalId__c": "STN-009" }, "WeekStartDate__c": "2026-05-26", "FootfallCount__c": 895000 },
+    { "attributes": { "type": "FootfallRecord__c", "referenceId": "FFRef17" }, "Station__r": { "ExternalId__c": "STN-010" }, "WeekStartDate__c": "2026-06-02", "FootfallCount__c": 850000 },
+    { "attributes": { "type": "FootfallRecord__c", "referenceId": "FFRef18" }, "Station__r": { "ExternalId__c": "STN-010" }, "WeekStartDate__c": "2026-05-26", "FootfallCount__c": 832000 },
+    { "attributes": { "type": "FootfallRecord__c", "referenceId": "FFRef19" }, "Station__r": { "ExternalId__c": "STN-011" }, "WeekStartDate__c": "2026-06-02", "FootfallCount__c": 720000 },
+    { "attributes": { "type": "FootfallRecord__c", "referenceId": "FFRef20" }, "Station__r": { "ExternalId__c": "STN-012" }, "WeekStartDate__c": "2026-06-02", "FootfallCount__c": 680000 }
+  ]
+}

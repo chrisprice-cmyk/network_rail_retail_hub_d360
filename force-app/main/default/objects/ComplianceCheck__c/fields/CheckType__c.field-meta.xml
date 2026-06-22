@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>CheckType__c</fullName>
+    <label>Check Type</label>
+    <required>true</required>
+    <type>Picklist</type>
+    <valueSet>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value><fullName>Fire Risk Assessment</fullName><default>false</default><label>Fire Risk Assessment</label></value>
+            <value><fullName>Fire Alarm Testing</fullName><default>false</default><label>Fire Alarm Testing</label></value>
+            <value><fullName>EICR Fixed Wire Testing</fullName><default>false</default><label>EICR Fixed Wire Testing</label></value>
+            <value><fullName>COSHH Risk Assessment</fullName><default>false</default><label>COSHH Risk Assessment</label></value>
+            <value><fullName>Cleaning Standards Audit</fullName><default>false</default><label>Cleaning Standards Audit</label></value>
+            <value><fullName>Security Inspection</fullName><default>false</default><label>Security Inspection</label></value>
+            <value><fullName>Sprinkler System Test</fullName><default>false</default><label>Sprinkler System Test</label></value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

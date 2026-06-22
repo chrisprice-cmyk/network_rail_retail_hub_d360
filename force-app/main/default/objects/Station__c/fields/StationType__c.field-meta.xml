@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>StationType__c</fullName>
+    <label>Station Type</label>
+    <required>true</required>
+    <type>Picklist</type>
+    <valueSet>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value><fullName>Category A</fullName><default>false</default><label>Category A</label></value>
+            <value><fullName>Category B</fullName><default>false</default><label>Category B</label></value>
+            <value><fullName>Category C</fullName><default>false</default><label>Category C</label></value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

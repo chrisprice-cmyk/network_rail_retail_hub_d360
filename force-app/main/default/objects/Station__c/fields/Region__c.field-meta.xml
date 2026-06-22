@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Region__c</fullName>
+    <label>Region</label>
+    <required>true</required>
+    <type>Picklist</type>
+    <valueSet>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value><fullName>London &amp; South East</fullName><default>false</default><label>London &amp; South East</label></value>
+            <value><fullName>North West &amp; Central</fullName><default>false</default><label>North West &amp; Central</label></value>
+            <value><fullName>Eastern</fullName><default>false</default><label>Eastern</label></value>
+            <value><fullName>Wales &amp; Western</fullName><default>false</default><label>Wales &amp; Western</label></value>
+            <value><fullName>Scotland</fullName><default>false</default><label>Scotland</label></value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
