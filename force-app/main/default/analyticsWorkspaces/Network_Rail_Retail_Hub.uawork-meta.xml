@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AnalyticsWorkspace xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Station compliance and commercial analytics for NR Retail Hub</description>
+    <masterLabel>Network Rail Retail Hub</masterLabel>
+    <workspaceAssetRelationships>
+        <asset>NR_Retail_Hub</asset>
+        <assetType>SemanticModel</assetType>
+        <assetUsageType>Referenced</assetUsageType>
+        <workspace>Network_Rail_Retail_Hub</workspace>
+    </workspaceAssetRelationships>
+</AnalyticsWorkspace>

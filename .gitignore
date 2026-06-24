@@ -104,7 +104,8 @@ deploy-options.json
 apex-scripts/log
 force-app/main/default/profiles/
 force-app/main/default/appMenus/AppSwitcher.appMenu-meta.xml
-force-app/main/default/flexipages/LightningService_UtilityBar.flexipage-meta.xml
+# Exclude all SDO boilerplate flexipages — only NR-specific pages should be committed
+force-app/main/default/flexipages/
 # [ADDED] Salesforce Code Analyzer / Scanner results (generated output)
 sca-results.csv
 sfca_results.json
