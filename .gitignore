@@ -104,8 +104,14 @@ deploy-options.json
 apex-scripts/log
 force-app/main/default/profiles/
 force-app/main/default/appMenus/AppSwitcher.appMenu-meta.xml
-# Exclude all SDO boilerplate flexipages — only NR-specific pages should be committed
+# Exclude all SDO boilerplate — only NR-specific metadata should be committed
 force-app/main/default/flexipages/
+force-app/main/default/flows/
+force-app/main/default/quickActions/
+force-app/main/default/layouts/CGC_Milestone_Progress__c-Milestone Progress Layout.layout-meta.xml
+force-app/main/default/layouts/Opportunity-Opportunity Layout.layout-meta.xml
+tableau-next-skills/
+.vscode/
 # [ADDED] Salesforce Code Analyzer / Scanner results (generated output)
 sca-results.csv
 sfca_results.json
